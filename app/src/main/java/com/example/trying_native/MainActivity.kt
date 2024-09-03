@@ -75,9 +75,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-fun log_ran() {
-    Log.d("MM", "hi there ----")
-}
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
