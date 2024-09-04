@@ -1,5 +1,6 @@
 package com.example.trying_native.Components_for_ui_compose
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -55,6 +56,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import com.example.trying_native.logD
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -129,7 +131,7 @@ fun DialExample_2(
     val timePickerState = rememberTimePickerState(
         initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
         initialMinute = currentTime.get(Calendar.MINUTE),
-        is24Hour = true,
+        is24Hour = false,
     )
 
     /** Determines whether the time picker is dial or input */
@@ -243,5 +245,86 @@ fun DatePickerModal(
         }
     ) {
         DatePicker(state = datePickerState)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AbstractFunction_TimePickerSection(
+    message_on_button:String,
+    modifier: Modifier = Modifier,
+    onTimeSelected_func_to_handle_value_returned: (TimePickerState) -> Unit
+) {
+//    function handles creating the state and managing it such that we only have to think about
+//    getting value in the callback function
+
+//    -------- // ------------
+//    further abstraction --> well function just takes in a button creates state that is toggled by the
+//    button and then displays the ui (compose) if the state is true ; so we can inject the last ui
+//    -------- // ------------
+
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    Button(
+        onClick = {
+            Log.d("AA", "$showTimePicker")
+            showTimePicker = !showTimePicker
+            Log.d("AA", "--$showTimePicker")
+        },
+        modifier = modifier,
+    ) {
+        Text(message_on_button)
+    }
+
+    if (showTimePicker) {
+        DialExample_2(
+            onConfirm = { timePickerState ->
+                val selectedTime = "${timePickerState.hour}:${timePickerState.minute}"
+                logD("Selected time: $selectedTime")
+                showTimePicker = false
+                onTimeSelected_func_to_handle_value_returned(timePickerState)
+            },
+            onDismiss = {
+                logD("TimePicker dismissed")
+                showTimePicker = false
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AbstractFunction_DatePickerSection(
+    message_on_button: String,
+    modifier: Modifier = Modifier,
+    onDateSelected_func_to_handle_value_returned: (Long?) -> Unit
+) {
+    // State to control the visibility of the DatePickerModal
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    // Button to toggle the DatePicker visibility
+    Button(
+        onClick = {
+            Log.d("AA", "showDatePicker--$showDatePicker")
+            showDatePicker = !showDatePicker
+        },
+        modifier = modifier
+    ) {
+        Text(message_on_button)
+    }
+
+    // If the DatePicker should be shown, display it
+    if (showDatePicker) {
+        DatePickerModal(
+            onDateSelected = { date ->
+                Log.d("AA", "Date picker ended -->$date")
+                showDatePicker = false
+                onDateSelected_func_to_handle_value_returned(date)
+            },
+            onDismiss = {
+                Log.d("AA", "Date picker dismissed")
+                showDatePicker = false
+            }
+        )
     }
 }

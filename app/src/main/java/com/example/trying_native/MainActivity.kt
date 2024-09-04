@@ -18,6 +18,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,66 +58,29 @@ class MainActivity : ComponentActivity() {
             Trying_nativeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
                     Column(modifier = Modifier.padding(paddingValues)) {
-                        var showTimePicker by remember { mutableStateOf(false) }
-                        // First element
+
                         Button_for_alarm("Click Me", Modifier.padding(8.dp)) {
                             scheduleAlarm()
                         }
-                        Button(onClick = {
-                            Log.d("AA","$showTimePicker");showTimePicker=!showTimePicker; Log.d("AA","--$showTimePicker")
+                        AbstractFunction_TimePickerSection(
+                            "Select starting time",
+                            onTimeSelected_func_to_handle_value_returned = { timePickerState ->
+                            logD("in the abstract timepicker func and the value gotted was -> $timePickerState")
+                        })
+                        AbstractFunction_TimePickerSection(
+                            "Select starting time",
+                            onTimeSelected_func_to_handle_value_returned = { timePickerState ->
+                                logD("in the abstract timepicker func and the value gotted was -> $timePickerState; time is ${timePickerState.hour}:${timePickerState.minute}")
+                            })
 
-                                         }, modifier = Modifier.padding(10.dp)) {
-                            Text("Toggle Timer")
-                        }
-                        if(showTimePicker){
-                            DialExample_2(
-                                onConfirm = { timePickerState ->
-                                    val selectedTime = "${timePickerState.hour}:${timePickerState.minute}"
-                                    logD("Selected time: $selectedTime")
-                                    showTimePicker = false
-                                    // Proceed with scheduling the alarm using the selected time
-                                },
-                                onDismiss = {
-                                    logD("TimePicker dismissed")
-                                    showTimePicker = false
-                                }
-                            )
-                        }
-                        // State to control the visibility of the DatePickerModal
-                        var showDatePicker by remember { mutableStateOf(false) }
-
-                        Button(onClick = {
-                            showDatePicker  =!showDatePicker; Log.d("AA","showDatePicker--$showDatePicker")
-
-                        }, modifier = Modifier.padding(10.dp)) {
-                            Text("Toggle Date picker ")
-                        }
-                        // State to hold the selected date
-                        var selectedDate by remember { mutableStateOf<Long?>(null) }
+                        AbstractFunction_DatePickerSection(
+                            "Select a date",
+                            onDateSelected_func_to_handle_value_returned = { selectedDate ->
+                                logD("Date selected: $selectedDate")
+                            }
+                        )
 
 
-                        if(showDatePicker){
-                            DatePickerModal(
-                                onDateSelected = { date ->
-                                    selectedDate = date
-                                    showDatePicker = !showDatePicker
-                                    logD("Date picker ended -->$selectedDate")
-                                }, onDismiss = {
-                                    showDatePicker = !showDatePicker
-                                    logD("Date picker dismissed ")
-                                }
-                            )
-                        }
-//                        AdvancedTimePickerDialog("Time Picker Title",
-//                            onDismiss = {
-//                                logD("date picker dismissed")
-//                                showTimePicker = false
-//                            },
-//                            onConfirm = {
-//                                logD("date picker confirmed")
-//                            },
-//
-//                            )
                     }
                 }
             }
