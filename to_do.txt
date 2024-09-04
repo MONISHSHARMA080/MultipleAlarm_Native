@@ -1,3 +1,7 @@
-1.> make the UI for the app >> set 2 time picker alarm allow user to pick time ;and display that
-2.>add the logic that allows the alarm app to launch on activity on the desired time 
+[XXXX] 1.> make the UI for the app >> set 2 time picker alarm allow user to pick time ;and display that
+2.>add the logic that allows the alarm app to launch on activity on the desired time --> see if the time is form today (in int) ; if yes no need for the date picker; just take the start time and end time and convert them in milliseconds and take the frequency in seconds and convert it in the milliseconds and then in a loop add them to the start time and keep calling the set alarm funtion(time in millisecond) 
 3.> add the alarm sound to the activity launched and a dismiss button
+
+---------- future implementation
+
+can also make a feature that allows user to enter date and we set the alarm between to dates (abstract the loop in 2 step) but could have to do it on a bg thread as user can exit the app
