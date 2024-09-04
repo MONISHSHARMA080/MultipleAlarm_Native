@@ -1,0 +1,3 @@
+1.> make the UI for the app >> set 2 time picker alarm allow user to pick time ;and display that
+2.>add the logic that allows the alarm app to launch on activity on the desired time 
+3.> add the alarm sound to the activity launched and a dismiss button
