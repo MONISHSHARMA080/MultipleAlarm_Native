@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -38,7 +39,7 @@ class MainActivity : ComponentActivity() {
         if (result.resultCode == Activity.RESULT_OK) {
             if (Settings.canDrawOverlays(this)) {
                 // Permission granted, schedule the alarm
-                scheduleAlarmInternal()
+                permissionToScheduleAlarm()
             } else {
                 Log.d("AA", "Overlay permission denied")
             }
@@ -47,7 +48,7 @@ class MainActivity : ComponentActivity() {
 
     private val exactAlarmPermissionLauncher = registerForActivityResult(StartActivityForResult()) { result ->
         // Check the result to see if the permission was granted
-        scheduleAlarmInternal() // Schedule the alarm anyway, as the system might still allow it
+        permissionToScheduleAlarm() // Schedule the alarm anyway, as the system might still allow it
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -60,7 +61,7 @@ class MainActivity : ComponentActivity() {
                     Column(modifier = Modifier.padding(paddingValues)) {
 
                         Button_for_alarm("Click Me", Modifier.padding(8.dp)) {
-                            scheduleAlarm()
+                            scheduleAlarm(SystemClock.elapsedRealtime() + 1000)
                         }
                         AbstractFunction_TimePickerSection(
                             "Select starting time",
@@ -88,7 +89,7 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    private fun scheduleAlarm() {
+    private fun permissionToScheduleAlarm() {
         // Check for SYSTEM_ALERT_WINDOW permission
         if (!Settings.canDrawOverlays(this)) {
             val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
@@ -97,16 +98,22 @@ class MainActivity : ComponentActivity() {
         }
         // Check for SCHEDULE_EXACT_ALARM permission (only required for Android 12+)
         // If both permissions are granted, proceed with scheduling the alarm
-        scheduleAlarmInternal()
+        // scheduleAlarmInternal()
     }
 
-    private fun scheduleAlarmInternal() {
+    private fun scheduleAlarm(triggerTime:Long) {
 
         Log.d("AA", "Clicked on the schedule alarm func")
+        var triggerTime_1 = triggerTime
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+//        val currentTime = SystemClock.elapsedRealtime()
+//        val triggerAtMillis = currentTime + (triggerTime - System.currentTimeMillis())
         val intent = Intent(this, AlarmReceiver::class.java)
+        logD("Trigger time in the scheduleAlarm func is --> ${triggerTime_1.toString()} ")
+        intent.putExtra("triggerTime", triggerTime_1)
         val pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-        alarmManager.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 10000, pendingIntent)
+        alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime_1, pendingIntent)
+
     }
 }
 
