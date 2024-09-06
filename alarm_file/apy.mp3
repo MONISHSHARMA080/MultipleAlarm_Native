@@ -1,0 +1,28 @@
+import os
+
+# Define the directory containing the files
+# Change the current working directory to the target directory
+# os.chdir(os.curdir())
+
+def clean_filename(filename):
+    # Replace spaces with underscores
+    new_filename = filename.replace(' ', '_')
+    
+    # Convert to lowercase and replace any non-lowercase letters with an underscore
+    new_filename = ''.join(
+        char.lower() if char.islower() or char in ' _-' else '_'
+        for char in new_filename
+    )
+    
+    return new_filename
+
+# Loop through all files in the directory
+for filename in os.listdir():
+    # Generate the new filename
+    new_filename = clean_filename(filename)
+    
+    # If the new filename is different from the current filename
+    if filename != new_filename:
+        # Rename the file
+        os.rename(filename, new_filename)
+        print(f'Renamed "{filename}" to "{new_filename}"')
