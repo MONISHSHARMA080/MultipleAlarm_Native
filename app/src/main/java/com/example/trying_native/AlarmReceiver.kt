@@ -13,7 +13,8 @@ class AlarmReceiver : BroadcastReceiver() {
         val triggerTime = intent.getLongExtra("triggerTime", 0)
         logD("Trigger time in the alarm receiver's func is -->$triggerTime; intent -->${intent.extras} ; time_By_Me -->$time_By_Me ")
         intent_1.putExtra("triggerTime", triggerTime)
-        intent_1.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        intent_1.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+
         context.startActivity(intent_1)
     }
 }
