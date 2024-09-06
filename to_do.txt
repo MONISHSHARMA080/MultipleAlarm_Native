@@ -7,3 +7,5 @@
 can also make a feature that allows user to enter date and we set the alarm between to dates (abstract the loop in 2 step) but could have to do it on a bg thread as user can exit the app
 ---
 can add a notification such that we also get an notification when when the activity is running
+----
+can make a ai driven animation on the alarm theme (integrate spotify, eg black skinhead with lightining )
