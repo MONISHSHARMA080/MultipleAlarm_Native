@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,11 +52,14 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.VisualTransformation
 import com.example.trying_native.logD
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -280,7 +284,7 @@ fun AbstractFunction_TimePickerSection(
         DialExample_2(
             onConfirm = { timePickerState ->
                 val selectedTime = "${timePickerState.hour}:${timePickerState.minute}"
-                logD("Selected time: $selectedTime")
+                logD("Selected time: $selectedTime, ${selectedTime}")
                 showTimePicker = false
                 onTimeSelected_func_to_handle_value_returned(timePickerState)
             },
@@ -327,4 +331,25 @@ fun AbstractFunction_DatePickerSection(
             }
         )
     }
+}
+@Composable
+fun NumberField(
+    placeHolderText: String,
+    onFrequencyChanged: (String) -> Unit
+) {
+    // State to hold the current text input
+    var text by remember { mutableStateOf("") }
+
+    TextField(
+        value = text,
+        onValueChange = { newText ->
+            text = newText
+            onFrequencyChanged(newText) // Callback to handle the input change
+        },
+        modifier = Modifier.fillMaxWidth(),
+        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+        placeholder = {
+            Text(text = placeHolderText)
+        }
+    )
 }
