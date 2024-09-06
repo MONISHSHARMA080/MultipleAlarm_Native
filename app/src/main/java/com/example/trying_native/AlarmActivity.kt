@@ -23,6 +23,7 @@ import com.example.trying_native.ui.theme.Trying_nativeTheme
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.delay
+import java.lang.reflect.Field
 
 class AlarmActivity : ComponentActivity() {
 
@@ -34,7 +35,18 @@ class AlarmActivity : ComponentActivity() {
         Log.d("AA", "in the alarm activity---")
 
         // Initialize MediaPlayer and start playing the sound
-        mediaPlayer = MediaPlayer.create(this, R.raw.renaissancemp)
+//        mediaPlayer = MediaPlayer.create(this, R.raw.renaissancemp)
+//        mediaPlayer?.start()
+        val rawFields: Array<Field> = R.raw::class.java.fields
+        val rawResources = rawFields.map { field ->
+            field.getInt(null)  // Get resource ID
+        }
+
+        // Select a random resource from the list
+        val randomSoundResId = rawResources.random()
+
+        // Initialize MediaPlayer with the randomly selected sound
+        mediaPlayer = MediaPlayer.create(this, randomSoundResId)
         mediaPlayer?.start()
 
         setContent {
