@@ -40,6 +40,7 @@ import java.util.Calendar
 
 import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 
 import androidx.compose.material3.DatePicker
@@ -54,10 +55,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import com.example.trying_native.logD
@@ -352,4 +355,30 @@ fun NumberField(
             Text(text = placeHolderText)
         }
     )
+}
+
+@Composable
+fun MyAlertDialog(shouldShowDialog: MutableState<Boolean>) {
+    if (shouldShowDialog.value) { // 2
+        AlertDialog( // 3
+            onDismissRequest = { // 4
+                shouldShowDialog.value = false
+            },
+            // 5
+            title = { Text(text = "Alert Dialog") },
+            text = { Text(text = "Jetpack Compose Alert Dialog") },
+            confirmButton = { // 6
+                Button(
+                    onClick = {
+                        shouldShowDialog.value = false
+                    }
+                ) {
+                    Text(
+                        text = "Confirm",
+                        color = Color.White
+                    )
+                }
+            }
+        )
+    }
 }

@@ -16,6 +16,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -25,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getSystemService
 import com.example.trying_native.Components_for_ui_compose.Button_for_alarm
@@ -34,102 +37,156 @@ import java.util.Date
 
 class MainActivity : ComponentActivity() {
 
-    private val overlayPermissionLauncher = registerForActivityResult(StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            if (Settings.canDrawOverlays(this)) {
-                // Permission granted, schedule the alarm
-                permissionToScheduleAlarm()
-            } else {
-                Log.d("AA", "Overlay permission denied")
-            }
-        }
-    }
-
-    private val exactAlarmPermissionLauncher = registerForActivityResult(StartActivityForResult()) { result ->
-        // Check the result to see if the permission was granted
-        permissionToScheduleAlarm() // Schedule the alarm anyway, as the system might still allow it
-    }
+    var startHour_after_the_callback: Int? = null
+    var startMin_after_the_callback: Int? = null
+    var endHour_after_the_callback: Int? = null
+    var endMin_after_the_callback: Int? = null
+    var date_after_the_callback: Long? = null
+    var freq_after_the_callback: Long? = null
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        var startTime_after_the_callback: Long? = null
-        var endTime_after_the_callback: Long? = null
-        var date_after_the_callback: Long? = null
-        var freq_after_the_callback: Long? = null
-
-
         setContent {
             Trying_nativeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
                     Column(modifier = Modifier.padding(paddingValues)) {
-                        Button_for_alarm("Click Me", Modifier.padding(8.dp)) {
-                            scheduleAlarm(SystemClock.elapsedRealtime() + 1000)
-                        }
+                        val context = LocalContext.current
+                        val showDialog = remember { mutableStateOf(false) }
+                        val dialogMessage = remember { mutableStateOf("") }
 
+
+
+                        // Schedule button
+                        Button_for_alarm("Schedule", Modifier.padding(8.dp)) {
+                            logD("fun areAllFieldsNotFilled ->${areAllFieldsNotFilled()};;; func areSomeFieldNotFilled ->${areSomeFieldNotFilled()} ")
+
+                            if (areAllFieldsNotFilled()) {
+                                dialogMessage.value = "Please fill in all the required fields."
+                                showDialog.value = true
+                            }
+
+                            else if (areSomeFieldNotFilled()) {
+                                dialogMessage.value = "Please select the ${emptyFieldAndTheirName()}."
+                                showDialog.value = true
+                            } else {
+                                scheduleAlarm(SystemClock.elapsedRealtime() + 1000)
+                            }
+                        }
+                        // Time pickers, date picker, and frequency field
                         AbstractFunction_TimePickerSection(
                             "Select starting time",
                             onTimeSelected_func_to_handle_value_returned = { timePickerState ->
-                            logD("in the abstract timepicker func and the value gotted was -> $timePickerState")
-                        })
+                                logD("in the abstract timepicker func and the value gotted was -> $timePickerState")
+                                startHour_after_the_callback = timePickerState.hour
+                                startMin_after_the_callback = timePickerState.minute
+                            })
 
                         AbstractFunction_TimePickerSection(
                             "Select ending time",
                             onTimeSelected_func_to_handle_value_returned = { timePickerState ->
                                 logD("in the abstract timepicker func and the value gotted was -> $timePickerState; time is ${timePickerState.hour}:${timePickerState.minute}")
+                                endHour_after_the_callback = timePickerState.hour
+                                endMin_after_the_callback = timePickerState.minute
                             })
 
                         AbstractFunction_DatePickerSection(
                             "Select a date",
                             onDateSelected_func_to_handle_value_returned = { selectedDate ->
-                                if (selectedDate != null){
+                                if (selectedDate != null) {
                                     logD("Date Obj-->${Date(selectedDate)}")
+                                    date_after_the_callback = selectedDate
                                 }
                                 logD("Date selected: $selectedDate")
                             }
                         )
                         NumberField("Enter your Frequency number",
-                            onFrequencyChanged = {
-                                string_received ->
-                               if(string_received.isNotBlank()) { // or else app will crash if it is null or empty
-                                   logD("String received -->$string_received")
-                                   freq_after_the_callback = string_received.toLong()
-                                   logD("freq_after_the_callback  -->$freq_after_the_callback")
-                               }
+                            onFrequencyChanged = { string_received ->
+                                if (string_received.isNotBlank()) { // or else app will crash if it is null or empty
+                                    logD("String received -->$string_received")
+                                    freq_after_the_callback = string_received.toLong()
+                                    logD("freq_after_the_callback  -->$freq_after_the_callback")
+                                }
                             }
                         )
+
+                        // Dialog box
+                        if (showDialog.value) {
+                            AlertDialog(
+                                onDismissRequest = { showDialog.value = false },
+                                title = { Text("Incomplete Information") },
+                                text = { Text(dialogMessage.value) },  // Use the dynamic message here
+                                confirmButton = {
+                                    Button(onClick = {
+                                        showDialog.value = false
+                                    }) {
+                                        Text("OK")
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
             }
         }
     }
 
-    private fun permissionToScheduleAlarm() {
-        // Check for SYSTEM_ALERT_WINDOW permission
-        if (!Settings.canDrawOverlays(this)) {
-            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
-            overlayPermissionLauncher.launch(intent)
-            return
+    private fun areAllFieldsNotFilled(): Boolean {
+        var freq= freq_after_the_callback
+        logD("changing freq to null->$freq_after_the_callback")
+
+        if (freq?.toInt() == 0){
+            logD("changing freq to null->$freq")
+            freq = null
         }
-        // Check for SCHEDULE_EXACT_ALARM permission (only required for Android 12+)
-        // If both permissions are granted, proceed with scheduling the alarm
-        // scheduleAlarmInternal()
+        return startHour_after_the_callback == null &&
+                startMin_after_the_callback == null &&
+                endHour_after_the_callback == null &&
+                endMin_after_the_callback == null &&
+                date_after_the_callback == null &&
+                freq_after_the_callback == null
+    }
+    private fun areSomeFieldNotFilled(): Boolean {
+        return startHour_after_the_callback == null ||
+                startMin_after_the_callback == null ||
+                endHour_after_the_callback == null ||
+                endMin_after_the_callback == null ||
+                date_after_the_callback == null ||
+                freq_after_the_callback == null
     }
 
-    private fun scheduleAlarm(triggerTime:Long) {
+    private fun emptyFieldAndTheirName():( String){
+        // this func is used when all the field are not null, so maybe we should return which field is null
+       if(startHour_after_the_callback == null){
+           return "Start time"
+       }
+        else if(startMin_after_the_callback == null){
+            return "Start time"
+        }
+        else if(endHour_after_the_callback == null){
+          return "End time"
+       }
+        else if (endMin_after_the_callback == null){
+            return "End time"
+       }
+        else if (date_after_the_callback == null){
+            return  "Date"
+       }
+        else{
+            return "Frequency"
+        }
+    }
 
+    private fun scheduleAlarm(triggerTime: Long) {
         Log.d("AA", "Clicked on the schedule alarm func")
         var triggerTime_1 = triggerTime
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-//        val currentTime = SystemClock.elapsedRealtime()
-//        val triggerAtMillis = currentTime + (triggerTime - System.currentTimeMillis())
         val intent = Intent(this, AlarmReceiver::class.java)
         logD("Trigger time in the scheduleAlarm func is --> ${triggerTime_1.toString()} ")
         intent.putExtra("triggerTime", triggerTime_1)
         val pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime_1, pendingIntent)
-
     }
 }
 
