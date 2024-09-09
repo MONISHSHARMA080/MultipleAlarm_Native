@@ -63,7 +63,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
+import com.example.trying_native.dataBase.AlarmDao
+import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.logD
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -380,5 +386,40 @@ fun MyAlertDialog(shouldShowDialog: MutableState<Boolean>) {
                 }
             }
         )
+    }
+}
+
+@Composable
+fun myTexts(alarmDao: AlarmDao) {
+    var isLoading by remember { mutableStateOf(true) }
+    var alarms by remember { mutableStateOf<List<AlarmData>?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        if (isLoading) {
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        alarms = withContext(Dispatchers.IO) {
+                            alarmDao.getAllAlarms()
+                        }
+                        isLoading = false
+                    }
+                }
+            ) {
+                Text("Click to see texts")
+            }
+        } else {
+            alarms?.let { alarmList ->
+                if (alarmList.isNotEmpty()) {
+                    alarmList.forEach { alarm ->
+                        Text("Alarm UID: ${alarm.uid}, First Value: ${alarm.first_value}, Second Value: ${alarm.second_value}, Frequency: ${alarm.freq_in_min} mins, Completed: ${alarm.isCompleted}")
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                } else {
+                    Text("No alarms found.")
+                }
+            }
+        }
     }
 }

@@ -1,7 +1,9 @@
 package com.example.trying_native
 
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
@@ -27,8 +29,15 @@ import com.example.trying_native.Components_for_ui_compose.*
 import com.example.trying_native.ui.theme.Trying_nativeTheme
 import java.util.Date
 import java.util.Calendar
+import androidx.room.Room
+import com.example.trying_native.dataBase.AlarmDao
+import com.example.trying_native.dataBase.AlarmData
+import com.example.trying_native.dataBase.AlarmDatabase
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
 
     var startHour_after_the_callback: Int? = null
     var startMin_after_the_callback: Int? = null
@@ -37,12 +46,60 @@ class MainActivity : ComponentActivity() {
     var date_after_the_callback: Long? = null
     var freq_after_the_callback: Long? = null
 
+    private lateinit var alarmDao: AlarmDao
 
+//    val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "AlarmData")
+//    val database = DatabaseManager.getInstance(applicationContext)
+ //-form docs
+
+
+    @SuppressLint("SuspiciousIndentation")
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+        val db = Room.databaseBuilder(
+            applicationContext,
+            AlarmDatabase::class.java, "alarm-database"
+        ).build()
+        alarmDao = db.alarmDao()
+
+        // Insert a new alarm into the database
+//        GlobalScope.launch {
+            val alarmData = AlarmData(
+                first_value = 1234,
+                second_value = 1235,
+                freq_in_min = 3,
+                isCompleted = true,
+                uid = 238123981
+            )
+//
+//            try {
+//                alarmDao.insert(alarmData)
+//            }catch(e:Exception) {
+//                Log.d("AAA", "Error got in insertion-->${e.toString()}")
+//            }
+//        }
+
+        // Retrieve all alarms from the database
+        GlobalScope.launch {
+            val alarms = alarmDao.getAllAlarms()
+            alarms.forEach { alarm ->
+                Log.d("AA", alarm.toString())
+            }
+        }
+
+//        try {
+//            // Building the Room database instance
+//
+//            logD("----||${db.toString()}")
+//        } catch (e: Exception) {
+//            // Log the error for debugging purposes
+//            logD( "Error creating database: ${e.message}")
+//            e.printStackTrace()  // Optional: Print the full stack trace for more detailed debugging
+//        }
         super.onCreate(savedInstanceState)
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
 
+    val activity_context = this
         setContent {
             Trying_nativeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
@@ -50,10 +107,16 @@ class MainActivity : ComponentActivity() {
                         val context = LocalContext.current
                         val showDialog = remember { mutableStateOf(false) }
                         val dialogMessage = remember { mutableStateOf("") }
-
+//                        val AlarmDao = db.userDao()
+//                        AlarmDao.insertAll(AlarmData(1,1234,1235,3,true))
+//                        val alarms_in_db: List<AlarmData> = AlarmDao.getAll()
+                        Text("dataBase here")
+//                        alarms_in_db.forEach { (AlarmData)-> Text(AlarmData.toString()) }
+                        myTexts(alarmDao)
+                        Text("dataBase here")
                         // Schedule button
                         Button_for_alarm("Schedule", Modifier.padding(8.dp)) {
-                            doAllFieldChecksIfFineRunScheduleMultipleAlarm(showDialog, dialogMessage,alarmManager )
+                            doAllFieldChecksIfFineRunScheduleMultipleAlarm(showDialog, dialogMessage,alarmManager, activity_context )
                         }
                         // Time pickers, date picker, and frequency field
                         AbstractFunction_TimePickerSection(
@@ -113,6 +176,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun al(a:Long,b:Long,c:Long,d:Boolean){
+
+    }
+
     private fun areAllFieldsNotFilled(): Boolean {
         var freq= freq_after_the_callback
         logD("changing freq to null->$freq_after_the_callback")
@@ -123,20 +190,14 @@ class MainActivity : ComponentActivity() {
         }else{
             freq = null
         }
-        return startHour_after_the_callback == null &&
-                startMin_after_the_callback == null &&
-                endHour_after_the_callback == null &&
-                endMin_after_the_callback == null &&
-                date_after_the_callback == null &&
-                freq == null
+        return startHour_after_the_callback == null && startMin_after_the_callback == null &&
+                endHour_after_the_callback == null && endMin_after_the_callback == null &&
+                date_after_the_callback == null && freq == null
     }
     private fun areSomeFieldNotFilled(): Boolean {
-        return startHour_after_the_callback == null ||
-                startMin_after_the_callback == null ||
-                endHour_after_the_callback == null ||
-                endMin_after_the_callback == null ||
-                date_after_the_callback == null ||
-                freq_after_the_callback == null
+        return startHour_after_the_callback == null || startMin_after_the_callback == null ||
+                endHour_after_the_callback == null || endMin_after_the_callback == null ||
+                date_after_the_callback == null || freq_after_the_callback == null
     }
 
     private fun emptyFieldAndTheirName():( String){
@@ -160,7 +221,7 @@ class MainActivity : ComponentActivity() {
             return "Frequency"
         }
     }
-    private fun doAllFieldChecksIfFineRunScheduleMultipleAlarm(showDialog: MutableState<Boolean>, dialogMessage: MutableState<String>, alarmManager:AlarmManager){
+    private fun doAllFieldChecksIfFineRunScheduleMultipleAlarm(showDialog: MutableState<Boolean>, dialogMessage: MutableState<String>, alarmManager:AlarmManager, context: Context){
         logD("fun areAllFieldsNotFilled ->${areAllFieldsNotFilled()};;; func areSomeFieldNotFilled ->${areSomeFieldNotFilled()} ")
         if (areAllFieldsNotFilled()) {
             dialogMessage.value = "Please fill in all the required fields."
@@ -171,7 +232,7 @@ class MainActivity : ComponentActivity() {
             showDialog.value = true
         } else {
 //            scheduleAlarm(SystemClock.elapsedRealtime() + 1000,alarmManager)
-            scheduleMultipleAlarms(alarmManager)
+            scheduleMultipleAlarms(alarmManager, context )
         }
     }
 
@@ -185,7 +246,7 @@ class MainActivity : ComponentActivity() {
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime_1, pendingIntent)
     }
 
-    private fun scheduleMultipleAlarms(alarmManager: AlarmManager){
+    private  fun scheduleMultipleAlarms(alarmManager: AlarmManager, context: Context){
     // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = date_after_the_callback?: 0L
@@ -204,18 +265,16 @@ class MainActivity : ComponentActivity() {
         var freq_in_min = freq_in_milli * 60000
          logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:: freq->$freq_in_min")
         var i=0
+        var alarmSetComplete = false
         while (startTimeInMillis <= endTimeInMillis){
             logD("round $i")
             scheduleAlarm(startTimeInMillis,alarmManager)
             startTimeInMillis = startTimeInMillis + freq_in_min
             i+=1
         }
-
-
-
-
+        alarmSetComplete = true
+        // now add this in the data base
     }
-
 }
 
 fun logD(message:String):Unit{

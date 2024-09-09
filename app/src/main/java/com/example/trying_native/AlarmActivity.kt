@@ -1,9 +1,11 @@
 package com.example.trying_native
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.os.PowerManager
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -28,15 +30,18 @@ import java.lang.reflect.Field
 class AlarmActivity : ComponentActivity() {
 
     private var mediaPlayer: MediaPlayer? = null
+    private var wakeLock: PowerManager.WakeLock? = null
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = powerManager.newWakeLock(
+            PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+            "AlarmActivity::WakeLock"
+        )
+        wakeLock?.acquire(10*60*1000L /*10 minutes*/)
         Log.d("AA", "in the alarm activity---")
-
-        // Initialize MediaPlayer and start playing the sound
-//        mediaPlayer = MediaPlayer.create(this, R.raw.renaissancemp)
-//        mediaPlayer?.start()
         val rawFields: Array<Field> = R.raw::class.java.fields
         val rawResources = rawFields.map { field ->
             field.getInt(null)  // Get resource ID
@@ -78,6 +83,7 @@ class AlarmActivity : ComponentActivity() {
         // Release MediaPlayer resources when the activity is destroyed
         mediaPlayer?.release()
         mediaPlayer = null
+        wakeLock?.release()
     }
 }
 
