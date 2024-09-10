@@ -1,14 +1,8 @@
 package com.example.trying_native.dataBase
 
-import android.content.Context
-import androidx.annotation.WorkerThread
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
-import androidx.room.Delete
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.Insert
@@ -21,11 +15,16 @@ data class AlarmData(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "first_value") val first_value: Long,
     @ColumnInfo(name = "second_value") val second_value: Long,
+    @ColumnInfo(name = "start_hour_for_display") val start_hour_for_display: Int,
+    @ColumnInfo(name = "start_min_for_display") val start_min_for_display: Int,
+    @ColumnInfo(name = "end_hour_for_display") val end_hour_for_display: Int,
+    @ColumnInfo(name = "end_min_for_display") val end_min_for_display: Int,
+    @ColumnInfo(name = "date_for_display") val date_for_display: String,
     @ColumnInfo(name = "freq_in_min") val freq_in_min: Long,
     @ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean
 )
 
-@Database(entities = [AlarmData::class], version = 1)
+@Database(entities = [AlarmData::class], version = 12)
 abstract class AlarmDatabase : RoomDatabase() {
     abstract fun alarmDao(): AlarmDao
 }
@@ -34,6 +33,9 @@ abstract class AlarmDatabase : RoomDatabase() {
 interface AlarmDao {
     @Insert
     suspend fun insert(alarmData: AlarmData): Long
+
+    @Query("SELECT * FROM AlarmData ")
+    fun getAll(): List<AlarmData>
 
     @Query("SELECT * FROM AlarmData")
     suspend fun getAllAlarms(): List<AlarmData>

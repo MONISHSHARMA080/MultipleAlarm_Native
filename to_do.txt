@@ -4,7 +4,7 @@
 [XXXX]3.8.> when alarm comes It does not wake the screen up (add some permission in th receiver)
 4.> make a db from which I can store and destroy alarms and a ui too (material Ui)
 ---------- future implementation
-
+5.> if not able to make store the alarm should probally abort the intent , and for that make a function that can be used when the user tries to delete the alarm
 
 wake alarm 3/4 sec before as we get late
 ---------------------

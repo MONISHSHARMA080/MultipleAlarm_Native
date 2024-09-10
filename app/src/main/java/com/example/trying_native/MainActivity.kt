@@ -6,7 +6,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.SystemClock
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,7 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -35,8 +33,12 @@ import androidx.room.Room
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmDatabase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneId
+import kotlin.time.Duration.Companion.hours
 
 class MainActivity : ComponentActivity() {
 
@@ -47,6 +49,7 @@ class MainActivity : ComponentActivity() {
     var endMin_after_the_callback: Int? = null
     var date_after_the_callback: Long? = null
     var freq_after_the_callback: Long? = null
+    var selected_date_for_display :String? = null
 
 
 
@@ -60,16 +63,19 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("SuspiciousIndentation")
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
-        val db = Room.databaseBuilder(
-            applicationContext,
-            AlarmDatabase::class.java, "alarm-database"
-        ).build()
-        alarmDao = db.alarmDao()
+
+//        lifecycleScope.launch(Dispatchers.IO) {
+            val db = Room.databaseBuilder(
+                applicationContext,
+                AlarmDatabase::class.java, "alarm-database"
+            ).build()
+            alarmDao = db.alarmDao()
+
+//        }
 
 
         super.onCreate(savedInstanceState)
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-
     val activity_context = this
         setContent {
             Trying_nativeTheme {
@@ -81,7 +87,7 @@ class MainActivity : ComponentActivity() {
                         myTexts(alarmDao)
                         // Schedule button
                         Button_for_alarm("Schedule", Modifier.padding(8.dp)) {
-                            doAllFieldChecksIfFineRunScheduleMultipleAlarm(showDialog, dialogMessage,alarmManager, activity_context )
+                            doAllFieldChecksIfFineRunScheduleMultipleAlarm(showDialog, dialogMessage,alarmManager, activity_context,selected_date_for_display, startHour_after_the_callback, startMin_after_the_callback, endHour_after_the_callback, endMin_after_the_callback )
                         }
                         // Time pickers, date picker, and frequency field
                         AbstractFunction_TimePickerSection(
@@ -104,8 +110,11 @@ class MainActivity : ComponentActivity() {
                             "Select a date",
                             onDateSelected_func_to_handle_value_returned = { selectedDate ->
                                 if (selectedDate != null) {
-                                    logD("Date Obj-->${Date(selectedDate)}")
+                                    var selected_date = Date(selectedDate)
+                                    logD("Date Obj-->${selected_date}")
                                     date_after_the_callback = selectedDate
+
+
                                 }
                                 logD("Date selected: $selectedDate")
                             }
@@ -135,14 +144,11 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+                        AlarmContainer(alarmDao)
                     }
                 }
             }
         }
-    }
-
-    private fun al(a:Long,b:Long,c:Long,d:Boolean){
-
     }
 
     private fun areAllFieldsNotFilled(): Boolean {
@@ -186,7 +192,7 @@ class MainActivity : ComponentActivity() {
             return "Frequency"
         }
     }
-    private fun doAllFieldChecksIfFineRunScheduleMultipleAlarm(showDialog: MutableState<Boolean>, dialogMessage: MutableState<String>, alarmManager:AlarmManager, context: Context){
+    private fun doAllFieldChecksIfFineRunScheduleMultipleAlarm(showDialog: MutableState<Boolean>, dialogMessage: MutableState<String>, alarmManager:AlarmManager, context: Context, selected_date_for_display:String?, startHour_after_the_callback:Int?, startMin_after_the_callback: Int?, endHour_after_the_callback:Int?, endMin_after_the_callback:Int? ) {
         logD("fun areAllFieldsNotFilled ->${areAllFieldsNotFilled()};;; func areSomeFieldNotFilled ->${areSomeFieldNotFilled()} ")
         if (areAllFieldsNotFilled()) {
             dialogMessage.value = "Please fill in all the required fields."
@@ -196,8 +202,19 @@ class MainActivity : ComponentActivity() {
             dialogMessage.value = "Please select the ${emptyFieldAndTheirName()}."
             showDialog.value = true
         } else {
+            var selected_date_for_display_1 = selected_date_for_display
+            var startHour_after_the_callback_1  = startHour_after_the_callback
+            var startMin_after_the_callback_1  = startMin_after_the_callback
+            var endHour_after_the_callback_1 = endHour_after_the_callback
+            var endMin_after_the_callback_1 = endMin_after_the_callback
+
+            if (selected_date_for_display_1 == null && startMin_after_the_callback_1 == null && startHour_after_the_callback_1 == null && endHour_after_the_callback_1== null && endMin_after_the_callback_1 == null){
+                dialogMessage.value = "Error occured , error code is 0#276gde7h32, can't serialize data "
+                showDialog.value = true
+            }else if (selected_date_for_display_1 != null && startHour_after_the_callback_1 != null && startMin_after_the_callback_1 != null && endHour_after_the_callback_1 != null && endMin_after_the_callback_1 != null){
+                scheduleMultipleAlarms(alarmManager, context, selected_date_for_display_1, startHour_after_the_callback_1, startMin_after_the_callback_1, endHour_after_the_callback_1, endMin_after_the_callback_1  )
+            }
 //            scheduleAlarm(SystemClock.elapsedRealtime() + 1000,alarmManager)
-            scheduleMultipleAlarms(alarmManager, context )
         }
     }
 
@@ -211,7 +228,7 @@ class MainActivity : ComponentActivity() {
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime_1, pendingIntent)
     }
 
-    private  fun scheduleMultipleAlarms(alarmManager: AlarmManager, context: Context){
+    private  fun scheduleMultipleAlarms(alarmManager: AlarmManager, context: Context, selected_date_for_display:String, startHour_after_the_callback:Int, startMin_after_the_callback: Int, endHour_after_the_callback:Int, endMin_after_the_callback:Int){
     // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = date_after_the_callback?: 0L
@@ -241,20 +258,27 @@ class MainActivity : ComponentActivity() {
             i+=1
         }
         alarmSetComplete = true
-        lifecycleScope.launch {
-            try {
-                val newAlarm = AlarmData(
-                    first_value = startTimeInMillisendForDb,
-                    second_value = endTimeInMillisendForDb,
-                    freq_in_min = freq_in_min,
-                    isReadyToUse = alarmSetComplete
-                )
-                val insertedId = alarmDao.insert(newAlarm)
-                logD("Inserted alarm with ID: $insertedId")
-            } catch (e: Exception) {
-                logD("Exception occurred when inserting in the db: $e")
-            }
-        }
+
+        // store it in a local variable and do a null if check, or pass it form the fucntions, or make the common variable not null
+           lifecycleScope.launch {
+               try {
+                   val newAlarm = AlarmData(
+                       first_value = startTimeInMillisendForDb,
+                       second_value = endTimeInMillisendForDb,
+                       freq_in_min = freq_in_min,
+                       isReadyToUse = alarmSetComplete,
+                       date_for_display = selected_date_for_display,
+                       start_hour_for_display = startHour_after_the_callback,
+                       start_min_for_display = startMin_after_the_callback,
+                       end_min_for_display = endMin_after_the_callback,
+                       end_hour_for_display = endHour_after_the_callback
+                   )
+                   val insertedId = alarmDao.insert(newAlarm)
+                   logD("Inserted alarm with ID: $insertedId")
+               } catch (e: Exception) {
+                   logD("Exception occurred when inserting in the db: $e")
+               }
+       }
 
         // now add this in the data base
     }

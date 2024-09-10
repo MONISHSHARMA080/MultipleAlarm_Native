@@ -1,7 +1,9 @@
 package com.example.trying_native.Components_for_ui_compose
 
 import android.util.Log
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -10,7 +12,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
@@ -41,7 +45,8 @@ import java.util.Calendar
 import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 
 import androidx.compose.material3.DatePicker
@@ -50,31 +55,32 @@ import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerFormatter
 import androidx.compose.material3.DatePickerState
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.logD
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 
 @Composable
@@ -343,6 +349,7 @@ fun AbstractFunction_DatePickerSection(
         )
     }
 }
+
 @Composable
 fun NumberField(
     placeHolderText: String,
@@ -390,41 +397,31 @@ fun MyAlertDialog(shouldShowDialog: MutableState<Boolean>) {
         )
     }
 }
-
 @Composable
 fun myTexts(alarmDao: AlarmDao) {
-    var isLoading by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
     var alarms by remember { mutableStateOf<List<AlarmData>?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
     Column(modifier = Modifier.padding(16.dp)) {
-        Button(
-            onClick = {
-                if (!isLoading) {
-                    isLoading = true
-                    coroutineScope.launch {
-                        try {
-                            alarms = withContext(Dispatchers.IO) {
-                                alarmDao.getAllAlarms()
-                            }
-                        } catch (e: Exception) {
-                            // Handle the exception (e.g., show an error message)
-                        } finally {
-                            isLoading = false
-                        }
-                    }
-                } else {
-                    // Cancel the coroutine if it's running
-                    coroutineScope.coroutineContext.cancelChildren()
-                    isLoading = false
-                }
-            }
-        ) {
-            Text(if (isLoading) "Cancel loading" else "Click to see texts")
-        }
-
         if (isLoading) {
-            CircularProgressIndicator()
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        alarms = withContext(Dispatchers.IO) {
+                            try {
+                                alarmDao.getAllAlarms()
+                            } catch (e: Exception) {
+                                // Handle the exception (e.g., log it)
+                                null
+                            }
+                        }
+                        isLoading = false
+                    }
+                }
+            ) {
+                Text("Click to see texts")
+            }
         } else {
             alarms?.let { alarmList ->
                 if (alarmList.isNotEmpty()) {
@@ -436,6 +433,75 @@ fun myTexts(alarmDao: AlarmDao) {
                     Text("No alarms found.")
                 }
             }
+            Button(onClick = { isLoading = true }) {
+                Text("Make it stop")
+            }
         }
     }
+}
+
+@Composable
+fun AlarmContainer(AlarmDao:AlarmDao) {
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val fontSize = (screenHeight * 0.05f).value.sp
+    val coroutineScope = rememberCoroutineScope()
+    var alarms by remember { mutableStateOf<List<AlarmData>?>(null) }
+    var isAlarmFetchedShowAlarms by remember { mutableStateOf<Boolean>(false) }
+
+    logD("In the alarm container")
+
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            alarms = withContext(Dispatchers.IO) {
+                try {
+                    AlarmDao.getAllAlarms()
+                } catch (e: Exception) {
+                    // Handle the exception (e.g., log it)
+                    logD("Opps something went  wrong when getting all the alarms -->$e")
+                    null
+                }
+            }
+            logD("got all the alarms-->${alarms.toString()}")
+            isAlarmFetchedShowAlarms = true
+        }
+    }
+    LazyColumn{
+        if(isAlarmFetchedShowAlarms != true && alarms == null ){
+            //display the icon  that we do not have alarms
+        }
+        else{
+            //lets show the alarms
+
+            // add a db field that gives me the time of both the alarm so that I do not need
+            // to calculate it right now,and also add date in the card
+
+            alarms?.forEach {
+                    individualAlarm ->
+               item{
+                   ElevatedCard(
+                       elevation = CardDefaults.cardElevation(
+                           defaultElevation = 18.dp,
+                       ),
+                       modifier = Modifier
+                           .size(width = screenWidth, height = 270.dp)
+                           .background(color = Color.LightGray)
+                           .padding(13.dp)
+                   ) {
+                       Text(
+                           text = "${individualAlarm.start_hour_for_display}:${individualAlarm.start_min_for_display} --> ${individualAlarm.end_hour_for_display}:${individualAlarm.end_min_for_display}",
+                           modifier = Modifier
+                               .padding(16.dp),
+                           textAlign = TextAlign.Center,
+                           fontSize = fontSize /2,
+                       )
+                   }
+               }
+
+            }
+
+        }
+    }
+
+
 }
