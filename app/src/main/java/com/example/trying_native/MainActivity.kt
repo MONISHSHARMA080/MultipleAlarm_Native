@@ -21,9 +21,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import com.example.trying_native.Components_for_ui_compose.Button_for_alarm
 import com.example.trying_native.Components_for_ui_compose.*
 import com.example.trying_native.ui.theme.Trying_nativeTheme
@@ -46,6 +48,8 @@ class MainActivity : ComponentActivity() {
     var date_after_the_callback: Long? = null
     var freq_after_the_callback: Long? = null
 
+
+
     private lateinit var alarmDao: AlarmDao
 
 //    val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "AlarmData")
@@ -62,40 +66,7 @@ class MainActivity : ComponentActivity() {
         ).build()
         alarmDao = db.alarmDao()
 
-        // Insert a new alarm into the database
-//        GlobalScope.launch {
-            val alarmData = AlarmData(
-                first_value = 1234,
-                second_value = 1235,
-                freq_in_min = 3,
-                isCompleted = true,
-                uid = 238123981
-            )
-//
-//            try {
-//                alarmDao.insert(alarmData)
-//            }catch(e:Exception) {
-//                Log.d("AAA", "Error got in insertion-->${e.toString()}")
-//            }
-//        }
 
-        // Retrieve all alarms from the database
-        GlobalScope.launch {
-            val alarms = alarmDao.getAllAlarms()
-            alarms.forEach { alarm ->
-                Log.d("AA", alarm.toString())
-            }
-        }
-
-//        try {
-//            // Building the Room database instance
-//
-//            logD("----||${db.toString()}")
-//        } catch (e: Exception) {
-//            // Log the error for debugging purposes
-//            logD( "Error creating database: ${e.message}")
-//            e.printStackTrace()  // Optional: Print the full stack trace for more detailed debugging
-//        }
         super.onCreate(savedInstanceState)
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
 
@@ -107,13 +78,7 @@ class MainActivity : ComponentActivity() {
                         val context = LocalContext.current
                         val showDialog = remember { mutableStateOf(false) }
                         val dialogMessage = remember { mutableStateOf("") }
-//                        val AlarmDao = db.userDao()
-//                        AlarmDao.insertAll(AlarmData(1,1234,1235,3,true))
-//                        val alarms_in_db: List<AlarmData> = AlarmDao.getAll()
-                        Text("dataBase here")
-//                        alarms_in_db.forEach { (AlarmData)-> Text(AlarmData.toString()) }
                         myTexts(alarmDao)
-                        Text("dataBase here")
                         // Schedule button
                         Button_for_alarm("Schedule", Modifier.padding(8.dp)) {
                             doAllFieldChecksIfFineRunScheduleMultipleAlarm(showDialog, dialogMessage,alarmManager, activity_context )
@@ -255,9 +220,12 @@ class MainActivity : ComponentActivity() {
         calendar.set(Calendar.SECOND, 0) // Set seconds to zero
         calendar.set(Calendar.MILLISECOND, 0) // Set milliseconds to zero
         var startTimeInMillis = calendar.timeInMillis
+        val startTimeInMillisendForDb= startTimeInMillis
+
         calendar.set(Calendar.HOUR_OF_DAY, endHour_after_the_callback ?: 0)
         calendar.set(Calendar.MINUTE, endMin_after_the_callback ?: 0)
         var endTimeInMillis = calendar.timeInMillis
+        val endTimeInMillisendForDb= endTimeInMillis
         var freq_in_milli : Long
         if(freq_after_the_callback != null){
             freq_in_milli = freq_after_the_callback as Long
@@ -273,6 +241,21 @@ class MainActivity : ComponentActivity() {
             i+=1
         }
         alarmSetComplete = true
+        lifecycleScope.launch {
+            try {
+                val newAlarm = AlarmData(
+                    first_value = startTimeInMillisendForDb,
+                    second_value = endTimeInMillisendForDb,
+                    freq_in_min = freq_in_min,
+                    isReadyToUse = alarmSetComplete
+                )
+                val insertedId = alarmDao.insert(newAlarm)
+                logD("Inserted alarm with ID: $insertedId")
+            } catch (e: Exception) {
+                logD("Exception occurred when inserting in the db: $e")
+            }
+        }
+
         // now add this in the data base
     }
 }

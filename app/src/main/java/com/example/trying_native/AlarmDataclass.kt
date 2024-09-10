@@ -10,20 +10,19 @@ import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Delete
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
-import androidx.room.Room
 import androidx.room.RoomDatabase
-import kotlinx.coroutines.flow.Flow
 
-@Entity
+@Entity(indices = [Index(value = ["first_value", "second_value"])])
 data class AlarmData(
-    @PrimaryKey(autoGenerate = true) val uid: Int,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "first_value") val first_value: Long,
     @ColumnInfo(name = "second_value") val second_value: Long,
     @ColumnInfo(name = "freq_in_min") val freq_in_min: Long,
-    @ColumnInfo(name = "is_completed") val isCompleted: Boolean,
+    @ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean
 )
 
 @Database(entities = [AlarmData::class], version = 1)
@@ -34,13 +33,11 @@ abstract class AlarmDatabase : RoomDatabase() {
 @Dao
 interface AlarmDao {
     @Insert
-    suspend fun insert(alarmData: AlarmData)
+    suspend fun insert(alarmData: AlarmData): Long
 
     @Query("SELECT * FROM AlarmData")
     suspend fun getAllAlarms(): List<AlarmData>
 }
-
-
 
 //
 //@Dao

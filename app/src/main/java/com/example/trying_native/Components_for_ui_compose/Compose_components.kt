@@ -41,6 +41,7 @@ import java.util.Calendar
 import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 
 import androidx.compose.material3.DatePicker
@@ -68,6 +69,7 @@ import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.logD
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
@@ -391,29 +393,43 @@ fun MyAlertDialog(shouldShowDialog: MutableState<Boolean>) {
 
 @Composable
 fun myTexts(alarmDao: AlarmDao) {
-    var isLoading by remember { mutableStateOf(true) }
+    var isLoading by remember { mutableStateOf(false) }
     var alarms by remember { mutableStateOf<List<AlarmData>?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
     Column(modifier = Modifier.padding(16.dp)) {
-        if (isLoading) {
-            Button(
-                onClick = {
+        Button(
+            onClick = {
+                if (!isLoading) {
+                    isLoading = true
                     coroutineScope.launch {
-                        alarms = withContext(Dispatchers.IO) {
-                            alarmDao.getAllAlarms()
+                        try {
+                            alarms = withContext(Dispatchers.IO) {
+                                alarmDao.getAllAlarms()
+                            }
+                        } catch (e: Exception) {
+                            // Handle the exception (e.g., show an error message)
+                        } finally {
+                            isLoading = false
                         }
-                        isLoading = false
                     }
+                } else {
+                    // Cancel the coroutine if it's running
+                    coroutineScope.coroutineContext.cancelChildren()
+                    isLoading = false
                 }
-            ) {
-                Text("Click to see texts")
             }
+        ) {
+            Text(if (isLoading) "Cancel loading" else "Click to see texts")
+        }
+
+        if (isLoading) {
+            CircularProgressIndicator()
         } else {
             alarms?.let { alarmList ->
                 if (alarmList.isNotEmpty()) {
                     alarmList.forEach { alarm ->
-                        Text("Alarm UID: ${alarm.uid}, First Value: ${alarm.first_value}, Second Value: ${alarm.second_value}, Frequency: ${alarm.freq_in_min} mins, Completed: ${alarm.isCompleted}")
+                        Text("Alarm ID: ${alarm.id}, First Value: ${alarm.first_value}, Second Value: ${alarm.second_value}, Frequency: ${alarm.freq_in_min} mins, Completed: ${alarm.isReadyToUse}")
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 } else {
