@@ -87,6 +87,7 @@ class MainActivity : ComponentActivity() {
                         myTexts(alarmDao)
                         // Schedule button
                         Button_for_alarm("Schedule", Modifier.padding(8.dp)) {
+                            logD("-------in the Button_for_alarm ")
                             doAllFieldChecksIfFineRunScheduleMultipleAlarm(showDialog, dialogMessage,alarmManager, activity_context,selected_date_for_display, startHour_after_the_callback, startMin_after_the_callback, endHour_after_the_callback, endMin_after_the_callback )
                         }
                         // Time pickers, date picker, and frequency field
@@ -112,9 +113,9 @@ class MainActivity : ComponentActivity() {
                                 if (selectedDate != null) {
                                     var selected_date = Date(selectedDate)
                                     logD("Date Obj-->${selected_date}")
-                                    date_after_the_callback = selectedDate
-
-
+                                    date_after_the_callback = selectedDate // add it here selected_date_for_display
+                                    val date_from_callB =  Instant.ofEpochMilli(selectedDate).atZone(ZoneId.systemDefault())
+                                    selected_date_for_display = "${date_from_callB.dayOfMonth}/${date_from_callB.monthValue}/${date_from_callB.year}"
                                 }
                                 logD("Date selected: $selectedDate")
                             }
@@ -202,16 +203,23 @@ class MainActivity : ComponentActivity() {
             dialogMessage.value = "Please select the ${emptyFieldAndTheirName()}."
             showDialog.value = true
         } else {
+            logD("in the doAllFieldChecksIfFineRunScheduleMultipleAlarm else statememt ")
             var selected_date_for_display_1 = selected_date_for_display
             var startHour_after_the_callback_1  = startHour_after_the_callback
             var startMin_after_the_callback_1  = startMin_after_the_callback
             var endHour_after_the_callback_1 = endHour_after_the_callback
             var endMin_after_the_callback_1 = endMin_after_the_callback
 
-            if (selected_date_for_display_1 == null && startMin_after_the_callback_1 == null && startHour_after_the_callback_1 == null && endHour_after_the_callback_1== null && endMin_after_the_callback_1 == null){
+
+
+            if (selected_date_for_display_1 == null || startMin_after_the_callback_1 == null || startHour_after_the_callback_1 == null || endHour_after_the_callback_1== null || endMin_after_the_callback_1 == null){
+                logD("in the selected date to null field---")
+                // selected_date_for_display_1 was null
+                logD("--$selected_date_for_display_1---$startMin_after_the_callback_1 -- $startHour_after_the_callback_1 --- $endHour_after_the_callback_1--- $endMin_after_the_callback_1")
                 dialogMessage.value = "Error occured , error code is 0#276gde7h32, can't serialize data "
                 showDialog.value = true
             }else if (selected_date_for_display_1 != null && startHour_after_the_callback_1 != null && startMin_after_the_callback_1 != null && endHour_after_the_callback_1 != null && endMin_after_the_callback_1 != null){
+                logD("About to launch the alarm ---")
                 scheduleMultipleAlarms(alarmManager, context, selected_date_for_display_1, startHour_after_the_callback_1, startMin_after_the_callback_1, endHour_after_the_callback_1, endMin_after_the_callback_1  )
             }
 //            scheduleAlarm(SystemClock.elapsedRealtime() + 1000,alarmManager)

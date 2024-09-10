@@ -495,6 +495,7 @@ fun AlarmContainer(AlarmDao:AlarmDao) {
                            textAlign = TextAlign.Center,
                            fontSize = fontSize /2,
                        )
+                       Text(text = "Date-->${individualAlarm.date_for_display}")
                    }
                }
 
