@@ -15,10 +15,19 @@ data class AlarmData(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "first_value") val first_value: Long,
     @ColumnInfo(name = "second_value") val second_value: Long,
-    @ColumnInfo(name = "start_hour_for_display") val start_hour_for_display: Int,
-    @ColumnInfo(name = "start_min_for_display") val start_min_for_display: Int,
-    @ColumnInfo(name = "end_hour_for_display") val end_hour_for_display: Int,
-    @ColumnInfo(name = "end_min_for_display") val end_min_for_display: Int,
+
+    // take all of this below and
+    @ColumnInfo(name = "start_time_for_display") val start_time_for_display: String,
+    @ColumnInfo(name = "start_am_pm") val start_am_pm: String,
+    @ColumnInfo(name = "end_time_for_display") val end_time_for_display: String,
+    @ColumnInfo(name = "end_am_pm") val end_am_pm: String,
+
+
+//    @ColumnInfo(name = "start_hour_for_display") val start_hour_for_display: Int,
+//    @ColumnInfo(name = "start_min_for_display") val start_min_for_display: Int,
+//    @ColumnInfo(name = "end_hour_for_display") val end_hour_for_display: Int,
+//    @ColumnInfo(name = "end_min_for_display") val end_min_for_display: Int,
+
     @ColumnInfo(name = "date_for_display") val date_for_display: String,
     @ColumnInfo(name = "freq_in_min") val freq_in_min: Long,
     @ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean

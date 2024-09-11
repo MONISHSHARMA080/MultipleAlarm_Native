@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
+import androidx.media3.common.Format
 import com.example.trying_native.Components_for_ui_compose.Button_for_alarm
 import com.example.trying_native.Components_for_ui_compose.*
 import com.example.trying_native.ui.theme.Trying_nativeTheme
@@ -36,8 +37,11 @@ import com.example.trying_native.dataBase.AlarmDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.time.Instant
+import java.time.LocalTime
 import java.time.ZoneId
+import java.util.Locale
 import kotlin.time.Duration.Companion.hours
 
 class MainActivity : ComponentActivity() {
@@ -97,6 +101,7 @@ class MainActivity : ComponentActivity() {
                                 logD("in the abstract timepicker func and the value gotted was -> $timePickerState")
                                 startHour_after_the_callback = timePickerState.hour
                                 startMin_after_the_callback = timePickerState.minute
+
                             })
 
                         AbstractFunction_TimePickerSection(
@@ -238,6 +243,7 @@ class MainActivity : ComponentActivity() {
 
     private  fun scheduleMultipleAlarms(alarmManager: AlarmManager, context: Context, selected_date_for_display:String, startHour_after_the_callback:Int, startMin_after_the_callback: Int, endHour_after_the_callback:Int, endMin_after_the_callback:Int){
     // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
+
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = date_after_the_callback?: 0L
         calendar.set(Calendar.HOUR_OF_DAY, startHour_after_the_callback ?: 0)
@@ -246,11 +252,19 @@ class MainActivity : ComponentActivity() {
         calendar.set(Calendar.MILLISECOND, 0) // Set milliseconds to zero
         var startTimeInMillis = calendar.timeInMillis
         val startTimeInMillisendForDb= startTimeInMillis
-
+        val start_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar.time)
+        val start_am_pm = SimpleDateFormat("a", Locale.getDefault()).format(calendar.time).trim()
         calendar.set(Calendar.HOUR_OF_DAY, endHour_after_the_callback ?: 0)
         calendar.set(Calendar.MINUTE, endMin_after_the_callback ?: 0)
         var endTimeInMillis = calendar.timeInMillis
         val endTimeInMillisendForDb= endTimeInMillis
+        val end_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar.time)
+        val end_am_pm =  SimpleDateFormat("a", Locale.getDefault()).format(calendar.time).trim()
+
+        // no linger need start time hour  min as start_hour_for_display already got me
+        // so make  changes to the db -->
+
+        logD(" \n\n am_pm_start_time-->$start_time_for_display $start_am_pm ; endtime-->$end_time_for_display $end_am_pm")
         var freq_in_milli : Long
         if(freq_after_the_callback != null){
             freq_in_milli = freq_after_the_callback as Long
@@ -276,10 +290,11 @@ class MainActivity : ComponentActivity() {
                        freq_in_min = freq_in_min,
                        isReadyToUse = alarmSetComplete,
                        date_for_display = selected_date_for_display,
-                       start_hour_for_display = startHour_after_the_callback,
-                       start_min_for_display = startMin_after_the_callback,
-                       end_min_for_display = endMin_after_the_callback,
-                       end_hour_for_display = endHour_after_the_callback
+                       start_time_for_display = start_time_for_display ,
+                       end_time_for_display = end_time_for_display,
+                       start_am_pm = start_am_pm ,
+                       end_am_pm = end_am_pm
+
                    )
                    val insertedId = alarmDao.insert(newAlarm)
                    logD("Inserted alarm with ID: $insertedId")

@@ -3,18 +3,21 @@ package com.example.trying_native.Components_for_ui_compose
 import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
@@ -473,33 +476,36 @@ fun AlarmContainer(AlarmDao:AlarmDao) {
         else{
             //lets show the alarms
 
-            // add a db field that gives me the time of both the alarm so that I do not need
-            // to calculate it right now,and also add date in the card
-
-            alarms?.forEach {
-                    individualAlarm ->
-               item{
-                   ElevatedCard(
-                       elevation = CardDefaults.cardElevation(
-                           defaultElevation = 18.dp,
-                       ),
-                       modifier = Modifier
-                           .size(width = screenWidth, height = 270.dp)
-                           .background(color = Color.LightGray)
-                           .padding(13.dp)
-                   ) {
-                       Text(
-                           text = "${individualAlarm.start_hour_for_display}:${individualAlarm.start_min_for_display} --> ${individualAlarm.end_hour_for_display}:${individualAlarm.end_min_for_display}",
-                           modifier = Modifier
-                               .padding(16.dp),
-                           textAlign = TextAlign.Center,
-                           fontSize = fontSize /2,
-                       )
-                       Text(text = "Date-->${individualAlarm.date_for_display}")
-                   }
-               }
-
+            alarms?.forEach { individualAlarm ->
+                item {
+                    ElevatedCard(
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = 0.dp,
+                        ),
+                        modifier = Modifier
+                            .size(width = screenWidth, height = 158.dp)
+                            .background(color = Color.LightGray)
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        shape = RoundedCornerShape(45.dp), // This will create a pill-shaped card
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "${individualAlarm.start_time_for_display} ${individualAlarm.start_am_pm.trim()} --> ${individualAlarm.end_time_for_display.trim()} ${individualAlarm.end_am_pm}",
+                                textAlign = TextAlign.Center,
+                                fontSize = fontSize / 1.9,
+                            )
+                            Text(text = "Date --> ${individualAlarm.date_for_display}", Modifier.padding(vertical = 33.dp))
+                        }
+                    }
+                }
             }
+
+
+
 
         }
     }

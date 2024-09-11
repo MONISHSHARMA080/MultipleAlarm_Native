@@ -52,6 +52,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.media3.common)
     val room_version = "2.6.1"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
