@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -72,6 +73,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.node.*
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -479,33 +481,63 @@ fun AlarmContainer(AlarmDao:AlarmDao) {
             alarms?.forEach { individualAlarm ->
                 item {
                     ElevatedCard(
-                        elevation = CardDefaults.cardElevation(
-                            defaultElevation = 0.dp,
-                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                         modifier = Modifier
                             .size(width = screenWidth, height = 158.dp)
-                            .background(color = Color.LightGray)
+                            .background(color = Color.Black)
                             .padding(horizontal = 8.dp, vertical = 6.dp),
                         shape = RoundedCornerShape(45.dp), // This will create a pill-shaped card
                     ) {
                         Column(
                             modifier = Modifier
+                                .fillMaxSize()
                                 .padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(
-                                text = "${individualAlarm.start_time_for_display} ${individualAlarm.start_am_pm.trim()} --> ${individualAlarm.end_time_for_display.trim()} ${individualAlarm.end_am_pm}",
-                                textAlign = TextAlign.Center,
-                                fontSize = fontSize / 1.9,
-                            )
-                            Text(text = "Date --> ${individualAlarm.date_for_display}", Modifier.padding(vertical = 33.dp))
+                            Row(
+                                verticalAlignment = Alignment.Bottom, // Align the AM/PM at the bottom of the time text
+                                horizontalArrangement = Arrangement.Start,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = individualAlarm.start_time_for_display,
+                                    fontSize = (fontSize / 1.2), // Larger font size for time
+                                    fontWeight = FontWeight.Black,
+                                    modifier = Modifier.padding(end = 4.dp) // Small padding for spacing
+                                )
+                                Text(
+                                    text = individualAlarm.start_am_pm,
+                                    fontSize = (fontSize / 2.2), // Smaller font size for AM/PM
+                                    modifier = Modifier.padding(bottom = 2.dp) // Aligning it properly
+                                )
+                                Text(
+                                    text = " --> ${individualAlarm.end_time_for_display}",
+                                    fontSize = (fontSize / 1.2), // Larger font size for time
+                                    modifier = Modifier.padding(start = 4.dp), // Small padding for spacing
+                                    fontWeight = FontWeight.Black
+                                )
+                                Text(
+                                    text = individualAlarm.end_am_pm,
+                                    fontSize = (fontSize / 2.3), // Smaller font size for AM/PM
+                                    modifier = Modifier.padding(bottom = 2.dp) // Aligning it properly
+                                )
+                            }
+                            Spacer(modifier = Modifier.weight(1f)) // This pushes the date text to the bottom
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.BottomEnd
+                            ) {
+                                Text(
+                                    text = "On: ${individualAlarm.date_for_display}",
+                                    textAlign = TextAlign.Right,
+                                    fontSize = (fontSize / 2.3), // Adjust font size as needed
+                                    fontWeight = FontWeight.W500
+                                )
+                            }
                         }
                     }
                 }
             }
-
-
-
 
         }
     }

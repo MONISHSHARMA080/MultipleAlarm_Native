@@ -3,14 +3,20 @@
 [XXXX]3.> add the alarm sound to the activity launched and a dismiss button and random sound
 [XXXX]3.8.> when alarm comes It does not wake the screen up (add some permission in th receiver)
 [XXXX]4.> make a db from which I can store and destroy alarms and a ui too (material Ui)
+
+--to do 
+make the delete function and add a basic delete button , just complete the basic ui and get the app running
+--to do
 ---------- future implementation
 5.> if not able to make store the alarm should probally abort the intent , and for that make a function that can be used when the user tries to delete the alarm
 
 6.> some sort of way in which I can prevent the making of same alarm
-7.> Write a function where I can deside that the time (startTimeInMillisendForDb) as 12 hours and also decide am or pm
+[XXXX]7.> Write a function where I can deside that the time (startTimeInMillisendForDb) as 12 hours and also decide am or pm
+
 wake alarm 3/4 sec before as we get late
 ---------------------
 alarm should be either repeating (eg. week days eg. S,S,M,T..), ability to add alarm between 2 days a week is cool but not useful-->may be give users ability to 1)set alarm 24 hours in the future or b)b/w 2 times 
+,here is how that looks like eg my college, I can make a alarm from 6:00 --> 8:00 at freq of 2 min and this will work form mon to fri, here alarm making multiple alarms will make the pending intent repeating
 ----------------------
 can also make a feature that allows user to enter date and we set the alarm between to dates (abstract the loop in 2 step) but could have to do it on a bg thread as user can exit the app
 ---

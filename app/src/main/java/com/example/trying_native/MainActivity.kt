@@ -280,8 +280,6 @@ class MainActivity : ComponentActivity() {
             i+=1
         }
         alarmSetComplete = true
-
-        // store it in a local variable and do a null if check, or pass it form the fucntions, or make the common variable not null
            lifecycleScope.launch {
                try {
                    val newAlarm = AlarmData(
