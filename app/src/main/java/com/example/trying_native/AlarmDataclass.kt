@@ -3,6 +3,7 @@ package com.example.trying_native.dataBase
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
+import androidx.room.Delete
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.Insert
@@ -37,6 +38,9 @@ interface AlarmDao {
 
     @Insert
     suspend fun insert(alarmData: AlarmData): Long
+
+    @Query("DELETE FROM AlarmData WHERE first_value = :firstValue AND second_value = :secondValue")
+    suspend fun deleteAlarmByValues(firstValue: Long, secondValue: Long): Int
 
     @Query("SELECT * FROM AlarmData")
     fun getAll(): List<AlarmData>

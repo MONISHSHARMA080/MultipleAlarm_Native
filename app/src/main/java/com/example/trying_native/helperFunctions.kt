@@ -11,7 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequency_in_min:Long, alarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity:Context) {
+fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequency_in_min:Long, alarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity:Context, delete_the_alarm_from_db:Boolean) {
 
     // what am I going to do it ;  make the pending intent  and call cancel on it (of course in a loop)
     val calendar = Calendar.getInstance()
@@ -21,13 +21,26 @@ fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequency_
     val  coroutineScope = CoroutineScope(Dispatchers.Default)
 
     coroutineScope.launch(Dispatchers.IO) {
+
         try {
-            alarmDao.updateReadyToUseInAlarm(firstValue = startTime, second_value = endTime, isReadyToUse = false)
+            if (delete_the_alarm_from_db == true)
+            {
+                alarmDao.deleteAlarmByValues(
+                    firstValue = startTime,
+                    secondValue = endTime
+                )
+            }
+            else{
+                alarmDao.updateReadyToUseInAlarm(
+                    firstValue = startTime,
+                    second_value = endTime,
+                    isReadyToUse = false
+                )
+            }
         }
         catch (e:Exception){
             logD("error updating the isReadyToUse -->$e ")
         }
-
     }
 
     // if the user cancelled the alarm when one or more alarms in the start has fired (much more succinctly before the last is fired)

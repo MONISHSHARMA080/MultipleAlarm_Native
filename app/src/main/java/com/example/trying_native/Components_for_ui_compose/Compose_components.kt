@@ -436,25 +436,24 @@ fun myTexts(alarmDao: AlarmDao) {
 }
 
 @Composable
-fun AlarmContainer(AlarmDao:AlarmDao, alarmManager: AlarmManager, context_of_activity: Context) {
-
+fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: Context) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val fontSize = (screenHeight * 0.05f).value.sp
     val coroutineScope = rememberCoroutineScope()
     var alarms by remember { mutableStateOf<List<AlarmData>?>(null) }
-    var isAlarmFetchedShowAlarms by remember { mutableStateOf<Boolean>(false) }
+    var isAlarmFetchedShowAlarms by remember { mutableStateOf(false) }
+    var refreshTrigger by remember { mutableStateOf(0) }
 
     logD("In the alarm container")
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(refreshTrigger) {
         coroutineScope.launch {
             alarms = withContext(Dispatchers.IO) {
                 try {
                     AlarmDao.getAllAlarms()
                 } catch (e: Exception) {
-                    // Handle the exception (e.g., log it)
-                    logD("Opps something went  wrong when getting all the alarms -->$e")
+                    logD("Oops something went wrong when getting all the alarms -->$e")
                     null
                 }
             }
@@ -462,13 +461,13 @@ fun AlarmContainer(AlarmDao:AlarmDao, alarmManager: AlarmManager, context_of_act
             isAlarmFetchedShowAlarms = true
         }
     }
-    LazyColumn{
-        if(isAlarmFetchedShowAlarms != true && alarms == null ){
-            //display the icon  that we do not have alarms
-        }
-        else{
-            //lets show the alarms
 
+    LazyColumn {
+        if (!isAlarmFetchedShowAlarms && alarms == null) {
+            item {
+                Text("No alarms found", fontSize = fontSize)
+            }
+        } else {
             alarms?.forEach { individualAlarm ->
                 item {
                     ElevatedCard(
@@ -477,7 +476,7 @@ fun AlarmContainer(AlarmDao:AlarmDao, alarmManager: AlarmManager, context_of_act
                             .size(width = screenWidth, height = 158.dp)
                             .background(color = Color.Black)
                             .padding(horizontal = 8.dp, vertical = 6.dp),
-                        shape = RoundedCornerShape(45.dp), // This will create a pill-shaped card
+                        shape = RoundedCornerShape(45.dp)
                     ) {
                         Column(
                             modifier = Modifier
@@ -486,47 +485,75 @@ fun AlarmContainer(AlarmDao:AlarmDao, alarmManager: AlarmManager, context_of_act
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Row(
-                                verticalAlignment = Alignment.Bottom, // Align the AM/PM at the bottom of the time text
+                                verticalAlignment = Alignment.Bottom,
                                 horizontalArrangement = Arrangement.Start,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
                                     text = individualAlarm.start_time_for_display,
-                                    fontSize = (fontSize / 1.2), // Larger font size for time
+                                    fontSize = (fontSize / 1.2),
                                     fontWeight = FontWeight.Black,
-                                    modifier = Modifier.padding(end = 4.dp) // Small padding for spacing
+                                    modifier = Modifier.padding(end = 4.dp)
                                 )
                                 Text(
                                     text = individualAlarm.start_am_pm,
-                                    fontSize = (fontSize / 2.2), // Smaller font size for AM/PM
-                                    modifier = Modifier.padding(bottom = 2.dp) // Aligning it properly
+                                    fontSize = (fontSize / 2.2),
+                                    modifier = Modifier.padding(bottom = 2.dp)
                                 )
                                 Text(
                                     text = " --> ${individualAlarm.end_time_for_display}",
-                                    fontSize = (fontSize / 1.2), // Larger font size for time
-                                    modifier = Modifier.padding(start = 4.dp), // Small padding for spacing
+                                    fontSize = (fontSize / 1.2),
+                                    modifier = Modifier.padding(start = 4.dp),
                                     fontWeight = FontWeight.Black
                                 )
                                 Text(
                                     text = individualAlarm.end_am_pm,
-                                    fontSize = (fontSize / 2.3), // Smaller font size for AM/PM
-                                    modifier = Modifier.padding(bottom = 2.dp) // Aligning it properly
+                                    fontSize = (fontSize / 2.3),
+                                    modifier = Modifier.padding(bottom = 2.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.weight(1f)) // This pushes the date text and button to the bottom
+                            Spacer(modifier = Modifier.weight(1f))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.Bottom
                             ) {
-                                Button(onClick = {logD("->>--") ; cancelAlarmByCancelingPendingIntent(context_of_activity = context_of_activity, startTime = individualAlarm.first_value, endTime = individualAlarm.second_value, frequency_in_min = individualAlarm.freq_in_min, alarmDao = AlarmDao, alarmManager = alarmManager)   }) {
+                                Button(onClick = {
+                                    coroutineScope.launch {
+                                        cancelAlarmByCancelingPendingIntent(
+                                            context_of_activity = context_of_activity,
+                                            startTime = individualAlarm.first_value,
+                                            endTime = individualAlarm.second_value,
+                                            frequency_in_min = individualAlarm.freq_in_min,
+                                            alarmDao = AlarmDao,
+                                            alarmManager = alarmManager,
+                                            delete_the_alarm_from_db = true
+                                        )
+                                        refreshTrigger++
+                                    }
+                                }) {
                                     Text("delete")
                                 }
-                                Text(" isReadyToUse -> ${individualAlarm.isReadyToUse}")
+                                Button(onClick = {
+                                    coroutineScope.launch {
+                                        cancelAlarmByCancelingPendingIntent(
+                                            context_of_activity = context_of_activity,
+                                            startTime = individualAlarm.first_value,
+                                            endTime = individualAlarm.second_value,
+                                            frequency_in_min = individualAlarm.freq_in_min,
+                                            alarmDao = AlarmDao,
+                                            alarmManager = alarmManager,
+                                            delete_the_alarm_from_db = false
+                                        )
+                                        refreshTrigger++
+                                    }
+                                }) {
+                                    Text("remove")
+                                }
                                 Text(
                                     text = "On: ${individualAlarm.date_for_display}",
                                     textAlign = TextAlign.Right,
-                                    fontSize = (fontSize / 2.43), // Adjust font size as needed
+                                    fontSize = (fontSize / 2.43),
                                     fontWeight = FontWeight.W500
                                 )
                             }
@@ -534,10 +561,7 @@ fun AlarmContainer(AlarmDao:AlarmDao, alarmManager: AlarmManager, context_of_act
                     }
                 }
             }
-
         }
     }
-
-
 }
 
