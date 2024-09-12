@@ -1,5 +1,7 @@
 package com.example.trying_native.Components_for_ui_compose
 
+import android.app.AlarmManager
+import android.content.Context
 import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -49,37 +51,25 @@ import java.util.Calendar
 import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerColors
-import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DatePickerFormatter
-import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.node.*
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
+import com.example.trying_native.cancelAlarmByCancelingPendingIntent
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.logD
@@ -446,7 +436,8 @@ fun myTexts(alarmDao: AlarmDao) {
 }
 
 @Composable
-fun AlarmContainer(AlarmDao:AlarmDao) {
+fun AlarmContainer(AlarmDao:AlarmDao, alarmManager: AlarmManager, context_of_activity: Context) {
+
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val fontSize = (screenHeight * 0.05f).value.sp
@@ -522,15 +513,20 @@ fun AlarmContainer(AlarmDao:AlarmDao) {
                                     modifier = Modifier.padding(bottom = 2.dp) // Aligning it properly
                                 )
                             }
-                            Spacer(modifier = Modifier.weight(1f)) // This pushes the date text to the bottom
-                            Box(
+                            Spacer(modifier = Modifier.weight(1f)) // This pushes the date text and button to the bottom
+                            Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.BottomEnd
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Bottom
                             ) {
+                                Button(onClick = {logD("->>--") ; cancelAlarmByCancelingPendingIntent(context_of_activity = context_of_activity, startTime = individualAlarm.first_value, endTime = individualAlarm.second_value, frequency_in_min = individualAlarm.freq_in_min, alarmDao = AlarmDao, alarmManager = alarmManager)   }) {
+                                    Text("delete")
+                                }
+                                Text(" isReadyToUse -> ${individualAlarm.isReadyToUse}")
                                 Text(
                                     text = "On: ${individualAlarm.date_for_display}",
                                     textAlign = TextAlign.Right,
-                                    fontSize = (fontSize / 2.3), // Adjust font size as needed
+                                    fontSize = (fontSize / 2.43), // Adjust font size as needed
                                     fontWeight = FontWeight.W500
                                 )
                             }
@@ -544,3 +540,4 @@ fun AlarmContainer(AlarmDao:AlarmDao) {
 
 
 }
+

@@ -22,12 +22,6 @@ data class AlarmData(
     @ColumnInfo(name = "end_time_for_display") val end_time_for_display: String,
     @ColumnInfo(name = "end_am_pm") val end_am_pm: String,
 
-
-//    @ColumnInfo(name = "start_hour_for_display") val start_hour_for_display: Int,
-//    @ColumnInfo(name = "start_min_for_display") val start_min_for_display: Int,
-//    @ColumnInfo(name = "end_hour_for_display") val end_hour_for_display: Int,
-//    @ColumnInfo(name = "end_min_for_display") val end_min_for_display: Int,
-
     @ColumnInfo(name = "date_for_display") val date_for_display: String,
     @ColumnInfo(name = "freq_in_min") val freq_in_min: Long,
     @ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean
@@ -40,14 +34,23 @@ abstract class AlarmDatabase : RoomDatabase() {
 
 @Dao
 interface AlarmDao {
+
     @Insert
     suspend fun insert(alarmData: AlarmData): Long
 
-    @Query("SELECT * FROM AlarmData ")
+    @Query("SELECT * FROM AlarmData")
     fun getAll(): List<AlarmData>
 
     @Query("SELECT * FROM AlarmData")
     suspend fun getAllAlarms(): List<AlarmData>
+
+    // New function to retrieve an alarm by first_value and second_value
+    @Query("SELECT * FROM AlarmData WHERE first_value = :firstValue AND second_value = :secondValue LIMIT 1")
+    suspend fun getAlarmByValues(firstValue: Long, secondValue: Long): AlarmData?
+
+    // New function to update the is_ready_to_use field of an alarm
+    @Query("UPDATE AlarmData SET is_ready_to_use = :isReadyToUse WHERE first_value = :firstValue AND second_value = :second_value")
+    suspend fun updateReadyToUseInAlarm(firstValue: Long, second_value:Long, isReadyToUse: Boolean)
 }
 
 //

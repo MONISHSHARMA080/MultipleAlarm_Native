@@ -56,7 +56,6 @@ class MainActivity : ComponentActivity() {
     var selected_date_for_display :String? = null
 
 
-
     private lateinit var alarmDao: AlarmDao
 
 //    val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "AlarmData")
@@ -150,7 +149,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        AlarmContainer(alarmDao)
+                        AlarmContainer(alarmDao, alarmManager, activity_context)
                     }
                 }
             }
@@ -241,6 +240,9 @@ class MainActivity : ComponentActivity() {
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime_1, pendingIntent)
     }
 
+
+
+    @SuppressLint("SuspiciousIndentation")
     private  fun scheduleMultipleAlarms(alarmManager: AlarmManager, context: Context, selected_date_for_display:String, startHour_after_the_callback:Int, startMin_after_the_callback: Int, endHour_after_the_callback:Int, endMin_after_the_callback:Int){
     // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
 
@@ -273,6 +275,7 @@ class MainActivity : ComponentActivity() {
          logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:: freq->$freq_in_min")
         var i=0
         var alarmSetComplete = false
+
         while (startTimeInMillis <= endTimeInMillis){
             logD("round $i")
             scheduleAlarm(startTimeInMillis,alarmManager)

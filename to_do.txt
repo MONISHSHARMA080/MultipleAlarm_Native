@@ -7,6 +7,8 @@
 --to do 
 make the delete function and add a basic delete button , just complete the basic ui and get the app running
 --to do
+what I want is that I do not want to delete the alarm form the ui MOST OF THE TIME, I can still call cancel on the pending intent , but make it not active  if you will , when  the user clicks the button then I can
+schedule pass it in the scheduleMultipleAlarms function(there is some resources wasted, and it will make it to the db , so should probally come up with better function :)
 ---------- future implementation
 5.> if not able to make store the alarm should probally abort the intent , and for that make a function that can be used when the user tries to delete the alarm
 
