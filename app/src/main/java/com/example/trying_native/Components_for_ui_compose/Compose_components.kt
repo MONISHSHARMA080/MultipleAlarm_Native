@@ -52,6 +52,7 @@ import java.util.Calendar
 import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 
@@ -65,6 +66,8 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.colorspace.ColorSpace
+import androidx.compose.ui.graphics.colorspace.ColorSpaces
 import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.node.*
 import androidx.compose.ui.platform.LocalConfiguration
@@ -469,21 +472,24 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
     val a = screenHeight/4
 
     LazyColumn(
+        Modifier.background(color = Color.Black)
 
     ) {
         alarms?.forEach { individualAlarm ->
             item{
                 ElevatedCard(
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+//                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                     modifier = Modifier
                         .size(width = screenWidth, height = a )
                         .background(color = Color.Black)
+
                         .padding(horizontal = 8.dp, vertical = 6.dp),
                     shape = RoundedCornerShape(45.dp)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
+                            .background(color = Color(0xFF0D388C) )
                             .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
@@ -532,14 +538,13 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                 )
                             }
                         }
-
                         Row (verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = "after every ${individualAlarm.freq_in_min_to_display} min",
                                 fontSize = (fontSize / 2.7),
+                                fontWeight = FontWeight.W600,
                                 textAlign = TextAlign.Center
                             ) }
-
 
                         Spacer(modifier = Modifier.weight(1f))
 
@@ -562,16 +567,21 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                         delete_the_alarm_from_db = true
                                     )
                                 }
-                            }) {
+                            }, colors = ButtonDefaults.buttonColors(
+                                 Color(0xFF0eaae3) // Hex color for #086f9e
+                            )
+                            ) {
                                 Text("delete")
                             }
                             Text(
                                 text = "On: ${individualAlarm.date_for_display}",
                                 textAlign = TextAlign.Right,
                                 fontSize = (fontSize / 2.43),
-                                fontWeight = FontWeight.W500,
-                                modifier = Modifier.padding(vertical = screenHeight/74)
+                                fontWeight = FontWeight.W600,
+                                modifier = Modifier.padding(vertical = screenHeight/74),
+
                             )
+
                             Button(onClick = {
                                 coroutineScope.launch {
                                     cancelAlarmByCancelingPendingIntent(
@@ -584,7 +594,10 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                         delete_the_alarm_from_db = false
                                     )
                                 }
-                            }) {
+                            }, colors = ButtonDefaults.buttonColors(
+                                Color(0xFF0eaae3) // Hex color for #086f9e
+                            )
+                            ) {
                                 Text("remove")
                             }
 
