@@ -24,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
-import androidx.media3.common.Format
 import com.example.trying_native.Components_for_ui_compose.Button_for_alarm
 import com.example.trying_native.Components_for_ui_compose.*
 import com.example.trying_native.ui.theme.Trying_nativeTheme
@@ -34,15 +33,11 @@ import androidx.room.Room
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmDatabase
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.Instant
-import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Locale
-import kotlin.time.Duration.Companion.hours
 
 class MainActivity : ComponentActivity() {
 
@@ -62,6 +57,7 @@ class MainActivity : ComponentActivity() {
 //    val database = DatabaseManager.getInstance(applicationContext)
  //-form docs
 
+val activity_context = this
 
     @SuppressLint("SuspiciousIndentation")
     @OptIn(ExperimentalMaterial3Api::class)
@@ -79,7 +75,7 @@ class MainActivity : ComponentActivity() {
 
         super.onCreate(savedInstanceState)
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-    val activity_context = this
+
         setContent {
             Trying_nativeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
@@ -133,6 +129,14 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         )
+                        Button(onClick = {
+
+                            lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(Calendar.getInstance().timeInMillis + 60000, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", Calendar.getInstance().timeInMillis + 5000, LastAlarmUpdateDBReceiver())
+
+
+                        }){
+                            Text("lastPendingIntentWithMessageForDbOperations")
+                        }
 
                         // Dialog box
                         if (showDialog.value) {
@@ -234,11 +238,13 @@ class MainActivity : ComponentActivity() {
         logD( "Clicked on the schedule alarm func")
         var triggerTime_1 = triggerTime
         val intent = Intent(this, AlarmReceiver::class.java)
-        logD("Trigger time in the scheduleAlarm func is --> ${triggerTime_1.toString()} ")
+        intent.putExtra("last_alarm_info1","from the schedule alarm function")
+        logD("Trigger time in the scheduleAlarm func is --> $triggerTime_1 ")
         intent.putExtra("triggerTime", triggerTime_1)
-        val pendingIntent = PendingIntent.getBroadcast(this, triggerTime.toInt(), intent, PendingIntent.FLAG_IMMUTABLE)
+        val pendingIntent = PendingIntent.getBroadcast(this, triggerTime.toInt(), intent, PendingIntent.FLAG_MUTABLE)
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime_1, pendingIntent)
     }
+    // this should fix it as I changed FLAG_IMUTABLE to FLAG_MUTABLE
 
 
 
@@ -263,8 +269,7 @@ class MainActivity : ComponentActivity() {
         val end_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar.time)
         val end_am_pm =  SimpleDateFormat("a", Locale.getDefault()).format(calendar.time).trim()
 
-        // no linger need start time hour  min as start_hour_for_display already got me
-        // so make  changes to the db -->
+        //  can make the
 
         logD(" \n\n am_pm_start_time-->$start_time_for_display $start_am_pm ; endtime-->$end_time_for_display $end_am_pm")
         var freq_in_milli : Long
@@ -280,8 +285,18 @@ class MainActivity : ComponentActivity() {
             logD("round $i")
             scheduleAlarm(startTimeInMillis,alarmManager)
             startTimeInMillis = startTimeInMillis + freq_in_min
+            // this line added the freq in the last pending intent and now to get time for the last time we
+            // need to - frq from it
             i+=1
         }
+        // making a broadcast to the receiver to update the alarm
+//        cancelAPendingIntent(startTimeInMillis - freq_in_min,activity_context, alarmManager)
+        // now making the last
+        logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
+        lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())
+        var startTimeNow = startTimeInMillis - freq_in_min
+
+//        lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime((startTimeInMillis - freq_in_min)+2000,activity_context, alarmManager, startTimeNow, startTimeNow, "form the lastPendingIntentWithMessageForDbOperations form", AlarmReceiver() )
         alarmSetComplete = true
            lifecycleScope.launch {
                try {

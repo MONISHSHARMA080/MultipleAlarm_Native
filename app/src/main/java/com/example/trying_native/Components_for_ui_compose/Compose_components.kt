@@ -435,6 +435,7 @@ fun myTexts(alarmDao: AlarmDao) {
     }
 }
 
+
 @Composable
 fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: Context) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -457,7 +458,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                     null
                 }
             }
-            logD("got all the alarms-->${alarms.toString()}")
+//            logD("got all the alarms-->${alarms.toString()}")
             isAlarmFetchedShowAlarms = true
         }
     }
@@ -556,6 +557,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                     fontSize = (fontSize / 2.43),
                                     fontWeight = FontWeight.W500
                                 )
+                                Text("${individualAlarm.isReadyToUse}")
                             }
                         }
                     }

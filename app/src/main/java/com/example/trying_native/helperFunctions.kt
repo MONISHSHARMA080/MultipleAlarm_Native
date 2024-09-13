@@ -2,8 +2,11 @@ package com.example.trying_native
 
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
+import androidx.core.view.ContentInfoCompat.Flags
 import androidx.lifecycle.lifecycleScope
 import com.example.trying_native.dataBase.AlarmDao
 import kotlinx.coroutines.CoroutineScope
@@ -58,22 +61,45 @@ fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequency_
     logD("\n after the while loop for cureent time StartTime ->$startTime --- curent_Time ->$curent_Time -- freq -> $frequency_in_min ")
     logD("Hopefully working --2")
 
+    var intent = Intent(context_of_activity, AlarmReceiver::class.java)
+    var pendingIntent:PendingIntent
+
     while (startTime <= endTime){
         // don't have to call the schedule alarm func , create pending intent yourself
         //            scheduleAlarm(startTime,alarmManager)
-        logD("Hopefully working --in  the beginning")
-        var intent = Intent(context_of_activity, AlarmReceiver::class.java)
-        logD("Hopefully working --3")
         intent.putExtra("triggerTime", startTime)
-        logD("Hopefully working --4")
-        val pendingIntent = PendingIntent.getBroadcast(context_of_activity, startTime.toInt(), intent, PendingIntent.FLAG_IMMUTABLE )
-        logD("Hopefully working --5")
-        logD(" null -->${pendingIntent == null};--intent ->${intent == null}")
+        pendingIntent = PendingIntent.getBroadcast(context_of_activity, startTime.toInt(), intent, PendingIntent.FLAG_IMMUTABLE )
         alarmManager.cancel(pendingIntent)
-        logD("Hopefully working --6")
         startTime = startTime + frequency_in_min
-        logD("Hopefully working --7")
 
     }
 
+}
+
+fun cancelAPendingIntent(startTime:Long, context_of_activity:Context, alarmManager:AlarmManager){
+
+    var intent = Intent(context_of_activity, AlarmReceiver::class.java)
+    intent.putExtra("triggerTime", startTime)
+    alarmManager.cancel(
+        PendingIntent.getBroadcast(context_of_activity, startTime.toInt(),
+            intent, PendingIntent.FLAG_IMMUTABLE )
+    )
+}
+
+fun lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarm_start_time_to_search_db: Long, context_of_activity:Context, alarmManager:AlarmManager, message_name_for_start_time:String, message_name_for_end_time: String, alarm_end_time_to_search_db:Long, broadcastReceiverClass:BroadcastReceiver){
+
+    var intent = Intent(context_of_activity, LastAlarmUpdateDBReceiver::class.java)
+
+    // probably should hardcode message_name_for_start_time to be alarm_end_time_to_search_db and same for message_name_for_end_time
+
+    intent.putExtra(message_name_for_start_time,alarm_start_time_to_search_db)
+    intent.putExtra(message_name_for_end_time,alarm_end_time_to_search_db)
+    val pendingIntent = PendingIntent.getBroadcast(context_of_activity,(alarm_end_time_to_search_db+alarm_start_time_to_search_db).toInt(), intent, PendingIntent.FLAG_IMMUTABLE)
+    alarmManager.setExact(
+        AlarmManager.RTC_WAKEUP,
+        alarm_end_time_to_search_db,
+        pendingIntent
+    )
+    logD("Pending intent set with start time: $alarm_start_time_to_search_db and end time: $alarm_end_time_to_search_db")
+    logD("intent -->${intent.extras} ||||| and pending intent -->${pendingIntent}\n ${Calendar.getInstance().timeInMillis < alarm_end_time_to_search_db}")
 }
