@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Entity(indices = [Index(value = ["first_value", "second_value"])])
 data class AlarmData(
+
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "first_value") val first_value: Long,
     @ColumnInfo(name = "second_value") val second_value: Long,
@@ -26,7 +27,9 @@ data class AlarmData(
 
     @ColumnInfo(name = "date_for_display") val date_for_display: String,
     @ColumnInfo(name = "freq_in_min") val freq_in_min: Long,
+    @ColumnInfo(name = "freq_in_min_to_display") val freq_in_min_to_display: Int,
     @ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean
+
 )
 
 @Database(entities = [AlarmData::class], version = 12)

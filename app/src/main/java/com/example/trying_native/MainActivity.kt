@@ -309,7 +309,8 @@ val activity_context = this
                        start_time_for_display = start_time_for_display ,
                        end_time_for_display = end_time_for_display,
                        start_am_pm = start_am_pm ,
-                       end_am_pm = end_am_pm
+                       end_am_pm = end_am_pm,
+                       freq_in_min_to_display = (freq_in_min/60000).toInt(),
 
                    )
                    val insertedId = alarmDao.insert(newAlarm)
