@@ -1,5 +1,6 @@
 package com.example.trying_native.Components_for_ui_compose
 
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.content.Context
 import android.util.Log
@@ -76,6 +77,7 @@ import com.example.trying_native.logD
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 
 
 @Composable
@@ -436,6 +438,7 @@ fun myTexts(alarmDao: AlarmDao) {
 }
 
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: Context) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -462,7 +465,6 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
             isAlarmFetchedShowAlarms = true
         }
     }
-
     LazyColumn {
         if (!isAlarmFetchedShowAlarms && alarms == null) {
             item {

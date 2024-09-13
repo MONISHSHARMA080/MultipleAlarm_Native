@@ -9,7 +9,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-
 class LastAlarmUpdateDBReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
     logD("||||||+++||||||||In ----- the lastAlarmUpdateDBReceiver class and got intent extras: ${intent.getLongExtra("alarm_start_time_to_search_db",0)}, ${intent.getLongExtra("alarm_end_time_to_search_db",0L)}\n\n")
@@ -19,14 +18,17 @@ class LastAlarmUpdateDBReceiver : BroadcastReceiver() {
         logD("both are zeroes  so exiting")
         return
     }
-
         CoroutineScope(Dispatchers.Default).launch {
             val alarmDao = Room.databaseBuilder(
                 context.applicationContext,
                 AlarmDatabase::class.java, "alarm-database"
             ).build().alarmDao()
-
-            alarmDao.updateReadyToUseInAlarm(alarm_start_time_to_search_db, alarm_end_time_to_search_db, false)
+            try {
+                alarmDao.updateReadyToUseInAlarm(alarm_start_time_to_search_db, alarm_end_time_to_search_db, false)
+            }
+            catch (e:Exception){
+                logD("\n\n  +++++Error updating the alarm in the DB+++++      \n\n")
+            }
             logD("\n----updated the db to be false----\n")
         }
     }
