@@ -62,6 +62,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.node.*
@@ -438,35 +439,33 @@ fun myTexts(alarmDao: AlarmDao) {
 }
 
 
-@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: Context) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val fontSize = (screenHeight * 0.05f).value.sp
     val coroutineScope = rememberCoroutineScope()
-    var alarms by remember { mutableStateOf<List<AlarmData>?>(null) }
-    var isAlarmFetchedShowAlarms by remember { mutableStateOf(false) }
-    var refreshTrigger by remember { mutableStateOf(0) }
 
-    logD("In the alarm container")
+    // Collect the Flow as State
+    val alarms by AlarmDao.getAllAlarmsFlow().collectAsState(initial = emptyList())
 
-    LaunchedEffect(refreshTrigger) {
-        coroutineScope.launch {
-            alarms = withContext(Dispatchers.IO) {
-                try {
-                    AlarmDao.getAllAlarms()
-                } catch (e: Exception) {
-                    logD("Oops something went wrong when getting all the alarms -->$e")
-                    null
-                }
-            }
-//            logD("got all the alarms-->${alarms.toString()}")
-            isAlarmFetchedShowAlarms = true
-        }
-    }
+//    LaunchedEffect(refreshTrigger) {
+//        coroutineScope.launch {
+//            alarms = withContext(Dispatchers.IO) {
+//                try {
+//                    AlarmDao.getAllAlarms()
+//                } catch (e: Exception) {
+//                    logD("Oops something went wrong when getting all the alarms -->$e")
+//                    null
+//                }
+//            }
+////            logD("got all the alarms-->${alarms.toString()}")
+//            isAlarmFetchedShowAlarms = true
+//        }
+//    }
+
     LazyColumn {
-        if (!isAlarmFetchedShowAlarms && alarms == null) {
+        if (alarms == null) {
             item {
                 Text("No alarms found", fontSize = fontSize)
             }
@@ -532,7 +531,6 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                             alarmManager = alarmManager,
                                             delete_the_alarm_from_db = true
                                         )
-                                        refreshTrigger++
                                     }
                                 }) {
                                     Text("delete")
@@ -548,7 +546,6 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                             alarmManager = alarmManager,
                                             delete_the_alarm_from_db = false
                                         )
-                                        refreshTrigger++
                                     }
                                 }) {
                                     Text("remove")
@@ -568,4 +565,3 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
         }
     }
 }
-

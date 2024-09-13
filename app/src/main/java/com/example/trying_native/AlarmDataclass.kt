@@ -10,6 +10,7 @@ import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
+import kotlinx.coroutines.flow.Flow
 
 @Entity(indices = [Index(value = ["first_value", "second_value"])])
 data class AlarmData(
@@ -47,6 +48,10 @@ interface AlarmDao {
 
     @Query("SELECT * FROM AlarmData")
     suspend fun getAllAlarms(): List<AlarmData>
+
+    @Query("SELECT * FROM AlarmData")
+    fun getAllAlarmsFlow(): Flow<List<AlarmData>>
+
 
     // New function to retrieve an alarm by first_value and second_value
     @Query("SELECT * FROM AlarmData WHERE first_value = :firstValue AND second_value = :secondValue LIMIT 1")
