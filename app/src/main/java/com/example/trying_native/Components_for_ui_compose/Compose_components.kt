@@ -471,129 +471,123 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
     LazyColumn(
 
     ) {
-        if (alarms == null) {
-            item {
-                Text("No alarms found", fontSize = fontSize)
-            }
-        } else {
-            alarms?.forEach { individualAlarm ->
-                item{
-                    ElevatedCard(
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        alarms?.forEach { individualAlarm ->
+            item{
+                ElevatedCard(
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    modifier = Modifier
+                        .size(width = screenWidth, height = a )
+                        .background(color = Color.Black)
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    shape = RoundedCornerShape(45.dp)
+                ) {
+                    Column(
                         modifier = Modifier
-                            .size(width = screenWidth, height = a )
-                            .background(color = Color.Black)
-                            .padding(horizontal = 8.dp, vertical = 6.dp),
-                        shape = RoundedCornerShape(45.dp)
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                // Start time
-                                Row(verticalAlignment = Alignment.Bottom) {
-                                    Text(
-                                        text = individualAlarm.start_time_for_display,
-                                        fontSize = (fontSize / 1.2),
-                                        fontWeight = FontWeight.Black,
-                                        modifier = Modifier.padding(end = 4.dp)
-                                    )
-                                    Text(
-                                        text = individualAlarm.start_am_pm,
-                                        fontSize = (fontSize / 2.2),
-                                        modifier = Modifier.padding(bottom = 2.dp)
-                                    )
-                                }
-
-                                // Middle text
-                                Column(horizontalAlignment = Alignment.CenterHorizontally,) {
-                                    Text(
-                                        text = "-->",
-                                        fontSize = (fontSize / 1.5),
-                                        fontWeight = FontWeight.Bold
-                                    )
-
-                                }
-
-                                // End time
-                                Row(verticalAlignment = Alignment.Bottom) {
-                                    Text(
-                                        text = individualAlarm.end_time_for_display,
-                                        fontSize = (fontSize / 1.2),
-                                        fontWeight = FontWeight.Black,
-                                        modifier = Modifier.padding(end = 4.dp)
-                                    )
-                                    Text(
-                                        text = individualAlarm.end_am_pm,
-                                        fontSize = (fontSize / 2.3),
-                                        modifier = Modifier.padding(bottom = 2.dp)
-                                    )
-                                }
+                            // Start time
+                            Row(verticalAlignment = Alignment.Bottom) {
+                                Text(
+                                    text = individualAlarm.start_time_for_display,
+                                    fontSize = (fontSize / 1.2),
+                                    fontWeight = FontWeight.Black,
+                                    modifier = Modifier.padding(end = 4.dp)
+                                )
+                                Text(
+                                    text = individualAlarm.start_am_pm,
+                                    fontSize = (fontSize / 2.2),
+                                    modifier = Modifier.padding(bottom = 2.dp)
+                                )
                             }
 
-                            Row (verticalAlignment = Alignment.CenterVertically) {
+                            // Middle text
+                            Column(horizontalAlignment = Alignment.CenterHorizontally,) {
                                 Text(
-                                    text = "after every ${individualAlarm.freq_in_min_to_display} min",
-                                    fontSize = (fontSize / 2.7),
-                                    textAlign = TextAlign.Center
-                                ) }
+                                    text = "-->",
+                                    fontSize = (fontSize / 1.5),
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                            }
+
+                            // End time
+                            Row(verticalAlignment = Alignment.Bottom) {
+                                Text(
+                                    text = individualAlarm.end_time_for_display,
+                                    fontSize = (fontSize / 1.2),
+                                    fontWeight = FontWeight.Black,
+                                    modifier = Modifier.padding(end = 4.dp)
+                                )
+                                Text(
+                                    text = individualAlarm.end_am_pm,
+                                    fontSize = (fontSize / 2.3),
+                                    modifier = Modifier.padding(bottom = 2.dp)
+                                )
+                            }
+                        }
+
+                        Row (verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "after every ${individualAlarm.freq_in_min_to_display} min",
+                                fontSize = (fontSize / 2.7),
+                                textAlign = TextAlign.Center
+                            ) }
 
 
-                            Spacer(modifier = Modifier.weight(1f))
+                        Spacer(modifier = Modifier.weight(1f))
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Bottom
-                            ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Bottom
+                        ) {
 
 //                                Text("${individualAlarm.isReadyToUse}")
-                                Button(onClick = {
-                                    coroutineScope.launch {
-                                        cancelAlarmByCancelingPendingIntent(
-                                            context_of_activity = context_of_activity,
-                                            startTime = individualAlarm.first_value,
-                                            endTime = individualAlarm.second_value,
-                                            frequency_in_min = individualAlarm.freq_in_min,
-                                            alarmDao = AlarmDao,
-                                            alarmManager = alarmManager,
-                                            delete_the_alarm_from_db = true
-                                        )
-                                    }
-                                }) {
-                                    Text("delete")
+                            Button(onClick = {
+                                coroutineScope.launch {
+                                    cancelAlarmByCancelingPendingIntent(
+                                        context_of_activity = context_of_activity,
+                                        startTime = individualAlarm.first_value,
+                                        endTime = individualAlarm.second_value,
+                                        frequency_in_min = individualAlarm.freq_in_min,
+                                        alarmDao = AlarmDao,
+                                        alarmManager = alarmManager,
+                                        delete_the_alarm_from_db = true
+                                    )
                                 }
-                                Text(
-                                    text = "On: ${individualAlarm.date_for_display}",
-                                    textAlign = TextAlign.Right,
-                                    fontSize = (fontSize / 2.43),
-                                    fontWeight = FontWeight.W500,
-                                    modifier = Modifier.padding(vertical = screenHeight/234)
-                                )
-                                Button(onClick = {
-                                    coroutineScope.launch {
-                                        cancelAlarmByCancelingPendingIntent(
-                                            context_of_activity = context_of_activity,
-                                            startTime = individualAlarm.first_value,
-                                            endTime = individualAlarm.second_value,
-                                            frequency_in_min = individualAlarm.freq_in_min,
-                                            alarmDao = AlarmDao,
-                                            alarmManager = alarmManager,
-                                            delete_the_alarm_from_db = false
-                                        )
-                                    }
-                                }) {
-                                    Text("remove")
-                                }
-
+                            }) {
+                                Text("delete")
                             }
+                            Text(
+                                text = "On: ${individualAlarm.date_for_display}",
+                                textAlign = TextAlign.Right,
+                                fontSize = (fontSize / 2.43),
+                                fontWeight = FontWeight.W500,
+                                modifier = Modifier.padding(vertical = screenHeight/74)
+                            )
+                            Button(onClick = {
+                                coroutineScope.launch {
+                                    cancelAlarmByCancelingPendingIntent(
+                                        context_of_activity = context_of_activity,
+                                        startTime = individualAlarm.first_value,
+                                        endTime = individualAlarm.second_value,
+                                        frequency_in_min = individualAlarm.freq_in_min,
+                                        alarmDao = AlarmDao,
+                                        alarmManager = alarmManager,
+                                        delete_the_alarm_from_db = false
+                                    )
+                                }
+                            }) {
+                                Text("remove")
+                            }
+
                         }
                     }
                 }
