@@ -18,6 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -59,8 +60,8 @@ class MainActivity : ComponentActivity() {
 
 val activity_context = this
 
-    @SuppressLint("SuspiciousIndentation")
     @OptIn(ExperimentalMaterial3Api::class)
+    @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
 
 //        lifecycleScope.launch(Dispatchers.IO) {
@@ -69,90 +70,90 @@ val activity_context = this
                 AlarmDatabase::class.java, "alarm-database"
             ).build()
             alarmDao = db.alarmDao()
-
 //        }
-
 
         super.onCreate(savedInstanceState)
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+
 
         setContent {
             Trying_nativeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
                     Column(modifier = Modifier.padding(paddingValues)) {
-                        val context = LocalContext.current
-                        val showDialog = remember { mutableStateOf(false) }
-                        val dialogMessage = remember { mutableStateOf("") }
-                        myTexts(alarmDao)
-                        // Schedule button
-                        Button_for_alarm("Schedule", Modifier.padding(8.dp)) {
-                            logD("-------in the Button_for_alarm ")
-                            doAllFieldChecksIfFineRunScheduleMultipleAlarm(showDialog, dialogMessage,alarmManager, activity_context,selected_date_for_display, startHour_after_the_callback, startMin_after_the_callback, endHour_after_the_callback, endMin_after_the_callback )
-                        }
-                        // Time pickers, date picker, and frequency field
-                        AbstractFunction_TimePickerSection(
-                            "Select starting time",
-                            onTimeSelected_func_to_handle_value_returned = { timePickerState ->
-                                logD("in the abstract timepicker func and the value gotted was -> $timePickerState")
-                                startHour_after_the_callback = timePickerState.hour
-                                startMin_after_the_callback = timePickerState.minute
-
-                            })
-
-                        AbstractFunction_TimePickerSection(
-                            "Select ending time",
-                            onTimeSelected_func_to_handle_value_returned = { timePickerState ->
-                                logD("in the abstract timepicker func and the value gotted was -> $timePickerState; time is ${timePickerState.hour}:${timePickerState.minute}")
-                                endHour_after_the_callback = timePickerState.hour
-                                endMin_after_the_callback = timePickerState.minute
-                            })
-
-                        AbstractFunction_DatePickerSection(
-                            "Select a date",
-                            onDateSelected_func_to_handle_value_returned = { selectedDate ->
-                                if (selectedDate != null) {
-                                    var selected_date = Date(selectedDate)
-                                    logD("Date Obj-->${selected_date}")
-                                    date_after_the_callback = selectedDate // add it here selected_date_for_display
-                                    val date_from_callB =  Instant.ofEpochMilli(selectedDate).atZone(ZoneId.systemDefault())
-                                    selected_date_for_display = "${date_from_callB.dayOfMonth}/${date_from_callB.monthValue}/${date_from_callB.year}"
-                                }
-                                logD("Date selected: $selectedDate")
-                            }
-                        )
-                        NumberField("Enter your Frequency number",
-                            onFrequencyChanged = { string_received ->
-                                if (string_received.isNotBlank()) { // or else app will crash if it is null or empty
-                                    logD("String received -->$string_received")
-                                    freq_after_the_callback = string_received.toLong()
-                                    logD("freq_after_the_callback  -->$freq_after_the_callback")
-                                }
-                            }
-                        )
-                        Button(onClick = {
-
-                            lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(Calendar.getInstance().timeInMillis + 60000, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", Calendar.getInstance().timeInMillis + 5000, LastAlarmUpdateDBReceiver())
-
-
-                        }){
-                            Text("lastPendingIntentWithMessageForDbOperations")
-                        }
-
-                        // Dialog box
-                        if (showDialog.value) {
-                            AlertDialog(
-                                onDismissRequest = { showDialog.value = false },
-                                title = { Text("Incomplete Information") },
-                                text = { Text(dialogMessage.value) },  // Use the dynamic message here
-                                confirmButton = {
-                                    Button(onClick = {
-                                        showDialog.value = false
-                                    }) {
-                                        Text("OK")
-                                    }
-                                }
-                            )
-                        }
+//                        val showDialog = remember { mutableStateOf(false) }
+//                        val dialogMessage = remember { mutableStateOf("") }
+//                        val showUserUiToSetAlarm by remember { mutableStateOf(false) }
+//
+//                         // Schedule button
+//                        Button_for_alarm("Schedule", Modifier.padding(8.dp)) {
+//                            logD("-------in the Button_for_alarm ")
+//                            doAllFieldChecksIfFineRunScheduleMultipleAlarm(showDialog, dialogMessage,alarmManager, activity_context,selected_date_for_display, startHour_after_the_callback, startMin_after_the_callback, endHour_after_the_callback, endMin_after_the_callback )
+//                        }
+//                        // Time pickers, date picker, and frequency field
+//                        AbstractFunction_TimePickerSection(
+//                            "Select starting time",
+//                            onTimeSelected_func_to_handle_value_returned = { timePickerState ->
+//                                logD("in the abstract timepicker func and the value gotted was -> $timePickerState")
+//                                startHour_after_the_callback = timePickerState.hour
+//                                startMin_after_the_callback = timePickerState.minute
+//
+//                            })
+//
+//                        AbstractFunction_TimePickerSection(
+//                            "Select ending time",
+//                            onTimeSelected_func_to_handle_value_returned = { timePickerState ->
+//                                logD("in the abstract timepicker func and the value gotted was -> $timePickerState; time is ${timePickerState.hour}:${timePickerState.minute}")
+//                                endHour_after_the_callback = timePickerState.hour
+//                                endMin_after_the_callback = timePickerState.minute
+//                            })
+//
+//                        AbstractFunction_DatePickerSection(
+//                            "Select a date",
+//                            onDateSelected_func_to_handle_value_returned = { selectedDate ->
+//                                if (selectedDate != null) {
+//                                    var selected_date = Date(selectedDate)
+//                                    logD("Date Obj-->${selected_date}")
+//                                    date_after_the_callback = selectedDate // add it here selected_date_for_display
+//                                    val date_from_callB =  Instant.ofEpochMilli(selectedDate).atZone(ZoneId.systemDefault())
+//                                    selected_date_for_display = "${date_from_callB.dayOfMonth}/${date_from_callB.monthValue}/${date_from_callB.year}"
+//                                }
+//                                logD("Date selected: $selectedDate")
+//                            }
+//                        )
+//                        NumberField("Enter your Frequency number",
+//                            onFrequencyChanged = { string_received ->
+//                                if (string_received.isNotBlank()) { // or else app will crash if it is null or empty
+//                                    logD("String received -->$string_received")
+//                                    freq_after_the_callback = string_received.toLong()
+//                                    logD("freq_after_the_callback  -->$freq_after_the_callback")
+//                                }
+//                            }
+//                        )
+//                        Button(onClick = {
+//
+//                            lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(Calendar.getInstance().timeInMillis + 60000, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", Calendar.getInstance().timeInMillis + 5000, LastAlarmUpdateDBReceiver())
+//
+//
+//                        }){
+//                            Text("lastPendingIntentWithMessageForDbOperations")
+//                        }
+//
+//                        // Dialog box
+//                        if (showDialog.value) {
+//                            AlertDialog(
+//                                onDismissRequest = { showDialog.value = false },
+//                                title = { Text("Incomplete Information") },
+//                                text = { Text(dialogMessage.value) },  // Use the dynamic message here
+//                                confirmButton = {
+//                                    Button(onClick = {
+//                                        showDialog.value = false
+//                                    }) {
+//                                        Text("OK")
+//                                    }
+//                                }
+//                            )
+//                        }
+                        timePicker_without_dialog(onDismiss = {}, onConfirm = {a -> logD("timepicker State in the main ->${a.hour}:${a.minute}")})
                         AlarmContainer(alarmDao, alarmManager, activity_context)
                     }
                 }
@@ -294,7 +295,6 @@ val activity_context = this
         // now making the last
         logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
         lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())
-        var startTimeNow = startTimeInMillis - freq_in_min
 
 //        lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime((startTimeInMillis - freq_in_min)+2000,activity_context, alarmManager, startTimeNow, startTimeNow, "form the lastPendingIntentWithMessageForDbOperations form", AlarmReceiver() )
         alarmSetComplete = true

@@ -5,11 +5,14 @@ import android.app.AlarmManager
 import android.content.Context
 import android.util.Log
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+//import androidx.compose.foundation.layout.BoxScopeInstance.align
+//import androidx.compose.foundation.layout.BoxScopeInstance.align
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -17,10 +20,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -51,8 +56,10 @@ import java.util.Calendar
 
 import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 
@@ -74,7 +81,9 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.example.trying_native.cancelAlarmByCancelingPendingIntent
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
@@ -107,13 +116,6 @@ fun Button_for_alarm(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    Trying_nativeTheme {
-        Greeting("Android")
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -444,7 +446,6 @@ fun myTexts(alarmDao: AlarmDao) {
     }
 }
 
-
 @Composable
 fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: Context) {
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
@@ -455,156 +456,301 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
     // Collect the Flow as State
     val alarms by AlarmDao.getAllAlarmsFlow().collectAsState(initial = emptyList())
 
-//    LaunchedEffect(refreshTrigger) {
-//        coroutineScope.launch {
-//            alarms = withContext(Dispatchers.IO) {
-//                try {
-//                    AlarmDao.getAllAlarms()
-//                } catch (e: Exception) {
-//                    logD("Oops something went wrong when getting all the alarms -->$e")
-//                    null
-//                }
-//            }
-////            logD("got all the alarms-->${alarms.toString()}")
-//            isAlarmFetchedShowAlarms = true
-//        }
-//    }
-    val a = screenHeight/4
-
-    LazyColumn(
-        Modifier.background(color = Color.Black)
-
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color.Black)
     ) {
-        alarms?.forEach { individualAlarm ->
-            item{
-                ElevatedCard(
-//                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                    modifier = Modifier
-                        .size(width = screenWidth, height = a )
-                        .background(color = Color.Black)
-
-                        .padding(horizontal = 8.dp, vertical = 6.dp),
-                    shape = RoundedCornerShape(45.dp)
-                ) {
-                    Column(
+        LazyColumn(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            alarms.forEach { individualAlarm ->
+                item {
+                    ElevatedCard(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .background(color = Color(0xFF0D388C) )
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .fillMaxWidth()
+                            .height(screenHeight / 4)
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        shape = RoundedCornerShape(45.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.fillMaxWidth()
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(color = Color(0xFF0D388C))
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            // Start time
-                            Row(verticalAlignment = Alignment.Bottom) {
-                                Text(
-                                    text = individualAlarm.start_time_for_display,
-                                    fontSize = (fontSize / 1.2),
-                                    fontWeight = FontWeight.Black,
-                                    modifier = Modifier.padding(end = 4.dp)
-                                )
-                                Text(
-                                    text = individualAlarm.start_am_pm,
-                                    fontSize = (fontSize / 2.2),
-                                    modifier = Modifier.padding(bottom = 2.dp)
-                                )
-                            }
-
-                            // Middle text
-                            Column(horizontalAlignment = Alignment.CenterHorizontally,) {
-                                Text(
-                                    text = "-->",
-                                    fontSize = (fontSize / 1.5),
-                                    fontWeight = FontWeight.Bold
-                                )
-
-                            }
-
-                            // End time
-                            Row(verticalAlignment = Alignment.Bottom) {
-                                Text(
-                                    text = individualAlarm.end_time_for_display,
-                                    fontSize = (fontSize / 1.2),
-                                    fontWeight = FontWeight.Black,
-                                    modifier = Modifier.padding(end = 4.dp)
-                                )
-                                Text(
-                                    text = individualAlarm.end_am_pm,
-                                    fontSize = (fontSize / 2.3),
-                                    modifier = Modifier.padding(bottom = 2.dp)
-                                )
-                            }
-                        }
-                        Row (verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "after every ${individualAlarm.freq_in_min_to_display} min",
-                                fontSize = (fontSize / 2.7),
-                                fontWeight = FontWeight.W600,
-                                textAlign = TextAlign.Center
-                            ) }
-
-                        Spacer(modifier = Modifier.weight(1f))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Bottom
-                        ) {
-
-//                                Text("${individualAlarm.isReadyToUse}")
-                            Button(onClick = {
-                                coroutineScope.launch {
-                                    cancelAlarmByCancelingPendingIntent(
-                                        context_of_activity = context_of_activity,
-                                        startTime = individualAlarm.first_value,
-                                        endTime = individualAlarm.second_value,
-                                        frequency_in_min = individualAlarm.freq_in_min,
-                                        alarmDao = AlarmDao,
-                                        alarmManager = alarmManager,
-                                        delete_the_alarm_from_db = true
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                // Start time
+                                Row(verticalAlignment = Alignment.Bottom) {
+                                    Text(
+                                        text = individualAlarm.start_time_for_display,
+                                        fontSize = (fontSize / 1.2),
+                                        fontWeight = FontWeight.Black,
+                                        modifier = Modifier.padding(end = 4.dp)
+                                    )
+                                    Text(
+                                        text = individualAlarm.start_am_pm,
+                                        fontSize = (fontSize / 2.2),
+                                        modifier = Modifier.padding(bottom = 2.dp)
                                     )
                                 }
-                            }, colors = ButtonDefaults.buttonColors(
-                                 Color(0xFF0eaae3) // Hex color for #086f9e
-                            )
-                            ) {
-                                Text("delete")
-                            }
-                            Text(
-                                text = "On: ${individualAlarm.date_for_display}",
-                                textAlign = TextAlign.Right,
-                                fontSize = (fontSize / 2.43),
-                                fontWeight = FontWeight.W600,
-                                modifier = Modifier.padding(vertical = screenHeight/74),
 
-                            )
-
-                            Button(onClick = {
-                                coroutineScope.launch {
-                                    cancelAlarmByCancelingPendingIntent(
-                                        context_of_activity = context_of_activity,
-                                        startTime = individualAlarm.first_value,
-                                        endTime = individualAlarm.second_value,
-                                        frequency_in_min = individualAlarm.freq_in_min,
-                                        alarmDao = AlarmDao,
-                                        alarmManager = alarmManager,
-                                        delete_the_alarm_from_db = false
+                                // Middle text
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "-->",
+                                        fontSize = (fontSize / 1.5),
+                                        fontWeight = FontWeight.Bold
                                     )
                                 }
-                            }, colors = ButtonDefaults.buttonColors(
-                                Color(0xFF0eaae3) // Hex color for #086f9e
-                            )
-                            ) {
-                                Text("remove")
+
+                                // End time
+                                Row(verticalAlignment = Alignment.Bottom) {
+                                    Text(
+                                        text = individualAlarm.end_time_for_display,
+                                        fontSize = (fontSize / 1.2),
+                                        fontWeight = FontWeight.Black,
+                                        modifier = Modifier.padding(end = 4.dp)
+                                    )
+                                    Text(
+                                        text = individualAlarm.end_am_pm,
+                                        fontSize = (fontSize / 2.3),
+                                        modifier = Modifier.padding(bottom = 2.dp)
+                                    )
+                                }
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "after every ${individualAlarm.freq_in_min_to_display} min",
+                                    fontSize = (fontSize / 2.7),
+                                    fontWeight = FontWeight.W600,
+                                    textAlign = TextAlign.Center
+                                )
                             }
 
+                            Spacer(modifier = Modifier.weight(1f))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Bottom
+                            ) {
+                                Button(
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            cancelAlarmByCancelingPendingIntent(
+                                                context_of_activity = context_of_activity,
+                                                startTime = individualAlarm.first_value,
+                                                endTime = individualAlarm.second_value,
+                                                frequency_in_min = individualAlarm.freq_in_min,
+                                                alarmDao = AlarmDao,
+                                                alarmManager = alarmManager,
+                                                delete_the_alarm_from_db = true
+                                            )
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(Color(0xFF0eaae3))
+                                ) {
+                                    Text("delete")
+                                }
+                                Text(
+                                    text = "On: ${individualAlarm.date_for_display}",
+                                    textAlign = TextAlign.Right,
+                                    fontSize = (fontSize / 2.43),
+                                    fontWeight = FontWeight.W600,
+                                    modifier = Modifier.padding(vertical = screenHeight / 74),
+                                )
+                                Button(
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            cancelAlarmByCancelingPendingIntent(
+                                                context_of_activity = context_of_activity,
+                                                startTime = individualAlarm.first_value,
+                                                endTime = individualAlarm.second_value,
+                                                frequency_in_min = individualAlarm.freq_in_min,
+                                                alarmDao = AlarmDao,
+                                                alarmManager = alarmManager,
+                                                delete_the_alarm_from_db = false
+                                            )
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(Color(0xFF0eaae3))
+                                ) {
+                                    Text("remove")
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+
+        // Position the RoundPlusIcon at the bottom center
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = screenHeight / 15)
+        ) {
+            RoundPlusIcon(size = screenHeight/10, onClick = {logD("fffff")})
+        }
     }
+}
+
+@Composable
+fun RoundPlusIcon(
+    modifier: Modifier = Modifier,
+    size: Dp ,
+    backgroundColor: Color = Color.Blue,
+    onClick: () -> Unit
+) {
+    var plusIconClicked by remember { mutableStateOf(false) }
+
+    if (plusIconClicked){
+//        MyAlertDialog(plusIconClicked)
+    }
+    Box(
+        modifier = modifier
+            .size(size)
+            .zIndex(4f)
+            .background(color = backgroundColor, shape = CircleShape)
+            .clickable { plusIconClicked = !plusIconClicked },
+        contentAlignment = Alignment.Center,
+
+    ) {
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = "Add",
+            modifier = Modifier.size(size / 2)
+        )
+    }
+}
+
+@Composable
+fun askUserForAlarmInformation(onDismissRequestFunctionToRun:()->Unit){
+
+    Dialog( onDismissRequest = {onDismissRequestFunctionToRun()}){
+        Card {
+            val showDialog = remember { mutableStateOf(false) }
+//                        val dialogMessage = remember { mutableStateOf("") }
+//                         // Schedule button
+//                        Button_for_alarm("Schedule", Modifier.padding(8.dp)) {
+//                            logD("-------in the Button_for_alarm ")
+//                            doAllFieldChecksIfFineRunScheduleMultipleAlarm(showDialog, dialogMessage,alarmManager, activity_context,selected_date_for_display, startHour_after_the_callback, startMin_after_the_callback, endHour_after_the_callback, endMin_after_the_callback )
+//                        }
+//                        // Time pickers, date picker, and frequency field
+//                        AbstractFunction_TimePickerSection(
+//                            "Select starting time",
+//                            onTimeSelected_func_to_handle_value_returned = { timePickerState ->
+//                                logD("in the abstract timepicker func and the value gotted was -> $timePickerState")
+//                                startHour_after_the_callback = timePickerState.hour
+//                                startMin_after_the_callback = timePickerState.minute
+//
+//                            })
+//
+//                        AbstractFunction_TimePickerSection(
+//                            "Select ending time",
+//                            onTimeSelected_func_to_handle_value_returned = { timePickerState ->
+//                                logD("in the abstract timepicker func and the value gotted was -> $timePickerState; time is ${timePickerState.hour}:${timePickerState.minute}")
+//                                endHour_after_the_callback = timePickerState.hour
+//                                endMin_after_the_callback = timePickerState.minute
+//                            })
+//
+//                        AbstractFunction_DatePickerSection(
+//                            "Select a date",
+//                            onDateSelected_func_to_handle_value_returned = { selectedDate ->
+//                                if (selectedDate != null) {
+//                                    var selected_date = Date(selectedDate)
+//                                    logD("Date Obj-->${selected_date}")
+//                                    date_after_the_callback = selectedDate // add it here selected_date_for_display
+//                                    val date_from_callB =  Instant.ofEpochMilli(selectedDate).atZone(ZoneId.systemDefault())
+//                                    selected_date_for_display = "${date_from_callB.dayOfMonth}/${date_from_callB.monthValue}/${date_from_callB.year}"
+//                                }
+//                                logD("Date selected: $selectedDate")
+//                            }
+//                        )
+//                        NumberField("Enter your Frequency number",
+//                            onFrequencyChanged = { string_received ->
+//                                if (string_received.isNotBlank()) { // or else app will crash if it is null or empty
+//                                    logD("String received -->$string_received")
+//                                    freq_after_the_callback = string_received.toLong()
+//                                    logD("freq_after_the_callback  -->$freq_after_the_callback")
+//                                }
+//                            }
+//                        )
+//                        Button(onClick = {
+//
+//                            lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(Calendar.getInstance().timeInMillis + 60000, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", Calendar.getInstance().timeInMillis + 5000, LastAlarmUpdateDBReceiver())
+//
+//
+//                        }){
+//                            Text("lastPendingIntentWithMessageForDbOperations")
+//                        }
+//
+//                        // Dialog box
+//                        if (showDialog.value) {
+//                            AlertDialog(
+//                                onDismissRequest = { showDialog.value = false },
+//                                title = { Text("Incomplete Information") },
+//                                text = { Text(dialogMessage.value) },  // Use the dynamic message here
+//                                confirmButton = {
+//                                    Button(onClick = {
+//                                        showDialog.value = false
+//                                    }) {
+//                                        Text("OK")
+//                                    }
+//                                }
+//                            )
+//                        }
+        }
+    }
+
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun timePicker_without_dialog(onConfirm: (TimePickerState) -> Unit, onDismiss: () -> Unit, nextButton:String = "Next"){
+val currentTime = Calendar.getInstance()
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+
+    // -----------------
+    // now just need to handle the function (just like the previous one)
+    // or when the user clicks the next or whatever button just return the timePickerState
+    //  --------done -----------
+
+
+val timePickerState = rememberTimePickerState(
+    initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
+    initialMinute = currentTime.get(Calendar.MINUTE),
+    is24Hour = false, // allow user to choose it , pass from env or setting from now
+)
+
+    logD("time picker -->${timePickerState.hour}")
+
+Column {
+    TimePicker(
+        state = timePickerState,
+//        modifier = Modifier.background(color = Color.Black)
+    )
+
+    Row(modifier = Modifier.padding(20.dp), horizontalArrangement = Arrangement.spacedBy(screenWidth/12)) {
+
+        Button(onClick = onDismiss) {
+        Text("Dismiss")
+    }
+        Button(onClick = { onConfirm(timePickerState) }) {
+            Text(nextButton)
+        }
+    }
+  }
+}
+
+@Composable
+fun datePicker_without_dialog(){
+    
 }
