@@ -57,21 +57,23 @@ import java.util.Calendar
 import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 
-import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.colorspace.ColorSpace
 import androidx.compose.ui.graphics.colorspace.ColorSpaces
@@ -83,6 +85,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
 import androidx.compose.ui.zIndex
 import com.example.trying_native.cancelAlarmByCancelingPendingIntent
 import com.example.trying_native.dataBase.AlarmDao
@@ -92,6 +95,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerState
+import androidx.compose.material3.rememberDatePickerState
 
 
 @Composable
@@ -602,12 +611,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
 }
 
 @Composable
-fun RoundPlusIcon(
-    modifier: Modifier = Modifier,
-    size: Dp ,
-    backgroundColor: Color = Color.Blue,
-    onClick: () -> Unit
-) {
+fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Color = Color.Blue, onClick: () -> Unit) {
     var plusIconClicked by remember { mutableStateOf(false) }
 
     if (plusIconClicked){
@@ -750,7 +754,61 @@ Column {
   }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun datePicker_without_dialog(){
-    
+fun DatePicker_without_dialog(
+    showDatePickerToTheUser: Boolean = true,
+    onDismiss: () -> Unit,
+    nextButton: String = "Next",
+    onConfirm: (DatePickerState) -> Unit
+) {
+//    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    var showDatePicker by remember { mutableStateOf(showDatePickerToTheUser) }
+    val datePickerState = rememberDatePickerState()
+//    val selectedDate = datePickerState.selectedDateMillis?.let { convertMillisToDate(it) } ?: ""
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        if (showDatePicker) {
+            Popup(
+                onDismissRequest = { showDatePicker = false },
+                alignment = Alignment.TopStart,
+
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+//                        .offset(y = screenHeight/28)
+                        .shadow(elevation = 4.dp)
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(16.dp)
+                ) {
+                    Column {
+                        DatePicker(
+                            state = datePickerState,
+                            showModeToggle = false,
+                        )
+                        Row(
+                            modifier = Modifier
+                                .padding(top = 7.dp),
+                            horizontalArrangement = Arrangement.spacedBy(screenWidth / 3)
+                        ) {
+                            Button(onClick = onDismiss) {
+                                Text("Dismiss")
+                            }
+                            Button(onClick = { onConfirm(datePickerState) }) {
+                                Text(nextButton)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+fun convertMillisToDate(millis: Long): String {
+    val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+    return formatter.format(Date(millis))
 }
