@@ -59,6 +59,7 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -100,16 +101,10 @@ import java.util.Date
 import java.util.Locale
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerState
-import androidx.compose.material3.rememberDatePickerState
-
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.google.common.primitives.UnsignedBytes.toInt
+import java.time.LocalDate
+import java.time.ZoneId
 
 @Composable
 fun Button_for_alarm(
@@ -455,15 +450,17 @@ fun myTexts(alarmDao: AlarmDao) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: Context) {
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+//    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val fontSize = (screenHeight * 0.05f).value.sp
     val coroutineScope = rememberCoroutineScope()
 
     // Collect the Flow as State
     val alarms by AlarmDao.getAllAlarmsFlow().collectAsState(initial = emptyList())
+    var showTheDialogToTheUserToAskForPermission by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -598,33 +595,33 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                 }
             }
         }
+        //-----------
+        if (showTheDialogToTheUserToAskForPermission){
+            DialogToAskUserAboutAlarm(onDismissRequest = {showTheDialogToTheUserToAskForPermission = false}, onConfirmation = {a,b ->logD("in the confirm ${a.hour}:${a.minute},--||-- ${b.selectedDateMillis}")})
+        }
 
-        // Position the RoundPlusIcon at the bottom center
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = screenHeight / 15)
         ) {
-            RoundPlusIcon(size = screenHeight/10, onClick = {logD("fffff")})
+            RoundPlusIcon(size = screenHeight/10, onClick = {showTheDialogToTheUserToAskForPermission = !showTheDialogToTheUserToAskForPermission})
         }
     }
 }
 
+
 @Composable
 fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Color = Color.Blue, onClick: () -> Unit) {
-    var plusIconClicked by remember { mutableStateOf(false) }
+//    var plusIconClicked by remember { mutableStateOf(false) }
 
-    if (plusIconClicked){
-//        MyAlertDialog(plusIconClicked)
-    }
     Box(
         modifier = modifier
             .size(size)
             .zIndex(4f)
             .background(color = backgroundColor, shape = CircleShape)
-            .clickable { plusIconClicked = !plusIconClicked },
+            .clickable { onClick()},
         contentAlignment = Alignment.Center,
-
     ) {
         Icon(
             imageVector = Icons.Default.Add,
@@ -718,9 +715,11 @@ fun askUserForAlarmInformation(onDismissRequestFunctionToRun:()->Unit){
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun timePicker_without_dialog(onConfirm: (TimePickerState) -> Unit, onDismiss: () -> Unit, nextButton:String = "Next"){
+fun timePicker_without_dialog(onConfirm: (TimePickerState) -> Unit, onDismiss: () -> Unit, nextButton:String = "Next", text_at_the_top:String){
 val currentTime = Calendar.getInstance()
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val fontSize = (screenHeight * 0.028f).value.sp
 
     // -----------------
     // now just need to handle the function (just like the previous one)
@@ -731,18 +730,26 @@ val currentTime = Calendar.getInstance()
 val timePickerState = rememberTimePickerState(
     initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
     initialMinute = currentTime.get(Calendar.MINUTE),
-    is24Hour = false, // allow user to choose it , pass from env or setting from now
+    is24Hour = false, // allow user to choose it in future , pass from env or setting from now
 )
-
     logD("time picker -->${timePickerState.hour}")
 
 Column {
-    TimePicker(
+
+    Text(text_at_the_top, modifier = Modifier.padding(vertical = screenHeight/53, horizontal = screenWidth/19),
+        fontSize = fontSize, fontWeight = FontWeight.W500, )
+
+    TimePicker(modifier = Modifier.padding(horizontal = screenWidth/22 ),
         state = timePickerState,
 //        modifier = Modifier.background(color = Color.Black)
     )
 
-    Row(modifier = Modifier.padding(20.dp), horizontalArrangement = Arrangement.spacedBy(screenWidth/12)) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(20.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
 
         Button(onClick = onDismiss) {
         Text("Dismiss")
@@ -760,21 +767,21 @@ fun DatePicker_without_dialog(
     showDatePickerToTheUser: Boolean = true,
     onDismiss: () -> Unit,
     nextButton: String = "Next",
-    onConfirm: (DatePickerState) -> Unit
+    onConfirm: (DatePickerState) -> Unit,
+
 ) {
-//    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     var showDatePicker by remember { mutableStateOf(showDatePickerToTheUser) }
-    val datePickerState = rememberDatePickerState()
-//    val selectedDate = datePickerState.selectedDateMillis?.let { convertMillisToDate(it) } ?: ""
+    val today = Calendar.getInstance().timeInMillis
+
+    // Initialize DatePickerState with today's date
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = today
+    )
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
     Box(modifier = Modifier.fillMaxWidth()) {
         if (showDatePicker) {
-            Popup(
-                onDismissRequest = { showDatePicker = false },
-                alignment = Alignment.TopStart,
-
-            ) {
+            Card( ){
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -790,15 +797,19 @@ fun DatePicker_without_dialog(
                         )
                         Row(
                             modifier = Modifier
+                                .fillMaxWidth()
                                 .padding(top = 7.dp),
-                            horizontalArrangement = Arrangement.spacedBy(screenWidth / 3)
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Button(onClick = onDismiss) {
                                 Text("Dismiss")
                             }
-                            Button(onClick = { onConfirm(datePickerState) }) {
+                            Button(
+                                onClick = { onConfirm(datePickerState) },
+                            ) {
                                 Text(nextButton)
                             }
+
                         }
                     }
                 }
@@ -807,8 +818,89 @@ fun DatePicker_without_dialog(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DialogToAskUserAboutAlarm(
+    onDismissRequest: () -> Unit,
+    onConfirmation: (timePickerState: TimePickerState, datePickerState: DatePickerState) -> Unit,
+) {
+    // Step state to determine whether we are showing the TimePicker or DatePicker
+    var showTimePicker by remember { mutableStateOf(true) }
+    val screenHeight = LocalConfiguration.current.screenHeightDp
+    val screenWidth = LocalConfiguration.current.screenWidthDp
+    val screenHeight_1 = (screenHeight /1.4).dp
+    val screenWidth_1 = (screenWidth ).dp
 
-fun convertMillisToDate(millis: Long): String {
-    val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
-    return formatter.format(Date(millis))
+
+    // Variables to store the picked time and date
+    var pickedTimeState: TimePickerState? by remember { mutableStateOf(null) }
+    var pickedDateState: DatePickerState? by remember { mutableStateOf(null) }
+    var a  by remember { mutableStateOf(0) }
+
+
+
+    Dialog(onDismissRequest = { onDismissRequest() }
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height((screenHeight_1))
+                .width(screenWidth_1),
+//                .width(screenWidth.dp)
+//                .padding(0.dp),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+
+                when (a) {
+                    0 -> timePicker_without_dialog(
+                        onConfirm = { timeState ->
+                            pickedTimeState = timeState
+                            a = 1 // Move to the next step (show DatePicker)
+                            logD("clicker next")
+                        },
+                        onDismiss = onDismissRequest,
+                        nextButton = "Next",
+                        text_at_the_top = "Starting time"
+                    )
+                    1->{
+                        timePicker_without_dialog(
+                            onConfirm = { timeState ->
+                                pickedTimeState = timeState
+                                a ++ // Move to the next step (show DatePicker)
+                                logD("clicker next")
+                            },
+                            onDismiss = onDismissRequest,
+                            nextButton = "Next",
+                            text_at_the_top = "Ending time"
+                        )
+                    }
+
+                    2 -> {
+                        // Show DatePicker next
+                        DatePicker_without_dialog(
+                            onConfirm = { dateState ->
+                                pickedDateState = dateState
+                                    // Both time and date are picked, call confirmation
+                                        onConfirmation(pickedTimeState!!, pickedDateState!!)
+                                a ++
+                            },
+                            onDismiss = onDismissRequest,
+                            nextButton = "Confirm",
+                        )
+                    }
+                    3 ->{
+                        // freq and example of it
+                    }
+                    // some checks like end time is bigger than start time, (do convert them in milliseconds with  selected date)
+                    // in the dialog box declare time now (milli) and date millisecond, and pass them to the both the
+                    // components then we can escape form the null checks  and on confirm replace them
+                }
+            }
+        }
+    }
 }

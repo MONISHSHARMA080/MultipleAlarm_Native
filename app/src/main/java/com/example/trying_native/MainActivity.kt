@@ -156,7 +156,7 @@ val activity_context = this
 //                        }
 //                        timePicker_without_dialog(onDismiss = {}, onConfirm = {a -> logD("timepicker State in the main ->${a.hour}:${a.minute}")})
 //                        DatePicker_without_dialog(showDatePickerToTheUser = true, onConfirm = {DatePickerState->logD("confirmed--> ${DatePickerState.selectedDateMillis}")} , onDismiss ={}  )
-//                        AlarmContainer(alarmDao, alarmManager, activity_context)
+                        AlarmContainer(alarmDao, alarmManager, activity_context)
                     }
                 }
             }
