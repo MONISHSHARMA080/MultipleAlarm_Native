@@ -259,8 +259,6 @@ val activity_context = this
         calendar.timeInMillis = date_after_the_callback?: 0L
         calendar.set(Calendar.HOUR_OF_DAY, startHour_after_the_callback ?: 0)
         calendar.set(Calendar.MINUTE, startMin_after_the_callback ?: 0)
-        calendar.set(Calendar.SECOND, 0) // Set seconds to zero
-        calendar.set(Calendar.MILLISECOND, 0) // Set milliseconds to zero
         var startTimeInMillis = calendar.timeInMillis
         val startTimeInMillisendForDb= startTimeInMillis
         val start_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar.time)
@@ -271,8 +269,6 @@ val activity_context = this
         val endTimeInMillisendForDb= endTimeInMillis
         val end_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar.time)
         val end_am_pm =  SimpleDateFormat("a", Locale.getDefault()).format(calendar.time).trim()
-
-        //  can make the
 
         logD(" \n\n am_pm_start_time-->$start_time_for_display $start_am_pm ; endtime-->$end_time_for_display $end_am_pm")
         var freq_in_milli : Long
@@ -321,8 +317,6 @@ val activity_context = this
                    logD("Exception occurred when inserting in the db: $e")
                }
        }
-
-        // now add this in the data base
     }
 }
 

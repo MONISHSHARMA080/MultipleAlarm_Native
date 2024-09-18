@@ -101,7 +101,12 @@ import java.util.Date
 import java.util.Locale
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerState
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.input.VisualTransformation
 import com.google.common.primitives.UnsignedBytes.toInt
 import java.time.LocalDate
 import java.time.ZoneId
@@ -366,7 +371,7 @@ fun NumberField(
     // State to hold the current text input
     var text by remember { mutableStateOf("") }
 
-    TextField(
+    OutlinedTextField(
         value = text,
         onValueChange = { newText ->
             text = newText
@@ -376,7 +381,7 @@ fun NumberField(
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
         placeholder = {
             Text(text = placeHolderText)
-        }
+        },
     )
 }
 
@@ -597,7 +602,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
         }
         //-----------
         if (showTheDialogToTheUserToAskForPermission){
-            DialogToAskUserAboutAlarm(onDismissRequest = {showTheDialogToTheUserToAskForPermission = false}, onConfirmation = {a,b ->logD("in the confirm ${a.hour}:${a.minute},--||-- ${b.selectedDateMillis}")})
+            DialogToAskUserAboutAlarm(onDismissRequest = {showTheDialogToTheUserToAskForPermission = false}, onConfirmation = {a,b, c ->logD("in the confirm ${a.hour}:${a.minute},--||-- ${c.selectedDateMillis}")})
         }
 
         Box(
@@ -620,7 +625,7 @@ fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Col
             .size(size)
             .zIndex(4f)
             .background(color = backgroundColor, shape = CircleShape)
-            .clickable { onClick()},
+            .clickable { onClick() },
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -715,11 +720,15 @@ fun askUserForAlarmInformation(onDismissRequestFunctionToRun:()->Unit){
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun timePicker_without_dialog(onConfirm: (TimePickerState) -> Unit, onDismiss: () -> Unit, nextButton:String = "Next", text_at_the_top:String){
-val currentTime = Calendar.getInstance()
+fun timePicker_without_dialog(onConfirm: (TimePickerState) -> Unit, onDismiss: () -> Unit, nextButton:String = "Next", text_at_the_top:String, mistake_message:String = "" ){
+
+    var user_mistake_message_show by remember { mutableStateOf(mistake_message) }
+    val currentTime = Calendar.getInstance()
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val fontSize = (screenHeight * 0.028f).value.sp
+
+
 
     // -----------------
     // now just need to handle the function (just like the previous one)
@@ -727,12 +736,13 @@ val currentTime = Calendar.getInstance()
     //  --------done -----------
 
 
+
 val timePickerState = rememberTimePickerState(
     initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
     initialMinute = currentTime.get(Calendar.MINUTE),
     is24Hour = false, // allow user to choose it in future , pass from env or setting from now
 )
-    logD("time picker -->${timePickerState.hour}")
+    logD("time picker -->${timePickerState.hour}:${timePickerState.minute}")
 
 Column {
 
@@ -743,6 +753,10 @@ Column {
         state = timePickerState,
 //        modifier = Modifier.background(color = Color.Black)
     )
+    if( user_mistake_message_show != ""){
+        Text(user_mistake_message_show, modifier = Modifier.padding(vertical = screenHeight/53, horizontal = screenWidth/19),
+            fontSize = (screenHeight * 0.0206f).value.sp, fontWeight = FontWeight.W500, color = Color.Red  )
+    }
 
     Row(
         modifier = Modifier
@@ -795,6 +809,9 @@ fun DatePicker_without_dialog(
                             state = datePickerState,
                             showModeToggle = false,
                         )
+//                        if (user_mistake_message_show != ""){
+//                        }
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -822,32 +839,36 @@ fun DatePicker_without_dialog(
 @Composable
 fun DialogToAskUserAboutAlarm(
     onDismissRequest: () -> Unit,
-    onConfirmation: (timePickerState: TimePickerState, datePickerState: DatePickerState) -> Unit,
+    onConfirmation: (startTime: TimePickerState, endTime:TimePickerState, datePickerState: DatePickerState) -> Unit,
 ) {
     // Step state to determine whether we are showing the TimePicker or DatePicker
-    var showTimePicker by remember { mutableStateOf(true) }
     val screenHeight = LocalConfiguration.current.screenHeightDp
     val screenWidth = LocalConfiguration.current.screenWidthDp
-    val screenHeight_1 = (screenHeight /1.4).dp
+    val screenHeight_normal = (screenHeight /1.4).dp
+    val screenHeight_if_message_not_present = (screenHeight /1.23).dp
     val screenWidth_1 = (screenWidth ).dp
 
 
     // Variables to store the picked time and date
-    var pickedTimeState: TimePickerState? by remember { mutableStateOf(null) }
+    var startTime: TimePickerState? by remember { mutableStateOf(null) }
+    var endTime: TimePickerState? by remember { mutableStateOf(null) }
     var pickedDateState: DatePickerState? by remember { mutableStateOf(null) }
     var a  by remember { mutableStateOf(0) }
+    var mistake_message_for_func  by remember { mutableStateOf("") }
 
-
+    val cardHeight = if (mistake_message_for_func.isEmpty()) {
+        screenHeight_normal
+    } else {
+        screenHeight_if_message_not_present
+    }
 
     Dialog(onDismissRequest = { onDismissRequest() }
     ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height((screenHeight_1))
+                .height((cardHeight))
                 .width(screenWidth_1),
-//                .width(screenWidth.dp)
-//                .padding(0.dp),
             shape = RoundedCornerShape(16.dp),
         ) {
             Column(
@@ -857,26 +878,31 @@ fun DialogToAskUserAboutAlarm(
             ) {
 
                 when (a) {
-                    0 -> timePicker_without_dialog(
-                        onConfirm = { timeState ->
-                            pickedTimeState = timeState
-                            a = 1 // Move to the next step (show DatePicker)
-                            logD("clicker next")
-                        },
-                        onDismiss = onDismissRequest,
-                        nextButton = "Next",
-                        text_at_the_top = "Starting time"
-                    )
+                    0 -> {
+                        timePicker_without_dialog(
+                            onConfirm = { timeState ->
+                                startTime = timeState
+                                a = 1 // Move to the next step (show DatePicker)
+                                logD("clicker next")
+                            },
+                            onDismiss = onDismissRequest,
+                            nextButton = "Next",
+                            text_at_the_top = "Starting time",
+                            mistake_message = mistake_message_for_func
+                        )
+//                        freq_without_dialog(onDismiss = onDismissRequest, nextButton = "Confirm", onConfirm = {freq_returned ->logD("frequency returned ->$freq_returned")} )
+                    }
                     1->{
                         timePicker_without_dialog(
                             onConfirm = { timeState ->
-                                pickedTimeState = timeState
+                                endTime = timeState
                                 a ++ // Move to the next step (show DatePicker)
                                 logD("clicker next")
                             },
                             onDismiss = onDismissRequest,
                             nextButton = "Next",
-                            text_at_the_top = "Ending time"
+                            text_at_the_top = "Ending time",
+                            mistake_message = mistake_message_for_func
                         )
                     }
 
@@ -886,21 +912,156 @@ fun DialogToAskUserAboutAlarm(
                             onConfirm = { dateState ->
                                 pickedDateState = dateState
                                     // Both time and date are picked, call confirmation
-                                        onConfirmation(pickedTimeState!!, pickedDateState!!)
+                                        onConfirmation(startTime!!,endTime!! ,pickedDateState!!)
                                 a ++
                             },
                             onDismiss = onDismissRequest,
                             nextButton = "Confirm",
                         )
+                      }
+                    3->{
+                        var startTime_obj_form_calender:Calendar = Calendar.getInstance().apply {
+                            timeInMillis = pickedDateState?.selectedDateMillis!!
+                            set(Calendar.HOUR_OF_DAY, startTime?.hour!!)
+                            set(Calendar.MINUTE, startTime?.minute!! )
+                        }
+                        var endTime_obj_form_calender = Calendar.getInstance().apply {
+                            timeInMillis = pickedDateState?.selectedDateMillis!!
+                            set(Calendar.HOUR_OF_DAY, endTime?.hour!!)
+                            set(Calendar.MINUTE, endTime?.minute!! )
+                        }
+
+                        // since alarms are being set on the same day( eg if it is on 03 (am) and end one has to be 15or .. ( pm) if it
+                        // reached 2 am it is not possible as the time picker not allows it so a bad input on the  user part, as alarm cant end beofr it starts )
+                        // it should be the the start time is bigger than the end time
+
+                        if (startTime_obj_form_calender.timeInMillis >= endTime_obj_form_calender.timeInMillis){
+                            logD("${startTime_obj_form_calender.timeInMillis},---, ${endTime_obj_form_calender.timeInMillis} ")
+                            val formatter = SimpleDateFormat("h:mm a MM/dd/yy", Locale.getDefault())
+                            val startTimeToShowUser = formatter.format(startTime_obj_form_calender.time)
+                            val endTimeToShowUser = formatter.format(endTime_obj_form_calender.time)
+                            mistake_message_for_func = " Your start Time($startTimeToShowUser) should be bigger than the end time ($endTimeToShowUser). we can't set that alarm "
+                            a = 0
+                        }else{
+                            a++
+                        }
                     }
-                    3 ->{
+                    4 ->{
                         // freq and example of it
+                        var startTime_obj_form_calender:Calendar = Calendar.getInstance().apply {
+                            timeInMillis = pickedDateState?.selectedDateMillis!!
+                            set(Calendar.HOUR_OF_DAY, startTime?.hour!!)
+                            set(Calendar.MINUTE, startTime?.minute!! )
+                        }
+                        var endTime_obj_form_calender = Calendar.getInstance().apply {
+                            timeInMillis = pickedDateState?.selectedDateMillis!!
+                            set(Calendar.HOUR_OF_DAY, endTime?.hour!!)
+                            set(Calendar.MINUTE, endTime?.minute!! )
+                        }
+                        freq_without_dialog(onDismiss = onDismissRequest, nextButton = "Confirm", onConfirm = {freq_returned ->logD("frequency returned ->$freq_returned..........")},
+                           calender_instance_at_start_time = startTime_obj_form_calender, calender_instance_at_end_time = endTime_obj_form_calender  )
                     }
                     // some checks like end time is bigger than start time, (do convert them in milliseconds with  selected date)
-                    // in the dialog box declare time now (milli) and date millisecond, and pass them to the both the
+                    // in the dialog box declare time ---NOW--- (milli) and date millisecond, and pass them to the both the
                     // components then we can escape form the null checks  and on confirm replace them
                 }
             }
         }
     }
+}
+
+
+@SuppressLint("DefaultLocale")
+@Composable
+fun freq_without_dialog(onDismiss:()->Unit, nextButton:String, onConfirm:(text_entered_by_user:Int)->Unit, calender_instance_at_start_time:Calendar, calender_instance_at_end_time:Calendar ) {
+
+//    logD("is the both of them same -->${calender_instance_at_end_time.timeInMillis == calender_instance_at_start_time.timeInMillis}")
+
+    var text_entered_by_user by remember { mutableStateOf(0) }
+    var numberToDisplay:Array<String>  by remember { mutableStateOf(Array(5) { "" }) }
+
+    val screenHeight = LocalConfiguration.current.screenHeightDp
+    val screenWidth = LocalConfiguration.current.screenHeightDp
+
+//    var startTime = cal_ins.apply {
+//        timeInMillis = dateInMillis
+//        set(Calendar.HOUR_OF_DAY, hour)
+//        set(Calendar.MINUTE, minute)
+//    }
+
+    var formattedTime:String
+
+    if (text_entered_by_user != 0){
+        var formattedStartTime_1 = String.format(
+            "%02d:%02d",
+            calender_instance_at_start_time.get(Calendar.HOUR_OF_DAY),
+            calender_instance_at_start_time.get(Calendar.MINUTE)
+        )
+        var formattedEndTime_1 = String.format(
+            "%02d:%02d",
+            calender_instance_at_start_time.get(Calendar.HOUR_OF_DAY),
+            calender_instance_at_start_time.get(Calendar.MINUTE)
+        )
+        logD("calender_instance_at_start_time.timeInMillis->${calender_instance_at_start_time.timeInMillis}.....${calender_instance_at_end_time.timeInMillis}" +
+                "\n\n $formattedStartTime_1-----$formattedEndTime_1")
+      for ( i in 1..4 ) {
+
+          // if the start time entered by the user or by for loop is >= than the end time then just add the end time
+          // eg --> 12:30 --> 12:40, 4 min freq, 12:30, 12:34, 12:38, 12:42 which is greater than 12:40 (or consider 12:40 which is same as 12:40)
+          // so we will add it to the array and exit, case 2-> I should not allow user to enter end time > than the start one
+
+          if (calender_instance_at_start_time.timeInMillis >= calender_instance_at_end_time.timeInMillis){
+
+              logD("the conditon is true and will exit from the for loop")
+
+              numberToDisplay[i-1]= String.format(
+                  "%02d:%02d",
+                  calender_instance_at_end_time.get(Calendar.HOUR_OF_DAY),
+                  calender_instance_at_end_time.get(Calendar.MINUTE)
+              )
+              break
+          }
+          formattedTime = String.format(
+              "%02d:%02d",
+              calender_instance_at_start_time.get(Calendar.HOUR_OF_DAY),
+              calender_instance_at_start_time.get(Calendar.MINUTE)
+          )
+          logD("formattedTime -->$formattedTime")
+          numberToDisplay[i-1]= formattedTime
+          calender_instance_at_start_time.add(Calendar.MINUTE, text_entered_by_user)
+
+      }
+      logD("array -->${numberToDisplay[0]}")
+  }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.Start // Aligns content to the start (left)
+    ) {
+        Text("Enter frequency -->", fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(vertical = (screenHeight/99).dp,  horizontal = (screenWidth/93).dp ))
+
+        NumberField("Enter the frequency(in min)", { changed_freq_string -> text_entered_by_user = changed_freq_string.toInt() })
+        if (text_entered_by_user != 0){
+            Text( "Alarms will go on --> ${numberToDisplay.joinToString(", ")}....", fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(vertical = (screenHeight/99).dp, horizontal = (screenWidth/83).dp  )  )
+         }
+      }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 7.dp, start = 8.dp, end = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Button(onClick = onDismiss) {
+            Text("Dismiss")
+        }
+        Button(
+            onClick = { onConfirm(text_entered_by_user) },
+        ) {
+            Text(nextButton)
+        }
+    }
+
 }
