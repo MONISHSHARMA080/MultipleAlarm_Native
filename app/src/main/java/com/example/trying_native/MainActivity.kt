@@ -318,6 +318,7 @@ val activity_context = this
                }
        }
     }
+
 }
 
 fun logD(message:String):Unit{
