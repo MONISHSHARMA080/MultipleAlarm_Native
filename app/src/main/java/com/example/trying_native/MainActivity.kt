@@ -1,11 +1,15 @@
 package com.example.trying_native
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,14 +21,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.lifecycle.lifecycleScope
 import com.example.trying_native.Components_for_ui_compose.Button_for_alarm
 import com.example.trying_native.Components_for_ui_compose.*
@@ -43,6 +44,24 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
+    private val overlayPermissionLauncher = registerForActivityResult(StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            if (Settings.canDrawOverlays(this)) {
+                // Permission granted, schedule the alarm
+                permissionToScheduleAlarm()
+            } else {
+                Log.d("AA", "Overlay permission denied")
+            }
+        }
+    }
+
+
+    private val exactAlarmPermissionLauncher = registerForActivityResult(StartActivityForResult()) { result ->
+        // Check the result to see if the permission was granted
+        permissionToScheduleAlarm() // Schedule the alarm anyway, as the system might still allow it
+    }
+
+
 
     var startHour_after_the_callback: Int? = null
     var startMin_after_the_callback: Int? = null
@@ -50,7 +69,7 @@ class MainActivity : ComponentActivity() {
     var endMin_after_the_callback: Int? = null
     var date_after_the_callback: Long? = null
     var freq_after_the_callback: Long? = null
-    var selected_date_for_display :String? = null
+//    var selected_date_for_display :String? = null
 
 
     private lateinit var alarmDao: AlarmDao
@@ -81,82 +100,8 @@ val activity_context = this
             Trying_nativeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
                     Column(modifier = Modifier.padding(paddingValues)) {
-//                        val showDialog = remember { mutableStateOf(false) }
-//                        val dialogMessage = remember { mutableStateOf("") }
-//                        val showUserUiToSetAlarm by remember { mutableStateOf(false) }
-//
-//                         // Schedule button
-//                        Button_for_alarm("Schedule", Modifier.padding(8.dp)) {
-//                            logD("-------in the Button_for_alarm ")
-//                            doAllFieldChecksIfFineRunScheduleMultipleAlarm(showDialog, dialogMessage,alarmManager, activity_context,selected_date_for_display, startHour_after_the_callback, startMin_after_the_callback, endHour_after_the_callback, endMin_after_the_callback )
-//                        }
-//                        // Time pickers, date picker, and frequency field
-//                        AbstractFunction_TimePickerSection(
-//                            "Select starting time",
-//                            onTimeSelected_func_to_handle_value_returned = { timePickerState ->
-//                                logD("in the abstract timepicker func and the value gotted was -> $timePickerState")
-//                                startHour_after_the_callback = timePickerState.hour
-//                                startMin_after_the_callback = timePickerState.minute
-//
-//                            })
-//
-//                        AbstractFunction_TimePickerSection(
-//                            "Select ending time",
-//                            onTimeSelected_func_to_handle_value_returned = { timePickerState ->
-//                                logD("in the abstract timepicker func and the value gotted was -> $timePickerState; time is ${timePickerState.hour}:${timePickerState.minute}")
-//                                endHour_after_the_callback = timePickerState.hour
-//                                endMin_after_the_callback = timePickerState.minute
-//                            })
-//
-//                        AbstractFunction_DatePickerSection(
-//                            "Select a date",
-//                            onDateSelected_func_to_handle_value_returned = { selectedDate ->
-//                                if (selectedDate != null) {
-//                                    var selected_date = Date(selectedDate)
-//                                    logD("Date Obj-->${selected_date}")
-//                                    date_after_the_callback = selectedDate // add it here selected_date_for_display
-//                                    val date_from_callB =  Instant.ofEpochMilli(selectedDate).atZone(ZoneId.systemDefault())
-//                                    selected_date_for_display = "${date_from_callB.dayOfMonth}/${date_from_callB.monthValue}/${date_from_callB.year}"
-//                                }
-//                                logD("Date selected: $selectedDate")
-//                            }
-//                        )
-//                        NumberField("Enter your Frequency number",
-//                            onFrequencyChanged = { string_received ->
-//                                if (string_received.isNotBlank()) { // or else app will crash if it is null or empty
-//                                    logD("String received -->$string_received")
-//                                    freq_after_the_callback = string_received.toLong()
-//                                    logD("freq_after_the_callback  -->$freq_after_the_callback")
-//                                }
-//                            }
-//                        )
-//                        Button(onClick = {
-//
-//                            lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(Calendar.getInstance().timeInMillis + 60000, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", Calendar.getInstance().timeInMillis + 5000, LastAlarmUpdateDBReceiver())
-//
-//
-//                        }){
-//                            Text("lastPendingIntentWithMessageForDbOperations")
-//                        }
-//
-//                        // Dialog box
-//                        if (showDialog.value) {
-//                            AlertDialog(
-//                                onDismissRequest = { showDialog.value = false },
-//                                title = { Text("Incomplete Information") },
-//                                text = { Text(dialogMessage.value) },  // Use the dynamic message here
-//                                confirmButton = {
-//                                    Button(onClick = {
-//                                        showDialog.value = false
-//                                    }) {
-//                                        Text("OK")
-//                                    }
-//                                }
-//                            )
-//                        }
-//                        timePicker_without_dialog(onDismiss = {}, onConfirm = {a -> logD("timepicker State in the main ->${a.hour}:${a.minute}")})
-//                        DatePicker_without_dialog(showDatePickerToTheUser = true, onConfirm = {DatePickerState->logD("confirmed--> ${DatePickerState.selectedDateMillis}")} , onDismiss ={}  )
-                        AlarmContainer(alarmDao, alarmManager, activity_context)
+                        Button(onClick = { permissionToScheduleAlarm() }) { Text("-----") }
+                      AlarmContainer(alarmDao, alarmManager, activity_context)
                     }
                 }
             }
@@ -248,6 +193,18 @@ val activity_context = this
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime_1, pendingIntent)
     }
     // this should fix it as I changed FLAG_IMUTABLE to FLAG_MUTABLE
+
+    private fun permissionToScheduleAlarm() {
+        // Check for SYSTEM_ALERT_WINDOW permission
+        if (!Settings.canDrawOverlays(this)) {
+            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+            overlayPermissionLauncher.launch(intent)
+            return
+        }
+        // Check for SCHEDULE_EXACT_ALARM permission (only required for Android 12+)
+        // If both permissions are granted, proceed with scheduling the alarm
+        // scheduleAlarmInternal()
+    }
 
 
 

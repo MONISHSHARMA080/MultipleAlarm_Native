@@ -7,6 +7,7 @@ import androidx.room.Delete
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
@@ -64,6 +65,42 @@ interface AlarmDao {
     @Query("UPDATE AlarmData SET is_ready_to_use = :isReadyToUse WHERE first_value = :firstValue AND second_value = :second_value")
     suspend fun updateReadyToUseInAlarm(firstValue: Long, second_value:Long, isReadyToUse: Boolean)
 }
+
+//
+//@Entity(indices = [Index(value = ["AskedForPermission"])])
+//data class AskedForPermission(
+//    @PrimaryKey(autoGenerate = true) val id: Int = 0, // Add a primary key for the single row
+//    @ColumnInfo(name = "AskedForPermission") val AskedForPermission: Boolean = false
+//)
+//
+//@Database(entities = [AlarmData::class], version = 13)
+//abstract class AskedForPermissionDatabase : RoomDatabase() {
+//    abstract fun AskedForPermissionDao(): AskedForPermissionDao
+//}
+//
+//
+//@Dao
+//interface AskedForPermissionDao {
+//
+//    @Insert(onConflict = OnConflictStrategy.REPLACE)
+//    suspend fun insertOrUpdate(permission: AskedForPermission)
+//
+//    @Query("SELECT * FROM AskedForPermission LIMIT 1")
+//    suspend fun getSinglePermission(): AskedForPermission?
+//
+//    @Query("UPDATE AskedForPermission SET AskedForPermission = :askedForPermission WHERE AskedForPermission = 1")
+//    suspend fun updatePermission(askedForPermission: Boolean)
+//
+//}
+
+
+
+
+
+
+
+
+
 
 //
 //@Dao

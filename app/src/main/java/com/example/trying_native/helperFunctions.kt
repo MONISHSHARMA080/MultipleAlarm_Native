@@ -70,6 +70,8 @@ fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequency_
         intent.putExtra("triggerTime", startTime)
         pendingIntent = PendingIntent.getBroadcast(context_of_activity, startTime.toInt(), intent, PendingIntent.FLAG_IMMUTABLE )
         alarmManager.cancel(pendingIntent)
+        cancelAPendingIntent(startTime,  context_of_activity, alarmManager)
+        logD("cancelling the alarm at $startTime ")
         startTime = startTime + frequency_in_min
 
     }

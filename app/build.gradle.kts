@@ -15,6 +15,7 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -52,10 +53,25 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    configurations.all {
+        resolutionStrategy {
+            force("androidx.test.espresso:espresso-core:3.6.1")
+        }
+    }
 }
 
 dependencies {
+    implementation(libs.androidx.espresso.contrib)
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+    androidTestImplementation("androidx.test:runner:1.6.1")
+    androidTestImplementation("androidx.test:rules:1.6.1")
+//    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.1")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    implementation(libs.androidx.junit.ktx)
+
     implementation(libs.androidx.media3.common)
+    implementation(libs.androidx.ui.test.android)
     val room_version = "2.6.1"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 

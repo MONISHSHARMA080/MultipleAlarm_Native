@@ -1,0 +1,1 @@
+# Xiaomi phones require background autostart permission

@@ -123,7 +123,7 @@ func main() {
 	}
 
 
-	dirToCompress := "/app/src/main/res/raw"
+	dirToCompress := "/app/src/main/resc/raw"
 
 	println("default dir for the .mp3 files is /app/src/main/res/raw ")
 	println("do you want to change it (y/n)")

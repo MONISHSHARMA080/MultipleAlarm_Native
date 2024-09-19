@@ -81,6 +81,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerState
+import androidx.compose.ui.platform.testTag
 import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.LastAlarmUpdateDBReceiver
 import com.example.trying_native.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime
@@ -400,6 +401,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
 
     Box(
         modifier = Modifier
+                .testTag("AlarmContainer")
             .fillMaxSize()
             .background(color = Color.Black)
     ) {
@@ -541,6 +543,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = screenHeight / 15)
+                .testTag("RoundPlusIcon")
         ) {
             RoundPlusIcon(size = screenHeight/10, onClick = {showTheDialogToTheUserToAskForPermission = !showTheDialogToTheUserToAskForPermission})
         }
@@ -580,12 +583,10 @@ fun timePicker_without_dialog(onConfirm: (TimePickerState) -> Unit, onDismiss: (
     val fontSize = (screenHeight * 0.028f).value.sp
 
 
-
     // -----------------
     // now just need to handle the function (just like the previous one)
     // or when the user clicks the next or whatever button just return the timePickerState
     //  --------done -----------
-
 
 
 val timePickerState = rememberTimePickerState(
@@ -600,9 +601,8 @@ Column {
     Text(text_at_the_top, modifier = Modifier.padding(vertical = screenHeight/53, horizontal = screenWidth/19),
         fontSize = fontSize, fontWeight = FontWeight.W500, )
 
-    TimePicker(modifier = Modifier.padding(horizontal = screenWidth/22 ),
+    TimePicker(modifier = Modifier.padding(horizontal = screenWidth/22 ).testTag("TimePickerTestTag"),
         state = timePickerState,
-//        modifier = Modifier.background(color = Color.Black)
     )
     if( user_mistake_message_show != ""){
         Text(user_mistake_message_show, modifier = Modifier.padding(vertical = screenHeight/53, horizontal = screenWidth/19),
@@ -619,12 +619,13 @@ Column {
         Button(onClick = onDismiss) {
         Text("Dismiss")
     }
-        Button(onClick = { onConfirm(timePickerState) }) {
+        Button(onClick = { onConfirm(timePickerState) }, modifier = Modifier.testTag("NextButtonInTimePicker")) {
             Text(nextButton)
         }
     }
   }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -642,7 +643,7 @@ fun DatePicker_without_dialog(
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = today
     )
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+//    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
     Box(modifier = Modifier.fillMaxWidth()) {
         if (showDatePicker) {
@@ -659,6 +660,8 @@ fun DatePicker_without_dialog(
                         DatePicker(
                             state = datePickerState,
                             showModeToggle = false,
+                            modifier = Modifier
+                            .testTag("datePicker")
                         )
 //                        if (user_mistake_message_show != ""){
 //                        }
@@ -686,6 +689,7 @@ fun DatePicker_without_dialog(
     }
 }
 
+@SuppressLint("SuspiciousIndentation")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DialogToAskUserAboutAlarm(
@@ -721,6 +725,7 @@ fun DialogToAskUserAboutAlarm(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
+                .testTag("DialogToAskUserAboutAlarm")
                 .height((cardHeight))
                 .width(screenWidth_1),
             shape = RoundedCornerShape(16.dp),
@@ -847,14 +852,6 @@ fun DialogToAskUserAboutAlarm(
                        selected_date_for_display =  date!! )
 
                    onDismissRequest()
-//
-//                       var startTime_obj_form_calender:Calendar = Calendar.getInstance().apply {
-//                       timeInMillis = pickedDateState?.selectedDateMillis!!
-//                       set(Calendar.HOUR_OF_DAY, startTime?.hour!!)
-//                       set(Calendar.MINUTE, startTime?.minute!! )
-//                   }
-//                   scheduleMultipleAlarms(alarmManager, activity_context = activity_context, alarmDao = alarmDao, calendar_for_start_time = startTime_obj_form_calender,    )
-//                   onDismissRequest()
 
                }
                 }
@@ -986,11 +983,10 @@ fun freq_without_dialog(onDismiss:()->Unit, nextButton:String, onConfirm:(text_e
     val startTimeInMillisendForDb= startTimeInMillis
     val start_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_start_time.time)
     val start_am_pm = SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
-//     calendar_for_start_time.set(Calendar.HOUR_OF_DAY, endHour_after_the_callback ?: 0)
-//     calendar_for_start_time.set(Calendar.MINUTE, endMin_after_the_callback ?: 0)
+
     var endTimeInMillis = calendar_for_end_time.timeInMillis
     val endTimeInMillisendForDb= endTimeInMillis
-    val end_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_start_time.time)
+    val end_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_end_time.time)
     val end_am_pm =  SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
 
     logD(" \n\n am_pm_start_time-->$start_time_for_display $start_am_pm ; endtime-->$end_time_for_display $end_am_pm")
