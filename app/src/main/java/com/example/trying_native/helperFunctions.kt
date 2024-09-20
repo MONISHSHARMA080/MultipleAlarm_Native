@@ -6,15 +6,17 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.core.view.ContentInfoCompat.Flags
 import androidx.lifecycle.lifecycleScope
 import com.example.trying_native.dataBase.AlarmDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 
-fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequency_in_min:Long, alarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity:Context, delete_the_alarm_from_db:Boolean) {
+suspend fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequency_in_min:Long, alarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity:ComponentActivity, delete_the_alarm_from_db:Boolean) {
 
     // what am I going to do it ;  make the pending intent  and call cancel on it (of course in a loop)
     val calendar = Calendar.getInstance()
@@ -23,26 +25,15 @@ fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequency_
 
     val  coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    coroutineScope.launch(Dispatchers.IO) {
-
+    withContext(Dispatchers.IO) {
         try {
-            if (delete_the_alarm_from_db == true)
-            {
-                alarmDao.deleteAlarmByValues(
-                    firstValue = startTime,
-                    secondValue = endTime
-                )
+            if (delete_the_alarm_from_db) {
+                alarmDao.deleteAlarmByValues(firstValue = startTime, secondValue = endTime)
+            } else {
+                alarmDao.updateReadyToUseInAlarm(firstValue = startTime, second_value = endTime, isReadyToUse = false)
             }
-            else{
-                alarmDao.updateReadyToUseInAlarm(
-                    firstValue = startTime,
-                    second_value = endTime,
-                    isReadyToUse = false
-                )
-            }
-        }
-        catch (e:Exception){
-            logD("error updating the isReadyToUse -->$e ")
+        } catch (e: Exception) {
+            logD("Error updating the database: $e")
         }
     }
 
@@ -68,9 +59,10 @@ fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequency_
         // don't have to call the schedule alarm func , create pending intent yourself
         //            scheduleAlarm(startTime,alarmManager)
         intent.putExtra("triggerTime", startTime)
-        pendingIntent = PendingIntent.getBroadcast(context_of_activity, startTime.toInt(), intent, PendingIntent.FLAG_IMMUTABLE )
-        alarmManager.cancel(pendingIntent)
-        cancelAPendingIntent(startTime,  context_of_activity, alarmManager)
+        pendingIntent = PendingIntent.getBroadcast(context_of_activity, startTime.toInt(), intent, PendingIntent.FLAG_MUTABLE )
+        pendingIntent.let { alarmManager.cancel(it); it.cancel() }
+//        alarmManager.cancel(pendingIntent)
+//        cancelAPendingIntent(startTime,  context_of_activity, alarmManager)
         logD("cancelling the alarm at $startTime ")
         startTime = startTime + frequency_in_min
 
@@ -78,7 +70,7 @@ fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequency_
 
 }
 
-fun cancelAPendingIntent(startTime:Long, context_of_activity:Context, alarmManager:AlarmManager){
+fun cancelAPendingIntent(startTime:Long, context_of_activity:ComponentActivity, alarmManager:AlarmManager){
 
     var intent = Intent(context_of_activity, AlarmReceiver::class.java)
     intent.putExtra("triggerTime", startTime)

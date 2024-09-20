@@ -27,7 +27,7 @@ class LastAlarmUpdateDBReceiver : BroadcastReceiver() {
                 alarmDao.updateReadyToUseInAlarm(alarm_start_time_to_search_db, alarm_end_time_to_search_db, false)
             }
             catch (e:Exception){
-                logD("\n\n  +++++Error updating the alarm in the DB+++++      \n\n")
+                logD("\n\n  +++++Error updating the alarm in the DB+++++ \n")
             }
             logD("\n----updated the db to be false----\n")
         }

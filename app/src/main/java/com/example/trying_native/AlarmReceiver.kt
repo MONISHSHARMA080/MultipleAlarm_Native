@@ -6,7 +6,7 @@ import android.util.Log
 
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        Log.d("AA","in the alarm receiver func and here is the intent --> $intent")
+        logD("in the alarm receiver func and here is the intent --> $intent")
         val intent_1 = Intent(context, AlarmActivity::class.java)
         var time_By_Me = intent.getExtras()?.getLong("triggerTime",-1000)
         val triggerTime = intent.getLongExtra("triggerTime", 0)

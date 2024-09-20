@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -390,7 +391,7 @@ fun MyAlertDialog(shouldShowDialog: MutableState<Boolean>) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: ComponentActivity) {
-//    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val fontSize = (screenHeight * 0.05f).value.sp
     val coroutineScope = rememberCoroutineScope()
@@ -401,15 +402,16 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
 
     Box(
         modifier = Modifier
-                .testTag("AlarmContainer")
+            .testTag("AlarmContainer")
             .fillMaxSize()
             .background(color = Color.Black)
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
-            alarms.forEach { individualAlarm ->
-                item {
+            itemsIndexed(alarms){indexOfIndividualAlarmInAlarm, individualAlarm ->
+//                logD("hhhhjjjjkkk-->$indexOfIndividualAlarmInAlarm")
+//                item {
                     ElevatedCard(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -486,6 +488,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                             ) {
                                 Button(
                                     onClick = {
+                                        logD("++==${individualAlarm.id} ---- $indexOfIndividualAlarmInAlarm ")
                                         coroutineScope.launch {
                                             cancelAlarmByCancelingPendingIntent(
                                                 context_of_activity = context_of_activity,
@@ -530,7 +533,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                             }
                         }
                     }
-                }
+//                }
             }
         }
         //-----------
@@ -601,7 +604,9 @@ Column {
     Text(text_at_the_top, modifier = Modifier.padding(vertical = screenHeight/53, horizontal = screenWidth/19),
         fontSize = fontSize, fontWeight = FontWeight.W500, )
 
-    TimePicker(modifier = Modifier.padding(horizontal = screenWidth/22 ).testTag("TimePickerTestTag"),
+    TimePicker(modifier = Modifier
+        .padding(horizontal = screenWidth / 22)
+        .testTag("TimePickerTestTag"),
         state = timePickerState,
     )
     if( user_mistake_message_show != ""){
