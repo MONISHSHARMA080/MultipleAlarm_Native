@@ -8,9 +8,6 @@
       <SelectionState runConfigName="clickOnPlusIconToEnterAnAlarm()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="appOpensSuccessfullyAndAlarmContainerExists()">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="testWithExpresso">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
@@ -18,6 +15,9 @@
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
       <SelectionState runConfigName="TestWithEspresso">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="testSetAlarmWithSpecificTimeDateAndFrequency()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

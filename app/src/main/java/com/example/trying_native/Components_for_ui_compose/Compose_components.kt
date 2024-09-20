@@ -390,7 +390,7 @@ fun MyAlertDialog(shouldShowDialog: MutableState<Boolean>) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: ComponentActivity) {
+fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: ComponentActivity, askUserForPermissionToScheduleAlarm:()->Unit) {
 
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val fontSize = (screenHeight * 0.05f).value.sp
@@ -548,7 +548,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                 .padding(bottom = screenHeight / 15)
                 .testTag("RoundPlusIcon")
         ) {
-            RoundPlusIcon(size = screenHeight/10, onClick = {showTheDialogToTheUserToAskForPermission = !showTheDialogToTheUserToAskForPermission})
+            RoundPlusIcon(size = screenHeight/10, onClick = {showTheDialogToTheUserToAskForPermission = !showTheDialogToTheUserToAskForPermission; askUserForPermissionToScheduleAlarm()})
         }
     }
 }
@@ -659,7 +659,8 @@ fun DatePicker_without_dialog(
 //                        .offset(y = screenHeight/28)
                         .shadow(elevation = 4.dp)
                         .background(MaterialTheme.colorScheme.surface)
-                        .padding(16.dp)
+                        .padding(8.dp)
+
                 ) {
                     Column {
                         DatePicker(
@@ -708,7 +709,6 @@ fun DialogToAskUserAboutAlarm(
 
     val screenHeight_normal = (screenHeight /1.4).dp
     val screenHeight_if_message_not_present = (screenHeight /1.23).dp
-    val screenWidth_1 = (screenWidth ).dp
 
 
     // Variables to store the picked time and date
@@ -725,14 +725,14 @@ fun DialogToAskUserAboutAlarm(
         screenHeight_if_message_not_present
     }
 
-    Dialog(onDismissRequest = { onDismissRequest() }
+    Dialog(onDismissRequest = { onDismissRequest() },
     ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("DialogToAskUserAboutAlarm")
                 .height((cardHeight))
-                .width(screenWidth_1),
+                .width(screenWidth.dp),
             shape = RoundedCornerShape(16.dp),
         ) {
             Column(

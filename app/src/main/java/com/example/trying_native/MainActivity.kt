@@ -48,9 +48,10 @@ class MainActivity : ComponentActivity() {
         if (result.resultCode == Activity.RESULT_OK) {
             if (Settings.canDrawOverlays(this)) {
                 // Permission granted, schedule the alarm
+
                 permissionToScheduleAlarm()
             } else {
-                Log.d("AA", "Overlay permission denied")
+                logD( "Overlay permission denied")
             }
         }
     }
@@ -100,8 +101,8 @@ val activity_context = this
             Trying_nativeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
                     Column(modifier = Modifier.padding(paddingValues)) {
-                        Button(onClick = { permissionToScheduleAlarm() }) { Text("-----") }
-                      AlarmContainer(alarmDao, alarmManager, activity_context)
+//                        Button(onClick = { permissionToScheduleAlarm() }) { Text("-----") }
+                      AlarmContainer(alarmDao, alarmManager, activity_context, askUserForPermissionToScheduleAlarm = { permissionToScheduleAlarm() })
                     }
                 }
             }
