@@ -538,20 +538,16 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
 
                                             var startTime_obj_form_calender:Calendar = Calendar.getInstance().apply {
                                                 timeInMillis = individualAlarm.first_value
-//                                                set(Calendar.HOUR_OF_DAY, startTime?.hour!!)
-//                                                set(Calendar.MINUTE, startTime?.minute!! )
                                             }
                                             var endTime_obj_form_calender = Calendar.getInstance().apply {
                                                 timeInMillis = individualAlarm.second_value
-//                                                set(Calendar.HOUR_OF_DAY, endTime?.hour!!)
-//                                                set(Calendar.MINUTE, endTime?.minute!! )
                                             }
                                             var date = individualAlarm.date_in_long
 
                                             coroutineScope.launch {
                                                 scheduleMultipleAlarms(alarmManager, activity_context = context_of_activity, alarmDao = AlarmDao,
                                                     calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = individualAlarm.freq_in_min_to_display,
-                                                    selected_date_for_display =  individualAlarm.date_for_display , date_in_long= date, coroutineScope = this, is_alarm_ready_to_use = true  )
+                                                    selected_date_for_display =  individualAlarm.date_for_display , date_in_long= date, coroutineScope = this, is_alarm_ready_to_use = true , is_this_func_call_to_update_an_existing_alarm = true, new_is_ready_to_use = true  )
                                             }
                                         }
                                     },
@@ -890,7 +886,7 @@ fun DialogToAskUserAboutAlarm(
                    coroutineScope.launch {
                        scheduleMultipleAlarms(alarmManager, activity_context = activity_context, alarmDao = alarmDao,
                            calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = freq_returned_by_user,
-                           selected_date_for_display =  date!!, date_in_long = pickedDateState!!.selectedDateMillis!!, coroutineScope = this, is_alarm_ready_to_use = true  )
+                           selected_date_for_display =  date!!, date_in_long = pickedDateState!!.selectedDateMillis!!, coroutineScope = this, is_alarm_ready_to_use = true, new_is_ready_to_use = false  )
                    }
                    onDismissRequest()
                }
@@ -1013,7 +1009,9 @@ fun freq_without_dialog(onDismiss:()->Unit, nextButton:String, onConfirm:(text_e
 
 
  suspend fun scheduleMultipleAlarms(alarmManager: AlarmManager, selected_date_for_display:String, date_in_long: Long, coroutineScope: CoroutineScope, is_alarm_ready_to_use:Boolean,
-                                    calendar_for_start_time:Calendar, calendar_for_end_time:Calendar, freq_after_the_callback:Int, activity_context:ComponentActivity, alarmDao:AlarmDao )
+                                    calendar_for_start_time:Calendar, calendar_for_end_time:Calendar, freq_after_the_callback:Int, activity_context:ComponentActivity, alarmDao:AlarmDao,
+                                    is_this_func_call_to_update_an_existing_alarm: Boolean = false , new_is_ready_to_use:Boolean                   )
+
  {
     // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
      var startTimeInMillis = calendar_for_start_time.timeInMillis
@@ -1032,7 +1030,6 @@ fun freq_without_dialog(onDismiss:()->Unit, nextButton:String, onConfirm:(text_e
     var freq_in_min = freq_in_milli * 60000
     logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:: freq->$freq_in_min")
     var i=0
-    var alarmSetComplete = false
 
     while (startTimeInMillis <= endTimeInMillis){
         logD("round $i")
@@ -1049,7 +1046,9 @@ fun freq_without_dialog(onDismiss:()->Unit, nextButton:String, onConfirm:(text_e
     lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())
 
 //        lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime((startTimeInMillis - freq_in_min)+2000,activity_context, alarmManager, startTimeNow, startTimeNow, "form the lastPendingIntentWithMessageForDbOperations form", AlarmReceiver() )
+ if (!is_this_func_call_to_update_an_existing_alarm ){
      withContext(Dispatchers.IO) {
+         logD("here to  insert a new one")
          try {
              val newAlarm = AlarmData(
                  first_value = startTimeInMillisendForDb,
@@ -1069,5 +1068,16 @@ fun freq_without_dialog(onDismiss:()->Unit, nextButton:String, onConfirm:(text_e
          } catch (e: Exception) {
              logD("Exception occurred when inserting in the db: $e")
          }
+     }
+   }
+     else{
+         logD("here to update the alarm---------------------------------------")
+    alarmDao.updateReadyToUse(
+        firstValue = startTimeInMillisendForDb,
+        secondValue = endTimeInMillisendForDb,
+        freqInMin = freq_in_min,
+        dateInLong = date_in_long,
+        isReadyToUse = new_is_ready_to_use
+    )
      }
 }

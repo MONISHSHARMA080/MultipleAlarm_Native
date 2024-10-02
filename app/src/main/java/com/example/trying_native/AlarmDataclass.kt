@@ -66,6 +66,22 @@ interface AlarmDao {
     // New function to update the is_ready_to_use field of an alarm
     @Query("UPDATE AlarmData SET is_ready_to_use = :isReadyToUse WHERE first_value = :firstValue AND second_value = :second_value")
     suspend fun updateReadyToUseInAlarm(firstValue: Long, second_value:Long, isReadyToUse: Boolean)
+
+    @Query("""
+        UPDATE AlarmData 
+        SET is_ready_to_use = :isReadyToUse 
+        WHERE first_value = :firstValue 
+        AND second_value = :secondValue 
+        AND freq_in_min = :freqInMin 
+        AND date_in_long = :dateInLong
+    """)
+    suspend fun updateReadyToUse(
+        firstValue: Long,
+        secondValue: Long,
+        freqInMin: Long,
+        dateInLong: Long,
+        isReadyToUse: Boolean
+    )
 }
 
 //
