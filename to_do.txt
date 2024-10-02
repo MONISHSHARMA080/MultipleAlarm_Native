@@ -12,8 +12,10 @@ schedule pass it in the scheduleMultipleAlarms function(there is some resources 
 --to do
  add logic to handle the boundary condition , like what it user adds a alarm that is on the 3:15 PM and end time is on 3:14 PM , we should reject this or ask them for the ending date (default to today, but here we still run in the same problem )
 --->>sol --> at the step 3 if the condition is true then ask teh user for the end date  
---
+
+change the remove button to set_again if the alarm is cancel and gray so that we can set the alarm again and add the color to it
 ---------- future implementation
+
 5.> if not able to make store the alarm should probally abort the intent , and for that make a function that can be used when the user tries to delete the alarm
 
 6.> some sort of way in which I can prevent the making of same alarm
