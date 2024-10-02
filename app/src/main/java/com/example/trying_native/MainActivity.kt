@@ -162,38 +162,39 @@ val activity_context = this
             return "Frequency"
         }
     }
-    private fun doAllFieldChecksIfFineRunScheduleMultipleAlarm(showDialog: MutableState<Boolean>, dialogMessage: MutableState<String>, alarmManager:AlarmManager, context: Context, selected_date_for_display:String?, startHour_after_the_callback:Int?, startMin_after_the_callback: Int?, endHour_after_the_callback:Int?, endMin_after_the_callback:Int? ) {
-        logD("fun areAllFieldsNotFilled ->${areAllFieldsNotFilled()};;; func areSomeFieldNotFilled ->${areSomeFieldNotFilled()} ")
-        if (areAllFieldsNotFilled()) {
-            dialogMessage.value = "Please fill in all the required fields."
-            showDialog.value = true
-        }
-        else if (areSomeFieldNotFilled()) {
-            dialogMessage.value = "Please select the ${emptyFieldAndTheirName()}."
-            showDialog.value = true
-        } else {
-            logD("in the doAllFieldChecksIfFineRunScheduleMultipleAlarm else statememt ")
-            var selected_date_for_display_1 = selected_date_for_display
-            var startHour_after_the_callback_1  = startHour_after_the_callback
-            var startMin_after_the_callback_1  = startMin_after_the_callback
-            var endHour_after_the_callback_1 = endHour_after_the_callback
-            var endMin_after_the_callback_1 = endMin_after_the_callback
 
-
-
-            if (selected_date_for_display_1 == null || startMin_after_the_callback_1 == null || startHour_after_the_callback_1 == null || endHour_after_the_callback_1== null || endMin_after_the_callback_1 == null){
-                logD("in the selected date to null field---")
-                // selected_date_for_display_1 was null
-                logD("--$selected_date_for_display_1---$startMin_after_the_callback_1 -- $startHour_after_the_callback_1 --- $endHour_after_the_callback_1--- $endMin_after_the_callback_1")
-                dialogMessage.value = "Error occured , error code is 0#276gde7h32, can't serialize data "
-                showDialog.value = true
-            }else if (selected_date_for_display_1 != null && startHour_after_the_callback_1 != null && startMin_after_the_callback_1 != null && endHour_after_the_callback_1 != null && endMin_after_the_callback_1 != null){
-                logD("About to launch the alarm ---")
-                scheduleMultipleAlarms(alarmManager, context, selected_date_for_display_1, startHour_after_the_callback_1, startMin_after_the_callback_1, endHour_after_the_callback_1, endMin_after_the_callback_1  )
-            }
-//            scheduleAlarm(SystemClock.elapsedRealtime() + 1000,alarmManager)
-        }
-    }
+//    private fun doAllFieldChecksIfFineRunScheduleMultipleAlarm(showDialog: MutableState<Boolean>, dialogMessage: MutableState<String>, alarmManager:AlarmManager, context: Context, selected_date_for_display:String?, startHour_after_the_callback:Int?, startMin_after_the_callback: Int?, endHour_after_the_callback:Int?, endMin_after_the_callback:Int? ) {
+//        logD("fun areAllFieldsNotFilled ->${areAllFieldsNotFilled()};;; func areSomeFieldNotFilled ->${areSomeFieldNotFilled()} ")
+//        if (areAllFieldsNotFilled()) {
+//            dialogMessage.value = "Please fill in all the required fields."
+//            showDialog.value = true
+//        }
+//        else if (areSomeFieldNotFilled()) {
+//            dialogMessage.value = "Please select the ${emptyFieldAndTheirName()}."
+//            showDialog.value = true
+//        } else {
+//            logD("in the doAllFieldChecksIfFineRunScheduleMultipleAlarm else statememt ")
+//            var selected_date_for_display_1 = selected_date_for_display
+//            var startHour_after_the_callback_1  = startHour_after_the_callback
+//            var startMin_after_the_callback_1  = startMin_after_the_callback
+//            var endHour_after_the_callback_1 = endHour_after_the_callback
+//            var endMin_after_the_callback_1 = endMin_after_the_callback
+//
+//
+//
+//            if (selected_date_for_display_1 == null || startMin_after_the_callback_1 == null || startHour_after_the_callback_1 == null || endHour_after_the_callback_1== null || endMin_after_the_callback_1 == null){
+//                logD("in the selected date to null field---")
+//                // selected_date_for_display_1 was null
+//                logD("--$selected_date_for_display_1---$startMin_after_the_callback_1 -- $startHour_after_the_callback_1 --- $endHour_after_the_callback_1--- $endMin_after_the_callback_1")
+//                dialogMessage.value = "Error occured , error code is 0#276gde7h32, can't serialize data "
+//                showDialog.value = true
+//            }else if (selected_date_for_display_1 != null && startHour_after_the_callback_1 != null && startMin_after_the_callback_1 != null && endHour_after_the_callback_1 != null && endMin_after_the_callback_1 != null){
+//                logD("About to launch the alarm ---")
+//                scheduleMultipleAlarms(alarmManager, context, selected_date_for_display_1, startHour_after_the_callback_1, startMin_after_the_callback_1, endHour_after_the_callback_1, endMin_after_the_callback_1  )
+//            }
+////            scheduleAlarm(SystemClock.elapsedRealtime() + 1000,alarmManager)
+//        }
+//    }
 
     private fun scheduleAlarm(triggerTime: Long, alarmManager:AlarmManager) {
         logD( "Clicked on the schedule alarm func")
@@ -220,75 +221,78 @@ val activity_context = this
     }
 
 
+    // should probally remove it --------------------
 
-    @SuppressLint("SuspiciousIndentation")
-    private  fun scheduleMultipleAlarms(alarmManager: AlarmManager, context: Context, selected_date_for_display:String, startHour_after_the_callback:Int, startMin_after_the_callback: Int, endHour_after_the_callback:Int, endMin_after_the_callback:Int){
-    // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
 
-        val calendar = Calendar.getInstance()
-        calendar.timeInMillis = date_after_the_callback?: 0L
-        calendar.set(Calendar.HOUR_OF_DAY, startHour_after_the_callback ?: 0)
-        calendar.set(Calendar.MINUTE, startMin_after_the_callback ?: 0)
-        var startTimeInMillis = calendar.timeInMillis
-        val startTimeInMillisendForDb= startTimeInMillis
-        val start_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar.time)
-        val start_am_pm = SimpleDateFormat("a", Locale.getDefault()).format(calendar.time).trim()
-        calendar.set(Calendar.HOUR_OF_DAY, endHour_after_the_callback ?: 0)
-        calendar.set(Calendar.MINUTE, endMin_after_the_callback ?: 0)
-        var endTimeInMillis = calendar.timeInMillis
-        val endTimeInMillisendForDb= endTimeInMillis
-        val end_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar.time)
-        val end_am_pm =  SimpleDateFormat("a", Locale.getDefault()).format(calendar.time).trim()
-
-        logD(" \n\n am_pm_start_time-->$start_time_for_display $start_am_pm ; endtime-->$end_time_for_display $end_am_pm")
-        var freq_in_milli : Long
-        if(freq_after_the_callback != null){
-            freq_in_milli = freq_after_the_callback as Long
-        }else{freq_in_milli = 2}
-        var freq_in_min = freq_in_milli * 60000
-         logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:: freq->$freq_in_min")
-        var i=0
-        var alarmSetComplete = false
-
-        while (startTimeInMillis <= endTimeInMillis){
-            logD("round $i")
-            scheduleAlarm(startTimeInMillis,alarmManager)
-            startTimeInMillis = startTimeInMillis + freq_in_min
-            // this line added the freq in the last pending intent and now to get time for the last time we
-            // need to - frq from it
-            i+=1
-        }
-        // making a broadcast to the receiver to update the alarm
-//        cancelAPendingIntent(startTimeInMillis - freq_in_min,activity_context, alarmManager)
-        // now making the last
-        logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
-        lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())
-
-//        lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime((startTimeInMillis - freq_in_min)+2000,activity_context, alarmManager, startTimeNow, startTimeNow, "form the lastPendingIntentWithMessageForDbOperations form", AlarmReceiver() )
-        alarmSetComplete = true
-           lifecycleScope.launch {
-               try {
-                   val newAlarm = AlarmData(
-                       first_value = startTimeInMillisendForDb,
-                       second_value = endTimeInMillisendForDb,
-                       freq_in_min = freq_in_min,
-                       isReadyToUse = alarmSetComplete,
-                       date_for_display = selected_date_for_display,
-                       start_time_for_display = start_time_for_display ,
-                       end_time_for_display = end_time_for_display,
-                       start_am_pm = start_am_pm ,
-                       end_am_pm = end_am_pm,
-                       freq_in_min_to_display = (freq_in_min/60000).toInt(),
-
-                   )
-                   val insertedId = alarmDao.insert(newAlarm)
-                   logD("Inserted alarm with ID: $insertedId")
-               } catch (e: Exception) {
-                   logD("Exception occurred when inserting in the db: $e")
-               }
-       }
-    }
-
+//    @SuppressLint("SuspiciousIndentation")
+//    private  fun scheduleMultipleAlarms(alarmManager: AlarmManager, context: Context, selected_date_for_display:String, startHour_after_the_callback:Int, startMin_after_the_callback: Int, endHour_after_the_callback:Int, endMin_after_the_callback:Int){
+//    // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
+//
+//        val calendar = Calendar.getInstance()
+//        calendar.timeInMillis = date_after_the_callback?: 0L
+//        calendar.set(Calendar.HOUR_OF_DAY, startHour_after_the_callback ?: 0)
+//        calendar.set(Calendar.MINUTE, startMin_after_the_callback ?: 0)
+//        var startTimeInMillis = calendar.timeInMillis
+//        val startTimeInMillisendForDb= startTimeInMillis
+//        val start_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar.time)
+//        val start_am_pm = SimpleDateFormat("a", Locale.getDefault()).format(calendar.time).trim()
+//        calendar.set(Calendar.HOUR_OF_DAY, endHour_after_the_callback ?: 0)
+//        calendar.set(Calendar.MINUTE, endMin_after_the_callback ?: 0)
+//        var endTimeInMillis = calendar.timeInMillis
+//        val endTimeInMillisendForDb= endTimeInMillis
+//        val end_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar.time)
+//        val end_am_pm =  SimpleDateFormat("a", Locale.getDefault()).format(calendar.time).trim()
+//
+//        logD(" \n\n am_pm_start_time-->$start_time_for_display $start_am_pm ; endtime-->$end_time_for_display $end_am_pm")
+//        var freq_in_milli : Long
+//        if(freq_after_the_callback != null){
+//            freq_in_milli = freq_after_the_callback as Long
+//        }else{freq_in_milli = 2}
+//        var freq_in_min = freq_in_milli * 60000
+//         logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:: freq->$freq_in_min")
+//        var i=0
+//        var alarmSetComplete = false
+//
+//        while (startTimeInMillis <= endTimeInMillis){
+//            logD("round $i")
+//            scheduleAlarm(startTimeInMillis,alarmManager)
+//            startTimeInMillis = startTimeInMillis + freq_in_min
+//            // this line added the freq in the last pending intent and now to get time for the last time we
+//            // need to - frq from it
+//            i+=1
+//        }
+//        // making a broadcast to the receiver to update the alarm
+////        cancelAPendingIntent(startTimeInMillis - freq_in_min,activity_context, alarmManager)
+//        // now making the last
+//        logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
+//        lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())
+//
+////        lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime((startTimeInMillis - freq_in_min)+2000,activity_context, alarmManager, startTimeNow, startTimeNow, "form the lastPendingIntentWithMessageForDbOperations form", AlarmReceiver() )
+//        alarmSetComplete = true
+//           lifecycleScope.launch {
+//               try {
+//                   val newAlarm = AlarmData(
+//                       first_value = startTimeInMillisendForDb,
+//                       second_value = endTimeInMillisendForDb,
+//                       freq_in_min = freq_in_min,
+//                       isReadyToUse = alarmSetComplete,
+//                       date_for_display = selected_date_for_display,
+//                       start_time_for_display = start_time_for_display ,
+//                       end_time_for_display = end_time_for_display,
+//                       start_am_pm = start_am_pm ,
+//                       end_am_pm = end_am_pm,
+//                       freq_in_min_to_display = (freq_in_min/60000).toInt(),
+//                       date_in_long =
+//
+//                   )
+//                   val insertedId = alarmDao.insert(newAlarm)
+//                   logD("Inserted alarm with ID: $insertedId")
+//               } catch (e: Exception) {
+//                   logD("Exception occurred when inserting in the db: $e")
+//               }
+//       }
+//    }
+//
 }
 
 fun logD(message:String):Unit{

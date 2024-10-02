@@ -26,6 +26,8 @@ data class AlarmData(
     @ColumnInfo(name = "end_time_for_display") val end_time_for_display: String,
     @ColumnInfo(name = "end_am_pm") val end_am_pm: String,
 
+    @ColumnInfo(name = "date_in_long") val date_in_long: Long,
+
     @ColumnInfo(name = "date_for_display") val date_for_display: String,
     @ColumnInfo(name = "freq_in_min") val freq_in_min: Long,
     @ColumnInfo(name = "freq_in_min_to_display") val freq_in_min_to_display: Int,
@@ -33,7 +35,7 @@ data class AlarmData(
 
 )
 
-@Database(entities = [AlarmData::class], version = 12)
+@Database(entities = [AlarmData::class], version = 2)
 abstract class AlarmDatabase : RoomDatabase() {
     abstract fun alarmDao(): AlarmDao
 }

@@ -87,6 +87,9 @@ import androidx.compose.ui.platform.testTag
 import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.LastAlarmUpdateDBReceiver
 import com.example.trying_native.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -402,6 +405,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
     val alarms by AlarmDao.getAllAlarmsFlow().collectAsState(initial = emptyList())
     var showTheDialogToTheUserToAskForPermission by remember { mutableStateOf(false) }
 
+
     Box(
         modifier = Modifier
             .testTag("AlarmContainer")
@@ -412,8 +416,6 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
             modifier = Modifier.fillMaxSize()
         ) {
             itemsIndexed(alarms){indexOfIndividualAlarmInAlarm, individualAlarm ->
-//                logD("hhhhjjjjkkk-->$indexOfIndividualAlarmInAlarm")
-//                item {
                     ElevatedCard(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -483,7 +485,6 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                     textAlign = TextAlign.Center
                                 )
                             }
-
                             Spacer(modifier = Modifier.weight(1f))
 
                             Row(
@@ -519,21 +520,44 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                 )
                                 Button(
                                     onClick = {
-                                        coroutineScope.launch {
-                                            cancelAlarmByCancelingPendingIntent(
-                                                context_of_activity = context_of_activity,
-                                                startTime = individualAlarm.first_value,
-                                                endTime = individualAlarm.second_value,
-                                                frequency_in_min = individualAlarm.freq_in_min,
-                                                alarmDao = AlarmDao,
-                                                alarmManager = alarmManager,
-                                                delete_the_alarm_from_db = false
-                                            )
+                                        if (individualAlarm.isReadyToUse){
+                                            coroutineScope.launch {
+                                                cancelAlarmByCancelingPendingIntent(
+                                                    context_of_activity = context_of_activity,
+                                                    startTime = individualAlarm.first_value,
+                                                    endTime = individualAlarm.second_value,
+                                                    frequency_in_min = individualAlarm.freq_in_min,
+                                                    alarmDao = AlarmDao,
+                                                    alarmManager = alarmManager,
+                                                    delete_the_alarm_from_db = false
+                                                )
+                                            }
+                                        }
+                                       // -------------------------
+                                        else {
+
+                                            var startTime_obj_form_calender:Calendar = Calendar.getInstance().apply {
+                                                timeInMillis = individualAlarm.first_value
+//                                                set(Calendar.HOUR_OF_DAY, startTime?.hour!!)
+//                                                set(Calendar.MINUTE, startTime?.minute!! )
+                                            }
+                                            var endTime_obj_form_calender = Calendar.getInstance().apply {
+                                                timeInMillis = individualAlarm.second_value
+//                                                set(Calendar.HOUR_OF_DAY, endTime?.hour!!)
+//                                                set(Calendar.MINUTE, endTime?.minute!! )
+                                            }
+                                            var date = individualAlarm.date_in_long
+
+                                            coroutineScope.launch {
+                                                scheduleMultipleAlarms(alarmManager, activity_context = context_of_activity, alarmDao = AlarmDao,
+                                                    calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = individualAlarm.freq_in_min_to_display,
+                                                    selected_date_for_display =  individualAlarm.date_for_display , date_in_long= date, coroutineScope = this, is_alarm_ready_to_use = true  )
+                                            }
                                         }
                                     },
                                     colors = ButtonDefaults.buttonColors(Color(0xFF0eaae3))
                                 ) {
-                                    Text("remove")
+                                    Text(if (individualAlarm.isReadyToUse) "remove" else "reset")
                                 }
                             }
                         }
@@ -704,7 +728,7 @@ fun DatePicker_without_dialog(
     }
 }
 
-@SuppressLint("SuspiciousIndentation")
+@SuppressLint("SuspiciousIndentation", "CoroutineCreationDuringComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DialogToAskUserAboutAlarm(
@@ -733,6 +757,7 @@ fun DialogToAskUserAboutAlarm(
     } else {
         screenHeight_if_message_not_present
     }
+    val coroutineScope = rememberCoroutineScope()
 
     Dialog(onDismissRequest = { onDismissRequest() },
     ) {
@@ -851,6 +876,8 @@ fun DialogToAskUserAboutAlarm(
                        set(Calendar.MINUTE, startTime?.minute!! )
                    }
 
+
+
                    var endTime_obj_form_calender = Calendar.getInstance().apply {
                        timeInMillis = pickedDateState?.selectedDateMillis!!
                        set(Calendar.HOUR_OF_DAY, endTime?.hour!!)
@@ -860,13 +887,12 @@ fun DialogToAskUserAboutAlarm(
                    var date = pickedDateState!!.selectedDateMillis?.let {
                        java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
                    }?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-
-                   scheduleMultipleAlarms(alarmManager, activity_context = activity_context, alarmDao = alarmDao,
-                       calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = freq_returned_by_user,
-                       selected_date_for_display =  date!! )
-
+                   coroutineScope.launch {
+                       scheduleMultipleAlarms(alarmManager, activity_context = activity_context, alarmDao = alarmDao,
+                           calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = freq_returned_by_user,
+                           selected_date_for_display =  date!!, date_in_long = pickedDateState!!.selectedDateMillis!!, coroutineScope = this, is_alarm_ready_to_use = true  )
+                   }
                    onDismissRequest()
-
                }
                 }
             }
@@ -986,13 +1012,10 @@ fun freq_without_dialog(onDismiss:()->Unit, nextButton:String, onConfirm:(text_e
 
 
 
- @SuppressLint("CoroutineCreationDuringComposition")
- @Composable
- fun scheduleMultipleAlarms(alarmManager: AlarmManager, selected_date_for_display:String,
-       calendar_for_start_time:Calendar, calendar_for_end_time:Calendar, freq_after_the_callback:Int, activity_context:ComponentActivity, alarmDao:AlarmDao )
+ suspend fun scheduleMultipleAlarms(alarmManager: AlarmManager, selected_date_for_display:String, date_in_long: Long, coroutineScope: CoroutineScope, is_alarm_ready_to_use:Boolean,
+                                    calendar_for_start_time:Calendar, calendar_for_end_time:Calendar, freq_after_the_callback:Int, activity_context:ComponentActivity, alarmDao:AlarmDao )
  {
     // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
-     val coroutineScope = rememberCoroutineScope()
      var startTimeInMillis = calendar_for_start_time.timeInMillis
     val startTimeInMillisendForDb= startTimeInMillis
     val start_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_start_time.time)
@@ -1026,26 +1049,25 @@ fun freq_without_dialog(onDismiss:()->Unit, nextButton:String, onConfirm:(text_e
     lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())
 
 //        lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime((startTimeInMillis - freq_in_min)+2000,activity_context, alarmManager, startTimeNow, startTimeNow, "form the lastPendingIntentWithMessageForDbOperations form", AlarmReceiver() )
-    alarmSetComplete = true
-     coroutineScope.launch {
-        try {
-            val newAlarm = AlarmData(
-                first_value = startTimeInMillisendForDb,
-                second_value = endTimeInMillisendForDb,
-                freq_in_min = freq_in_min,
-                isReadyToUse = alarmSetComplete,
-                date_for_display = selected_date_for_display,
-                start_time_for_display = start_time_for_display ,
-                end_time_for_display = end_time_for_display,
-                start_am_pm = start_am_pm ,
-                end_am_pm = end_am_pm,
-                freq_in_min_to_display = (freq_in_min/60000).toInt(),
-
-                )
-            val insertedId = alarmDao.insert(newAlarm)
-            logD("Inserted alarm with ID: $insertedId")
-        } catch (e: Exception) {
-            logD("Exception occurred when inserting in the db: $e")
-        }
-    }
+     withContext(Dispatchers.IO) {
+         try {
+             val newAlarm = AlarmData(
+                 first_value = startTimeInMillisendForDb,
+                 second_value = endTimeInMillisendForDb,
+                 freq_in_min = freq_in_min,
+                 isReadyToUse = is_alarm_ready_to_use,
+                 date_for_display = selected_date_for_display,
+                 start_time_for_display = start_time_for_display,
+                 end_time_for_display = end_time_for_display,
+                 start_am_pm = start_am_pm,
+                 end_am_pm = end_am_pm,
+                 freq_in_min_to_display = (freq_in_min / 60000).toInt(),
+                 date_in_long = date_in_long
+             )
+             val insertedId = alarmDao.insert(newAlarm)
+             logD("Inserted alarm with ID: $insertedId")
+         } catch (e: Exception) {
+             logD("Exception occurred when inserting in the db: $e")
+         }
+     }
 }
