@@ -61,6 +61,7 @@ android {
 }
 
 dependencies {
+    implementation("com.posthog:posthog-android:3.+")
     implementation(libs.androidx.espresso.contrib)
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation("androidx.test:runner:1.6.1")

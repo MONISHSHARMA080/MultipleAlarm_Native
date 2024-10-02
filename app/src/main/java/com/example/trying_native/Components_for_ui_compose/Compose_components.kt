@@ -5,6 +5,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
@@ -395,6 +396,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val fontSize = (screenHeight * 0.05f).value.sp
     val coroutineScope = rememberCoroutineScope()
+    var askUserForPermission by remember { mutableStateOf(Settings.canDrawOverlays(context_of_activity)) }
 
     // Collect the Flow as State
     val alarms by AlarmDao.getAllAlarmsFlow().collectAsState(initial = emptyList())
@@ -422,7 +424,10 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(color = Color(0xFF0D388C))
+                                .background(
+                                    color = if (!individualAlarm.isReadyToUse) Color(0xFF666b75) else Color(0xFF0D388C)
+
+                                )
                                 .padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
@@ -548,7 +553,11 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                 .padding(bottom = screenHeight / 15)
                 .testTag("RoundPlusIcon")
         ) {
-            RoundPlusIcon(size = screenHeight/10, onClick = {showTheDialogToTheUserToAskForPermission = !showTheDialogToTheUserToAskForPermission; askUserForPermissionToScheduleAlarm()})
+            RoundPlusIcon(size = screenHeight/10, onClick = {showTheDialogToTheUserToAskForPermission = !showTheDialogToTheUserToAskForPermission;
+            if(askUserForPermission == true){
+                askUserForPermissionToScheduleAlarm()
+            }
+        })
         }
     }
 }

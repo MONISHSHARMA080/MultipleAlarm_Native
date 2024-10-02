@@ -7,7 +7,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
@@ -16,33 +15,31 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.lifecycle.lifecycleScope
-import com.example.trying_native.Components_for_ui_compose.Button_for_alarm
 import com.example.trying_native.Components_for_ui_compose.*
 import com.example.trying_native.ui.theme.Trying_nativeTheme
-import java.util.Date
 import java.util.Calendar
 import androidx.room.Room
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmDatabase
+import com.posthog.android.PostHogAndroid
+import com.posthog.android.PostHogAndroidConfig
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.time.Instant
-import java.time.ZoneId
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        const val POSTHOG_API_KEY = "phc_HKK1ZuTn3bjPFLZs0yA8ApLpgPt48JvrB614zbOduFQ"
+        const val POSTHOG_HOST = "https://us.i.posthog.com"
+    }
 
     private val overlayPermissionLauncher = registerForActivityResult(StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
@@ -77,13 +74,28 @@ class MainActivity : ComponentActivity() {
 
 //    val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "AlarmData")
 //    val database = DatabaseManager.getInstance(applicationContext)
- //-form docs
+ //-form docsd
 
 val activity_context = this
 
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
+
+
+        val config = PostHogAndroidConfig(
+            apiKey = POSTHOG_API_KEY,
+            host = POSTHOG_HOST
+        )
+        config.sessionReplay = true
+        // choose whether to mask images or text
+        config.sessionReplayConfig.maskAllImages = false
+        config.sessionReplayConfig.maskAllTextInputs = true
+        // screenshot is disabled by default
+        // The screenshot may contain sensitive information, use with caution
+        config.sessionReplayConfig.screenshot = true
+
+        PostHogAndroid.setup(this, config)
 
 //        lifecycleScope.launch(Dispatchers.IO) {
             val db = Room.databaseBuilder(
@@ -102,7 +114,7 @@ val activity_context = this
                 Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
                     Column(modifier = Modifier.padding(paddingValues)) {
 //                        Button(onClick = { permissionToScheduleAlarm() }) { Text("-----") }
-                      AlarmContainer(alarmDao, alarmManager, activity_context, askUserForPermissionToScheduleAlarm = { permissionToScheduleAlarm() })
+                      AlarmContainer(alarmDao, alarmManager, activity_context, askUserForPermissionToScheduleAlarm = { permissionToScheduleAlarm() } )
                     }
                 }
             }
