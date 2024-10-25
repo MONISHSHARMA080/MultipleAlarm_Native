@@ -1,9 +1,12 @@
+import java.io.FileInputStream
+import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
     id("com.google.devtools.ksp") version "1.9.0-1.0.13"
 }
+
 
 android {
     namespace = "com.example.trying_native"
@@ -21,7 +24,15 @@ android {
         }
     }
 
-     signingConfigs {
+    // Load signing properties from the file
+    val keystorePropertiesFile = file("app/signing.properties")
+    val keystoreProperties = Properties().apply {
+        if (keystorePropertiesFile.exists()) {
+            load(FileInputStream(keystorePropertiesFile))
+        }
+    }
+
+    signingConfigs {
         create("release") {
             storeFile = file("app/${keystoreProperties["STORE_FILE"]}")
             storePassword = keystoreProperties["STORE_PASSWORD"] as String?
@@ -29,22 +40,15 @@ android {
             keyPassword = keystoreProperties["KEY_PASSWORD"] as String?
         }
     }
-    
+
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
-        release {
-            isMinifyEnabled = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
             signingConfig = signingConfigs.getByName("release")
         }
-        debug {
+
+        getByName("debug") {
             isDebuggable = true
         }
     }
@@ -78,7 +82,6 @@ android {
         }
     }
 }
-
 dependencies {
     implementation("com.posthog:posthog-android:3.+")
     implementation(libs.androidx.espresso.contrib)
