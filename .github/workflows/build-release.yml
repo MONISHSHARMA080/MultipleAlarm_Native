@@ -56,12 +56,18 @@ jobs:
           chmod +x ./gradlew
           ./gradlew assembleRelease --warning-mode all
 
+      - name: Align APK with zipalign
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zipalign
+          zipalign -v -p 4 app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/app-release-aligned.apk
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: app/build/outputs/apk/release/app-release.apk
+          files: app/build/outputs/apk/release/app-release-aligned.apk
           tag_name: v${{ steps.version.outputs.next_version }}
           name: Release v${{ steps.version.outputs.next_version }}
           body: |
