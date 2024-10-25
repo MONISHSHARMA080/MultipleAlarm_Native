@@ -54,7 +54,7 @@ jobs:
       - name: Build Release APK
         run: |
           chmod +x ./gradlew
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease --warning-mode all
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
