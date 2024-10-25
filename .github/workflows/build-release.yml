@@ -31,15 +31,17 @@ jobs:
       - name: Build APK
         run: ./gradlew assembleRelease
 
-        - name: Create GitHub Release and Upload APK
+      - name: Upload APK to GitHub Release
         uses: eregon/publish-release@v1
         with:
+          repo: ${{ github.repository }}
           tag: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }}"
           body: "Automated release of the latest APK build for the main branch."
           files: app/build/outputs/apk/release/app-release-unsigned.apk
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: false
           prerelease: false
+
       - name: Clean up
         run: ./gradlew clean
