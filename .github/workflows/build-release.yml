@@ -1,0 +1,46 @@
+name: Build and Release APK
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '11' # Or the Java version your project requires
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build APK
+        run: ./gradlew assembleRelease
+
+      - name: Upload APK to GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          files: app/build/outputs/apk/release/app-release-unsigned.apk
+          body: "Automated release of the latest APK build for the main branch."
+          draft: false
+          prerelease: false
+
+      - name: Clean up
+        run: ./gradlew clean
