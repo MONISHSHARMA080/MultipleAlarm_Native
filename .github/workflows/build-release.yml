@@ -31,14 +31,14 @@ jobs:
       - name: Build APK
         run: ./gradlew assembleRelease
 
-      - name: Upload APK to GitHub Release
-        uses: ncipollo/release-action@v1
+        - name: Create GitHub Release and Upload APK
+        uses: eregon/publish-release@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
-          artifact: app/build/outputs/apk/release/app-release-unsigned.apk
           body: "Automated release of the latest APK build for the main branch."
+          files: app/build/outputs/apk/release/app-release-unsigned.apk
+          token: ${{ secrets.GITHUB_TOKEN }}
           draft: false
           prerelease: false
 
