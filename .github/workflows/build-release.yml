@@ -6,9 +6,8 @@ on:
       - main
   workflow_dispatch:
 
-# Add permissions block at workflow level
 permissions:
-  contents: write # This is crucial for creating releases
+  contents: write
   packages: write
 
 jobs:
@@ -17,6 +16,23 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history for getting tags
+
+      - name: Get next version number
+        id: version
+        run: |
+          # Get the latest tag that matches vX pattern (where X is a number)
+          latest_tag=$(git tag -l "v[0-9]*" | sort -V | tail -n 1)
+          if [ -z "$latest_tag" ]; then
+            # If no existing tag found, start with v1
+            echo "next_version=1" >> $GITHUB_OUTPUT
+          else
+            # Extract number from tag (remove 'v' prefix) and increment
+            current_version=${latest_tag#v}
+            next_version=$((current_version + 1))
+            echo "next_version=$next_version" >> $GITHUB_OUTPUT
+          fi
 
       - name: Set up JDK
         uses: actions/setup-java@v3
@@ -35,11 +51,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: app/build/outputs/apk/release/app-release-unsigned.apk
-          tag_name: v${{ github.run_number }}
-          name: Release v${{ github.run_number }}
+          tag_name: v${{ steps.version.outputs.next_version }}
+          name: Release v${{ steps.version.outputs.next_version }}
           body: |
             Automated release of the latest APK build for the main branch.
-            Build number: ${{ github.run_number }}
+            Build number: ${{ steps.version.outputs.next_version }}
             Commit: ${{ github.sha }}
           draft: false
           prerelease: false
