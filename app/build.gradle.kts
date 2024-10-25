@@ -23,14 +23,16 @@ android {
 
     signingConfigs {
         create("release") {
-            val properties = java.util.Properties()
-            val signingPropertiesFile = rootProject.file("app/signing.properties")
-            if (signingPropertiesFile.exists()) {
-                properties.load(signingPropertiesFile.inputStream())
-                storeFile = file(properties["STORE_FILE"] as String)
-                storePassword = properties["STORE_PASSWORD"] as String
-                keyAlias = properties["KEY_ALIAS"] as String
-                keyPassword = properties["KEY_PASSWORD"] as String
+            // Fix: Properly import Properties and handle file reading
+            val properties = java.util.Properties().apply {
+                val signingPropertiesFile = rootProject.file("app/signing.properties")
+                if (signingPropertiesFile.exists()) {
+                    load(signingPropertiesFile.reader())
+                    storeFile = file(getProperty("STORE_FILE"))
+                    storePassword = getProperty("STORE_PASSWORD")
+                    keyAlias = getProperty("KEY_ALIAS")
+                    keyPassword = getProperty("KEY_PASSWORD")
+                }
             }
         }
     }
@@ -78,7 +80,6 @@ android {
         }
     }
 }
-
 dependencies {
     implementation("com.posthog:posthog-android:3.+")
     implementation(libs.androidx.espresso.contrib)
