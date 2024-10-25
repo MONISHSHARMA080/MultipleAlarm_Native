@@ -65,77 +65,25 @@ jobs:
           restore-keys: |
             gradle-deps
 
-      - name: Decode Keystore
-        run: |
-          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
-            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
-            echo "Keystore decoded successfully"
-            ls -l app/release.keystore
-          else
-            echo "Error: KEYSTORE_BASE64 secret is not set"
-            exit 1
-          fi
-
-      - name: Create Signing Properties
-        run: |
-          cat << EOF > app/signing.properties
-          STORE_FILE=release.keystore
-          STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS=${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}
-          EOF
-          echo "signing.properties created successfully"
-          ls -l app/signing.properties
-
       - name: Build Debug APK
         run: ./gradlew assembleDebug 
 
       - name: Build Release APK
         run: |
           ./gradlew clean
-          ./gradlew assembleRelease 
-          
-      - name: Verify APK Exists
-        run: |
-          if [ -f app/build/outputs/apk/release/app-release-unsigned.apk ]; then
-            echo "APK file exists"
-            ls -l app/build/outputs/apk/release/
-          else
-            echo "Error: APK file not found"
-            exit 1
-          fi
+          ./gradlew assembleRelease
 
-      - name: Install Zipalign
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y zipalign
-          zipalign -v
-
-      - name: Zipalign APK
-        run: |
-          mkdir -p app/build/outputs/apk/release/aligned
-          zipalign -v -p 4  \
-            app/build/outputs/apk/release/app-release-unsigned.apk \
-            app/build/outputs/apk/release/aligned/app-release-unsigned-aligned.apk
-          
-          # Verify alignment
-          zipalign -c -v 4 app/build/outputs/apk/release/aligned/app-release-unsigned-aligned.apk || {
-            echo "Alignment verification failed"
-            exit 1
-          }
-
-      - name: Sign APK
-        run: |
-          apksigner sign --ks app/release.keystore \
-            --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
-            --key-pass pass:${{ secrets.KEY_PASSWORD }} \
-            --ks-key-alias ${{ secrets.KEY_ALIAS }} \
-            app/build/outputs/apk/release/aligned/app-release-unsigned-aligned.apk
-
-      - name: Verify Signed APK
-        run: |
-          apksigner verify app/build/outputs/apk/release/aligned/app-release-unsigned-aligned.apk
-          ls -l app/build/outputs/apk/release/aligned/app-release-unsigned-aligned.apk
+      - name: Sign Android Release
+        id: sign_app
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
 
       - name: Generate Release Notes
         id: release_notes
@@ -151,7 +99,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: app/build/outputs/apk/release/aligned/app-release-unsigned-aligned.apk
+          files: ${{ steps.sign_app.outputs.signedReleaseFile }}
           tag_name: v${{ steps.version.outputs.next_version }}
           name: Release v${{ steps.version.outputs.next_version }}
           body: |
@@ -165,11 +113,5 @@ jobs:
           name: APK-Files
           path: |
             app/build/outputs/apk/debug/app-debug.apk
-            app/build/outputs/apk/release/aligned/app-release-unsigned-aligned.apk
+            ${{ steps.sign_app.outputs.signedReleaseFile }}
           retention-days: 30
-
-      - name: Clean Up Sensitive Files
-        if: always()
-        run: |
-          rm -f app/release.keystore
-          rm -f app/signing.properties
