@@ -88,12 +88,12 @@ jobs:
           ls -l app/signing.properties
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug 
 
       - name: Build Release APK
         run: |
           ./gradlew clean
-          ./gradlew assembleRelease --stacktrace
+          ./gradlew assembleRelease 
           
       - name: Verify APK Exists
         run: |
@@ -114,7 +114,7 @@ jobs:
       - name: Zipalign APK
         run: |
           mkdir -p app/build/outputs/apk/release/aligned
-          zipalign -f -v -p 4 \
+          zipalign -v -p 4  \
             app/build/outputs/apk/release/app-release-unsigned.apk \
             app/build/outputs/apk/release/aligned/app-release-unsigned-aligned.apk
           
