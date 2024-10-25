@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: '11' # Or the Java version your project requires
+          java-version: '17' # Or the Java version your project requires
 
       - name: Cache Gradle dependencies
         uses: actions/cache@v3
