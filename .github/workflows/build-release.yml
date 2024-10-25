@@ -52,6 +52,8 @@ jobs:
           # List keystore contents
           echo "Keystore contents:"
           keytool -list -v -keystore app/signing.keystore -storepass "${{ secrets.KEYSTORE_PASSWORD }}" | grep "Alias name:"
+          echo "::debug::KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}" # debug log
+          echo "KEYSTORE_BASE64 (standard echo): ${{ secrets.KEYSTORE_BASE64 }}" # visible log
 
       # Modified signing step with explicit paths
       - name: Sign Android Release
@@ -66,9 +68,7 @@ jobs:
           output: app/build/outputs/apk/release/app-release-signed.apk
         env:
           BUILD_TOOLS_VERSION: "34.0.0"
-        run: |
-          echo "::debug::KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}" # debug log
-          echo "KEYSTORE_BASE64 (standard echo): ${{ secrets.KEYSTORE_BASE64 }}" # visible log
+         
 
 
       # Debug step to verify signed APK
