@@ -62,7 +62,6 @@ jobs:
       - name: Sign Android Release
         id: sign_app
         uses: r0adkll/sign-android-release@v1
-        printf "${{ secrets.KEYSTORE_BASE64 }}"
         printf ${{ secrets.KEYSTORE_BASE64 }}
         with:
           releaseDirectory: app/build/outputs/apk/release
