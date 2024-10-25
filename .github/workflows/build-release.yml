@@ -37,7 +37,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
-          files: app/build/outputs/apk/release/app-release-unsigned.apk
+          artifact: app/build/outputs/apk/release/app-release-unsigned.apk
           body: "Automated release of the latest APK build for the main branch."
           draft: false
           prerelease: false
