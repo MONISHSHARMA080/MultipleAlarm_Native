@@ -48,11 +48,6 @@ jobs:
 
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
-        
-      - name: Clean Gradle Cache
-        run: |
-          rm -f ~/.gradle/caches/modules-2/modules-2.lock
-          rm -f ~/.gradle/caches/modules-2/gc.properties
 
       - name: Cache Gradle Dependencies
         uses: actions/cache@v3
@@ -73,6 +68,19 @@ jobs:
           ./gradlew clean
           ./gradlew assembleRelease
 
+      # Add verification step for keystore before signing
+      - name: Verify Keystore
+        run: |
+          # Decode keystore to a temporary file
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > temp_keystore.jks
+          
+          # List keystore contents (excluding sensitive info)
+          echo "Verifying keystore contents..."
+          keytool -list -v -keystore temp_keystore.jks -storepass "${{ secrets.KEYSTORE_PASSWORD }}" | grep "Alias name:" || exit 1
+          
+          # Clean up
+          rm temp_keystore.jks
+
       - name: Sign Android Release
         id: sign_app
         uses: r0adkll/sign-android-release@v1
@@ -84,6 +92,17 @@ jobs:
           keyPassword: ${{ secrets.KEY_PASSWORD }}
         env:
           BUILD_TOOLS_VERSION: "34.0.0"
+
+      # Verify the signed APK exists
+      - name: Verify Signed APK
+        run: |
+          if [ -f "${{ steps.sign_app.outputs.signedReleaseFile }}" ]; then
+            echo "Signed APK exists at: ${{ steps.sign_app.outputs.signedReleaseFile }}"
+            ls -l "${{ steps.sign_app.outputs.signedReleaseFile }}"
+          else
+            echo "Error: Signed APK not found!"
+            exit 1
+          fi
 
       - name: Generate Release Notes
         id: release_notes
