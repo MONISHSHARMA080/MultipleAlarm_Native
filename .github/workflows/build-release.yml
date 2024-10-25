@@ -41,6 +41,5 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           draft: false
           prerelease: false
-
       - name: Clean up
         run: ./gradlew clean
