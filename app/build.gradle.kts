@@ -4,7 +4,6 @@ plugins {
     id("kotlin-kapt")
     id("com.google.devtools.ksp") version "1.9.0-1.0.13"
 }
-
 android {
     namespace = "com.example.trying_native"
     compileSdk = 34
@@ -16,68 +15,66 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-        debug {
-            isDebuggable = true
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
-    }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
-    configurations.all {
-        resolutionStrategy {
-            force("androidx.test.espresso:espresso-core:3.6.1")
-        }
-    }
-
     signingConfigs {
-        release {
+        create("release") {
             // Load the signing configuration from signing.properties
             def signingProperties = new Properties()
             def signingPropsFile = rootProject.file('app/signing.properties')
             if (signingPropsFile.exists()) {
                 signingProperties.load(new FileInputStream(signingPropsFile))
-                storeFile file(signingProperties['STORE_FILE'])
-                storePassword signingProperties['STORE_PASSWORD']
-                keyAlias signingProperties['KEY_ALIAS']
-                keyPassword signingProperties['KEY_PASSWORD']
+                storeFile = file(signingProperties['STORE_FILE'])
+                storePassword = signingProperties['STORE_PASSWORD']
+                keyAlias = signingProperties['KEY_ALIAS']
+                keyPassword = signingProperties['KEY_PASSWORD']
             }
         }
     }
-     buildTypes {
+
+    buildTypes {
         release {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            signingConfig = signingConfigs.getByName("release")
+        }
+        debug {
+            isDebuggable = true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
+    buildFeatures {
+        compose = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.1"
+    }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+
+    configurations.all {
+        resolutionStrategy {
+            force("androidx.test.espresso:espresso-core:3.6.1")
         }
     }
 }
