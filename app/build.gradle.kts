@@ -4,6 +4,7 @@ plugins {
     id("kotlin-kapt")
     id("com.google.devtools.ksp") version "1.9.0-1.0.13"
 }
+
 android {
     namespace = "com.example.trying_native"
     compileSdk = 34
@@ -22,15 +23,14 @@ android {
 
     signingConfigs {
         create("release") {
-            // Load the signing configuration from signing.properties
-            def signingProperties = new Properties()
-            def signingPropsFile = rootProject.file('app/signing.properties')
-            if (signingPropsFile.exists()) {
-                signingProperties.load(new FileInputStream(signingPropsFile))
-                storeFile = file(signingProperties['STORE_FILE'])
-                storePassword = signingProperties['STORE_PASSWORD']
-                keyAlias = signingProperties['KEY_ALIAS']
-                keyPassword = signingProperties['KEY_PASSWORD']
+            val properties = java.util.Properties()
+            val signingPropertiesFile = rootProject.file("app/signing.properties")
+            if (signingPropertiesFile.exists()) {
+                properties.load(signingPropertiesFile.inputStream())
+                storeFile = file(properties["STORE_FILE"] as String)
+                storePassword = properties["STORE_PASSWORD"] as String
+                keyAlias = properties["KEY_ALIAS"] as String
+                keyPassword = properties["KEY_PASSWORD"] as String
             }
         }
     }
