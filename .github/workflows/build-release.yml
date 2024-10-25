@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -12,29 +14,106 @@ permissions:
 
 jobs:
   build:
+    name: Build & Release APK
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: recursive
 
-      # ... (previous steps remain the same) ...
+      - name: Get Version Name
+        id: version
+        run: |
+          latest_tag=$(git tag -l "v[0-9]*" | sort -V | tail -n 1)
+          if [ -z "$latest_tag" ]; then
+            echo "next_version=1" >> $GITHUB_OUTPUT
+          else
+            current_version=${latest_tag#v}
+            next_version=$((current_version + 1))
+            echo "next_version=$next_version" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Install zipalign
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+        
+      - name: Clean Gradle Cache
+        run: |
+          rm -f ~/.gradle/caches/modules-2/modules-2.lock
+          rm -f ~/.gradle/caches/modules-2/gc.properties
+
+      - name: Cache Gradle Dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            !~/.gradle/caches/build-cache-*
+          key: gradle-deps-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-deps
+
+      - name: Decode Keystore
+        run: |
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
+            echo "Keystore decoded successfully"
+            ls -l app/release.keystore
+          else
+            echo "Error: KEYSTORE_BASE64 secret is not set"
+            exit 1
+          fi
+
+      - name: Create Signing Properties
+        run: |
+          cat << EOF > app/signing.properties
+          STORE_FILE=release.keystore
+          STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS=${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}
+          EOF
+          echo "signing.properties created successfully"
+          ls -l app/signing.properties
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Build Release APK
+        run: |
+          ./gradlew clean
+          ./gradlew assembleRelease --stacktrace
+          
+      - name: Verify APK Exists
+        run: |
+          if [ -f app/build/outputs/apk/release/app-release-unsigned.apk ]; then
+            echo "APK file exists"
+            ls -l app/build/outputs/apk/release/
+          else
+            echo "Error: APK file not found"
+            exit 1
+          fi
+
+      - name: Install Zipalign
         run: |
           sudo apt-get update
           sudo apt-get install -y zipalign
           zipalign -v
 
-      - name: Verify APK location and create output directory
+      - name: Zipalign APK
         run: |
-          ls -la app/build/outputs/apk/release/
           mkdir -p app/build/outputs/apk/release/aligned
-
-      - name: Align APK with zipalign
-        run: |
-          # Add force flag to overwrite if file exists
           zipalign -f -v -p 4 \
             app/build/outputs/apk/release/app-release-unsigned.apk \
             app/build/outputs/apk/release/aligned/app-release-unsigned-aligned.apk
@@ -44,11 +123,8 @@ jobs:
             echo "Alignment verification failed"
             exit 1
           }
-          
-          # List the resulting file
-          ls -la app/build/outputs/apk/release/aligned/
 
-      - name: Sign aligned APK
+      - name: Sign APK
         run: |
           apksigner sign --ks app/release.keystore \
             --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
@@ -56,7 +132,21 @@ jobs:
             --ks-key-alias ${{ secrets.KEY_ALIAS }} \
             app/build/outputs/apk/release/aligned/app-release-unsigned-aligned.apk
 
-      - name: Create Release
+      - name: Verify Signed APK
+        run: |
+          apksigner verify app/build/outputs/apk/release/aligned/app-release-unsigned-aligned.apk
+          ls -l app/build/outputs/apk/release/aligned/app-release-unsigned-aligned.apk
+
+      - name: Generate Release Notes
+        id: release_notes
+        run: |
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          echo "Build date: $(date)" >> $GITHUB_ENV
+          echo "Version: ${{ steps.version.outputs.next_version }}" >> $GITHUB_ENV
+          echo "Commit: ${{ github.sha }}" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -65,8 +155,21 @@ jobs:
           tag_name: v${{ steps.version.outputs.next_version }}
           name: Release v${{ steps.version.outputs.next_version }}
           body: |
-            Automated release of the latest APK build for the main branch.
-            Build number: ${{ steps.version.outputs.next_version }}
-            Commit: ${{ github.sha }}
+            ${{ env.RELEASE_NOTES }}
           draft: false
           prerelease: false
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: APK-Files
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/release/aligned/app-release-unsigned-aligned.apk
+          retention-days: 30
+
+      - name: Clean Up Sensitive Files
+        if: always()
+        run: |
+          rm -f app/release.keystore
+          rm -f app/signing.properties
