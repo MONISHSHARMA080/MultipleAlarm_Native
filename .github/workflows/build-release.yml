@@ -34,19 +34,14 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
-
       # Debug step to verify the unsigned APK location
       - name: Build Release APK
         run: |
+          chmod +x ./gradlew
           ./gradlew clean assembleRelease --stacktrace
           echo "Checking release directory contents:"
           ls -R app/build/outputs/apk/release/
 
-      # Debug step to verify keystore creation
-      - name: Debug Keystore
-        run: |
           # Decode and save keystore
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/signing.keystore
           
@@ -62,6 +57,7 @@ jobs:
       - name: Sign Android Release
         id: sign_app
         uses: r0adkll/sign-android-release@v1
+        
         with:
           releaseDirectory: app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -71,13 +67,10 @@ jobs:
           output: app/build/outputs/apk/release/app-release-signed.apk
         env:
           BUILD_TOOLS_VERSION: "34.0.0"
-
-      # Debug: Print KEYSORE_BASE64 after signing step
-      - name: Debug KEYSTORE_BASE64
         run: |
-          echo "::debug::KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}"
-          echo "KEYSTORE_BASE64 (standard echo): ${{ secrets.KEYSTORE_BASE64 }}"
-        if: always() # Ensure this runs regardless of success/failure
+          echo "::debug::KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}" # debug log
+          echo "KEYSTORE_BASE64 (standard echo): ${{ secrets.KEYSTORE_BASE64 }}" # visible log
+
 
       # Debug step to verify signed APK
       - name: Verify Signed APK
