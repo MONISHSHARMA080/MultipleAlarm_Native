@@ -48,7 +48,7 @@ jobs:
           # Verify keystore file
           echo "Keystore file details:"
           ls -l app/signing.keystore
-          
+        
           # List keystore contents
           echo "Keystore contents:"
           keytool -list -v -keystore app/signing.keystore -storepass "${{ secrets.KEYSTORE_PASSWORD }}" | grep "Alias name:"
@@ -57,7 +57,6 @@ jobs:
       - name: Sign Android Release
         id: sign_app
         uses: r0adkll/sign-android-release@v1
-        
         with:
           releaseDirectory: app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
