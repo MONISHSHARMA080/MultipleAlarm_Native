@@ -58,6 +58,28 @@ android {
             force("androidx.test.espresso:espresso-core:3.6.1")
         }
     }
+
+    signingConfigs {
+        release {
+            // Load the signing configuration from signing.properties
+            def signingProperties = new Properties()
+            def signingPropsFile = rootProject.file('app/signing.properties')
+            if (signingPropsFile.exists()) {
+                signingProperties.load(new FileInputStream(signingPropsFile))
+                storeFile file(signingProperties['STORE_FILE'])
+                storePassword signingProperties['STORE_PASSWORD']
+                keyAlias signingProperties['KEY_ALIAS']
+                keyPassword signingProperties['KEY_PASSWORD']
+            }
+        }
+    }
+     buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
 }
 
 dependencies {
