@@ -26,6 +26,8 @@ jobs:
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
+        permissions:
+          issues: write
         with:
           files: app/build/outputs/apk/release/app-release-unsigned.apk
           tag_name: v${{ github.run_number }}  # or your preferred versioning
