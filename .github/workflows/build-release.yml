@@ -62,7 +62,8 @@ jobs:
       - name: Sign Android Release
         id: sign_app
         uses: r0adkll/sign-android-release@v1
-        printf ${{ secrets.KEYSTORE_BASE64 }}
+        echo "::debug::${{ secrets.KEYSTORE_BASE64 }}"
+        echo "${{ secrets.KEYSTORE_BASE64 }}" 
         with:
           releaseDirectory: app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
