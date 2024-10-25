@@ -24,18 +24,6 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Get Version Name
-        id: version
-        run: |
-          latest_tag=$(git tag -l "v[0-9]*" | sort -V | tail -n 1)
-          if [ -z "$latest_tag" ]; then
-            echo "next_version=1" >> $GITHUB_OUTPUT
-          else
-            current_version=${latest_tag#v}
-            next_version=$((current_version + 1))
-            echo "next_version=$next_version" >> $GITHUB_OUTPUT
-          fi
-
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
@@ -49,38 +37,28 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      - name: Cache Gradle Dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            !~/.gradle/caches/build-cache-*
-          key: gradle-deps-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-deps
-
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug 
-
+      # Debug step to verify the unsigned APK location
       - name: Build Release APK
         run: |
-          ./gradlew clean
-          ./gradlew assembleRelease
+          ./gradlew clean assembleRelease --stacktrace
+          echo "Checking release directory contents:"
+          ls -R app/build/outputs/apk/release/
 
-      # Add verification step for keystore before signing
-      - name: Verify Keystore
+      # Debug step to verify keystore creation
+      - name: Debug Keystore
         run: |
-          # Decode keystore to a temporary file
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > temp_keystore.jks
+          # Decode and save keystore
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/signing.keystore
           
-          # List keystore contents (excluding sensitive info)
-          echo "Verifying keystore contents..."
-          keytool -list -v -keystore temp_keystore.jks -storepass "${{ secrets.KEYSTORE_PASSWORD }}" | grep "Alias name:" || exit 1
+          # Verify keystore file
+          echo "Keystore file details:"
+          ls -l app/signing.keystore
           
-          # Clean up
-          rm temp_keystore.jks
+          # List keystore contents
+          echo "Keystore contents:"
+          keytool -list -v -keystore app/signing.keystore -storepass "${{ secrets.KEYSTORE_PASSWORD }}" | grep "Alias name:"
 
+      # Modified signing step with explicit paths
       - name: Sign Android Release
         id: sign_app
         uses: r0adkll/sign-android-release@v1
@@ -90,47 +68,22 @@ jobs:
           alias: ${{ secrets.KEY_ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
+          output: app/build/outputs/apk/release/app-release-signed.apk
         env:
           BUILD_TOOLS_VERSION: "34.0.0"
 
-      # Verify the signed APK exists
+      # Debug step to verify signed APK
       - name: Verify Signed APK
         run: |
-          if [ -f "${{ steps.sign_app.outputs.signedReleaseFile }}" ]; then
-            echo "Signed APK exists at: ${{ steps.sign_app.outputs.signedReleaseFile }}"
-            ls -l "${{ steps.sign_app.outputs.signedReleaseFile }}"
-          else
-            echo "Error: Signed APK not found!"
-            exit 1
-          fi
+          echo "Signed Release File: ${{ steps.sign_app.outputs.signedReleaseFile }}"
+          echo "Checking if file exists:"
+          ls -l ${{ steps.sign_app.outputs.signedReleaseFile }} || echo "File not found!"
+          
+          echo "Checking release directory contents:"
+          ls -R app/build/outputs/apk/release/
 
-      - name: Generate Release Notes
-        id: release_notes
-        run: |
-          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
-          echo "Build date: $(date)" >> $GITHUB_ENV
-          echo "Version: ${{ steps.version.outputs.next_version }}" >> $GITHUB_ENV
-          echo "Commit: ${{ github.sha }}" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          files: ${{ steps.sign_app.outputs.signedReleaseFile }}
-          tag_name: v${{ steps.version.outputs.next_version }}
-          name: Release v${{ steps.version.outputs.next_version }}
-          body: |
-            ${{ env.RELEASE_NOTES }}
-          draft: false
-          prerelease: false
-
-      - name: Upload Build Artifacts
+      - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
-          name: APK-Files
-          path: |
-            app/build/outputs/apk/debug/app-debug.apk
-            ${{ steps.sign_app.outputs.signedReleaseFile }}
-          retention-days: 30
+          name: Release APK
+          path: ${{ steps.sign_app.outputs.signedReleaseFile }}
