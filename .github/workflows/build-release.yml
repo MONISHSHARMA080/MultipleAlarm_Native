@@ -1,47 +1,40 @@
-name: Build and Release APK
+name: Android Build & Release
 
 on:
   push:
     branches:
-      - main
+      - main  # or your default branch
+  workflow_dispatch:  # allows manual trigger
 
 jobs:
   build:
-    name: Build Android APK
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out code
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: '17' # Or the Java version your project requires
+          java-version: '17'
 
-      - name: Cache Gradle dependencies
-        uses: actions/cache@v3
+      - name: Build Release APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
         with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Build APK
-        run: ./gradlew assembleRelease
-
-      - name: Upload APK to GitHub Release
-        uses: eregon/publish-release@v1
-        with:
-          repo: ${{ github.repository }}
-          tag: ${{ github.ref_name }}
-          name: "Release ${{ github.ref_name }}"
-          body: "Automated release of the latest APK build for the main branch."
           files: app/build/outputs/apk/release/app-release-unsigned.apk
-          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: v${{ github.run_number }}  # or your preferred versioning
+          name: Release v${{ github.run_number }}
+          body: |
+            Automated release of the latest APK build for the main branch.
+            Build number: ${{ github.run_number }}
+            Commit: ${{ github.sha }}
           draft: false
           prerelease: false
-
-      - name: Clean up
-        run: ./gradlew clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
