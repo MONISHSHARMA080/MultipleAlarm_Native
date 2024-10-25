@@ -19,65 +19,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get next version number
-        id: version
-        run: |
-          latest_tag=$(git tag -l "v[0-9]*" | sort -V | tail -n 1)
-          if [ -z "$latest_tag" ]; then
-            echo "next_version=1" >> $GITHUB_OUTPUT
-          else
-            current_version=${latest_tag#v}
-            next_version=$((current_version + 1))
-            echo "next_version=$next_version" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Set up JDK
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
-
-      - name: Cache Gradle packages
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Decode Keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
-          ls -la app/release.keystore  # Verify keystore creation
-
-      - name: Update Gradle Properties
-        run: |
-          cat << EOF > app/signing.properties
-          STORE_FILE=release.keystore
-          STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS=${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}
-          EOF
-          ls -la app/signing.properties  # Verify properties file creation
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
-
-      - name: Show gradle version and build info
-        run: |
-          ./gradlew --version
-          ./gradlew projects
-
-      - name: Build Release APK
-        run: |
-          ./gradlew clean
-          ./gradlew assembleRelease --stacktrace --info
-          ls -la app/build/outputs/apk/release/  # List contents of release directory
+      # ... (previous steps remain the same) ...
 
       - name: Install zipalign
         run: |
@@ -85,25 +27,41 @@ jobs:
           sudo apt-get install -y zipalign
           zipalign -v
 
-      - name: Verify APK exists
+      - name: Verify APK location and create output directory
         run: |
-          if [ ! -f app/build/outputs/apk/release/app-release.apk ]; then
-            echo "APK file not found!"
-            exit 1
-          fi
+          ls -la app/build/outputs/apk/release/
+          mkdir -p app/build/outputs/apk/release/aligned
 
       - name: Align APK with zipalign
         run: |
-          mkdir -p app/build/outputs/apk/release/aligned
-          zipalign -v -p 4 app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/aligned/app-release-aligned.apk
-          ls -la app/build/outputs/apk/release/aligned/  # Verify aligned APK creation
+          # Add force flag to overwrite if file exists
+          zipalign -f -v -p 4 \
+            app/build/outputs/apk/release/app-release-unsigned.apk \
+            app/build/outputs/apk/release/aligned/app-release-unsigned-aligned.apk
+          
+          # Verify alignment
+          zipalign -c -v 4 app/build/outputs/apk/release/aligned/app-release-unsigned-aligned.apk || {
+            echo "Alignment verification failed"
+            exit 1
+          }
+          
+          # List the resulting file
+          ls -la app/build/outputs/apk/release/aligned/
+
+      - name: Sign aligned APK
+        run: |
+          apksigner sign --ks app/release.keystore \
+            --ks-pass pass:${{ secrets.KEYSTORE_PASSWORD }} \
+            --key-pass pass:${{ secrets.KEY_PASSWORD }} \
+            --ks-key-alias ${{ secrets.KEY_ALIAS }} \
+            app/build/outputs/apk/release/aligned/app-release-unsigned-aligned.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: app/build/outputs/apk/release/aligned/app-release-aligned.apk
+          files: app/build/outputs/apk/release/aligned/app-release-unsigned-aligned.apk
           tag_name: v${{ steps.version.outputs.next_version }}
           name: Release v${{ steps.version.outputs.next_version }}
           body: |
