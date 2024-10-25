@@ -62,7 +62,6 @@ jobs:
       - name: Sign Android Release
         id: sign_app
         uses: r0adkll/sign-android-release@v1
-        
         with:
           releaseDirectory: app/build/outputs/apk/release
           signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -72,10 +71,13 @@ jobs:
           output: app/build/outputs/apk/release/app-release-signed.apk
         env:
           BUILD_TOOLS_VERSION: "34.0.0"
-        run: |
-          echo "::debug::KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}" # debug log
-          echo "KEYSTORE_BASE64 (standard echo): ${{ secrets.KEYSTORE_BASE64 }}" # visible log
 
+      # Debug: Print KEYSORE_BASE64 after signing step
+      - name: Debug KEYSTORE_BASE64
+        run: |
+          echo "::debug::KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}"
+          echo "KEYSTORE_BASE64 (standard echo): ${{ secrets.KEYSTORE_BASE64 }}"
+        if: always() # Ensure this runs regardless of success/failure
 
       # Debug step to verify signed APK
       - name: Verify Signed APK
