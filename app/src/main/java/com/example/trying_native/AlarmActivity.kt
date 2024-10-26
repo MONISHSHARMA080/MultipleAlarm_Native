@@ -104,7 +104,9 @@ class AlarmActivity : ComponentActivity() {
 
     // Plays a random sound from the loaded resources
     private fun playRandomSound() {
+        logD("in the playRandom")
         if (soundResourceIds.isNotEmpty()) {
+            logD("soundResourceIds is not empty")
             val randomSoundId = soundResourceIds[Random.nextInt(soundResourceIds.size)]
             mediaPlayer = MediaPlayer.create(this, randomSoundId)
             mediaPlayer?.isLooping = true
