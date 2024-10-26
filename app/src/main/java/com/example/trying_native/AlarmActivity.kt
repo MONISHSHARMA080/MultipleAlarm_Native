@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.media.MediaPlayer
+import android.media.RingtoneManager
 import android.os.Bundle
 import android.os.PowerManager
 import android.util.Log
@@ -29,7 +30,6 @@ import kotlinx.coroutines.delay
 import java.lang.reflect.Field
 
 class AlarmActivity : ComponentActivity() {
-
     private var mediaPlayer: MediaPlayer? = null
     private var wakeLock: PowerManager.WakeLock? = null
 
@@ -47,29 +47,48 @@ class AlarmActivity : ComponentActivity() {
                     WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
                     WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
         )
+
         setShowWhenLocked(true)
         setTurnScreenOn(true)
         wakeLock?.acquire(10*60*1000L /*10 minutes*/)
         Log.d("AA", "in the alarm activity---")
-        val rawFields: Array<Field> = R.raw::class.java.fields
-        val rawResources = rawFields.map { field ->
-            field.getInt(null)  // Get resource ID
+
+        try {
+            val rawFields: Array<Field> = R.raw::class.java.fields
+            val rawResources = rawFields.map { field ->
+                field.getInt(null)  // Get resource ID
+            }
+
+            // Check if we have any sound resources
+            if (rawResources.isEmpty()) {
+                // Fallback to a default sound if no custom sounds are available
+                mediaPlayer = MediaPlayer.create(this, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM))
+            } else {
+                // Select a random resource from the list
+                val randomSoundResId = rawResources.random()
+                mediaPlayer = MediaPlayer.create(this, randomSoundResId)
+            }
+
+            // Configure MediaPlayer
+            mediaPlayer?.apply {
+                isLooping = true
+                start()
+            }
+        } catch (e: Exception) {
+            Log.e("AlarmActivity", "Error initializing sound: ${e.message}")
+            // Fallback to system default alarm sound
+            mediaPlayer = MediaPlayer.create(this, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM))
+            mediaPlayer?.start()
         }
-
-        // Select a random resource from the list
-        val randomSoundResId = rawResources.random()
-
-        // Initialize MediaPlayer with the randomly selected sound
-        mediaPlayer = MediaPlayer.create(this, randomSoundResId)
-        mediaPlayer?.start()
 
         setContent {
             Trying_nativeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) {
                     TimeDisplay {
-                        finish() // End the activity when the button is clicked
+                        mediaPlayer?.stop()
                         mediaPlayer?.release()
                         mediaPlayer = null
+                        finish() // End the activity when the button is clicked
                     }
                 }
             }
@@ -77,25 +96,28 @@ class AlarmActivity : ComponentActivity() {
     }
 
     override fun onNewIntent(intent: Intent) {
-        if (intent != null) {
-            super.onNewIntent(intent)
-        }
+        super.onNewIntent(intent)
         Log.d("AA", "New Intent received in AlarmActivity")
+
+        // Stop and release the current MediaPlayer
+        mediaPlayer?.stop()
+        mediaPlayer?.release()
+        mediaPlayer = null
 
         // Finish the previous activity when a new intent is received
         finish()
-        startActivity(intent) // Optionally, restart the activity with the new intent
+        intent.let { startActivity(it) } // Restart the activity with the new intent if available
     }
 
     override fun onDestroy() {
         super.onDestroy()
         // Release MediaPlayer resources when the activity is destroyed
+        mediaPlayer?.stop()
         mediaPlayer?.release()
         mediaPlayer = null
         wakeLock?.release()
     }
 }
-
 
 @Composable
 fun TimeDisplay(onFinish: () -> Unit) {
