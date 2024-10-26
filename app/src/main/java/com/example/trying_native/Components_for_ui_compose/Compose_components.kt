@@ -669,7 +669,6 @@ fun DatePicker_without_dialog(
     showDatePickerToTheUser: Boolean = true,  // probably i left it there show replace it
     onDismiss: () -> Unit,
     nextButton: String = "Next",
-//    onConfirm: (DatePickerState) -> Unit,
     onDateSelectedByUser: (Long) -> Unit
 
 ) {
@@ -687,61 +686,6 @@ fun DatePicker_without_dialog(
             }
         },
     )
-//    var showDatePicker by remember { mutableStateOf(showDatePickerToTheUser) }
-//    val today = Calendar.getInstance().timeInMillis
-//
-//    // Initialize DatePickerState with today's date
-//    val datePickerState = rememberDatePickerState(
-//        initialSelectedDateMillis = today
-//    )
-
-//    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-
-//    Box(modifier = Modifier.fillMaxWidth()) {
-//        if (showDatePicker) {
-//            Card( ){
-//                Box(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-////                        .offset(y = screenHeight/28)
-//                        .shadow(elevation = 4.dp)
-//                        .background(MaterialTheme.colorScheme.surface)
-//                        .padding(8.dp)
-//
-//                ) {
-//                    Column {
-//                        DatePicker(
-//                            state = datePickerState,
-//                            showModeToggle = false,
-//                            modifier = Modifier
-//                            .testTag("datePicker")
-//                        )
-////                        if (user_mistake_message_show != ""){
-////                        }
-//
-//                        Row(
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .padding(top = 7.dp),
-//                            horizontalArrangement = Arrangement.SpaceBetween
-//                        ) {
-//                            Button(onClick = onDismiss) {
-//                                Text("Dismiss")
-//                            }
-//                            Button(
-//                                onClick = { onConfirm(datePickerState) },
-//                            ) {
-//                                Text(nextButton)
-//                            }
-//
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-
-
 
 }
 
@@ -865,8 +809,9 @@ fun DialogToAskUserAboutAlarm(
                                 onDateSelected = { dateState ->
 
                                     onConfirmation(startTime!!, endTime!!, dateState)
-                                    a++ // Move to the next state
+                                   // Move to the next state
                                     showDatePickerModal = false // Dismiss DatePicker
+                                    a++
                                     logD("value of a after running onConfirmation is $a")
                                 },
                                 onDismiss = {
