@@ -21,7 +21,11 @@ jobs:
         cache: gradle
 
     - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      env:
+          AKS_AKS: ${{ secrets.KEYSTORE_BASE64 }}  # Access the AKS_AKS secret
+      run: |
+          chmod +x gradlew
+          echo "The AKS secret is: $AKS_AKS"
 
     - name: Decode Keystore
       env:
