@@ -1,6 +1,5 @@
 /build
 /app/src/main/res/raw
-# Signing configs
 *.keystore
 *.jks
 signing.properties
@@ -8,3 +7,5 @@ keystore-base64.txt
 temp.txt
 keystore-base64.txt
 my-release-key.keystore
+keystore_base64.txt
+keystore.jks

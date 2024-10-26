@@ -22,25 +22,30 @@ android {
             useSupportLibrary = true
         }
     }
+    signingConfigs {
+        create("release") {
+            // These will be populated from command line parameters
+            storeFile = file(findProperty("android.injected.signing.store.file") ?: "keystore.jks")
+            storePassword = findProperty("android.injected.signing.store.password") as String?
+            keyAlias = findProperty("android.injected.signing.key.alias") as String?
+            keyPassword = findProperty("android.injected.signing.key.password") as String?
+        }
+    }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-        debug {
-            isDebuggable = true
+            isMinifyEnabled = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
