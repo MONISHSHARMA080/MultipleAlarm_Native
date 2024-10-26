@@ -28,92 +28,95 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.delay
 import java.lang.reflect.Field
+import kotlin.random.Random
+
+
 class AlarmActivity : ComponentActivity() {
+
     private var mediaPlayer: MediaPlayer? = null
     private var wakeLock: PowerManager.WakeLock? = null
 
-    // Function to get a random sound resource ID from raw folder dynamically
-    private fun getRandomSoundResource(): Int {
-        val soundResourceIds = mutableListOf<Int>()
-        R.raw::class.java.fields.forEach { field ->
-            soundResourceIds.add(field.getInt(null))
-        }
-        return soundResourceIds.random()
+    // List of sound resources dynamically loaded
+    private val soundResourceIds by lazy {
+        loadSoundResources()
     }
 
-    // Function to start playing a random sound
-    private fun playRandomSound() {
-        try {
-            mediaPlayer?.release()
-            mediaPlayer = MediaPlayer.create(this, getRandomSoundResource()).apply {
-                isLooping = true
-                start()
-            }
-        } catch (e: Exception) {
-            Log.e("AlarmActivity", "Error playing sound: ${e.message}")
-        }
-    }
-
-    // Rest of your activity code remains the same
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Set up power settings
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
         wakeLock = powerManager.newWakeLock(
             PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
             "AlarmActivity::WakeLock"
         )
+        wakeLock?.acquire(10 * 60 * 1000L) // 10 minutes
 
+        // Configure window flags for alarm display
         window.addFlags(
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                     WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
                     WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
                     WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
         )
-
         setShowWhenLocked(true)
         setTurnScreenOn(true)
-        wakeLock?.acquire(10*60*1000L /*10 minutes*/)
 
-        logD("in the alarm activity---")
-
+        // Play a random sound
         playRandomSound()
 
         setContent {
             Trying_nativeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) {
                     TimeDisplay {
-                        mediaPlayer?.stop()
-                        mediaPlayer?.release()
-                        mediaPlayer = null
-                        finish()
+                        stopAndReleaseMediaPlayer()
+                        finish() // End activity when button clicked
                     }
                 }
             }
         }
     }
 
+    // Handles new intents to restart the alarm
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         Log.d("AA", "New Intent received in AlarmActivity")
 
-        mediaPlayer?.stop()
-        mediaPlayer?.release()
-        mediaPlayer = null
-
+        stopAndReleaseMediaPlayer()
         playRandomSound()
-
-        finish()
-        intent.let { startActivity(it) }
     }
 
+    // Releases resources on activity destruction
     override fun onDestroy() {
         super.onDestroy()
+        stopAndReleaseMediaPlayer()
+        wakeLock?.release()
+    }
+
+    // Load all sound resources from the raw folder
+    private fun loadSoundResources(): List<Int> {
+        val fields = R.raw::class.java.fields
+        return fields.mapNotNull { field ->
+            resources.getIdentifier(field.name, "raw", packageName).takeIf { it != 0 }
+        }
+    }
+
+    // Plays a random sound from the loaded resources
+    private fun playRandomSound() {
+        if (soundResourceIds.isNotEmpty()) {
+            val randomSoundId = soundResourceIds[Random.nextInt(soundResourceIds.size)]
+            mediaPlayer = MediaPlayer.create(this, randomSoundId)
+            mediaPlayer?.isLooping = true
+            mediaPlayer?.start()
+        }
+    }
+
+    // Stops and releases the media player
+    private fun stopAndReleaseMediaPlayer() {
         mediaPlayer?.stop()
         mediaPlayer?.release()
         mediaPlayer = null
-        wakeLock?.release()
     }
 }
 
