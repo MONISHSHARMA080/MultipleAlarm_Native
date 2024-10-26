@@ -51,7 +51,7 @@ class AlarmActivity : ComponentActivity() {
         setShowWhenLocked(true)
         setTurnScreenOn(true)
         wakeLock?.acquire(10*60*1000L /*10 minutes*/)
-        Log.d("AA", "in the alarm activity---")
+        logD( "in the alarm activity---")
 
         try {
             val rawFields: Array<Field> = R.raw::class.java.fields
@@ -61,21 +61,26 @@ class AlarmActivity : ComponentActivity() {
 
             // Check if we have any sound resources
             if (rawResources.isEmpty()) {
+                logD("rawResources.isEmpty")
                 // Fallback to a default sound if no custom sounds are available
                 mediaPlayer = MediaPlayer.create(this, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM))
             } else {
+                logD("rawResources.is not Empty")
                 // Select a random resource from the list
                 val randomSoundResId = rawResources.random()
                 mediaPlayer = MediaPlayer.create(this, randomSoundResId)
+                mediaPlayer = MediaPlayer.create(this, randomSoundResId)
+                mediaPlayer?.start()
             }
 
-            // Configure MediaPlayer
-            mediaPlayer?.apply {
-                isLooping = true
-                start()
-            }
+
+//            // Configure MediaPlayer
+//            mediaPlayer?.apply {
+//                isLooping = true
+//                start()
+//            }
         } catch (e: Exception) {
-            Log.e("AlarmActivity", "Error initializing sound: ${e.message}")
+            logD( "Error initializing sound: ${e.message}")
             // Fallback to system default alarm sound
             mediaPlayer = MediaPlayer.create(this, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM))
             mediaPlayer?.start()
