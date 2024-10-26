@@ -427,7 +427,9 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(
-                                    color = if (!individualAlarm.isReadyToUse) Color(0xFF666b75) else Color(0xFF0D388C)
+                                    color = if (!individualAlarm.isReadyToUse) Color(0xFF666b75) else Color(
+                                        0xFF0D388C
+                                    )
 
                                 )
                                 .padding(16.dp),
@@ -561,12 +563,12 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
 //                }
             }
         }
-        //-----------
         if (showTheDialogToTheUserToAskForPermission){
-            DialogToAskUserAboutAlarm(onDismissRequest = {showTheDialogToTheUserToAskForPermission = false}, onConfirmation = {a,b, c ->logD("in the confirm ${a.hour}:${a.minute},--||-- ${c.selectedDateMillis}")}
+            DialogToAskUserAboutAlarm(onDismissRequest = {
+                logD("DialogToAskUserAboutAlarm is about to be set to false")
+                showTheDialogToTheUserToAskForPermission = false }, onConfirmation = {a,b, c ->logD("in the confirm ${a.hour}:${a.minute},--||-- ${c}"); logD("got the confirmation in DialogToAskUserAboutAlarm")}
             , activity_context = context_of_activity, alarmDao = AlarmDao, alarmManager = alarmManager)
         }
-
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -664,65 +666,121 @@ Column {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePicker_without_dialog(
-    showDatePickerToTheUser: Boolean = true,
+    showDatePickerToTheUser: Boolean = true,  // probably i left it there show replace it
     onDismiss: () -> Unit,
     nextButton: String = "Next",
-    onConfirm: (DatePickerState) -> Unit,
+//    onConfirm: (DatePickerState) -> Unit,
+    onDateSelectedByUser: (Long) -> Unit
 
 ) {
-    var showDatePicker by remember { mutableStateOf(showDatePickerToTheUser) }
-    val today = Calendar.getInstance().timeInMillis
 
-    // Initialize DatePickerState with today's date
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = today
+    DatePickerModalByMe(
+        onDismiss = { onDismiss() }, textForDismissButton = "Dismiss", textForNextButton = nextButton,
+        onDateSelected = { date ->
+            if (date != null) {
+                logD("about to run the onDateSelectedByUser in DatePickerModalByMe , and date is -->$date  ")
+                onDateSelectedByUser(date)
+            } else if (date == null) {
+                logD("${date == null}")
+                logD("about to run ondismiss function in DatePickerModalByMe as date is null ")
+                onDismiss()
+            }
+        },
     )
+//    var showDatePicker by remember { mutableStateOf(showDatePickerToTheUser) }
+//    val today = Calendar.getInstance().timeInMillis
+//
+//    // Initialize DatePickerState with today's date
+//    val datePickerState = rememberDatePickerState(
+//        initialSelectedDateMillis = today
+//    )
+
 //    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 
-    Box(modifier = Modifier.fillMaxWidth()) {
-        if (showDatePicker) {
-            Card( ){
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-//                        .offset(y = screenHeight/28)
-                        .shadow(elevation = 4.dp)
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(8.dp)
-
-                ) {
-                    Column {
-                        DatePicker(
-                            state = datePickerState,
-                            showModeToggle = false,
-                            modifier = Modifier
-                            .testTag("datePicker")
-                        )
-//                        if (user_mistake_message_show != ""){
+//    Box(modifier = Modifier.fillMaxWidth()) {
+//        if (showDatePicker) {
+//            Card( ){
+//                Box(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+////                        .offset(y = screenHeight/28)
+//                        .shadow(elevation = 4.dp)
+//                        .background(MaterialTheme.colorScheme.surface)
+//                        .padding(8.dp)
+//
+//                ) {
+//                    Column {
+//                        DatePicker(
+//                            state = datePickerState,
+//                            showModeToggle = false,
+//                            modifier = Modifier
+//                            .testTag("datePicker")
+//                        )
+////                        if (user_mistake_message_show != ""){
+////                        }
+//
+//                        Row(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(top = 7.dp),
+//                            horizontalArrangement = Arrangement.SpaceBetween
+//                        ) {
+//                            Button(onClick = onDismiss) {
+//                                Text("Dismiss")
+//                            }
+//                            Button(
+//                                onClick = { onConfirm(datePickerState) },
+//                            ) {
+//                                Text(nextButton)
+//                            }
+//
 //                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 7.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Button(onClick = onDismiss) {
-                                Text("Dismiss")
-                            }
-                            Button(
-                                onClick = { onConfirm(datePickerState) },
-                            ) {
-                                Text(nextButton)
-                            }
 
-                        }
-                    }
+
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DatePickerModalByMe(
+    onDateSelected: (Long) -> Unit,
+    onDismiss: () -> Unit,
+    textForNextButton:String,
+    textForDismissButton:String,
+) {
+    val datePickerState = rememberDatePickerState()
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                var dateInMilli = datePickerState.selectedDateMillis
+                if (dateInMilli != null){
+                    onDateSelected(dateInMilli)
+                }else{
+                    logD("in DatePickerModalByMe dateInMilli is null ")
+                    onDismiss()
                 }
+            }) {
+                Text(textForNextButton)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(textForDismissButton)
             }
         }
+    ) {
+        DatePicker(state = datePickerState)
     }
 }
+
 
 @SuppressLint("SuspiciousIndentation", "CoroutineCreationDuringComposition")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -730,7 +788,7 @@ fun DatePicker_without_dialog(
 fun DialogToAskUserAboutAlarm(
     alarmManager: AlarmManager,  activity_context: ComponentActivity, alarmDao: AlarmDao,
     onDismissRequest: () -> Unit,
-    onConfirmation: (startTime: TimePickerState, endTime:TimePickerState, datePickerState: DatePickerState) -> Unit,
+    onConfirmation: (startTime: TimePickerState, endTime:TimePickerState, datePickerState: Long) -> Unit,
 ) {
     // Step state to determine whether we are showing the TimePicker or DatePicker
     val screenHeight = LocalConfiguration.current.screenHeightDp
@@ -738,7 +796,7 @@ fun DialogToAskUserAboutAlarm(
 
     val screenHeight_normal = (screenHeight /1.4).dp
     val screenHeight_if_message_not_present = (screenHeight /1.23).dp
-
+    var showDatePickerModal by remember { mutableStateOf(false) }
 
     // Variables to store the picked time and date
     var startTime: TimePickerState? by remember { mutableStateOf(null) }
@@ -770,6 +828,7 @@ fun DialogToAskUserAboutAlarm(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+                logD("value of a(show the modal to the user) is $a")
 
                 when (a) {
                     0 -> {
@@ -801,19 +860,31 @@ fun DialogToAskUserAboutAlarm(
                     }
 
                     2 -> {
-                        // Show DatePicker next
-                        DatePicker_without_dialog(
-                            onConfirm = { dateState ->
-                                pickedDateState = dateState
-                                    // Both time and date are picked, call confirmation
-                                        onConfirmation(startTime!!,endTime!! ,pickedDateState!!)
-                                a ++
-                            },
-                            onDismiss = onDismissRequest,
-                            nextButton = "Confirm",
-                        )
-                      }
+                        if (showDatePickerModal) {
+                            DatePickerModalByMe(
+                                onDateSelected = { dateState ->
+
+                                    onConfirmation(startTime!!, endTime!!, dateState)
+                                    a++ // Move to the next state
+                                    showDatePickerModal = false // Dismiss DatePicker
+                                    logD("value of a after running onConfirmation is $a")
+                                },
+                                onDismiss = {
+                                    showDatePickerModal = false
+                                    onDismissRequest()
+                                    logD("on dismiss function is running in DatePickerModalByMe")
+                                },
+                                textForNextButton = "Confirm",
+                                textForDismissButton = "Cancel"
+                            )
+                        } else {
+                            // When 'a' is set to 2, trigger DatePicker display
+                            showDatePickerModal = true
+                        }
+                    }
+
                     3->{
+                        logD("in the a==3 camp")
                         var startTime_obj_form_calender:Calendar = Calendar.getInstance().apply {
                             timeInMillis = pickedDateState?.selectedDateMillis!!
                             set(Calendar.HOUR_OF_DAY, startTime?.hour!!)
@@ -824,7 +895,7 @@ fun DialogToAskUserAboutAlarm(
                             set(Calendar.HOUR_OF_DAY, endTime?.hour!!)
                             set(Calendar.MINUTE, endTime?.minute!! )
                         }
-
+                        logD("in the a==3.1 camp")
                         // since alarms are being set on the same day( eg if it is on 03 (am) and end one has to be 15or .. ( pm) if it
                         // reached 2 am it is not possible as the time picker not allows it so a bad input on the  user part, as alarm cant end beofr it starts )
                         // it should be the the start time is bigger than the end time
@@ -836,11 +907,14 @@ fun DialogToAskUserAboutAlarm(
                             val endTimeToShowUser = formatter.format(endTime_obj_form_calender.time)
                             mistake_message_for_func = " Your start Time($startTimeToShowUser) should be bigger than the end time ($endTimeToShowUser). we can't set that alarm "
                             a = 0
+                            logD("in the a==3.2 camp")
                         }else{
                             a++
+                            logD("in the a==3.21 camp")
                         }
                     }
                     4 ->{
+                        logD("in the a==4 camp")
                         // freq and example of it
                         var startTime_obj_form_calender:Calendar = Calendar.getInstance().apply {
                             timeInMillis = pickedDateState?.selectedDateMillis!!
