@@ -27,7 +27,10 @@ jobs:
       env:
         ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
       run: |
-        echo $ENCODED_KEYSTORE | base64 -d > app/release.keystore
+        mkdir -p app
+        echo "$ENCODED_KEYSTORE" | base64 --decode > app/release.keystore
+        # Verify the file exists and has content
+        ls -l app/release.keystore
 
     - name: Build and Sign APK
       env:
