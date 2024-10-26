@@ -25,7 +25,7 @@ jobs:
           AKS_AKS: ${{ secrets.KEYSTORE_BASE64 }}  # Access the AKS_AKS secret
       run: |
           chmod +x gradlew
-          echo "The AKS secret is: $AKS_AKS"
+          echo "First 4 characters of the AKS secret: ${AKS_AKS:0:4}****"
 
     - name: Decode Keystore
       env:
