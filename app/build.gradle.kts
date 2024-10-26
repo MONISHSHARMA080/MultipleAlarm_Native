@@ -22,7 +22,7 @@ android {
             useSupportLibrary = true
         }
     }
-    signingConfigs {
+ signingConfigs {
         create("release") {
             // These will be populated from command line parameters
             storeFile = file(findProperty("android.injected.signing.store.file") ?: "keystore.jks")
