@@ -57,6 +57,7 @@ class AlarmActivity : ComponentActivity() {
             val rawFields: Array<Field> = R.raw::class.java.fields
             val rawResources = rawFields.map { field ->
                 field.getInt(null)  // Get resource ID
+                logD("${field}")
             }
 
             // Check if we have any sound resources
@@ -64,6 +65,7 @@ class AlarmActivity : ComponentActivity() {
                 logD("rawResources.isEmpty")
                 // Fallback to a default sound if no custom sounds are available
                 mediaPlayer = MediaPlayer.create(this, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM))
+                mediaPlayer?.start()
             } else {
                 logD("rawResources.is not Empty")
                 // Select a random resource from the list
