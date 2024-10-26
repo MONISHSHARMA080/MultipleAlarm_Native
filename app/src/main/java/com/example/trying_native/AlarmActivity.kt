@@ -59,6 +59,15 @@ class AlarmActivity : ComponentActivity() {
                 field.getInt(null)  // Get resource ID
                 logD("${field}")
             }
+            rawFields.forEachIndexed { index, field ->
+                try {
+                    val resourceId = field.getInt(null)
+                    val resourceName = field.name
+                    logD("Resource $index: Name=$resourceName, ID=$resourceId")
+                } catch (e: Exception) {
+                    logD("Error accessing resource $index: ${e.message}")
+                }
+            }
 
             // Check if we have any sound resources
             if (rawResources.isEmpty()) {
