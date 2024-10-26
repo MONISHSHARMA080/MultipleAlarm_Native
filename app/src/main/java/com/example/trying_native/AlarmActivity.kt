@@ -28,19 +28,43 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.delay
 import java.lang.reflect.Field
-
 class AlarmActivity : ComponentActivity() {
     private var mediaPlayer: MediaPlayer? = null
     private var wakeLock: PowerManager.WakeLock? = null
 
+    // Function to get a random sound resource ID from raw folder dynamically
+    private fun getRandomSoundResource(): Int {
+        val soundResourceIds = mutableListOf<Int>()
+        R.raw::class.java.fields.forEach { field ->
+            soundResourceIds.add(field.getInt(null))
+        }
+        return soundResourceIds.random()
+    }
+
+    // Function to start playing a random sound
+    private fun playRandomSound() {
+        try {
+            mediaPlayer?.release()
+            mediaPlayer = MediaPlayer.create(this, getRandomSoundResource()).apply {
+                isLooping = true
+                start()
+            }
+        } catch (e: Exception) {
+            Log.e("AlarmActivity", "Error playing sound: ${e.message}")
+        }
+    }
+
+    // Rest of your activity code remains the same
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
         wakeLock = powerManager.newWakeLock(
             PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
             "AlarmActivity::WakeLock"
         )
+
         window.addFlags(
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                     WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
@@ -51,51 +75,10 @@ class AlarmActivity : ComponentActivity() {
         setShowWhenLocked(true)
         setTurnScreenOn(true)
         wakeLock?.acquire(10*60*1000L /*10 minutes*/)
-        logD( "in the alarm activity---")
 
-        try {
-            val rawFields: Array<Field> = R.raw::class.java.fields
-            val rawResources = rawFields.map { field ->
-                field.getInt(null)  // Get resource ID
-                logD("${field}")
-            }
-            rawFields.forEachIndexed { index, field ->
-                try {
-                    val resourceId = field.getInt(null)
-                    val resourceName = field.name
-                    logD("Resource $index: Name=$resourceName, ID=$resourceId")
-                } catch (e: Exception) {
-                    logD("Error accessing resource $index: ${e.message}")
-                }
-            }
+        logD("in the alarm activity---")
 
-            // Check if we have any sound resources
-            if (rawResources.isEmpty()) {
-                logD("rawResources.isEmpty")
-                // Fallback to a default sound if no custom sounds are available
-                mediaPlayer = MediaPlayer.create(this, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM))
-                mediaPlayer?.start()
-            } else {
-                logD("rawResources.is not Empty")
-                // Select a random resource from the list
-                val randomSoundResId = rawResources.random()
-                mediaPlayer = MediaPlayer.create(this, randomSoundResId)
-                mediaPlayer = MediaPlayer.create(this, randomSoundResId)
-                mediaPlayer?.start()
-            }
-
-
-//            // Configure MediaPlayer
-//            mediaPlayer?.apply {
-//                isLooping = true
-//                start()
-//            }
-        } catch (e: Exception) {
-            logD( "Error initializing sound: ${e.message}")
-            // Fallback to system default alarm sound
-            mediaPlayer = MediaPlayer.create(this, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM))
-            mediaPlayer?.start()
-        }
+        playRandomSound()
 
         setContent {
             Trying_nativeTheme {
@@ -104,7 +87,7 @@ class AlarmActivity : ComponentActivity() {
                         mediaPlayer?.stop()
                         mediaPlayer?.release()
                         mediaPlayer = null
-                        finish() // End the activity when the button is clicked
+                        finish()
                     }
                 }
             }
@@ -115,19 +98,18 @@ class AlarmActivity : ComponentActivity() {
         super.onNewIntent(intent)
         Log.d("AA", "New Intent received in AlarmActivity")
 
-        // Stop and release the current MediaPlayer
         mediaPlayer?.stop()
         mediaPlayer?.release()
         mediaPlayer = null
 
-        // Finish the previous activity when a new intent is received
+        playRandomSound()
+
         finish()
-        intent.let { startActivity(it) } // Restart the activity with the new intent if available
+        intent.let { startActivity(it) }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // Release MediaPlayer resources when the activity is destroyed
         mediaPlayer?.stop()
         mediaPlayer?.release()
         mediaPlayer = null
