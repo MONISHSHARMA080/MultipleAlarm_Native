@@ -49,6 +49,7 @@ class AlarmActivity : ComponentActivity() {
         )
         setShowWhenLocked(true)
         setTurnScreenOn(true)
+        
         wakeLock?.acquire(4*60*1000L /*10 minutes*/)
         Log.d("AA", "in the alarm activity---")
         val rawFields: Array<Field> = R.raw::class.java.fields
