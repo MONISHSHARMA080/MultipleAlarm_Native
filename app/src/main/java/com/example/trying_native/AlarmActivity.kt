@@ -30,95 +30,124 @@ import kotlinx.coroutines.delay
 import java.lang.reflect.Field
 import kotlin.random.Random
 
-
 class AlarmActivity : ComponentActivity() {
-
     private var mediaPlayer: MediaPlayer? = null
     private var wakeLock: PowerManager.WakeLock? = null
 
-    // List of sound resources dynamically loaded
-    private val soundResourceIds by lazy {
-        loadSoundResources()
+    private fun logAvailableSounds() {
+        val fields = R.raw::class.java.fields
+        logD("Total number of resources in raw folder: ${fields.size}")
+
+        val soundFields = fields.filter { it.name.endsWith("mp") }
+        logD("Found ${soundFields.size} MP3 files:")
+
+        soundFields.forEach { field ->
+            logD("Sound file available: ${field.name}")
+        }
+    }
+
+    private fun getRandomSoundResourceId(): Int {
+        // Get all raw resources
+        val fields = R.raw::class.java.fields
+        // Filter only MP3 files
+        val soundFields = fields.filter { it.name.endsWith("mp") }
+
+        if (soundFields.isEmpty()) {
+            logD("WARNING: No sound files found in raw folder!")
+            throw IllegalStateException("No sound files found in raw folder")
+        }
+
+        // Pick a random sound
+        val randomField = soundFields.random()
+        logD("Selected sound file: ${randomField.name}")
+        return randomField.getInt(null)
+    }
+
+    private fun playRandomSound() {
+        try {
+            // Stop and release any existing MediaPlayer
+            mediaPlayer?.stop()
+            mediaPlayer?.release()
+
+            val resourceId = getRandomSoundResourceId()
+            // Create new MediaPlayer with random sound
+            mediaPlayer = MediaPlayer.create(this, resourceId).apply {
+                isLooping = true
+                start()
+            }
+            logD("Successfully started playing sound with resource ID: $resourceId")
+        } catch (e: Exception) {
+            logD("Error playing sound: ${e.message}")
+            e.printStackTrace()
+        }
     }
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Set up power settings
+        logD("AlarmActivity onCreate started")
+        // Log all available sounds at startup
+        logAvailableSounds()
+
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
         wakeLock = powerManager.newWakeLock(
             PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
             "AlarmActivity::WakeLock"
         )
-        wakeLock?.acquire(10 * 60 * 1000L) // 10 minutes
 
-        // Configure window flags for alarm display
         window.addFlags(
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                     WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
                     WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
                     WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
         )
+
         setShowWhenLocked(true)
         setTurnScreenOn(true)
+        wakeLock?.acquire(10601000L) // 10 minutes
 
-        // Play a random sound
+        logD("Starting to play random sound")
+        // Play random sound when activity starts
         playRandomSound()
 
+        logD("Setting up UI content")
         setContent {
             Trying_nativeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) {
                     TimeDisplay {
-                        stopAndReleaseMediaPlayer()
-                        finish() // End activity when button clicked
+                        logD("Stop button clicked, cleaning up MediaPlayer")
+                        mediaPlayer?.stop()
+                        mediaPlayer?.release()
+                        mediaPlayer = null
+                        finish() // End the activity when the button is clicked
                     }
                 }
             }
         }
     }
 
-    // Handles new intents to restart the alarm
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        Log.d("AA", "New Intent received in AlarmActivity")
+        logD("New Intent received in AlarmActivity")
 
-        stopAndReleaseMediaPlayer()
+        // Stop current sound and play a new random sound
+        logD("Playing new random sound due to new intent")
         playRandomSound()
+
+        // Handle the new intent
+        finish()
+        intent.let { startActivity(it) }
     }
 
-    // Releases resources on activity destruction
     override fun onDestroy() {
         super.onDestroy()
-        stopAndReleaseMediaPlayer()
-        wakeLock?.release()
-    }
-
-    // Load all sound resources from the raw folder
-    private fun loadSoundResources(): List<Int> {
-        val fields = R.raw::class.java.fields
-        return fields.mapNotNull { field ->
-            resources.getIdentifier(field.name, "raw", packageName).takeIf { it != 0 }
-        }
-    }
-
-    // Plays a random sound from the loaded resources
-    private fun playRandomSound() {
-        logD("in the playRandom")
-        if (soundResourceIds.isNotEmpty()) {
-            logD("soundResourceIds is not empty")
-            val randomSoundId = soundResourceIds[Random.nextInt(soundResourceIds.size)]
-            mediaPlayer = MediaPlayer.create(this, randomSoundId)
-            mediaPlayer?.isLooping = true
-            mediaPlayer?.start()
-        }
-    }
-
-    // Stops and releases the media player
-    private fun stopAndReleaseMediaPlayer() {
+        logD("AlarmActivity onDestroy called")
         mediaPlayer?.stop()
         mediaPlayer?.release()
         mediaPlayer = null
+        wakeLock?.release()
+        logD("MediaPlayer and WakeLock released")
     }
 }
 
