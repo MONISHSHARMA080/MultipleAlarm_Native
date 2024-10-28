@@ -49,9 +49,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          ls app/src/main/res/raw/
-          rm -rf app/src/main/res/raw/
-          unzip alarm_sound.zip -d app/src/main/res/raw/
+  
           ls app/src/main/res/raw/
           ./gradlew assembleRelease \
             -Pandroid.injected.signing.store.file=$PWD/app/release.keystore \
