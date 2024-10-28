@@ -1,5 +1,7 @@
 /build
 /app/src/main/res/raw
+app/src/main/res/raw
+app/src/main/res/raw/
 *.keystore
 *.jks
 signing.properties
