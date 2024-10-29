@@ -49,9 +49,6 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-  
-          ls app/src/main/res/raw/ -1 | wc -l 
-          ls app/src/main/res/raw/
           unzip alarm_sound.zip
           ls app/src/main/res/raw/ -1 | wc -l 
           ls app/src/main/res/raw/
