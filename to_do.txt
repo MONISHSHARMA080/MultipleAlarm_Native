@@ -31,3 +31,5 @@ can also make a feature that allows user to enter date and we set the alarm betw
 can add a notification such that we also get an notification when when the activity is running
 ----
 can make a ai driven animation on the alarm theme (integrate spotify, eg black skinhead with lightining )
+----
+in the alarmContainer make a callback function that computes the time (unix) every min (a var) and compare it to the startTimeInMillisendForDb and endTimeInMillisendForDb if var  > than both then set it the next day if only > than first then set the remaining alarm
