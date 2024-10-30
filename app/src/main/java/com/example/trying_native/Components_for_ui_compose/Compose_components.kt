@@ -823,7 +823,7 @@ fun freq_without_dialog(onDismiss:()->Unit, nextButton:String, onConfirm:(text_e
 
 //    logD("is the both of them same -->${calender_instance_at_end_time.timeInMillis == calender_instance_at_start_time.timeInMillis}")
 
-    var text_entered_by_user by remember { mutableStateOf(0) }
+    var text_entered_by_user by remember { mutableStateOf(5) }
     var numberToDisplay:Array<String>  by remember { mutableStateOf(Array(5) { "" }) }
 
     val screenHeight = LocalConfiguration.current.screenHeightDp
@@ -887,8 +887,19 @@ fun freq_without_dialog(onDismiss:()->Unit, nextButton:String, onConfirm:(text_e
         Text("Enter frequency -->", fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(vertical = (screenHeight/99).dp,  horizontal = (screenWidth/93).dp ))
 
-        NumberField("Enter the frequency(in min)", { changed_freq_string -> text_entered_by_user = changed_freq_string.toInt() })
-        if (text_entered_by_user != 0){
+        NumberField(
+            "Enter the frequency(in min)"
+        ) { changed_freq_string ->
+            text_entered_by_user = if (changed_freq_string.isNotEmpty()) {
+                changed_freq_string.toIntOrNull()
+                    ?: -1 // Use -1 to denote an invalid state if parsing fails
+            } else {
+                -1  // Set to -1 if the field is empty to avoid onDismiss behavior
+            }
+        }
+
+
+        if (text_entered_by_user > 0){
             Text( "Alarms will go on --> ${numberToDisplay.joinToString(", ")}....", fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(vertical = (screenHeight/99).dp, horizontal = (screenWidth/83).dp  )  )
          }
