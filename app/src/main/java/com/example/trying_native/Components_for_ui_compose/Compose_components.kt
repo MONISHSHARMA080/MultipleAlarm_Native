@@ -874,8 +874,8 @@ fun freq_without_dialog(
             )
         )
 
-        NumberField("Enter the frequency(in min)") { changed_freq_string ->
-            text_entered_by_user = changed_freq_string.toIntOrNull() ?: -1
+        NumberField("Enter the frequency(in min)")  { changed_freq_string ->
+            text_entered_by_user = changed_freq_string.toIntOrNull() ?: -0
         }
 
         if (text_entered_by_user > 0) {
