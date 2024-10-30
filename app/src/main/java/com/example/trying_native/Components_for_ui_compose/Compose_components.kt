@@ -88,6 +88,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
@@ -819,91 +820,75 @@ fun DialogToAskUserAboutAlarm(
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun freq_without_dialog(onDismiss:()->Unit, nextButton:String, onConfirm:(text_entered_by_user:Int)->Unit, calender_instance_at_start_time:Calendar, calender_instance_at_end_time:Calendar ) {
-
-//    logD("is the both of them same -->${calender_instance_at_end_time.timeInMillis == calender_instance_at_start_time.timeInMillis}")
-
-    var text_entered_by_user by remember { mutableStateOf(5) }
-    var numberToDisplay:Array<String>  by remember { mutableStateOf(Array(5) { "" }) }
+fun freq_without_dialog(
+    onDismiss: () -> Unit,
+    nextButton: String,
+    onConfirm: (text_entered_by_user: Int) -> Unit,
+    calender_instance_at_start_time: Calendar,
+    calender_instance_at_end_time: Calendar
+) {
+    var text_entered_by_user by remember { mutableStateOf(0) }
+    var numberToDisplay by remember { mutableStateOf(Array(5) { "" }) }
 
     val screenHeight = LocalConfiguration.current.screenHeightDp
-    val screenWidth = LocalConfiguration.current.screenHeightDp
+    val screenWidth = LocalConfiguration.current.screenWidthDp
 
-//    var startTime = cal_ins.apply {
-//        timeInMillis = dateInMillis
-//        set(Calendar.HOUR_OF_DAY, hour)
-//        set(Calendar.MINUTE, minute)
-//    }
+    // Update numberToDisplay whenever text_entered_by_user changes
+    LaunchedEffect(text_entered_by_user) {
+        if (text_entered_by_user > 0) {
+            val updatedTimes = Array(5) { "" }
+            val tempStartTime = calender_instance_at_start_time.clone() as Calendar
 
-    var formattedTime:String
-
-    if (text_entered_by_user != 0){
-        val formattedStartTime_1 = String.format(
-            "%02d:%02d",
-            calender_instance_at_start_time.get(Calendar.HOUR_OF_DAY),
-            calender_instance_at_start_time.get(Calendar.MINUTE)
-        )
-        val formattedEndTime_1 = String.format(
-            "%02d:%02d",
-            calender_instance_at_start_time.get(Calendar.HOUR_OF_DAY),
-            calender_instance_at_start_time.get(Calendar.MINUTE)
-        )
-        logD("calender_instance_at_start_time.timeInMillis->${calender_instance_at_start_time.timeInMillis}.....${calender_instance_at_end_time.timeInMillis}" +
-                "\n\n $formattedStartTime_1-----$formattedEndTime_1")
-      for ( i in 1..4 ) {
-
-          // if the start time entered by the user or by for loop is >= than the end time then just add the end time
-          // eg --> 12:30 --> 12:40, 4 min freq, 12:30, 12:34, 12:38, 12:42 which is greater than 12:40 (or consider 12:40 which is same as 12:40)
-          // so we will add it to the array and exit, case 2-> I should not allow user to enter end time > than the start one
-
-          if (calender_instance_at_start_time.timeInMillis >= calender_instance_at_end_time.timeInMillis){
-
-              logD("the conditon is true and will exit from the for loop")
-
-              numberToDisplay[i-1]= String.format(
-                  "%02d:%02d",
-                  calender_instance_at_end_time.get(Calendar.HOUR_OF_DAY),
-                  calender_instance_at_end_time.get(Calendar.MINUTE)
-              )
-              break
-          }
-          formattedTime = String.format(
-              "%02d:%02d",
-              calender_instance_at_start_time.get(Calendar.HOUR_OF_DAY),
-              calender_instance_at_start_time.get(Calendar.MINUTE)
-          )
-          logD("formattedTime -->$formattedTime")
-          numberToDisplay[i-1]= formattedTime
-          calender_instance_at_start_time.add(Calendar.MINUTE, text_entered_by_user)
-
-      }
-      logD("array -->${numberToDisplay[0]}")
-  }
+            for (i in 1..4) {
+                if (tempStartTime.timeInMillis >= calender_instance_at_end_time.timeInMillis) {
+                    updatedTimes[i - 1] = String.format(
+                        "%02d:%02d",
+                        calender_instance_at_end_time.get(Calendar.HOUR_OF_DAY),
+                        calender_instance_at_end_time.get(Calendar.MINUTE)
+                    )
+                    break
+                }
+                updatedTimes[i - 1] = String.format(
+                    "%02d:%02d",
+                    tempStartTime.get(Calendar.HOUR_OF_DAY),
+                    tempStartTime.get(Calendar.MINUTE)
+                )
+                tempStartTime.add(Calendar.MINUTE, text_entered_by_user)
+            }
+            numberToDisplay = updatedTimes
+        } else {
+            numberToDisplay = Array(5) { "" }
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.Start // Aligns content to the start (left)
+        horizontalAlignment = Alignment.Start
     ) {
-        Text("Enter frequency -->", fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(vertical = (screenHeight/99).dp,  horizontal = (screenWidth/93).dp ))
+        Text(
+            "Enter frequency -->",
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(
+                vertical = (screenHeight / 99).dp,
+                horizontal = (screenWidth / 93).dp
+            )
+        )
 
-        NumberField(
-            "Enter the frequency(in min)"
-        ) { changed_freq_string ->
-            text_entered_by_user = if (changed_freq_string.isNotEmpty()) {
-                changed_freq_string.toIntOrNull()
-                    ?: -1 // Use -1 to denote an invalid state if parsing fails
-            } else {
-                -1  // Set to -1 if the field is empty to avoid onDismiss behavior
-            }
+        NumberField("Enter the frequency(in min)") { changed_freq_string ->
+            text_entered_by_user = changed_freq_string.toIntOrNull() ?: -1
         }
 
-
-        if (text_entered_by_user > 0){
-            Text( "Alarms will go on --> ${numberToDisplay.joinToString(", ")}....", fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(vertical = (screenHeight/99).dp, horizontal = (screenWidth/83).dp  )  )
-         }
-      }
+        if (text_entered_by_user > 0) {
+            Text(
+                "Alarms will go on --> ${numberToDisplay.joinToString(", ")}....",
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(
+                    vertical = (screenHeight / 99).dp,
+                    horizontal = (screenWidth / 83).dp
+                )
+            )
+        }
+    }
 
     Row(
         modifier = Modifier
@@ -915,13 +900,15 @@ fun freq_without_dialog(onDismiss:()->Unit, nextButton:String, onConfirm:(text_e
             Text("Dismiss")
         }
         Button(
-            onClick = { if(text_entered_by_user != 0) { onConfirm(text_entered_by_user) } },
+            onClick = { if (text_entered_by_user > 0) onConfirm(text_entered_by_user) }
         ) {
             Text(nextButton)
         }
     }
-
 }
+
+
+
 
  fun scheduleAlarm(triggerTime: Long, alarmManager:AlarmManager, componentActivity: ComponentActivity) {
     logD( "Clicked on the schedule alarm func")

@@ -33,3 +33,6 @@ can add a notification such that we also get an notification when when the activ
 can make a ai driven animation on the alarm theme (integrate spotify, eg black skinhead with lightining )
 ----
 in the alarmContainer make a callback function that computes the time (unix) every min (a var) and compare it to the startTimeInMillisendForDb and endTimeInMillisendForDb if var  > than both then set it the next day if only > than first then set the remaining alarm
+
+---
+the app is not reactive (as remove the freq close thing on back button)
