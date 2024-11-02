@@ -349,14 +349,27 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                         }
                                        // -------------------------
                                         else {
+                                            val calenderInstance = Calendar.getInstance()
+                                            val cal1 = calenderInstance.apply { timeInMillis = Calendar.getInstance().timeInMillis }
+                                            val cal2 = calenderInstance.apply { timeInMillis = individualAlarm.date_in_long }
+                                            // dates in db and the current
+                                            val areTheDatesSame = cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+                                                    cal1.get(Calendar.MONTH) == cal2.get(Calendar.MONTH) &&
+                                                    cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH)
 
-                                            var startTime_obj_form_calender:Calendar = Calendar.getInstance().apply {
+                                            logD("are the both the date same --> $areTheDatesSame, ")
+                                            var startTime_obj_form_calender:Calendar = calenderInstance.apply {
                                                 timeInMillis = individualAlarm.first_value
                                             }
-                                            var endTime_obj_form_calender = Calendar.getInstance().apply {
+                                            var endTime_obj_form_calender = calenderInstance.apply {
                                                 timeInMillis = individualAlarm.second_value
                                             }
-                                            var date = individualAlarm.date_in_long
+                                            var date : Long
+                                            if (areTheDatesSame){
+                                                date = individualAlarm.date_in_long
+                                            }else  {
+                                                date = cal1.timeInMillis
+                                            }
 
                                             coroutineScope.launch {
                                                 scheduleMultipleAlarms(alarmManager, activity_context = context_of_activity, alarmDao = AlarmDao,
@@ -472,96 +485,6 @@ Column {
         }
     }
   }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DatePickerDocked() {
-    var showDatePicker by remember { mutableStateOf(false) }
-    val datePickerState = rememberDatePickerState()
-    val selectedDate = datePickerState.selectedDateMillis?.let {
-        convertMillisToDate(it)
-    } ?: ""
-
-    Box(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        OutlinedTextField(
-            value = selectedDate,
-            onValueChange = { },
-            label = { Text("DOB") },
-            readOnly = true,
-            trailingIcon = {
-                IconButton(onClick = { showDatePicker = !showDatePicker }) {
-                    Icon(
-                        imageVector = Icons.Default.DateRange,
-                        contentDescription = "Select date"
-                    )
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(64.dp)
-        )
-
-        if (showDatePicker) {
-            Popup(
-                onDismissRequest = { showDatePicker = false },
-                alignment = Alignment.TopStart
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .offset(y = 64.dp)
-                        .shadow(elevation = 4.dp)
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(16.dp)
-                ) {
-                    DatePicker(
-                        state = datePickerState,
-                        showModeToggle = false
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun DatePickerFieldToModal(modifier: Modifier = Modifier) {
-    var selectedDate by remember { mutableStateOf<Long?>(null) }
-    var showModal by remember { mutableStateOf(false) }
-
-    OutlinedTextField(
-        value = selectedDate?.let { convertMillisToDate(it) } ?: "",
-        onValueChange = { },
-        label = { Text("DOB") },
-        placeholder = { Text("MM/DD/YYYY") },
-        trailingIcon = {
-            Icon(Icons.Default.DateRange, contentDescription = "Select date")
-        },
-        modifier = modifier
-            .fillMaxWidth()
-            .pointerInput(selectedDate) {
-                awaitEachGesture {
-                    // Modifier.clickable doesn't work for text fields, so we use Modifier.pointerInput
-                    // in the Initial pass to observe events before the text field consumes them
-                    // in the Main pass.
-                    awaitFirstDown(pass = PointerEventPass.Initial)
-                    val upEvent = waitForUpOrCancellation(pass = PointerEventPass.Initial)
-                    if (upEvent != null) {
-                        showModal = true
-                    }
-                }
-            }
-    )
-
-    if (showModal) {
-        DatePickerModal(
-            onDateSelected = { selectedDate = it },
-            onDismiss = { showModal = false }
-        )
-    }
 }
 
 fun convertMillisToDate(millis: Long): String {
