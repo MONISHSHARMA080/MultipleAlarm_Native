@@ -718,6 +718,10 @@ fun DialogToAskUserAboutAlarm(
                             onDismissRequest()
                             logD("in the a->3 dateInMilliSec is null")
                         }else {
+
+                            // something is wrong with the logic here as If I want the time to be form the
+                            // 11:45 to 12:15 of this date it will return false
+
                             var startTime_obj_form_calender: Calendar =
                                 Calendar.getInstance().apply {
                                     timeInMillis = dateInMilliSec

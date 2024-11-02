@@ -61,8 +61,19 @@ class AlarmActivity : ComponentActivity() {
         val randomSoundResId = rawResources.random()
 
         // Initialize MediaPlayer with the randomly selected sound
-        mediaPlayer = MediaPlayer.create(this, randomSoundResId)
-        mediaPlayer?.start()
+      try {
+          mediaPlayer = MediaPlayer.create(this, randomSoundResId)
+          mediaPlayer?.start()
+      }catch (e:Exception){
+         try {
+             mediaPlayer = MediaPlayer.create(this,R.raw.renaissancemp)
+             mediaPlayer?.start()
+         }catch (e:Exception){
+             logD("Exception occurred in starting the fallback alarm \n--> $e <-- \n ")
+             finish()
+         }
+          logD("Exception occurred in starting the alarm sound \n-->  $e  <-- \n")
+      }
 
         setContent {
             Trying_nativeTheme {
