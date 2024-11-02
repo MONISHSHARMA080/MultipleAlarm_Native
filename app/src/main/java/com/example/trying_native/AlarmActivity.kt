@@ -19,6 +19,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -135,8 +138,10 @@ fun TimeDisplay(onFinish: () -> Unit) {
             Text(
                 text = currentTime,
                 color = Color.Red,
-                fontSize = 63.sp,
-                fontWeight = FontWeight.Bold
+                fontSize = 68.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.testTag("time_display")
+                 .semantics { contentDescription = "time_display_text" } // Add contentDescription here
             )
 
             Spacer(modifier = Modifier.height(28.dp)) // Space between the time and the button
