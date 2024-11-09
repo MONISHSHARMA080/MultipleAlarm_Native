@@ -34,5 +34,15 @@ can make a ai driven animation on the alarm theme (integrate spotify, eg black s
 ----
 in the alarmContainer make a callback function that computes the time (unix) every min (a var) and compare it to the startTimeInMillisendForDb and endTimeInMillisendForDb if var  > than both then set it the next day if only > than first then set the remaining alarm
 
----
-the app is not reactive (as remove the freq close thing on back button)
+
+
+
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++
+ADHD --->>>
+-------------
+I can take some tasks from me(user) that is just the list of taks that is need to be done; then I can play the alarm such that I will dislaty the text in the alarm(task to do )and a button to select if I have completed , If did then go to the next one and see if I can add a break thing to it 
+
+>> the taks could be taken in a list in the "elastic alarm container" like google tasks 
