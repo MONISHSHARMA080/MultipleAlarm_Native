@@ -46,3 +46,5 @@ ADHD --->>>
 I can take some tasks from me(user) that is just the list of taks that is need to be done; then I can play the alarm such that I will dislaty the text in the alarm(task to do )and a button to select if I have completed , If did then go to the next one and see if I can add a break thing to it 
 
 >> the taks could be taken in a list in the "elastic alarm container" like google tasks 
+>> and a receiver that blocks my view by increasting the alarm frequency if I start to use other app for leisure, (a ml approach or just simple hardcode one where I have 3 category ,1st exempted list like whatsapp, phone, clock etc, next is for a min and then there is for the no no no) and closing it should be hard but not too mutch (probally ask in th beginning to the user)
+>> do not set alarm of all the time all at once , just set one and then set the other when the this one goes on --also test this with some sort of integration test, like the alarm should go on and the setting of the alarm is there and the intent is carrying the things that it is suppose to 
