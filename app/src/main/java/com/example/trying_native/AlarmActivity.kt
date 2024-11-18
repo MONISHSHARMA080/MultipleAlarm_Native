@@ -61,7 +61,8 @@ class AlarmActivity : ComponentActivity() {
 
         // Select a random resource from the list
         val randomSound = rawResources.random()
-        val randomSoundName = randomSound.first
+        var randomSoundName = randomSound.first
+        if (randomSoundName == null){randomSoundName=" <--string is null--> "}
         val randomSoundResId = randomSound.second
 
         // Initialize MediaPlayer with the randomly selected sound
