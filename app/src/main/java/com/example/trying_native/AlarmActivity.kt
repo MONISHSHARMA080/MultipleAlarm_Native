@@ -3,6 +3,7 @@ package com.example.trying_native
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.PowerManager
@@ -26,10 +27,10 @@ import com.example.trying_native.ui.theme.Trying_nativeTheme
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.delay
+import java.io.File
+import java.io.FileWriter
 import java.lang.reflect.Field
-
 class AlarmActivity : ComponentActivity() {
-
     private var mediaPlayer: MediaPlayer? = null
     private var wakeLock: PowerManager.WakeLock? = null
 
@@ -51,29 +52,41 @@ class AlarmActivity : ComponentActivity() {
         setTurnScreenOn(true)
 
         wakeLock?.acquire(4*60*1000L /*10 minutes*/)
-        logD( "in the alarm activity---")
+        logD("in the alarm activity---")
+
         val rawFields: Array<Field> = R.raw::class.java.fields
         val rawResources = rawFields.map { field ->
-            field.getInt(null)  // Get resource ID
+            Pair(field.name, field.getInt(null))  // Store both name and ID
         }
 
         // Select a random resource from the list
-        val randomSoundResId = rawResources.random()
+        val randomSound = rawResources.random()
+        val randomSoundName = randomSound.first
+        val randomSoundResId = randomSound.second
 
         // Initialize MediaPlayer with the randomly selected sound
-      try {
-          mediaPlayer = MediaPlayer.create(this, randomSoundResId)
-          mediaPlayer?.start()
-      }catch (e:Exception){
-         try {
-             mediaPlayer = MediaPlayer.create(this,R.raw.renaissancemp)
-             mediaPlayer?.start()
-         }catch (e:Exception){
-             logD("Exception occurred in starting the fallback alarm \n--> $e <-- \n ")
-             finish()
-         }
-          logD("Exception occurred in starting the alarm sound \n-->  $e  <-- \n")
-      }
+        try {
+            mediaPlayer = MediaPlayer.create(this, randomSoundResId)
+            mediaPlayer?.start()
+            logD("$randomSoundResId")
+
+            // Log the sound playing details to a file
+            logSoundPlay(randomSoundName)
+
+        } catch (e: Exception) {
+            try {
+                mediaPlayer = MediaPlayer.create(this, R.raw.renaissancemp)
+                mediaPlayer?.start()
+
+                // Log the fallback sound
+                logSoundPlay("renaissancemp")
+
+            } catch (e: Exception) {
+                logD("Exception occurred in starting the fallback alarm \n--> $e <-- \n ")
+                finish()
+            }
+            logD("Exception occurred in starting the alarm sound \n-->  $e  <-- \n")
+        }
 
         setContent {
             Trying_nativeTheme {
@@ -85,6 +98,25 @@ class AlarmActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    private fun logSoundPlay(soundName: String) {
+        try {
+            val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+            val logEntry = "$soundName played at $now\n"
+
+            // Get the app's external files directory
+            val file = File(getExternalFilesDir(null), "sound_log.txt")
+
+            // Append the log entry to the file
+            FileWriter(file, true).use { writer ->
+                writer.append(logEntry)
+            }
+
+            logD("Logged sound play: $logEntry")
+        } catch (e: Exception) {
+            logD("Failed to log sound play: ${e.message}")
         }
     }
 
@@ -107,8 +139,6 @@ class AlarmActivity : ComponentActivity() {
         wakeLock?.release()
     }
 }
-
-
 @Composable
 fun TimeDisplay(onFinish: () -> Unit) {
     var currentTime by remember { mutableStateOf(getCurrentTime()) }
