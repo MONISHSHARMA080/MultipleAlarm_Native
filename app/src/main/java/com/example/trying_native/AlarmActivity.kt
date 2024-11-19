@@ -39,6 +39,7 @@ class AlarmActivity : ComponentActivity() {
     private var wakeLock: PowerManager.WakeLock? = null
     private var audioManager: AudioManager? = null
     private  val AUTO_FINISH_DELAY = 120000L
+    private  var previousAudioVolume = 2
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,6 +70,8 @@ class AlarmActivity : ComponentActivity() {
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
         // Get the maximum volume for alarm stream
+        previousAudioVolume = audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: previousAudioVolume
+
         val maxVolume = audioManager?.getStreamMaxVolume(AudioManager.STREAM_ALARM) ?: 7
         // Set volume to maximum for alarm
         audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0)
@@ -193,6 +196,7 @@ class AlarmActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         // Release MediaPlayer resources when the activity is destroyed
+        audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, previousAudioVolume, 0)
         mediaPlayer?.release()
         mediaPlayer = null
         wakeLock?.release()
