@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.PowerManager
@@ -30,9 +31,12 @@ import kotlinx.coroutines.delay
 import java.io.File
 import java.io.FileWriter
 import java.lang.reflect.Field
+
 class AlarmActivity : ComponentActivity() {
     private var mediaPlayer: MediaPlayer? = null
     private var wakeLock: PowerManager.WakeLock? = null
+    private var audioManager: AudioManager? = null
+    private  val AUTO_FINISH_DELAY = 120000L
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,6 +46,7 @@ class AlarmActivity : ComponentActivity() {
             PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
             "AlarmActivity::WakeLock"
         )
+
         window.addFlags(
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                     WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
@@ -59,6 +64,13 @@ class AlarmActivity : ComponentActivity() {
             Pair(field.name, field.getInt(null))  // Store both name and ID
         }
 
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
+        // Get the maximum volume for alarm stream
+        val maxVolume = audioManager?.getStreamMaxVolume(AudioManager.STREAM_ALARM) ?: 7
+        // Set volume to maximum for alarm
+        audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0)
+
         // Select a random resource from the list
         val randomSound = rawResources.random()
         var randomSoundName = randomSound.first
@@ -66,28 +78,68 @@ class AlarmActivity : ComponentActivity() {
         val randomSoundResId = randomSound.second
 
         // Initialize MediaPlayer with the randomly selected sound
-        try {
-            mediaPlayer = MediaPlayer.create(this, randomSoundResId)
-            mediaPlayer?.start()
-            logD("$randomSoundResId")
+//        try {
+//            mediaPlayer = MediaPlayer.create(this, randomSoundResId)
+//            mediaPlayer?.start()
+//            logD("$randomSoundResId")
+//
+//            // Log the sound playing details to a file
+//            logSoundPlay(randomSoundName)
+//
+//        } catch (e: Exception) {
+//            try {
+//                mediaPlayer = MediaPlayer.create(this, R.raw.renaissancemp)
+//                mediaPlayer?.start()
+//
+//                // Log the fallback sound
+//                logSoundPlay("renaissancemp")
+//
+//            } catch (e: Exception) {
+//                logD("Exception occurred in starting the fallback alarm \n--> $e <-- \n ")
+//                finish()
+//            }
+//            logD("Exception occurred in starting the alarm sound \n-->  $e  <-- \n")
+//        }
 
-            // Log the sound playing details to a file
+        try {
+            mediaPlayer = MediaPlayer().apply {
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .build()
+                )
+                setDataSource(resources.openRawResourceFd(randomSoundResId))
+                prepare()
+                isLooping = true  // Make the alarm loop until dismissed
+                start()
+            }
+            logD("Playing alarm sound: $randomSoundResId")
             logSoundPlay(randomSoundName)
 
         } catch (e: Exception) {
             try {
-                mediaPlayer = MediaPlayer.create(this, R.raw.renaissancemp)
-                mediaPlayer?.start()
-
-                // Log the fallback sound
+                // Fallback sound with alarm stream
+                mediaPlayer = MediaPlayer().apply {
+                    setAudioAttributes(
+                        AudioAttributes.Builder()
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                            .setUsage(AudioAttributes.USAGE_ALARM)
+                            .build()
+                    )
+                    setDataSource(resources.openRawResourceFd(R.raw.renaissancemp))
+                    prepare()
+                    isLooping = true
+                    start()
+                }
                 logSoundPlay("renaissancemp")
-
             } catch (e: Exception) {
                 logD("Exception occurred in starting the fallback alarm \n--> $e <-- \n ")
                 finish()
             }
             logD("Exception occurred in starting the alarm sound \n-->  $e  <-- \n")
         }
+
 
         setContent {
             Trying_nativeTheme {
@@ -140,6 +192,8 @@ class AlarmActivity : ComponentActivity() {
         wakeLock?.release()
     }
 }
+
+
 @Composable
 fun TimeDisplay(onFinish: () -> Unit) {
     var currentTime by remember { mutableStateOf(getCurrentTime()) }

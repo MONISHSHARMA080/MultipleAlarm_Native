@@ -34,8 +34,9 @@ can make a ai driven animation on the alarm theme (integrate spotify, eg black s
 ----
 in the alarmContainer make a callback function that computes the time (unix) every min (a var) and compare it to the startTimeInMillisendForDb and endTimeInMillisendForDb if var  > than both then set it the next day if only > than first then set the remaining alarm
 
-
-
+-----
+in the alarmManager.setExact should be in the try catch and when the execption that user set 500 concurrent alarms not alowed occurs make a new fuc to do it one alarm at a time (set one and send the info in the intent and in the alarmactivity get it and set the next alarm there)
+-----
 
 
 
