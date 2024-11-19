@@ -7,6 +7,7 @@ import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.os.Handler
 import android.os.PowerManager
 import android.util.Log
 import android.view.WindowManager
@@ -31,6 +32,7 @@ import kotlinx.coroutines.delay
 import java.io.File
 import java.io.FileWriter
 import java.lang.reflect.Field
+import kotlin.concurrent.timerTask
 
 class AlarmActivity : ComponentActivity() {
     private var mediaPlayer: MediaPlayer? = null
@@ -113,6 +115,9 @@ class AlarmActivity : ComponentActivity() {
                 prepare()
                 isLooping = true  // Make the alarm loop until dismissed
                 start()
+                Timer().schedule(timerTask {
+                    finish()
+                }, AUTO_FINISH_DELAY)
             }
             logD("Playing alarm sound: $randomSoundResId")
             logSoundPlay(randomSoundName)
@@ -131,8 +136,9 @@ class AlarmActivity : ComponentActivity() {
                     prepare()
                     isLooping = true
                     start()
+
                 }
-                logSoundPlay("renaissancemp")
+                logSoundPlay("renaissance")
             } catch (e: Exception) {
                 logD("Exception occurred in starting the fallback alarm \n--> $e <-- \n ")
                 finish()
