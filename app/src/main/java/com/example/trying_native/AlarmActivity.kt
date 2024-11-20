@@ -64,7 +64,7 @@ class AlarmActivity : ComponentActivity() {
 
         val rawFields: Array<Field> = R.raw::class.java.fields
         val rawResources = rawFields.map { field ->
-            Pair(field.name, field.getInt(null))  // Store both name and ID
+            Pair(field.name, field.getInt(null))
         }
 
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -74,7 +74,7 @@ class AlarmActivity : ComponentActivity() {
 
         val maxVolume = audioManager?.getStreamMaxVolume(AudioManager.STREAM_ALARM) ?: 7
         // Set volume to maximum for alarm
-        audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0)
+        audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, previousAudioVolume, 0)
 
         // Select a random resource from the list
         val randomSound = rawResources.random()
