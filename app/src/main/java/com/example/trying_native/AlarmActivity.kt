@@ -212,7 +212,7 @@ fun TimeDisplay(onFinish: () -> Unit) {
     LaunchedEffect(Unit) {
         while (true) {
             currentTime = getCurrentTime()
-            delay(900)
+            delay(996)
         }
     }
 
@@ -234,10 +234,13 @@ fun TimeDisplay(onFinish: () -> Unit) {
                 fontWeight = FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.height(28.dp)) // Space between the time and the button
+            Spacer(modifier = Modifier.height(34.dp)) // Space between the time and the button
 
             // Button to finish the activity
-            Button(onClick = { onFinish() }) {
+            Button(onClick = { onFinish() }, 
+            modifier = Modifier .height(56.dp) 
+            .padding(horizontal = 16.dp)
+            ) {
                 Text(text = "Cancel alarm")
             }
         }
