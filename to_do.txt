@@ -49,3 +49,11 @@ I can take some tasks from me(user) that is just the list of taks that is need t
 >> the taks could be taken in a list in the "elastic alarm container" like google tasks 
 >> and a receiver that blocks my view by increasting the alarm frequency if I start to use other app for leisure, (a ml approach or just simple hardcode one where I have 3 category ,1st exempted list like whatsapp, phone, clock etc, next is for a min and then there is for the no no no) and closing it should be hard but not too mutch (probally ask in th beginning to the user)
 >> do not set alarm of all the time all at once , just set one and then set the other when the this one goes on --also test this with some sort of integration test, like the alarm should go on and the setting of the alarm is there and the intent is carrying the things that it is suppose to 
+-----------------
+ #-------Alarm Screen-------#
+ in the alamr sceeen I should make it random.. 2 choices with similar sub choices , keep the alarmActivity screen same or display random Alarmactivity screen (3-4) >> sub idea is that the clicking the button in the alarmActivity will reveal what I need to do to close the alarm  , eg clicking on the button can display a text telling me to click it 3-4 times or make a random  swipe on the x-y axis or a combination of the two
+
+  --what Will it accomplish--
+  well I will have to keep my attention and it will alaways be active on the alarm and not be routine 
+ --in the new design(task)--
+  could slow it down in b/w the alarm and start it if the tasks is not going through and in b/w / ending of the tasks
