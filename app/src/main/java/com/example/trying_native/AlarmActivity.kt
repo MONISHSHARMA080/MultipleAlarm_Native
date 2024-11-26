@@ -242,5 +242,5 @@ fun TimeDisplay(onFinish: () -> Unit) {
 
 // Helper function to get current time
 fun getCurrentTime(): String {
-    return SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date())
+    return SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date())
 }
