@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
+import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Bundle
@@ -39,11 +40,28 @@ class AlarmActivity : ComponentActivity() {
     private var audioManager: AudioManager? = null
     private val AUTO_FINISH_DELAY = 120000L
     private var previousAudioVolume = 2
+    private var audioFocusRequest: AudioFocusRequest? = null
+    private var ableToChangeAudioFocus:Boolean=false
+
+    // Add AudioFocus callback
+    private val audioFocusChangeListener =
+            AudioManager.OnAudioFocusChangeListener { focusChange ->
+                when (focusChange) {
+                    AudioManager.AUDIOFOCUS_LOSS, AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                        // We don't want to handle audio focus loss since we're an alarm
+                        // The alarm should continue playing
+                    }
+                    AudioManager.AUDIOFOCUS_GAIN -> {
+                        // We already have focus, no need to handle this
+                    }
+                }
+            }
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        audioFocusRequest =  audioFocusRequestBuilder()
         wakeLock =
                 powerManager.newWakeLock(
                         PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
@@ -58,96 +76,23 @@ class AlarmActivity : ComponentActivity() {
         )
         setShowWhenLocked(true)
         setTurnScreenOn(true)
-
         wakeLock?.acquire(4 * 60 * 1000L /*10 minutes*/)
-        logD("in the alarm activity---")
-
         val rawFields: Array<Field> = R.raw::class.java.fields
         val rawResources = rawFields.map { field -> Pair(field.name, field.getInt(null)) }
-
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-
         // Get the maximum volume for alarm stream
         previousAudioVolume =
                 audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: previousAudioVolume
 
-        val maxVolume = audioManager?.getStreamMaxVolume(AudioManager.STREAM_ALARM) ?: 7
+        // val maxVolume = audioManager?.getStreamMaxVolume(AudioManager.STREAM_ALARM) ?: 7
         // Set volume to maximum for alarm
         audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, previousAudioVolume, 0)
-
-        // Select a random resource from the list
-        val randomSound = rawResources.random()
-        var randomSoundName = randomSound.first
-        if (randomSoundName == null) {
-            randomSoundName = " <--string is null--> "
-        }
-        val randomSoundResId = randomSound.second
-
-        // Initialize MediaPlayer with the randomly selected sound
-        //        try {
-        //            mediaPlayer = MediaPlayer.create(this, randomSoundResId)
-        //            mediaPlayer?.start()
-        //            logD("$randomSoundResId")
-        //
-        //            // Log the sound playing details to a file
-        //            logSoundPlay(randomSoundName)
-        //
-        //        } catch (e: Exception) {
-        //            try {
-        //                mediaPlayer = MediaPlayer.create(this, R.raw.renaissancemp)
-        //                mediaPlayer?.start()
-        //
-        //                // Log the fallback sound
-        //                logSoundPlay("renaissancemp")
-        //
-        //            } catch (e: Exception) {
-        //                logD("Exception occurred in starting the fallback alarm \n--> $e <-- \n ")
-        //                finish()
-        //            }
-        //            logD("Exception occurred in starting the alarm sound \n-->  $e  <-- \n")
-        //        }
-
-        try {
-            mediaPlayer =
-                    MediaPlayer().apply {
-                        setAudioAttributes(
-                                AudioAttributes.Builder()
-                                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                                        .setUsage(AudioAttributes.USAGE_ALARM)
-                                        .build()
-                        )
-                        setDataSource(resources.openRawResourceFd(randomSoundResId))
-                        prepare()
-                        isLooping = true // Make the alarm loop until dismissed
-                        start()
-                        Timer().schedule(timerTask { finish() }, AUTO_FINISH_DELAY)
-                    }
-            logD("Playing alarm sound: $randomSoundResId")
-            logSoundPlay(randomSoundName)
-        } catch (e: Exception) {
-            try {
-                // Fallback sound with alarm stream
-                mediaPlayer =
-                        MediaPlayer().apply {
-                            setAudioAttributes(
-                                    AudioAttributes.Builder()
-                                            .setContentType(
-                                                    AudioAttributes.CONTENT_TYPE_SONIFICATION
-                                            )
-                                            .setUsage(AudioAttributes.USAGE_ALARM)
-                                            .build()
-                            )
-                            setDataSource(resources.openRawResourceFd(R.raw.renaissancemp))
-                            prepare()
-                            isLooping = true
-                            start()
-                        }
-                logSoundPlay("renaissance")
-            } catch (e: Exception) {
-                logD("Exception occurred in starting the fallback alarm \n--> $e <-- \n ")
-                finish()
-            }
-            logD("Exception occurred in starting the alarm sound \n-->  $e  <-- \n")
+        val result = audioManager?.requestAudioFocus(audioFocusRequest!!)
+        // call it no matter what, but would prefer to pause the resource
+        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED){
+            playAlarmWithRandomSound(rawResources)
+        }else{
+            playAlarmWithRandomSound(rawResources)
         }
 
         setContent {
@@ -180,6 +125,76 @@ class AlarmActivity : ComponentActivity() {
         }
     }
 
+    private fun audioFocusRequestBuilder(): AudioFocusRequest!{
+
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
+        // Create AudioFocusRequest
+        return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
+                .setAudioAttributes(
+                        AudioAttributes.Builder()
+                                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                                .setUsage(AudioAttributes.USAGE_ALARM)
+                                .build()
+                )
+                .setOnAudioFocusChangeListener(audioFocusChangeListener)
+                .build()
+
+        // Request audio focus before playing alarm
+
+    }
+
+   private fun playAlarmWithRandomSound(rawResources:List<Pair<String!, Int>>){
+       val randomSound = rawResources.random()
+       var randomSoundName = randomSound.first
+       if (randomSoundName == null) {
+           randomSoundName = " <--string is null--> "
+       }
+       val randomSoundResId = randomSound.second
+       try {
+                 mediaPlayer =
+                         MediaPlayer().apply {
+                             setAudioAttributes(
+                                     AudioAttributes.Builder()
+                                             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                                             .setUsage(AudioAttributes.USAGE_ALARM)
+                                             .build()
+                             )
+                             setDataSource(resources.openRawResourceFd(randomSoundResId))
+                             prepare()
+                             isLooping = true // Make the alarm loop until dismissed
+                             start()
+                             Timer().schedule(timerTask { finish() }, AUTO_FINISH_DELAY)
+                         }
+                 logD("Playing alarm sound: $randomSoundResId")
+                 logSoundPlay(randomSoundName)
+             } catch (e: Exception) {
+                 try {
+                     // Fallback sound with alarm stream
+                     mediaPlayer =
+                             MediaPlayer().apply {
+                                 setAudioAttributes(
+                                         AudioAttributes.Builder()
+                                                 .setContentType(
+                                                         AudioAttributes.CONTENT_TYPE_SONIFICATION
+                                                 )
+                                                 .setUsage(AudioAttributes.USAGE_ALARM)
+                                                 .build()
+                                 )
+                                 setDataSource(resources.openRawResourceFd(R.raw.renaissancemp))
+                                 prepare()
+                                 isLooping = true
+                                 start()
+                             }
+                     logSoundPlay("renaissance")
+                 } catch (e: Exception) {
+                     logD("Exception occurred in starting the fallback alarm \n--> $e <-- \n ")
+                     finish()
+                 }
+                 logD("Exception occurred in starting the alarm sound \n-->  $e  <-- \n")
+             }
+   }
+
     override fun onNewIntent(intent: Intent) {
         if (intent != null) {
             super.onNewIntent(intent)
@@ -194,6 +209,9 @@ class AlarmActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         // Release MediaPlayer resources when the activity is destroyed
+         audioFocusRequest?.let { request ->
+                   audioManager?.abandonAudioFocusRequest(request)
+         }
         audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, previousAudioVolume, 0)
         mediaPlayer?.release()
         mediaPlayer = null
