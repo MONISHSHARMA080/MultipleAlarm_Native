@@ -125,7 +125,7 @@ class AlarmActivity : ComponentActivity() {
         }
     }
 
-    private fun audioFocusRequestBuilder(): AudioFocusRequest!{
+    private fun audioFocusRequestBuilder(): AudioFocusRequest{
 
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
@@ -144,7 +144,7 @@ class AlarmActivity : ComponentActivity() {
 
     }
 
-   private fun playAlarmWithRandomSound(rawResources:List<Pair<String!, Int>>){
+   private fun playAlarmWithRandomSound(rawResources:List<Pair<String, Int>>){
        val randomSound = rawResources.random()
        var randomSoundName = randomSound.first
        if (randomSoundName == null) {
