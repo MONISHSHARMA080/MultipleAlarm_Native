@@ -168,7 +168,7 @@ class AlarmActivity : ComponentActivity() {
     private fun audioFocusRequestBuilder(): AudioFocusRequest{
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         // Create AudioFocusRequest
-        return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
+        return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
                 .setAudioAttributes(
                         AudioAttributes.Builder()
                                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
