@@ -7,6 +7,8 @@ import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaPlayer
+import android.media.session.MediaController
+import android.media.session.MediaSessionManager
 import android.os.Bundle
 import android.os.PowerManager
 import android.util.Log
@@ -41,7 +43,10 @@ class AlarmActivity : ComponentActivity() {
     private val AUTO_FINISH_DELAY = 120000L
     private var previousAudioVolume = 2
     private var audioFocusRequest: AudioFocusRequest? = null
-    private var ableToChangeAudioFocus:Boolean=false
+    private var wasBackgroundPlaying = false
+    private lateinit var mediaSessionManager: MediaSessionManager
+    private var mediaControllerList: List<MediaController>? = null
+
 
     // Add AudioFocus callback
     private val audioFocusChangeListener =
@@ -67,7 +72,7 @@ class AlarmActivity : ComponentActivity() {
                         PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
                         "AlarmActivity::WakeLock"
                 )
-
+        pauseBackgroundAudio()
         window.addFlags(
                 WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                         WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
@@ -87,6 +92,7 @@ class AlarmActivity : ComponentActivity() {
         // val maxVolume = audioManager?.getStreamMaxVolume(AudioManager.STREAM_ALARM) ?: 7
         // Set volume to maximum for alarm
         audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, previousAudioVolume, 0)
+        // if the BG audio is active then pause it
         val result = audioManager?.requestAudioFocus(audioFocusRequest!!)
         // call it no matter what, but would prefer to pause the resource
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED){
@@ -125,10 +131,42 @@ class AlarmActivity : ComponentActivity() {
         }
     }
 
+    private fun pauseBackgroundAudio(){
+//        if (mediaPlayer?.isPlaying() == true){
+//            mediaPlayer.pause()
+//            wasBackgroundPlaying = true
+//        }
+        try {
+            // Initialize MediaSessionManager
+            mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
+
+            // Get a list of active media controllers
+            mediaControllerList = mediaSessionManager.getActiveSessions(null)
+
+            // Pause all active media controllers
+            mediaControllerList?.forEach { controller ->
+                controller.transportControls.pause()
+            }
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+            // Handle the exception if required permissions are not granted
+        }
+    }
+
+    private fun resumeBackgroundAudio() {
+        try {
+            // Resume all active media controllers
+            mediaControllerList?.forEach { controller ->
+                controller.transportControls.play()
+            }
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+            // Handle the exception if required permissions are not granted
+        }
+    }
+
     private fun audioFocusRequestBuilder(): AudioFocusRequest{
-
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-
         // Create AudioFocusRequest
         return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
                 .setAudioAttributes(
@@ -139,9 +177,7 @@ class AlarmActivity : ComponentActivity() {
                 )
                 .setOnAudioFocusChangeListener(audioFocusChangeListener)
                 .build()
-
         // Request audio focus before playing alarm
-
     }
 
    private fun playAlarmWithRandomSound(rawResources:List<Pair<String, Int>>){
@@ -195,12 +231,10 @@ class AlarmActivity : ComponentActivity() {
              }
    }
 
+    @SuppressLint("UnsafeIntentLaunch")
     override fun onNewIntent(intent: Intent) {
-        if (intent != null) {
-            super.onNewIntent(intent)
-        }
+        super.onNewIntent(intent)
         Log.d("AA", "New Intent received in AlarmActivity")
-
         // Finish the previous activity when a new intent is received
         finish()
         startActivity(intent) // Optionally, restart the activity with the new intent
@@ -208,11 +242,19 @@ class AlarmActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        resumeBackgroundAudio()
         // Release MediaPlayer resources when the activity is destroyed
          audioFocusRequest?.let { request ->
                    audioManager?.abandonAudioFocusRequest(request)
          }
         audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, previousAudioVolume, 0)
+         try {
+            if (wasBackgroundPlaying) {
+                mediaPlayer?.start()
+            }
+        } catch (e: Exception) {
+            logD("Failed to resume background audio: ${e.message}")
+        }
         mediaPlayer?.release()
         mediaPlayer = null
         wakeLock?.release()
