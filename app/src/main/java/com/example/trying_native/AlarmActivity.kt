@@ -108,6 +108,7 @@ class AlarmActivity : ComponentActivity() {
                         finish() // End the activity when the button is clicked
                         mediaPlayer?.release()
                         mediaPlayer = null
+                        finishAndRemoveTask()
                     }
                 }
             }
@@ -243,6 +244,7 @@ class AlarmActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         resumeBackgroundAudio()
+        finishAndRemoveTask()
         // Release MediaPlayer resources when the activity is destroyed
          audioFocusRequest?.let { request ->
                    audioManager?.abandonAudioFocusRequest(request)
