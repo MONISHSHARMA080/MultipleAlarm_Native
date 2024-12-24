@@ -65,30 +65,15 @@ class AlarmActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
         audioFocusRequest =  audioFocusRequestBuilder()
-        wakeLock =
-                powerManager.newWakeLock(
-                        PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
-                        "AlarmActivity::WakeLock"
-                )
         pauseBackgroundAudio()
-        window.addFlags(
-                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                        WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-        )
-        setShowWhenLocked(true)
-        setTurnScreenOn(true)
-        wakeLock?.acquire(4 * 60 * 1000L /*10 minutes*/)
+        keepScreenON()
         val rawFields: Array<Field> = R.raw::class.java.fields
         val rawResources = rawFields.map { field -> Pair(field.name, field.getInt(null)) }
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         // Get the maximum volume for alarm stream
         previousAudioVolume =
                 audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: previousAudioVolume
-
         // val maxVolume = audioManager?.getStreamMaxVolume(AudioManager.STREAM_ALARM) ?: 7
         // Set volume to maximum for alarm
         audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, previousAudioVolume, 0)
@@ -105,7 +90,7 @@ class AlarmActivity : ComponentActivity() {
             Trying_nativeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) {
                     TimeDisplay {
-                        finish() // End the activity when the button is clicked
+//                        finish() // End the activity when the button is clicked
                         mediaPlayer?.release()
                         mediaPlayer = null
                         finishAndRemoveTask()
@@ -244,7 +229,6 @@ class AlarmActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         resumeBackgroundAudio()
-        finishAndRemoveTask()
         // Release MediaPlayer resources when the activity is destroyed
          audioFocusRequest?.let { request ->
                    audioManager?.abandonAudioFocusRequest(request)
@@ -260,6 +244,25 @@ class AlarmActivity : ComponentActivity() {
         mediaPlayer?.release()
         mediaPlayer = null
         wakeLock?.release()
+        finishAndRemoveTask()
+    }
+
+    fun keepScreenON(){
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock =
+            powerManager.newWakeLock(
+                PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+                "AlarmActivity::WakeLock"
+            )
+        window.addFlags(
+            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+        )
+        setShowWhenLocked(true)
+        setTurnScreenOn(true)
+        wakeLock?.acquire(4 * 60 * 1000L /*10 minutes*/)
     }
 }
 
