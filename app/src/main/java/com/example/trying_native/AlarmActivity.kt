@@ -28,6 +28,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.trying_native.ui.theme.Trying_nativeTheme
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import java.io.File
 import java.io.FileWriter
 import java.lang.reflect.Field
@@ -35,6 +40,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.concurrent.timerTask
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class AlarmActivity : ComponentActivity() {
     private var mediaPlayer: MediaPlayer? = null
@@ -46,7 +52,13 @@ class AlarmActivity : ComponentActivity() {
     private var wasBackgroundPlaying = false
     private lateinit var mediaSessionManager: MediaSessionManager
     private var mediaControllerList: List<MediaController>? = null
-
+    private val activityScope = CoroutineScope(
+        SupervisorJob() +
+                Dispatchers.Main +
+                CoroutineExceptionHandler { _, throwable ->
+                    logD("Coroutine exception: ${throwable.message}")
+                }
+    )
 
     // Add AudioFocus callback
     private val audioFocusChangeListener =
@@ -66,8 +78,11 @@ class AlarmActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         audioFocusRequest =  audioFocusRequestBuilder()
-        pauseBackgroundAudio()
-        keepScreenON()
+//        pauseBackgroundAudio()
+//        keepScreenON()
+        activityScope.launch { pauseBackgroundAudio() }
+        activityScope.launch { keepScreenON() }
+
         val rawFields: Array<Field> = R.raw::class.java.fields
         val rawResources = rawFields.map { field -> Pair(field.name, field.getInt(null)) }
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -81,9 +96,9 @@ class AlarmActivity : ComponentActivity() {
         val result = audioManager?.requestAudioFocus(audioFocusRequest!!)
         // call it no matter what, but would prefer to pause the resource
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED){
-            playAlarmWithRandomSound(rawResources)
+            activityScope.launch { playAlarmWithRandomSound(rawResources) }
         }else{
-            playAlarmWithRandomSound(rawResources)
+            activityScope.launch { playAlarmWithRandomSound(rawResources) }
         }
 
         setContent {
@@ -91,7 +106,7 @@ class AlarmActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) {
                     TimeDisplay {
 //                        finish() // End the activity when the button is clicked
-                        mediaPlayer?.release()
+                        mediaPlayer?.release() // I can remove it as it is unnecessary and is there in the onDestroy()
                         mediaPlayer = null
                         finishAndRemoveTask()
                     }
@@ -245,6 +260,7 @@ class AlarmActivity : ComponentActivity() {
         mediaPlayer = null
         wakeLock?.release()
         finishAndRemoveTask()
+        activityScope.cancel()
     }
 
     fun keepScreenON(){

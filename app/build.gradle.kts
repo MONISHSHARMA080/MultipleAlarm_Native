@@ -80,6 +80,7 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.1")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation(libs.androidx.junit.ktx)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
     implementation(libs.androidx.media3.common)
     implementation(libs.androidx.ui.test.android)
