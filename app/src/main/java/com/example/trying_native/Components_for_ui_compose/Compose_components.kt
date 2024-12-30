@@ -728,7 +728,7 @@ fun DialogToAskUserAboutAlarm(
                         var date = pickedDateState!!?.let {
                             java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
                         }?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                        coroutineScope.launch {
+                        coroutineScope.launch (Dispatchers.IO){
                             scheduleMultipleAlarms(alarmManager, activity_context = activity_context, alarmDao = alarmDao,
                                 calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = freq_returned_by_user,
                                 selected_date_for_display =  date!!, date_in_long = dateInMilliSec, coroutineScope = this, is_alarm_ready_to_use = true, new_is_ready_to_use = false  )
