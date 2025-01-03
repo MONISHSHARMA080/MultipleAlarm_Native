@@ -101,6 +101,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.format.DateTimeFormatter
 import java.util.Date
+import kotlin.math.log
 
 @Composable
 fun AdvancedTimePickerDialog(
@@ -370,10 +371,15 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                             }else  {
                                                 date = cal1.timeInMillis
                                             }
-                                            coroutineScope.launch {
-                                                scheduleMultipleAlarms(alarmManager, activity_context = context_of_activity, alarmDao = AlarmDao,
-                                                    calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = individualAlarm.freq_in_min_to_display,
-                                                    selected_date_for_display =  individualAlarm.date_for_display , date_in_long= date, coroutineScope = this, is_alarm_ready_to_use = true , is_this_func_call_to_update_an_existing_alarm = true, new_is_ready_to_use = true  )
+                                            try {
+                                                coroutineScope.launch (Dispatchers.IO){
+                                                    scheduleMultipleAlarms(alarmManager, activity_context = context_of_activity, alarmDao = AlarmDao,
+                                                        calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = individualAlarm.freq_in_min_to_display,
+                                                        selected_date_for_display =  individualAlarm.date_for_display , date_in_long= date, coroutineScope = this, is_alarm_ready_to_use = true , is_this_func_call_to_update_an_existing_alarm = true, new_is_ready_to_use = true  )
+
+                                                }
+                                            }catch (e:Exception){
+                                                logD("exception occurred in creating the  alarm coroutine and ir is -->$e" )
                                             }
                                         }
                                     },
@@ -711,7 +717,7 @@ fun DialogToAskUserAboutAlarm(
                5->{
                    val dateInMilliSec = pickedDateState
                     if ( dateInMilliSec != null){
-                        var startTime_obj_form_calender:Calendar = Calendar.getInstance().apply {
+                        val startTime_obj_form_calender:Calendar = Calendar.getInstance().apply {
                             timeInMillis = dateInMilliSec
                             set(Calendar.HOUR_OF_DAY, startTime?.hour!!)
                             set(Calendar.MINUTE, startTime?.minute!! )
@@ -719,7 +725,7 @@ fun DialogToAskUserAboutAlarm(
 
 
 
-                        var endTime_obj_form_calender = Calendar.getInstance().apply {
+                        val endTime_obj_form_calender = Calendar.getInstance().apply {
                             timeInMillis = dateInMilliSec
                             set(Calendar.HOUR_OF_DAY, endTime?.hour!!)
                             set(Calendar.MINUTE, endTime?.minute!! )
