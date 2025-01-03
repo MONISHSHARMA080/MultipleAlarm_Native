@@ -113,8 +113,6 @@ val activity_context = this
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
-
-
         val config = PostHogAndroidConfig(
             apiKey = POSTHOG_API_KEY,
             host = POSTHOG_HOST
@@ -135,7 +133,6 @@ val activity_context = this
                 AlarmDatabase::class.java, "alarm-database"
             ).build()
             alarmDao = db.alarmDao()
-//        }
 
         super.onCreate(savedInstanceState)
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager

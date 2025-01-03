@@ -10,6 +10,7 @@ import android.media.MediaPlayer
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.os.Bundle
+import android.os.Message
 import android.os.PowerManager
 import android.util.Log
 import android.view.WindowManager
@@ -41,6 +42,7 @@ import java.util.*
 import kotlin.concurrent.timerTask
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.properties.Delegates
 
 class AlarmActivity : ComponentActivity() {
     private var mediaPlayer: MediaPlayer? = null
@@ -51,6 +53,8 @@ class AlarmActivity : ComponentActivity() {
     private var audioFocusRequest: AudioFocusRequest? = null
     private var wasBackgroundPlaying = false
     private lateinit var mediaSessionManager: MediaSessionManager
+    private lateinit var message: String
+//    private var  by Delegates.notNull<Boolean>()
     private var mediaControllerList: List<MediaController>? = null
     private val activityScope = CoroutineScope(
         SupervisorJob() +
@@ -101,15 +105,27 @@ class AlarmActivity : ComponentActivity() {
             activityScope.launch { playAlarmWithRandomSound(rawResources) }
         }
 
+      var  isMessagePresent= intent.getBooleanExtra("isMessagePresent", false)
+      var message =""
+      if (  isMessagePresent){
+          val messagetemp =intent.getStringExtra("message")
+          logD("the meessage form the intent in the AlarmActivity is  ->${messagetemp}<-")
+          if (messagetemp==null){
+              isMessagePresent = false
+          }else{
+              message =messagetemp
+          }
+      }
+        logD("is the message is present is -->${isMessagePresent}")
+
         setContent {
             Trying_nativeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) {
-                    TimeDisplay {
-//                        finish() // End the activity when the button is clicked
+                    TimeDisplay(onFinish = {
                         mediaPlayer?.release() // I can remove it as it is unnecessary and is there in the onDestroy()
-                        mediaPlayer = null
-                        finishAndRemoveTask()
-                    }
+                        mediaPlayer = null; finishAndRemoveTask()
+                    }, message = message,  isMessagePresent=  isMessagePresent
+                    )
                 }
             }
         }
@@ -283,7 +299,7 @@ class AlarmActivity : ComponentActivity() {
 }
 
 @Composable
-fun TimeDisplay(onFinish: () -> Unit) {
+fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent:Boolean  ) {
     var currentTime by remember { mutableStateOf(getCurrentTime()) }
 
     // Updates the time every second
@@ -309,9 +325,18 @@ fun TimeDisplay(onFinish: () -> Unit) {
                     fontSize = 63.sp,
                     fontWeight = FontWeight.Bold
             )
-
             Spacer(modifier = Modifier.height(34.dp)) // Space between the time and the button
 
+            if(isMessagePresent){
+                Text(
+                    text = message,
+                    color = Color.Cyan,
+                    fontSize = 53.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(34.dp)) // Space between the time and the button
             // Button to finish the activity
             Button(
                     onClick = { onFinish() },

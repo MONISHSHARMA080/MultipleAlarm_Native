@@ -188,7 +188,6 @@ fun NumberField(
 ) {
     // State to hold the current text input
     var text by remember { mutableStateOf("") }
-
     OutlinedTextField(
         value = text,
         onValueChange = { newText ->
@@ -439,8 +438,6 @@ fun timePicker_without_dialog(onConfirm: (TimePickerState) -> Unit, onDismiss: (
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val fontSize = (screenHeight * 0.028f).value.sp
-
-
     // -----------------
     // now just need to handle the function (just like the previous one)
     // or when the user clicks the next or whatever button just return the timePickerState
@@ -545,7 +542,7 @@ fun DialogToAskUserAboutAlarm(
     val screenHeight_if_message_not_present = (screenHeight /1.23).dp
 //    var showDatePickerModal by remember { mutableStateOf(false) }
     var showDatePickerModal by remember { mutableStateOf(false) }
-
+    var messageInAlarm by remember { mutableStateOf("") }
     // Variables to store the picked time and date
     var startTime: TimePickerState? by remember { mutableStateOf(null) }
     var endTime: TimePickerState? by remember { mutableStateOf(null) }
@@ -639,8 +636,7 @@ fun DialogToAskUserAboutAlarm(
                         if (dateInMilliSec==null){
                             onDismissRequest()
                             logD("in the a->3 dateInMilliSec is null")
-                        }else {
-
+                        } else {
                             // something is wrong with the logic here as If I want the time to be form the
                             // 11:45 to 12:15 of this date it will return false
 
@@ -700,6 +696,12 @@ fun DialogToAskUserAboutAlarm(
 
                                 ; freq_returned_by_user = freq_returned; a++ },
                                 calender_instance_at_start_time = startTime_obj_form_calender, calender_instance_at_end_time = endTime_obj_form_calender  )
+
+                            Spacer(modifier = Modifier.height(24.dp)) // Space between the time and the button
+                            MessageInput(
+                                message = messageInAlarm,
+                                onMessageChange = { messageInAlarm = it }
+                            )
                         }
 
 
@@ -731,7 +733,7 @@ fun DialogToAskUserAboutAlarm(
                         coroutineScope.launch {
                             scheduleMultipleAlarms(alarmManager, activity_context = activity_context, alarmDao = alarmDao,
                                 calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = freq_returned_by_user,
-                                selected_date_for_display =  date!!, date_in_long = dateInMilliSec, coroutineScope = this, is_alarm_ready_to_use = true, new_is_ready_to_use = false  )
+                                selected_date_for_display =  date!!, date_in_long = dateInMilliSec, coroutineScope = this, is_alarm_ready_to_use = true, new_is_ready_to_use = false, message = messageInAlarm  )
                         }
                     }
 
@@ -742,6 +744,25 @@ fun DialogToAskUserAboutAlarm(
         }
     }
 }
+
+
+@Composable
+fun MessageInput(
+    message: String,
+    onMessageChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedTextField(
+        value = message,
+        onValueChange = onMessageChange,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        label = { Text("Enter message") },
+        singleLine = true
+    )
+}
+
 
 
 @SuppressLint("DefaultLocale")
@@ -833,29 +854,27 @@ fun freq_without_dialog(
     }
 }
 
-
-
-
- fun scheduleAlarm(triggerTime: Long, alarmManager:AlarmManager, componentActivity: ComponentActivity) {
+ fun scheduleAlarm(triggerTime: Long, alarmManager:AlarmManager, componentActivity: ComponentActivity, message:String? = null) {
     logD( "Clicked on the schedule alarm func")
     var triggerTime_1 = triggerTime
     val intent = Intent(componentActivity, AlarmReceiver::class.java)
+     if (!message.isNullOrEmpty()){
+         intent.putExtra("message", message)
+         intent.putExtra("isMessagePresent", true)
+     }else{
+         intent.putExtra("isMessagePresent", false)
+     }
     intent.putExtra("last_alarm_info1","from the schedule alarm function")
     logD("Trigger time in the scheduleAlarm func is --> $triggerTime_1 ")
     intent.putExtra("triggerTime", triggerTime_1)
     val pendingIntent = PendingIntent.getBroadcast(componentActivity, triggerTime.toInt(), intent, PendingIntent.FLAG_MUTABLE)
     alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime_1, pendingIntent)
-// this should fix it as I changed FLAG_IMUTABLE to FLAG_MUTABLE
 }
-
-
-
 
 
  suspend fun scheduleMultipleAlarms(alarmManager: AlarmManager, selected_date_for_display:String, date_in_long: Long, coroutineScope: CoroutineScope, is_alarm_ready_to_use:Boolean,
                                     calendar_for_start_time:Calendar, calendar_for_end_time:Calendar, freq_after_the_callback:Int, activity_context:ComponentActivity, alarmDao:AlarmDao,
-                                    is_this_func_call_to_update_an_existing_alarm: Boolean = false , new_is_ready_to_use:Boolean                   )
-
+                                    is_this_func_call_to_update_an_existing_alarm: Boolean = false , new_is_ready_to_use:Boolean,   message: String?=null               )
  {
     // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
      var startTimeInMillis = calendar_for_start_time.timeInMillis
@@ -877,7 +896,7 @@ fun freq_without_dialog(
 
     while (startTimeInMillis <= endTimeInMillis){
         logD("round $i")
-        scheduleAlarm(startTimeInMillis,alarmManager, activity_context)
+        scheduleAlarm(startTimeInMillis,alarmManager, activity_context, message = message)
         startTimeInMillis = startTimeInMillis + freq_in_min
         // this line added the freq in the last pending intent and now to get time for the last time we
         // need to - frq from it
