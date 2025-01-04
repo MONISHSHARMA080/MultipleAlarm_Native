@@ -144,7 +144,7 @@ val activity_context = this
                 Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
                     Column(modifier = Modifier.padding(paddingValues)) {
 
-                      AlarmContainer(alarmDao, alarmManager, activity_context, askUserForPermissionToScheduleAlarm = { permissionToScheduleAlarm() } )
+                      AlarmContainer(alarmDao, alarmManager, activity_context, askUserForPermissionToScheduleAlarm = { permissionToScheduleAlarm() }, context = this@MainActivity )
                     }
                 }
             }

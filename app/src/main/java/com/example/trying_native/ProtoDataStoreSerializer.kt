@@ -9,7 +9,6 @@ import com.example.trying_native.PremissionDataStore
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
-import androidx.datastore.preferences.protobuf.InvalidProtocolBufferException
 
 object ProtoDataStoreSerializer : Serializer<PremissionDataStore> {
     override val defaultValue: PremissionDataStore  = PremissionDataStore.getDefaultInstance()
@@ -17,7 +16,7 @@ object ProtoDataStoreSerializer : Serializer<PremissionDataStore> {
     override suspend fun readFrom(input: InputStream): PremissionDataStore {
         try {
             return PremissionDataStore.parseFrom(input)
-        } catch (exception: InvalidProtocolBufferException) {
+        } catch (exception: Exception) {
             throw CorruptionException("Cannot read proto.", exception)
         }
     }
@@ -26,6 +25,7 @@ object ProtoDataStoreSerializer : Serializer<PremissionDataStore> {
         output: OutputStream) = t.writeTo(output)
 
 }
-val Context.settingsDataStore: DataStore<PremissionDataStore> by dataStore(
+val Context.ProtoDataStore: DataStore<PremissionDataStore> by dataStore(
     fileName = " dataStore.proto",
     serializer = ProtoDataStoreSerializer,
+)

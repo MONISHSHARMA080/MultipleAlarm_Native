@@ -91,95 +91,21 @@ import androidx.compose.material3.DatePickerState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.window.Popup
 import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.LastAlarmUpdateDBReceiver
+import com.example.trying_native.PremissionDataStore
+import com.example.trying_native.data.ProtoDataStore
 import com.example.trying_native.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.format.DateTimeFormatter
 import java.util.Date
-
-@Composable
-fun AdvancedTimePickerDialog(
-    title: String = "Select Time",
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
-    toggle: @Composable () -> Unit = {},
-    content: @Composable () -> Unit,
-) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false),
-    ) {
-        Surface(
-            shape = MaterialTheme.shapes.extraLarge,
-            tonalElevation = 6.dp,
-            modifier =
-            Modifier
-                .width(IntrinsicSize.Min)
-                .height(IntrinsicSize.Min)
-                .background(
-                    shape = MaterialTheme.shapes.extraLarge,
-                    color = MaterialTheme.colorScheme.surface
-                ),
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 20.dp),
-                    text = title,
-                    style = MaterialTheme.typography.labelMedium
-                )
-                content()
-                Row(
-                    modifier = Modifier
-                        .height(40.dp)
-                        .fillMaxWidth()
-                ) {
-                    toggle()
-                    Spacer(modifier = Modifier.weight(1f))
-                    TextButton(onClick = onDismiss) { Text("Cancel") }
-                    TextButton(onClick = onConfirm) { Text("OK") }
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DatePickerModal(
-    onDateSelected: (Long?) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val datePickerState = rememberDatePickerState()
-
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = {
-                onDateSelected(datePickerState.selectedDateMillis)
-                onDismiss()
-            }) {
-                Text("OK")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    ) {
-        DatePicker(state = datePickerState)
-    }
-}
 
 @Composable
 fun NumberField(
@@ -205,7 +131,7 @@ fun NumberField(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: ComponentActivity, askUserForPermissionToScheduleAlarm:()->Unit) {
+fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: ComponentActivity, askUserForPermissionToScheduleAlarm:()->Unit, context:Context) {
 
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val fontSize = (screenHeight * 0.05f).value.sp
@@ -398,13 +324,23 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                 .padding(bottom = screenHeight / 15)
                 .testTag("RoundPlusIcon")
         ) {
-            RoundPlusIcon(size = screenHeight/10, onClick = {showTheDialogToTheUserToAskForPermission = !showTheDialogToTheUserToAskForPermission;
-            if(askUserForPermission == true){
+            RoundPlusIcon(size = screenHeight/10, onClick = {
+            showTheDialogToTheUserToAskForPermission = !showTheDialogToTheUserToAskForPermission;
+            val askUserForBackgroundAutostartPermission: Flow<Boolean> = context.ProtoDataStore.data.map {
+                userPermissson->
+                userPermissson.backgroundAutostartPremission
+            }
+                logD("the value for the proto is -->${askUserForBackgroundAutostartPermission}")
+            if(askUserForPermission){
                 askUserForPermissionToScheduleAlarm()
             }
         })
         }
     }
+}
+
+fun askForBackgroundActivityPermissionOnMIUI(){
+
 }
 
 
@@ -482,12 +418,6 @@ Column {
     }
   }
 }
-
-fun convertMillisToDate(millis: Long): String {
-    val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
-    return formatter.format(Date(millis))
-}
-
 
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -92,9 +92,10 @@ android {
 
 
     dependencies {
+        //proto
         implementation("androidx.datastore:datastore:1.1.1")
-        implementation("com.google.protobuf:protobuf-kotlin:3.23.4")
-        implementation("com.google.protobuf:protobuf-javalite:3.23.4")
+//        implementation("com.google.protobuf:protobuf-java:3.23.4")
+
         implementation("com.posthog:posthog-android:3.+")
         implementation(libs.androidx.espresso.contrib)
         androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
@@ -127,9 +128,10 @@ android {
         implementation(libs.androidx.datastore.preferences)
         implementation(libs.androidx.datastore.core)
         implementation(libs.androidx.datastore.v100)
-        implementation(libs.androidx.datastore.rxjava3)
-        implementation(libs.androidx.datastore)
-        implementation(libs.androidx.datastore.preferences)
+
+//        implementation(libs.androidx.datastore.rxjava3)
+//        implementation(libs.androidx.datastore)
+//        implementation(libs.androidx.datastore.preferences)
 
         implementation(libs.androidx.core.ktx)
         implementation(libs.androidx.lifecycle.runtime.ktx)
