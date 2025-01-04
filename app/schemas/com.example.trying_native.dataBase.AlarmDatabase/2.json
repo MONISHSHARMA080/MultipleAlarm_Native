@@ -1,0 +1,111 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "10e9b8fc74c31ceb3f9b844898494fbf",
+    "entities": [
+      {
+        "tableName": "AlarmData",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `first_value` INTEGER NOT NULL, `second_value` INTEGER NOT NULL, `start_time_for_display` TEXT NOT NULL, `start_am_pm` TEXT NOT NULL, `end_time_for_display` TEXT NOT NULL, `end_am_pm` TEXT NOT NULL, `date_in_long` INTEGER NOT NULL, `date_for_display` TEXT NOT NULL, `freq_in_min` INTEGER NOT NULL, `freq_in_min_to_display` INTEGER NOT NULL, `is_ready_to_use` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "first_value",
+            "columnName": "first_value",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "second_value",
+            "columnName": "second_value",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "start_time_for_display",
+            "columnName": "start_time_for_display",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "start_am_pm",
+            "columnName": "start_am_pm",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "end_time_for_display",
+            "columnName": "end_time_for_display",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "end_am_pm",
+            "columnName": "end_am_pm",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date_in_long",
+            "columnName": "date_in_long",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date_for_display",
+            "columnName": "date_for_display",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "freq_in_min",
+            "columnName": "freq_in_min",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "freq_in_min_to_display",
+            "columnName": "freq_in_min_to_display",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isReadyToUse",
+            "columnName": "is_ready_to_use",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_AlarmData_first_value_second_value",
+            "unique": false,
+            "columnNames": [
+              "first_value",
+              "second_value"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_AlarmData_first_value_second_value` ON `${TABLE_NAME}` (`first_value`, `second_value`)"
+          }
+        ],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '10e9b8fc74c31ceb3f9b844898494fbf')"
+    ]
+  }
+}

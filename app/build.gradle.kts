@@ -24,9 +24,15 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+
+
+        ksp {
+            arg("room.schemaLocation", "$projectDir/schemas")
+            arg("room.incremental", "true")
+        }
     }
 
-    android {
 
         sourceSets {
             getByName("main") {
@@ -87,14 +93,16 @@ android {
                 force("androidx.test.espresso:espresso-core:3.6.1")
             }
         }
-    }
 
 
 
     dependencies {
         //proto
         implementation("androidx.datastore:datastore:1.1.1")
-//        implementation("com.google.protobuf:protobuf-java:3.23.4")
+
+//        implementation("com.google.protobuf:protobuf-javalite:3.23.4")
+//        implementation("androidx.datastore:datastore:1.0.0")
+        implementation("com.google.protobuf:protoc:3.23.4")
 
         implementation("com.posthog:posthog-android:3.+")
         implementation(libs.androidx.espresso.contrib)
@@ -113,7 +121,7 @@ android {
         implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
         implementation("androidx.room:room-runtime:$room_version")
-        annotationProcessor("androidx.room:room-compiler:$room_version")
+//        annotationProcessor("androidx.room:room-compiler:$room_version")
 //    kapt("androidx.room:room-compiler:$room_version")
         ksp("androidx.room:room-compiler:$room_version")
         implementation("androidx.room:room-ktx:$room_version")
@@ -150,21 +158,17 @@ android {
         debugImplementation(libs.androidx.ui.test.manifest)
     }
 
-    protobuf {
-        protoc {
-            artifact = "com.google.protobuf:protoc:3.23.4"
-        }
+}
 
-        // Generates the java Protobuf-lite code for the Protos in this project
-        generateProtoTasks {
-            all().forEach { task ->
-                task.builtins {
-                    create("java") {
-                        option("lite")
-                    }
-                    create("kotlin") {
-                        option("lite")
-                    }
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.23.4"
+    }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                create("java") {
+                    option("lite")
                 }
             }
         }
