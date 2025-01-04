@@ -94,11 +94,13 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.window.Popup
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.LastAlarmUpdateDBReceiver
 import com.example.trying_native.PremissionDataStore
 import com.example.trying_native.data.ProtoDataStore
 import com.example.trying_native.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime
+import com.example.trying_native.permission.AskBackgroundAutoStartPermissionMI
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -142,12 +144,25 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
     // Collect the Flow as State
     val alarms by AlarmDao.getAllAlarmsFlow().collectAsState(initial = emptyList())
     var showTheDialogToTheUserToAskForPermission by remember { mutableStateOf(false) }
-    var a = false
-    val askUserForBackgroundAutostartPermission  by context.ProtoDataStore.data.map {
-            userPermissson->
-        userPermissson.backgroundAutostartPremission
-    }.collectAsState(initial = false)
-    logD("the value for the proto is -->${askUserForBackgroundAutostartPermission}")
+//    val askUserForBackgroundAutostartPermission: Boolean? by context.ProtoDataStore.data
+//        .map { it.backgroundAutostartPremission }
+//        .collectAsStateWithLifecycle(initialValue = null)
+//
+//    askUserForBackgroundAutostartPermission?.let { value ->
+//        logD("the value for the proto is -->$value")
+//    }
+
+//    LaunchedEffect(Unit) {
+//        context.ProtoDataStore.data.collect { preferences ->
+//            logD( "Background permission changed to: ${preferences.backgroundAutostartPremission}")
+//        }
+//    }
+//
+//    LaunchedEffect(Unit) {
+//        context.ProtoDataStore.updateData {currentData ->
+//            currentData.toBuilder().setBackgroundAutostartPremission(false).build()
+//        }
+//    }
 
     Box(
         modifier = Modifier
@@ -335,7 +350,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
             if(askUserForPermission){
                 askUserForPermissionToScheduleAlarm()
             }
-        })
+        }, context = context )
         }
     }
 }
@@ -346,9 +361,25 @@ fun askForBackgroundActivityPermissionOnMIUI(){
 
 
 @Composable
-fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Color = Color.Blue, onClick: () -> Unit) {
+fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Color = Color.Blue, onClick: () -> Unit, context: Context) {
 //    var plusIconClicked by remember { mutableStateOf(false) }
+//    var lateint a
 
+    LaunchedEffect(Unit) {
+        context.ProtoDataStore.data.collect { preferences ->
+            logD( "Background permission is to: ${preferences.backgroundAutostartPremission}")
+            val requestForBGAutoStart = AskBackgroundAutoStartPermissionMI(context)
+            if ( !requestForBGAutoStart.hasAutostartPermission() && !preferences.backgroundAutostartPremission){
+                var a =requestForBGAutoStart.requestAutostartPermission()
+                logD(" the  updating the  backgroundAutostartPremission to be ${a}")
+                context.ProtoDataStore.updateData {currentData ->
+            currentData.toBuilder().setBackgroundAutostartPremission(a).build()
+        }
+//                context.ProtoDataStore.updateData { aa ->  }
+            }
+
+        }
+    }
     Box(
         modifier = modifier
             .size(size)

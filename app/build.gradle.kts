@@ -94,6 +94,7 @@ dependencies {
     // Other dependencies remain the same...
     implementation("com.posthog:posthog-android:3.+")
     implementation(libs.androidx.espresso.contrib)
+    implementation(libs.androidx.lifecycle.runtime.compose.android)
 
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")

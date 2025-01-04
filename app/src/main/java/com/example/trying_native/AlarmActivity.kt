@@ -330,15 +330,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean
 
             Spacer(modifier = Modifier.height(34.dp))
 
-            if (isMessagePresent) {
-                Text(
-                    text = message,
-                    color = Color.Cyan,
-                    fontSize = 53.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(34.dp))
-            }
+
 
             Button(
                 onClick = onFinish,
@@ -348,6 +340,15 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean
             ) {
                 Text(text = "Cancel alarm")
             }
+            if (isMessagePresent) {
+            Spacer(modifier = Modifier.height(34.dp))
+            Text(
+                text = message,
+                color = Color.Cyan,
+                fontSize = 53.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
         }
     }
 }

@@ -18,6 +18,7 @@ protobufKotlinVersion = "3.23.4"
 uiTestAndroid = "1.7.1"
 junitKtx = "1.2.1"
 espressoContrib = "3.6.1"
+lifecycleRuntimeComposeAndroid = "2.8.7"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -51,6 +52,7 @@ androidx-ui-test-android = { group = "androidx.compose.ui", name = "ui-test-andr
 androidx-junit-ktx = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "junitKtx" }
 androidx-espresso-contrib = { group = "androidx.test.espresso", name = "espresso-contrib", version.ref = "espressoContrib" }
 protobuf-kotlin-v3234 = { module = "com.google.protobuf:protobuf-kotlin", version.ref = "protobufKotlinVersion" }
+androidx-lifecycle-runtime-compose-android = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose-android", version.ref = "lifecycleRuntimeComposeAndroid" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
