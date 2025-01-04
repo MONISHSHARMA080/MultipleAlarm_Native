@@ -102,6 +102,7 @@ import com.example.trying_native.lastPendingIntentWithMessageForDbOperationsWill
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.format.DateTimeFormatter
@@ -141,7 +142,12 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
     // Collect the Flow as State
     val alarms by AlarmDao.getAllAlarmsFlow().collectAsState(initial = emptyList())
     var showTheDialogToTheUserToAskForPermission by remember { mutableStateOf(false) }
-
+    var a = false
+    val askUserForBackgroundAutostartPermission  by context.ProtoDataStore.data.map {
+            userPermissson->
+        userPermissson.backgroundAutostartPremission
+    }.collectAsState(initial = false)
+    logD("the value for the proto is -->${askUserForBackgroundAutostartPermission}")
 
     Box(
         modifier = Modifier
@@ -326,11 +332,6 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
         ) {
             RoundPlusIcon(size = screenHeight/10, onClick = {
             showTheDialogToTheUserToAskForPermission = !showTheDialogToTheUserToAskForPermission;
-            val askUserForBackgroundAutostartPermission: Flow<Boolean> = context.ProtoDataStore.data.map {
-                userPermissson->
-                userPermissson.backgroundAutostartPremission
-            }
-                logD("the value for the proto is -->${askUserForBackgroundAutostartPermission}")
             if(askUserForPermission){
                 askUserForPermissionToScheduleAlarm()
             }
