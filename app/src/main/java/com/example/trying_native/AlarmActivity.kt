@@ -299,52 +299,59 @@ class AlarmActivity : ComponentActivity() {
 }
 
 @Composable
-fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent:Boolean  ) {
-    var currentTime by remember { mutableStateOf(getCurrentTime()) }
+fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean) {
+    // Create state outside of the remember block
+    val timeState = remember { mutableStateOf(getCurrentTime()) }
+    var currentTime by timeState
 
-    // Updates the time every second
     LaunchedEffect(Unit) {
         while (true) {
-            currentTime = getCurrentTime()
-            delay(999)
+            timeState.value = getCurrentTime()
+            delay(1000)
         }
     }
 
-    // Display time in red on black background with a button to finish the activity
     Box(
-            modifier = Modifier.fillMaxSize().background(Color.Black),
-            contentAlignment = Alignment.Center
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black),
+        contentAlignment = Alignment.Center
     ) {
         Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
-                    text = currentTime,
-                    color = Color.Red,
-                    fontSize = 63.sp,
-                    fontWeight = FontWeight.Bold
+                text = currentTime,
+                color = Color.Red,
+                fontSize = 63.sp,
+                fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.height(34.dp)) // Space between the time and the button
 
-            if(isMessagePresent){
+            Spacer(modifier = Modifier.height(34.dp))
+
+            if (isMessagePresent) {
                 Text(
                     text = message,
                     color = Color.Cyan,
                     fontSize = 53.sp,
                     fontWeight = FontWeight.Bold
                 )
+                Spacer(modifier = Modifier.height(34.dp))
             }
 
-            Spacer(modifier = Modifier.height(34.dp)) // Space between the time and the button
-            // Button to finish the activity
             Button(
-                    onClick = { onFinish() },
-                    modifier = Modifier.height(56.dp).padding(horizontal = 16.dp)
-            ) { Text(text = "Cancel alarm") }
+                onClick = onFinish,
+                modifier = Modifier
+                    .height(56.dp)
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text(text = "Cancel alarm")
+            }
         }
     }
 }
+
 
 // Helper function to get current time
 fun getCurrentTime(): String {

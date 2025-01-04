@@ -18,118 +18,92 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary = true
-        }
+    }
 
+    buildFeatures {
+        compose =true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.6" // Update to match Kotlin version
+    }
 
-
-        ksp {
-            arg("room.schemaLocation", "$projectDir/schemas")
-            arg("room.incremental", "true")
+     buildTypes {
+        release {
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 
-        sourceSets {
-            getByName("main") {
-                // Specify the proto file directory
-                proto {
-                    srcDir("src/main/proto")
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    // If you're using compose, update this as well
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.1"
+    }
+}
+
+// Protobuf configuration
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.23.4"
+    }
+
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                create("java") {
+                    option("lite")
                 }
             }
         }
-        signingConfigs {
-            create("release") {
-                storeFile = file(
-                    System.getenv("ANDROID_KEYSTORE_FILE")
-                        ?: project.findProperty("android.injected.signing.store.file")?.toString()
-                        ?: "release.keystore"
-                )
-                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-                    ?: project.findProperty("android.injected.signing.store.password")?.toString()
-                keyAlias = System.getenv("ANDROID_KEY_ALIAS")
-                    ?: project.findProperty("android.injected.signing.key.alias")?.toString()
-                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
-                    ?: project.findProperty("android.injected.signing.key.password")?.toString()
-            }
-        }
+    }
+}
 
-        buildTypes {
-            release {
-                isMinifyEnabled = true
-                proguardFiles(
-                    getDefaultProguardFile("proguard-android-optimize.txt"),
-                    "proguard-rules.pro"
-                )
-                signingConfig = signingConfigs.getByName("release")
-            }
-        }
+configurations.all {
+    resolutionStrategy {
+        // Force specific versions to resolve conflicts
+        force("com.google.protobuf:protobuf-javalite:3.23.4")
 
-        compileOptions {
+        // Exclude protobuf-lite from all configurations
+        exclude(group = "com.google.protobuf", module = "protobuf-lite")
+    }
+}
 
-            sourceCompatibility = JavaVersion.VERSION_1_8
-            targetCompatibility = JavaVersion.VERSION_1_8
-        }
-        kotlinOptions {
-            jvmTarget = "1.8"
-        }
-        buildFeatures {
-            compose = true
-        }
-        composeOptions {
-            kotlinCompilerExtensionVersion = "1.5.1"
-        }
-        packaging {
-            resources {
-                excludes += "/META-INF/{AL2.0,LGPL2.1}"
-            }
-        }
-        configurations.all {
-            resolutionStrategy {
-                force("androidx.test.espresso:espresso-core:3.6.1")
-            }
-        }
+dependencies {
+    // Core Proto dependencies
+    implementation("androidx.datastore:datastore-core:1.1.1") {
+        exclude(group = "com.google.protobuf", module = "protobuf-lite")
+    }
+    implementation("androidx.datastore:datastore:1.1.1") {
+        exclude(group = "com.google.protobuf", module = "protobuf-lite")
+    }
+    implementation("com.google.protobuf:protobuf-javalite:3.23.4")
 
+    // Other dependencies remain the same...
+    implementation("com.posthog:posthog-android:3.+")
+    implementation(libs.androidx.espresso.contrib)
 
-
-    dependencies {
-        //proto
-        implementation("androidx.datastore:datastore:1.1.1")
-
-//        implementation("com.google.protobuf:protobuf-javalite:3.23.4")
-//        implementation("androidx.datastore:datastore:1.0.0")
-        implementation("com.google.protobuf:protoc:3.23.4")
-
-        implementation("com.posthog:posthog-android:3.+")
-        implementation(libs.androidx.espresso.contrib)
-        androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-        androidTestImplementation("androidx.test:runner:1.6.1")
-        androidTestImplementation("androidx.test:rules:1.6.1")
-//    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-        androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.1")
-        debugImplementation("androidx.compose.ui:ui-test-manifest")
-        implementation(libs.androidx.junit.ktx)
-        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
-
-        implementation(libs.androidx.media3.common)
-        implementation(libs.androidx.ui.test.android)
-        val room_version = "2.6.1"
-        implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
-
-        implementation("androidx.room:room-runtime:$room_version")
-//        annotationProcessor("androidx.room:room-compiler:$room_version")
-//    kapt("androidx.room:room-compiler:$room_version")
-        ksp("androidx.room:room-compiler:$room_version")
-        implementation("androidx.room:room-ktx:$room_version")
-        implementation("androidx.room:room-rxjava2:$room_version")
-        implementation("androidx.room:room-rxjava3:$room_version")
-        implementation("androidx.room:room-guava:$room_version")
-        testImplementation("androidx.room:room-testing:$room_version")
-        implementation("androidx.room:room-paging:$room_version")
+    val roomVersion = "2.6.1"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+        implementation("androidx.room:room-rxjava2:$roomVersion")
+        implementation("androidx.room:room-rxjava3:$roomVersion")
+        implementation("androidx.room:room-guava:$roomVersion")
+        testImplementation("androidx.room:room-testing:$roomVersion")
+        implementation("androidx.room:room-paging:$roomVersion")
 
         implementation(libs.androidx.material.icons.core)
         implementation(libs.androidx.material.icons.extended)
@@ -157,20 +131,3 @@ android {
         debugImplementation(libs.androidx.ui.tooling)
         debugImplementation(libs.androidx.ui.test.manifest)
     }
-
-}
-
-protobuf {
-    protoc {
-        artifact = "com.google.protobuf:protoc:3.23.4"
-    }
-    generateProtoTasks {
-        all().forEach { task ->
-            task.builtins {
-                create("java") {
-                    option("lite")
-                }
-            }
-        }
-    }
-}
