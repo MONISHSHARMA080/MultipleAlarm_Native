@@ -1,0 +1,9 @@
+
+syntax = "proto3";
+
+option java_package = "com.example.trying_native";
+option java_multiple_files = true;
+
+message PremissionDataStore  {
+ bool backgroundAutostartPremission =1;
+}
