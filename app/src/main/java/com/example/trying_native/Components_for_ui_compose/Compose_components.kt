@@ -355,9 +355,6 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
     }
 }
 
-fun askForBackgroundActivityPermissionOnMIUI(){
-
-}
 
 
 @Composable
@@ -365,26 +362,15 @@ fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Col
 //    var plusIconClicked by remember { mutableStateOf(false) }
 //    var lateint a
 
-    LaunchedEffect(Unit) {
-        context.ProtoDataStore.data.collect { preferences ->
-            logD( "Background permission is to: ${preferences.backgroundAutostartPremission}")
-            val requestForBGAutoStart = AskBackgroundAutoStartPermissionMI(context)
-            if ( !requestForBGAutoStart.hasAutostartPermission() && !preferences.backgroundAutostartPremission){
-                var a =requestForBGAutoStart.requestAutostartPermission()
-                logD(" the  updating the  backgroundAutostartPremission to be ${a}")
-                context.ProtoDataStore.updateData {currentData ->
-            currentData.toBuilder().setBackgroundAutostartPremission(a).build()
-        }
-            }
-
-        }
-    }
     Box(
         modifier = modifier
             .size(size)
             .zIndex(4f)
             .background(color = backgroundColor, shape = CircleShape)
-            .clickable { onClick() },
+            .clickable {
+                val requestForBGAutoStart = AskBackgroundAutoStartPermissionMI(context)
+                requestForBGAutoStart.askForBackgroundActivityPermissionOnMIUI(context)
+                ;onClick() },
         contentAlignment = Alignment.Center,
     ) {
         Icon(

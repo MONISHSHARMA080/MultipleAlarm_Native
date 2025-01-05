@@ -6,6 +6,13 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import com.example.trying_native.data.ProtoDataStore
+import com.example.trying_native.logD
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class AskBackgroundAutoStartPermissionMI(private val context: Context) {
     // Check if the device is Xiaomi/MIUI
@@ -106,6 +113,23 @@ class AskBackgroundAutoStartPermissionMI(private val context: Context) {
         } catch (e: Exception) {
             e.printStackTrace()
             false
+        }
+    }
+
+    fun askForBackgroundActivityPermissionOnMIUI(context: Context){
+        CoroutineScope(Dispatchers.Main).launch {
+            context.ProtoDataStore.data.collect { preferences ->
+                logD( "Background permission is : ${preferences.backgroundAutostartPremission}")
+                val requestForBGAutoStart = AskBackgroundAutoStartPermissionMI(context)
+                logD("does we have auto start permission --> ${requestForBGAutoStart.hasAutostartPermission()}")
+                if ( !preferences.backgroundAutostartPremission){
+                    val a =requestForBGAutoStart.requestAutostartPermission()
+                    logD(" the  updating the  backgroundAutostartPermission to be ${a}")
+                    context.ProtoDataStore.updateData {currentData ->
+                        currentData.toBuilder().setBackgroundAutostartPremission(a).build()
+                    }
+                }
+            }
         }
     }
 }
