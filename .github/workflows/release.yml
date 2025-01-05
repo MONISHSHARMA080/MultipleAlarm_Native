@@ -2,7 +2,9 @@ name: Android CI
 
 on:
   push:
-    branches: ["main", "pauseBackgroundAudioOnceAlarmStart"]
+    branches: ["main", "pauseBackgroundAudioOnceAlarmStart", 
+"ProtoDataStore"
+ ]
   pull_request:
     branches: ["main"]
 
