@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.trying_native.ui.theme.Trying_nativeTheme
@@ -325,23 +326,31 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent:Boolean 
                     fontSize = 63.sp,
                     fontWeight = FontWeight.Bold
             )
+            Spacer(modifier = Modifier.height(44.dp)) // Space between the time and the button
+
+            // Button to finish the activity
+            Button(
+                    onClick = { onFinish() },
+                    modifier = Modifier.height(56.dp).padding(horizontal = 16.dp)
+            ) { Text(text = "Cancel alarm") }
+
             Spacer(modifier = Modifier.height(34.dp)) // Space between the time and the button
 
             if(isMessagePresent){
                 Text(
                     text = message,
                     color = Color.Cyan,
-                    fontSize = 53.sp,
-                    fontWeight = FontWeight.Bold
+                    fontSize = 46.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center, // Center align the text
+                    lineHeight = 60.sp,
+                    modifier = Modifier
+                        .fillMaxWidth() // Take full width
+                        .padding(horizontal = 8.dp), // Add padding
+                    softWrap = true // Enable text wrapping
                 )
             }
 
-            Spacer(modifier = Modifier.height(34.dp)) // Space between the time and the button
-            // Button to finish the activity
-            Button(
-                    onClick = { onFinish() },
-                    modifier = Modifier.height(56.dp).padding(horizontal = 16.dp)
-            ) { Text(text = "Cancel alarm") }
         }
     }
 }
