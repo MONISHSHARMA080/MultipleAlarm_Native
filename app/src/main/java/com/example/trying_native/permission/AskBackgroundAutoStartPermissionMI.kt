@@ -19,93 +19,60 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class AskBackgroundAutoStartPermissionMI(private val context: Context) {
-
-    enum class AutoStartState {
-        ENABLED,
-        DISABLED,
-        NO_INFO,
-        UNEXPECTED_RESULT
-    }
-
-    // Check if the device is Xiaomi/MIUI
     fun isXiaomiDevice(): Boolean {
         return Build.MANUFACTURER.lowercase() == "xiaomi" ||
                 Build.BRAND.lowercase() == "xiaomi" ||
                 Build.BRAND.lowercase() == "redmi"
     }
 
-    // Get autostart state
-    fun getAutoStartState(): AutoStartState {
-        if (!isXiaomiDevice()) {
-            return AutoStartState.NO_INFO
-        }
-
-        try {
-            val pm = context.packageManager
-            val intent = Intent()
-            val miuiSettingsComponent = ComponentName(
-                "com.miui.securitycenter",
-                "com.miui.permcenter.autostart.AutoStartManagementActivity"
-            )
-
-            intent.component = miuiSettingsComponent
-
-            // Check if MIUI security center exists
-            val securityCenterExists = pm.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY).isNotEmpty()
-
-            if (!securityCenterExists) {
-                return AutoStartState.NO_INFO
-            }
-
-            // Use contentResolver to check autostart status
-            val uri = Uri.parse("content://com.miui.securitycenter.autostart/state")
-            val projection = arrayOf("package_name", "state")
-            val selection = "package_name=?"
-            val selectionArgs = arrayOf(context.packageName)
-
-            context.contentResolver.query(uri, projection, selection, selectionArgs, null)?.use { cursor ->
-                if (cursor.moveToFirst()) {
-                    val stateIndex = cursor.getColumnIndex("state")
-                    if (stateIndex != -1) {
-                        val state = cursor.getInt(stateIndex)
-                        return if (state == 1) {
-                            AutoStartState.ENABLED
-                        } else {
-                            AutoStartState.DISABLED
-                        }
-                    }
-                }
-            }
-
-            return AutoStartState.UNEXPECTED_RESULT
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return AutoStartState.NO_INFO
-        }
-    }
-
-    // Check if autostart is enabled
     fun isAutoStartEnabled(checkBatteryOptimization: Boolean = true): Boolean {
         if (!isXiaomiDevice()) {
             return true
         }
 
-        val state = getAutoStartState()
-
-        if (state == AutoStartState.NO_INFO || state == AutoStartState.UNEXPECTED_RESULT) {
-            // Fallback to checking battery optimization
-            return if (checkBatteryOptimization) {
-                val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-                powerManager.isIgnoringBatteryOptimizations(context.packageName)
-            } else {
-                false
+        return try {
+            // Try to check through package manager first
+            val pm = context.packageManager
+            val intent = Intent().apply {
+                component = ComponentName(
+                    "com.miui.securitycenter",
+                    "com.miui.permcenter.autostart.AutoStartManagementActivity"
+                )
             }
-        }
 
-        return state == AutoStartState.ENABLED
+            val securityCenterExists = pm.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY).isNotEmpty()
+            if (!securityCenterExists) {
+                return checkBatteryOptimization && checkBatteryOptimization()
+            }
+
+            // If we can't directly query the content provider (due to permissions),
+            // check the app's background state
+            val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            val runningProcesses = activityManager.runningAppProcesses
+
+            val isBackgroundRestricted = runningProcesses?.any {
+                it.processName == context.packageName &&
+                        it.importance <= ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE
+            } ?: false
+
+            if (isBackgroundRestricted) {
+                return false
+            }
+
+            // If all else fails, check battery optimization
+            checkBatteryOptimization && checkBatteryOptimization()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            checkBatteryOptimization && checkBatteryOptimization()
+        }
     }
 
-    // Request autostart permission
+    private fun checkBatteryOptimization(): Boolean {
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        return powerManager.isIgnoringBatteryOptimizations(context.packageName)
+    }
+
+    // Your original implementation
     fun requestAutostartPermission(): Boolean {
         if (!isXiaomiDevice()) {
             return false
@@ -140,6 +107,7 @@ class AskBackgroundAutoStartPermissionMI(private val context: Context) {
         }
     }
 
+    // Your original implementation
     fun askForBackgroundActivityPermissionOnMIUI(context: Context) {
         CoroutineScope(Dispatchers.Main).launch {
             context.ProtoDataStore.data.collect { preferences ->
@@ -147,7 +115,7 @@ class AskBackgroundAutoStartPermissionMI(private val context: Context) {
                 val autoStartEnabled = isAutoStartEnabled()
                 logD("Autostart permission status: $autoStartEnabled")
 
-                if (!preferences.backgroundAutostartPremission) {
+                if (!autoStartEnabled) {
                     val requested = requestAutostartPermission()
                     logD("Updating backgroundAutostartPermission to: $requested")
                     context.ProtoDataStore.updateData { currentData ->
