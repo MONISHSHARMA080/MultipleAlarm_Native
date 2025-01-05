@@ -1,10 +1,14 @@
 package com.example.trying_native.permission
 
+import android.app.ActivityManager
+import android.app.AppOpsManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,6 +19,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class AskBackgroundAutoStartPermissionMI(private val context: Context) {
+
+    enum class AutoStartState {
+        ENABLED,
+        DISABLED,
+        NO_INFO,
+        UNEXPECTED_RESULT
+    }
+
     // Check if the device is Xiaomi/MIUI
     fun isXiaomiDevice(): Boolean {
         return Build.MANUFACTURER.lowercase() == "xiaomi" ||
@@ -22,41 +34,75 @@ class AskBackgroundAutoStartPermissionMI(private val context: Context) {
                 Build.BRAND.lowercase() == "redmi"
     }
 
-    // Check if autostart permission is granted
-    fun hasAutostartPermission(): Boolean {
+    // Get autostart state
+    fun getAutoStartState(): AutoStartState {
         if (!isXiaomiDevice()) {
-            return true // Non-MIUI devices don't need this specific permission
+            return AutoStartState.NO_INFO
         }
 
-        return try {
-            // Check if the app is added to protected apps list
+        try {
             val pm = context.packageManager
             val intent = Intent()
-            intent.component = ComponentName(
+            val miuiSettingsComponent = ComponentName(
                 "com.miui.securitycenter",
                 "com.miui.permcenter.autostart.AutoStartManagementActivity"
             )
 
-            // If the security center activity exists and app can query it
+            intent.component = miuiSettingsComponent
+
+            // Check if MIUI security center exists
             val securityCenterExists = pm.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY).isNotEmpty()
 
             if (!securityCenterExists) {
-                // If security center doesn't exist, check battery optimization instead
-                val powerManager = context.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
-                return powerManager.isIgnoringBatteryOptimizations(context.packageName)
+                return AutoStartState.NO_INFO
             }
 
-            // For MIUI devices, check if app is in recent apps list
-            val am = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
-            val runningApps = am.runningAppProcesses
-            val isRunning = runningApps?.any { it.processName == context.packageName } ?: false
+            // Use contentResolver to check autostart status
+            val uri = Uri.parse("content://com.miui.securitycenter.autostart/state")
+            val projection = arrayOf("package_name", "state")
+            val selection = "package_name=?"
+            val selectionArgs = arrayOf(context.packageName)
 
-            // If app is running in background, it likely has autostart permission
-            isRunning
+            context.contentResolver.query(uri, projection, selection, selectionArgs, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val stateIndex = cursor.getColumnIndex("state")
+                    if (stateIndex != -1) {
+                        val state = cursor.getInt(stateIndex)
+                        return if (state == 1) {
+                            AutoStartState.ENABLED
+                        } else {
+                            AutoStartState.DISABLED
+                        }
+                    }
+                }
+            }
+
+            return AutoStartState.UNEXPECTED_RESULT
         } catch (e: Exception) {
             e.printStackTrace()
-            false
+            return AutoStartState.NO_INFO
         }
+    }
+
+    // Check if autostart is enabled
+    fun isAutoStartEnabled(checkBatteryOptimization: Boolean = true): Boolean {
+        if (!isXiaomiDevice()) {
+            return true
+        }
+
+        val state = getAutoStartState()
+
+        if (state == AutoStartState.NO_INFO || state == AutoStartState.UNEXPECTED_RESULT) {
+            // Fallback to checking battery optimization
+            return if (checkBatteryOptimization) {
+                val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+                powerManager.isIgnoringBatteryOptimizations(context.packageName)
+            } else {
+                false
+            }
+        }
+
+        return state == AutoStartState.ENABLED
     }
 
     // Request autostart permission
@@ -64,7 +110,6 @@ class AskBackgroundAutoStartPermissionMI(private val context: Context) {
         if (!isXiaomiDevice()) {
             return false
         }
-
         return try {
             // Main intent for MIUI Security Center
             val mainIntent = Intent().apply {
@@ -75,58 +120,40 @@ class AskBackgroundAutoStartPermissionMI(private val context: Context) {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
 
-            // List of possible component paths
-            val possibleComponents = listOf(
-                ComponentName(
-                    "com.miui.securitycenter",
-                    "com.miui.permcenter.autostart.AutoStartManagementActivity"
-                ),
-                ComponentName(
-                    "com.miui.securitycenter",
-                    "com.miui.permcenter.permissions.PermissionsEditorActivity"
-                ),
-                ComponentName(
-                    "com.miui.security",
-                    "com.miui.permcenter.autostart.AutoStartManagementActivity"
-                )
-            )
-
-            // Try each possible path
-            for (component in possibleComponents) {
-                try {
-                    mainIntent.component = component
-                    context.startActivity(mainIntent)
-                    return true
-                } catch (e: Exception) {
-                    continue
+            // Try to open MIUI autostart settings
+            try {
+                context.startActivity(mainIntent)
+                return true
+            } catch (e: Exception) {
+                // If MIUI settings fails, try battery optimization settings
+                val batterySaverIntent = Intent().apply {
+                    action = Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
+                    data = Uri.parse("package:${context.packageName}")
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 }
+                context.startActivity(batterySaverIntent)
+                true
             }
-
-            // If all specific intents fail, open battery optimization settings
-            val batterySaverIntent = Intent().apply {
-                action = Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            context.startActivity(batterySaverIntent)
-            true
-
         } catch (e: Exception) {
             e.printStackTrace()
             false
         }
     }
 
-    fun askForBackgroundActivityPermissionOnMIUI(context: Context){
+    fun askForBackgroundActivityPermissionOnMIUI(context: Context) {
         CoroutineScope(Dispatchers.Main).launch {
             context.ProtoDataStore.data.collect { preferences ->
-                logD( "Background permission is : ${preferences.backgroundAutostartPremission}")
-                val requestForBGAutoStart = AskBackgroundAutoStartPermissionMI(context)
-                logD("does we have auto start permission --> ${requestForBGAutoStart.hasAutostartPermission()}")
-                if ( !preferences.backgroundAutostartPremission){
-                    val a =requestForBGAutoStart.requestAutostartPermission()
-                    logD(" the  updating the  backgroundAutostartPermission to be ${a}")
-                    context.ProtoDataStore.updateData {currentData ->
-                        currentData.toBuilder().setBackgroundAutostartPremission(a).build()
+                logD("Background permission is: ${preferences.backgroundAutostartPremission}")
+                val autoStartEnabled = isAutoStartEnabled()
+                logD("Autostart permission status: $autoStartEnabled")
+
+                if (!preferences.backgroundAutostartPremission) {
+                    val requested = requestAutostartPermission()
+                    logD("Updating backgroundAutostartPermission to: $requested")
+                    context.ProtoDataStore.updateData { currentData ->
+                        currentData.toBuilder()
+                            .setBackgroundAutostartPremission(requested)
+                            .build()
                     }
                 }
             }
