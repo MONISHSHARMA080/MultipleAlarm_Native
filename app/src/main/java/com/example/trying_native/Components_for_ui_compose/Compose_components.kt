@@ -375,7 +375,6 @@ fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Col
                 context.ProtoDataStore.updateData {currentData ->
             currentData.toBuilder().setBackgroundAutostartPremission(a).build()
         }
-//                context.ProtoDataStore.updateData { aa ->  }
             }
 
         }
