@@ -377,8 +377,10 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                                         selected_date_for_display =  individualAlarm.date_for_display , date_in_long= date, coroutineScope = this, is_alarm_ready_to_use = true , is_this_func_call_to_update_an_existing_alarm = true, new_is_ready_to_use = true  )
                                                     if(exceptionOccurred !== null){
                                                         notificationBuilder(context_of_activity,"error returned in creating multiple alarm ","execution returned exception in schedule multiple alarm  -->${exceptionOccurred}").showNotification()
+                                                        logD("error in the schedulemultiple -->${exceptionOccurred}")
                                                     }
                                                 }catch (e:Exception){
+                                                    logD("exception occurred in try catch for multiple alarm -->${e} ")
                                                     notificationBuilder(context_of_activity,"error returned in creating multiple alarm ","execution returned exception in schedule multiple alarm  -->${e}").showNotification()
                                                 }
                                             }
