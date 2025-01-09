@@ -376,10 +376,10 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                                         calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = individualAlarm.freq_in_min_to_display,
                                                         selected_date_for_display =  individualAlarm.date_for_display , date_in_long= date, coroutineScope = this, is_alarm_ready_to_use = true , is_this_func_call_to_update_an_existing_alarm = true, new_is_ready_to_use = true  )
                                                     if(exceptionOccurred !== null){
-                                                        notificationBuilder(context_of_activity,"error returned in creating multiple alarm ","execution returned execption in schedule multiple alarm  -->${exceptionOccurred}")
+                                                        notificationBuilder(context_of_activity,"error returned in creating multiple alarm ","execution returned exception in schedule multiple alarm  -->${exceptionOccurred}").showNotification()
                                                     }
                                                 }catch (e:Exception){
-                                                    notificationBuilder(context_of_activity,"error returned in creating multiple alarm ","execution returned execption in schedule multiple alarm  -->${e}")
+                                                    notificationBuilder(context_of_activity,"error returned in creating multiple alarm ","execution returned exception in schedule multiple alarm  -->${e}").showNotification()
                                                 }
                                             }
                                         }
