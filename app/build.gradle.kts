@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.trying_native"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.trying_native"
@@ -106,6 +106,9 @@ dependencies {
     implementation(libs.androidx.datastore.rxjava3)
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.datastore.preferences)
+
+    // notification
+    implementation("androidx.core:core-ktx:1.15.0")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

@@ -96,6 +96,7 @@ import androidx.compose.ui.window.Popup
 import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.LastAlarmUpdateDBReceiver
 import com.example.trying_native.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime
+import com.example.trying_native.notification.notificationBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -370,9 +371,16 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                                 date = cal1.timeInMillis
                                             }
                                             coroutineScope.launch {
-                                                scheduleMultipleAlarms(alarmManager, activity_context = context_of_activity, alarmDao = AlarmDao,
-                                                    calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = individualAlarm.freq_in_min_to_display,
-                                                    selected_date_for_display =  individualAlarm.date_for_display , date_in_long= date, coroutineScope = this, is_alarm_ready_to_use = true , is_this_func_call_to_update_an_existing_alarm = true, new_is_ready_to_use = true  )
+                                                try {
+                                                    val exceptionOccurred = scheduleMultipleAlarms(alarmManager, activity_context = context_of_activity, alarmDao = AlarmDao,
+                                                        calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = individualAlarm.freq_in_min_to_display,
+                                                        selected_date_for_display =  individualAlarm.date_for_display , date_in_long= date, coroutineScope = this, is_alarm_ready_to_use = true , is_this_func_call_to_update_an_existing_alarm = true, new_is_ready_to_use = true  )
+                                                    if(exceptionOccurred !== null){
+                                                        notificationBuilder(context_of_activity,"error returned in creating multiple alarm ","execution returned execption in schedule multiple alarm  -->${exceptionOccurred}")
+                                                    }
+                                                }catch (e:Exception){
+                                                    notificationBuilder(context_of_activity,"error returned in creating multiple alarm ","execution returned execption in schedule multiple alarm  -->${e}")
+                                                }
                                             }
                                         }
                                     },
@@ -482,13 +490,6 @@ Column {
     }
   }
 }
-
-fun convertMillisToDate(millis: Long): String {
-    val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
-    return formatter.format(Date(millis))
-}
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -727,16 +728,20 @@ fun DialogToAskUserAboutAlarm(
                             set(Calendar.MINUTE, endTime?.minute!! )
                         }
 
-                        var date = pickedDateState!!?.let {
+                        val date = pickedDateState?.let {
                             java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
                         }?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                         coroutineScope.launch {
-                            scheduleMultipleAlarms(alarmManager, activity_context = activity_context, alarmDao = alarmDao,
+                            try {
+                                scheduleMultipleAlarms(alarmManager, activity_context = activity_context, alarmDao = alarmDao,
                                 calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = freq_returned_by_user,
                                 selected_date_for_display =  date!!, date_in_long = dateInMilliSec, coroutineScope = this, is_alarm_ready_to_use = true, new_is_ready_to_use = false, message = messageInAlarm  )
+                            }catch (e:Exception){
+                                logD("there is a error while scheduling alarm-->${e}")
+                                notificationBuilder(activity_context, "Error occurred in creating alarm", "the error was -->${e}").showNotification()
+                            }
                         }
                     }
-
                    onDismissRequest()
                }
                 }
@@ -865,17 +870,18 @@ fun freq_without_dialog(
          intent.putExtra("isMessagePresent", false)
      }
     intent.putExtra("last_alarm_info1","from the schedule alarm function")
-    logD("Trigger time in the scheduleAlarm func is --> $triggerTime_1 ")
+    logD("Trigger time in the scheduleAlarm func  is --> $triggerTime_1 ")
     intent.putExtra("triggerTime", triggerTime_1)
-    val pendingIntent = PendingIntent.getBroadcast(componentActivity, triggerTime.toInt(), intent, PendingIntent.FLAG_MUTABLE)
+    val pendingIntent = PendingIntent.getBroadcast(componentActivity, triggerTime.toInt(), intent,
+        PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+)
     alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime_1, pendingIntent)
 }
 
 
  suspend fun scheduleMultipleAlarms(alarmManager: AlarmManager, selected_date_for_display:String, date_in_long: Long, coroutineScope: CoroutineScope, is_alarm_ready_to_use:Boolean,
                                     calendar_for_start_time:Calendar, calendar_for_end_time:Calendar, freq_after_the_callback:Int, activity_context:ComponentActivity, alarmDao:AlarmDao,
-                                    is_this_func_call_to_update_an_existing_alarm: Boolean = false , new_is_ready_to_use:Boolean,   message: String?=null               )
- {
+                                    is_this_func_call_to_update_an_existing_alarm: Boolean = false , new_is_ready_to_use:Boolean,   message: String?=null) :Exception? {
     // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
      var startTimeInMillis = calendar_for_start_time.timeInMillis
     val startTimeInMillisendForDb= startTimeInMillis
@@ -896,7 +902,12 @@ fun freq_without_dialog(
 
     while (startTimeInMillis <= endTimeInMillis){
         logD("round $i")
-        scheduleAlarm(startTimeInMillis,alarmManager, activity_context, message = message)
+        try {
+            scheduleAlarm(startTimeInMillis,alarmManager, activity_context, message = message)
+        }catch (e:Exception){
+            logD("error occurred in the schedule multiple alarms-->${e}")
+            return e
+        }
         startTimeInMillis = startTimeInMillis + freq_in_min
         // this line added the freq in the last pending intent and now to get time for the last time we
         // need to - frq from it
@@ -930,6 +941,7 @@ fun freq_without_dialog(
              logD("Inserted alarm with ID: $insertedId")
          } catch (e: Exception) {
              logD("Exception occurred when inserting in the db: $e")
+             return@withContext e
          }
      }
    }
@@ -943,4 +955,5 @@ fun freq_without_dialog(
         isReadyToUse = new_is_ready_to_use
     )
      }
+     return null
 }
