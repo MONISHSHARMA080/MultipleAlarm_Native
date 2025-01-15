@@ -83,12 +83,14 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.testTag
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.LastAlarmUpdateDBReceiver
 import com.example.trying_native.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime
 import com.example.trying_native.notification.notificationBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.withContext
 import java.time.format.DateTimeFormatter
 
@@ -199,8 +201,10 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
 
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val fontSize = (screenHeight * 0.05f).value.sp
-    val coroutineScope = rememberCoroutineScope()
-    var askUserForPermission by remember { mutableStateOf(Settings.canDrawOverlays(context_of_activity)) }
+
+//    val coroutineScope = remember {CoroutineScope(SupervisorJob() + Dispatchers.Default)  }
+    val coroutineScope = context_of_activity.lifecycleScope
+    val askUserForPermission by remember { mutableStateOf(Settings.canDrawOverlays(context_of_activity)) }
 
     // Collect the Flow as State
     val alarms by AlarmDao.getAllAlarmsFlow().collectAsState(initial = emptyList())
@@ -298,7 +302,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                 Button(
                                     onClick = {
                                         logD("++==${individualAlarm.id} ---- $indexOfIndividualAlarmInAlarm ")
-                                        coroutineScope.launch {
+                                        coroutineScope.launch(Dispatchers.IO) {
                                             cancelAlarmByCancelingPendingIntent(
                                                 context_of_activity = context_of_activity,
                                                 startTime = individualAlarm.first_value,
@@ -324,7 +328,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                 Button(
                                     onClick = {
                                         if (individualAlarm.isReadyToUse){
-                                            coroutineScope.launch {
+                                            coroutineScope.launch(Dispatchers.IO) {
                                                 cancelAlarmByCancelingPendingIntent(
                                                     context_of_activity = context_of_activity,
                                                     startTime = individualAlarm.first_value,
@@ -359,7 +363,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                             }else  {
                                                 date = cal1.timeInMillis
                                             }
-                                            coroutineScope.launch {
+                                            coroutineScope.launch(Dispatchers.IO) {
                                                 try {
                                                     val exceptionOccurred = scheduleMultipleAlarms(alarmManager, activity_context = context_of_activity, alarmDao = AlarmDao,
                                                         calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = individualAlarm.freq_in_min_to_display,
