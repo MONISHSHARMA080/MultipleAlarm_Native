@@ -1,4 +1,4 @@
-package com.example.trying_native.Components_for_ui_compose
+package com.example.trying_native.components_for_ui_compose
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -7,7 +7,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -34,12 +33,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimeInput
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberTimePickerState
@@ -90,7 +87,6 @@ import com.example.trying_native.lastPendingIntentWithMessageForDbOperationsWill
 import com.example.trying_native.notification.notificationBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.withContext
 import java.time.format.DateTimeFormatter
 
@@ -731,7 +727,7 @@ fun DialogToAskUserAboutAlarm(
                5->{
                    val dateInMilliSec = pickedDateState
                     if ( dateInMilliSec != null){
-                        var startTime_obj_form_calender:Calendar = Calendar.getInstance().apply {
+                        val startTime_obj_form_calender:Calendar = Calendar.getInstance().apply {
                             timeInMillis = dateInMilliSec
                             set(Calendar.HOUR_OF_DAY, startTime?.hour!!)
                             set(Calendar.MINUTE, startTime?.minute!! )
@@ -750,9 +746,13 @@ fun DialogToAskUserAboutAlarm(
                         }?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                         coroutineScope.launch {
                             try {
-                                scheduleMultipleAlarms(alarmManager, activity_context = activity_context, alarmDao = alarmDao,
+                               val exception= scheduleMultipleAlarms(alarmManager, activity_context = activity_context, alarmDao = alarmDao,
                                 calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = freq_returned_by_user,
                                 selected_date_for_display =  date!!, date_in_long = dateInMilliSec, coroutineScope = this, is_alarm_ready_to_use = true, new_is_ready_to_use = false, message = messageInAlarm  )
+                                if (exception != null){
+                                    logD("there is a error while scheduling alarm-->${exception}")
+                                    notificationBuilder(activity_context,"the error was -->${exception}", "Error occurred in creating alarm", ).showNotification()
+                                }
                             }catch (e:Exception){
                                 logD("there is a error while scheduling alarm-->${e}")
                                 notificationBuilder(activity_context, "Error occurred in creating alarm", "the error was -->${e}").showNotification()

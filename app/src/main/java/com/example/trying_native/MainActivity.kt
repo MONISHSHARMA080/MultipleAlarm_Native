@@ -17,54 +17,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
-import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.waitForUpOrCancellation
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.Button
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
-import androidx.lifecycle.lifecycleScope
-import com.example.trying_native.Components_for_ui_compose.*
 import com.example.trying_native.ui.theme.Trying_nativeTheme
-import java.util.Calendar
 import androidx.room.Room
+import com.example.trying_native.components_for_ui_compose.AlarmContainer
 import com.example.trying_native.dataBase.AlarmDao
-import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmDatabase
 import com.posthog.android.PostHogAndroid
 import com.posthog.android.PostHogAndroidConfig
-import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
@@ -128,11 +93,6 @@ val activity_context = this
         PostHogAndroid.setup(this, config)
 
 //        lifecycleScope.launch(Dispatchers.IO) {
-            val db = Room.databaseBuilder(
-                applicationContext,
-                AlarmDatabase::class.java, "alarm-database"
-            ).build()
-            alarmDao = db.alarmDao()
 
         super.onCreate(savedInstanceState)
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
@@ -144,7 +104,7 @@ val activity_context = this
                 Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
                     Column(modifier = Modifier.padding(paddingValues)) {
 
-                      AlarmContainer(alarmDao, alarmManager, activity_context, askUserForPermissionToScheduleAlarm = { permissionToScheduleAlarm() } )
+                      AlarmContainer(getAlarmDao(), alarmManager, activity_context, askUserForPermissionToScheduleAlarm = { permissionToScheduleAlarm() } )
                     }
                 }
             }
@@ -193,38 +153,13 @@ val activity_context = this
         }
     }
 
-//    private fun doAllFieldChecksIfFineRunScheduleMultipleAlarm(showDialog: MutableState<Boolean>, dialogMessage: MutableState<String>, alarmManager:AlarmManager, context: Context, selected_date_for_display:String?, startHour_after_the_callback:Int?, startMin_after_the_callback: Int?, endHour_after_the_callback:Int?, endMin_after_the_callback:Int? ) {
-//        logD("fun areAllFieldsNotFilled ->${areAllFieldsNotFilled()};;; func areSomeFieldNotFilled ->${areSomeFieldNotFilled()} ")
-//        if (areAllFieldsNotFilled()) {
-//            dialogMessage.value = "Please fill in all the required fields."
-//            showDialog.value = true
-//        }
-//        else if (areSomeFieldNotFilled()) {
-//            dialogMessage.value = "Please select the ${emptyFieldAndTheirName()}."
-//            showDialog.value = true
-//        } else {
-//            logD("in the doAllFieldChecksIfFineRunScheduleMultipleAlarm else statememt ")
-//            var selected_date_for_display_1 = selected_date_for_display
-//            var startHour_after_the_callback_1  = startHour_after_the_callback
-//            var startMin_after_the_callback_1  = startMin_after_the_callback
-//            var endHour_after_the_callback_1 = endHour_after_the_callback
-//            var endMin_after_the_callback_1 = endMin_after_the_callback
-//
-//
-//
-//            if (selected_date_for_display_1 == null || startMin_after_the_callback_1 == null || startHour_after_the_callback_1 == null || endHour_after_the_callback_1== null || endMin_after_the_callback_1 == null){
-//                logD("in the selected date to null field---")
-//                // selected_date_for_display_1 was null
-//                logD("--$selected_date_for_display_1---$startMin_after_the_callback_1 -- $startHour_after_the_callback_1 --- $endHour_after_the_callback_1--- $endMin_after_the_callback_1")
-//                dialogMessage.value = "Error occured , error code is 0#276gde7h32, can't serialize data "
-//                showDialog.value = true
-//            }else if (selected_date_for_display_1 != null && startHour_after_the_callback_1 != null && startMin_after_the_callback_1 != null && endHour_after_the_callback_1 != null && endMin_after_the_callback_1 != null){
-//                logD("About to launch the alarm ---")
-//                scheduleMultipleAlarms(alarmManager, context, selected_date_for_display_1, startHour_after_the_callback_1, startMin_after_the_callback_1, endHour_after_the_callback_1, endMin_after_the_callback_1  )
-//            }
-////            scheduleAlarm(SystemClock.elapsedRealtime() + 1000,alarmManager)
-//        }
-//    }
+    private  fun getAlarmDao(): AlarmDao {
+    val db = Room.databaseBuilder(
+        applicationContext,
+        AlarmDatabase::class.java, "alarm-database"
+    ).build()
+    return db.alarmDao()
+}
 
     private fun scheduleAlarm(triggerTime: Long, alarmManager:AlarmManager) {
         logD( "Clicked on the schedule alarm func")

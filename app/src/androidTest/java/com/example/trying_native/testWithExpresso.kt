@@ -10,13 +10,13 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.example.trying_native.Components_for_ui_compose.AlarmContainer
+import com.example.trying_native.components_for_ui_compose.scheduleMultipleAlarms
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class TestWithEspresso {
+class E2ETests {
 
     @get:Rule
     val composeTestRule = createAndroidComposeRule<MainActivity>()

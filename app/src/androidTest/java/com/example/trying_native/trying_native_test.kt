@@ -1,142 +1,64 @@
-//package com.example.trying_native
-//
-//import android.annotation.SuppressLint
-//import android.app.AlarmManager
-//import android.content.Context
-//import android.content.Context.ALARM_SERVICE
-//import androidx.activity.compose.setContent
-//import androidx.compose.material3.Scaffold
-//import androidx.compose.ui.test.junit4.createAndroidComposeRule
-//import androidx.compose.ui.test.onChild
-//import androidx.compose.ui.test.onNodeWithContentDescription
-//import androidx.compose.ui.test.onNodeWithTag
-//import androidx.compose.ui.test.onNodeWithText
-//import androidx.compose.ui.test.onRoot
-//import androidx.compose.ui.test.performClick
-//import androidx.compose.ui.test.performTextInput
-//import androidx.compose.ui.test.printToLog
-//import androidx.room.Room
-//import androidx.test.espresso.contrib.PickerActions
-//import androidx.test.ext.junit.runners.AndroidJUnit4
-//import com.example.trying_native.Components_for_ui_compose.AlarmContainer
-//import com.example.trying_native.dataBase.AlarmDatabase
-//import com.example.trying_native.ui.theme.Trying_nativeTheme
-//import kotlinx.coroutines.delay
-//import kotlinx.coroutines.runBlocking
-//import org.junit.Rule
-//import org.junit.Test
-//import org.junit.runner.RunWith
-//import java.text.SimpleDateFormat
-//import java.util.Calendar
-//import java.util.Locale
-//
-//
-//@RunWith(AndroidJUnit4::class)
-//class MainActivityTest {
-//
-//    // This creates a rule to launch MainActivity
-//    @get:Rule
-//    val composeTestRule = createAndroidComposeRule<MainActivity>()
-//
-//    @Test
-//    fun appOpensSuccessfullyAndAlarmContainerExists() {
-//        logD("entered the ")
-//        composeTestRule.onNodeWithTag("AlarmContainer").assertExists()
-//    }
-//
-//    @Test
-//    fun clickOnPlusIconToEnterAnAlarm(){
-//        var  time = Calendar.getInstance().apply { set(Calendar.MINUTE, Calendar.MINUTE+10) }
-//        var hourToClickOn = time.get(Calendar.HOUR)
-//        composeTestRule.onNodeWithTag("RoundPlusIcon").performClick()
-//
-//        logD("clicked on ")
-//
-//        // runBlocking { delay(3000)  }
-//        composeTestRule.onNodeWithTag("DialogToAskUserAboutAlarm").assertExists()
-//        logD("about to exit --")
-////        PickerActions.setTime(12, time.get(Calendar.MINUTE))
-////        composeTestRule.onNodeWithTag("TimePickerTestTag").performTextInput("12:30")
-//
-//        // choose the current time as start time
-//        runBlocking { delay(1000) }
-//
-//        composeTestRule.onNodeWithTag("NextButtonInTimePicker").assertExists()
-//        composeTestRule.onNodeWithTag("NextButtonInTimePicker").performClick()
-//
-//        // choose the end time as 10 min after
-//
-//        logD("hourToClickOn-->$hourToClickOn")
-//        PickerActions.setTime(12, time.get(Calendar.MINUTE))
-//        composeTestRule.onNodeWithText("Ending time").assertExists()
-//        //        logD("---------${composeTestRule.onRoot()}-----------")
-//        composeTestRule.onNodeWithTag("TimePickerTestTag").printToLog("TimePickerHierarchy")
-//        logD("--------------------")
-//        runBlocking { delay(1000) }
-////        var a = composeTestRule.onNodeWithContentDescription("${hourToClickOn+2} o'clock")
-//        var a = time.get(Calendar.HOUR) +2
-//        logD("||---$a o'clock|[[]]][[[][][[]")
-//
-//        composeTestRule.onNodeWithContentDescription("$a o'clock").performClick()
-//
-//        // clicking on the minute
-//        var minute_now = Calendar.getInstance().get(Calendar.MINUTE)
-//        composeTestRule.onNodeWithText(minute_now.toString())
-//
-////
-////        val amPm = time.get(Calendar.AM_PM)
-////
-////        val result = if (amPm == Calendar.AM) "AM" else "PM"
-////        composeTestRule.onNodeWithText("${result}").assertExists()
-////        composeTestRule.onNodeWithTag("${result}").performClick()
-////        composeTestRule.onNodeWithTag("${time.get(Calendar.MINUTE)}").performClick()
-////        composeTestRule.onNodeWithTag("${time.get(Calendar.MINUTE)}").assertExists()
-//
-//        composeTestRule.onNodeWithTag("NextButtonInTimePicker").assertExists()
-//        composeTestRule.onNodeWithTag("NextButtonInTimePicker").performClick()
-//        composeTestRule.onNodeWithTag("datePicker").assertExists()
-//        logD("date is ${time.get(Calendar.DATE)}")
-//
-//        composeTestRule.onNodeWithTag("datePicker").printToLog("datePickerH")
-//        val dateFormat = SimpleDateFormat("EEEE, MMMM dd, yyyy", Locale.ENGLISH)
-//        val formattedDate = dateFormat.format(time.time)
-//        logD("++--++"+formattedDate)
-//        composeTestRule.onNodeWithTag("datePicker").onChild
-//            onNodeWithText("${time.get(Calendar.DAY_OF_WEEK)}, ${time.get(Calendar.MONTH)} ${time.get(Calendar.DATE)}, ${time.get(Calendar.YEAR)}").performClick()
-//
-//        runBlocking { delay(32000)  }
-//        logD("$hourToClickOn")
-//
-//    }
-//
-//}
 
-
+import android.app.AlarmManager
+import android.content.Context
+import androidx.activity.ComponentActivity
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.example.trying_native.Components_for_ui_compose.AlarmContainer
+import com.example.trying_native.AlarmActivity
 import com.example.trying_native.MainActivity
+import com.example.trying_native.components_for_ui_compose.scheduleMultipleAlarms
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.Calendar
+import com.example.trying_native.testHelperFile.E2ETestHelper
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import org.junit.Assert
 
 @RunWith(AndroidJUnit4::class)
 class AlarmContainerTest {
-//
-//    @get:Rule
-//    val composeTestRule = createComposeRule()
-//
+
+    private val context = ApplicationProvider.getApplicationContext<Context>()
+    private val activityContext = ApplicationProvider.getApplicationContext<ComponentActivity>()
+    private val coroutineScope= TestScope()
     @get:Rule
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
+    @get:Rule
+    val alarmActivityRule = createAndroidComposeRule<AlarmActivity>()
+
+    @Test
+    fun testIfTheAlarmSetBySetMultipleAlarmRunsTillTheEnd(){
+        // this one does not test the ui for the user, rather it is to see that if the alarms set by fun setMultipleAlarms
+        // executes/runs, and see that the class is called appropriate number of times
+        val helperClass = E2ETestHelper()
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val alarmDao = helperClass.getAlarmDao(context)
+        val startInMIn= 3
+        val endMin = 20
+        val freqToSkipAlarm = 2
+         coroutineScope.launch {
+             val exception=   scheduleMultipleAlarms(alarmManager =alarmManager, activity_context = activityContext, alarmDao = alarmDao,
+                calendar_for_start_time = helperClass.getTheCalenderInstanceAndSkipTheMinIn(startInMIn), calendar_for_end_time = helperClass.getTheCalenderInstanceAndSkipTheMinIn(endMin),
+                date_in_long = helperClass.getDateInLong(), coroutineScope = coroutineScope, freq_after_the_callback = freqToSkipAlarm,
+                selected_date_for_display = helperClass.getDateString(helperClass.getDateInLong()), is_alarm_ready_to_use = true, new_is_ready_to_use = false
+            )
+             if (exception != null){
+                Assert.fail("error in scheduling alarm , the exception was --> $exception")
+             }
+        }
+        // noe use adb to fast forward to the time and then see how many times the alarm activity gets called
+    }
+
     @Test
     fun testSetAlarmWithSpecificTimeDateAndFrequency() {
+
         // Setup the content with the composable to test
 //        composeTestRule.setContent {
 //            AlarmContainer(
