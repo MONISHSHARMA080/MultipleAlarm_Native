@@ -6,7 +6,7 @@ import android.content.Context
 import androidx.core.app.NotificationCompat
 import com.example.trying_native.R
 
-class notificationBuilder(context:Context, notificationText:String, title:String ) {
+class NotificationBuilder(context:Context, notificationText:String, title:String ) {
      companion object {
         private const val CHANNEL_ID = "default_channel"
         private const val CHANNEL_NAME = "Default Channel"
