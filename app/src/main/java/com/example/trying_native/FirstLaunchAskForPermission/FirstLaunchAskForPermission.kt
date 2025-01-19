@@ -18,41 +18,21 @@ class FirstLaunchAskForPermission(private val context: Context) {
         context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
     }
 
-//    private val notificationPermissionLauncher = rememberLauncherForActivityResult(
-//        contract = ActivityResultContracts.RequestPermission()
-//    ) { isGranted ->
-//        if (isGranted) {
-//            logD("Notification permission granted")
-//        } else {
-//            logD("Notification permission denied")
-//        }
-//    }
-
     fun checkAndRequestPermissions() {
         logD("here in the check andRequest func")
         if (isFirstLaunch()) {
+            askForNotificationPermission()
             BackGroundAutostartPermissionHelper.getAutoStartPermission(context)
             BackGroundAutostartPermissionHelper.requestDisableBatteryOptimization(context)
-            askFornotificationPermission()
             setFirstLaunchComplete()
+            logD("about to get out ")
         }
     }
 
-    private fun askFornotificationPermission() {
+    private fun askForNotificationPermission() {
         logD("here in the notification func and the post notification permission is -->${
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
         }")
-//        when (ContextCompat.checkSelfPermission(
-//            context,
-//            Manifest.permission.POST_NOTIFICATIONS
-//        )) {
-//            PackageManager.PERMISSION_GRANTED -> {
-//                logD("the notification permission is already given")
-//            }
-//            PackageManager.PERMISSION_DENIED -> {
-//                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-//            }
-//        }
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) {
             ActivityCompat.requestPermissions(
                 context as Activity,
