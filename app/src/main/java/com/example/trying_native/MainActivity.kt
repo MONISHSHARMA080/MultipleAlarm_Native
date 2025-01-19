@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.example.trying_native.ui.theme.Trying_nativeTheme
 import androidx.room.Room
+import com.example.trying_native.BackGroundAutoStartHelper.BackGroundAutostartPermissionHelper
 import com.example.trying_native.components_for_ui_compose.AlarmContainer
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmDatabase
@@ -96,8 +97,7 @@ val activity_context = this
 
         super.onCreate(savedInstanceState)
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-
-
+//        BackGroundAutostartPermissionHelper.getAutoStartPermission(this)
         setContent {
             var a by remember { mutableStateOf(false) }
             Trying_nativeTheme {
