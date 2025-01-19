@@ -82,6 +82,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.trying_native.AlarmReceiver
+import com.example.trying_native.FirstLaunchAskForPermission.FirstLaunchAskForPermission
 import com.example.trying_native.LastAlarmUpdateDBReceiver
 import com.example.trying_native.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime
 import com.example.trying_native.notification.NotificationBuilder
@@ -423,21 +424,8 @@ fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Col
             .zIndex(4f)
             .background(color = backgroundColor, shape = CircleShape)
             .clickable {
-                when {
-                    ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.POST_NOTIFICATIONS
-                    ) == PackageManager.PERMISSION_GRANTED -> {
-                        // Permission already granted
-                        onClick()
-                    }
-                    else -> {
-                        // Request the permission but don't wait for result
-                        launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        // Run onClick anyway
-                        onClick()
-                    }
-                }
+                FirstLaunchAskForPermission(context).checkAndRequestPermissions()
+                onClick()
             },
         contentAlignment = Alignment.Center,
     ) {

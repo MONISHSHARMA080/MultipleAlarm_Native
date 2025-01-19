@@ -76,7 +76,6 @@ class MainActivity : ComponentActivity() {
 
 val activity_context = this
 
-    @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
         val config = PostHogAndroidConfig(
@@ -97,7 +96,6 @@ val activity_context = this
 
         super.onCreate(savedInstanceState)
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-//        BackGroundAutostartPermissionHelper.getAutoStartPermission(this)
         setContent {
             var a by remember { mutableStateOf(false) }
             Trying_nativeTheme {
