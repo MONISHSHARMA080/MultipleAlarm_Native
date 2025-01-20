@@ -1,7 +1,8 @@
 name: Android CI
 on:
   push:
-    branches: ["main", "pauseBackgroundAudioOnceAlarmStart"]
+    branches:
+      ["main", "pauseBackgroundAudioOnceAlarmStart", "writingTestsForTheApp"]
   pull_request:
     branches: ["main"]
 
@@ -11,7 +12,7 @@ permissions:
 jobs:
   test:
     name: Run Integration Tests
-    runs-on: ubuntu-latest # Switching to Ubuntu for better emulator support
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
