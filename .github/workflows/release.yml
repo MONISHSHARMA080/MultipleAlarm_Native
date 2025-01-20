@@ -1,8 +1,7 @@
 name: Android CI
 on:
   push:
-    branches:
-      ["main", "pauseBackgroundAudioOnceAlarmStart", "writingTestsForTheApp"]
+    branches: ["main", "pauseBackgroundAudioOnceAlarmStart"]
   pull_request:
     branches: ["main"]
 
@@ -12,7 +11,7 @@ permissions:
 jobs:
   test:
     name: Run Integration Tests
-    runs-on: macos-latest # Using macOS runner for better Android emulator performance
+    runs-on: ubuntu-latest # Switching to Ubuntu for better emulator support
     steps:
       - uses: actions/checkout@v3
 
@@ -29,13 +28,16 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Create and start emulator
+      - name: Run Tests with Emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
-          arch: x86_64
-          profile: pixel
-          script: ./gradlew connectedAndroidTest --info
+          arch: arm64-v8a
+          profile: pixel_6
+          target: google_apis
+          script: |
+            adb logcat *:E &
+            ./gradlew connectedAndroidTest --stacktrace --info
 
   build:
     needs: test # This ensures tests must pass before building
