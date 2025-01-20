@@ -1,8 +1,8 @@
 name: Android CI
-
 on:
   push:
-    branches: ["main", "pauseBackgroundAudioOnceAlarmStart"]
+    branches:
+      ["main", "pauseBackgroundAudioOnceAlarmStart", "writingTestsForTheApp"]
   pull_request:
     branches: ["main"]
 
@@ -10,9 +10,36 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  test:
+    name: Run Integration Tests
+    runs-on: macos-latest # Using macOS runner for better Android emulator performance
+    steps:
+      - uses: actions/checkout@v3
 
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Create and start emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          arch: x86_64
+          profile: pixel
+          script: ./gradlew connectedAndroidTest --info
+
+  build:
+    needs: test # This ensures tests must pass before building
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
@@ -33,7 +60,7 @@ jobs:
           AKS_AKS: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
           chmod +x gradlew
-          echo "First 4 characters of the AKS secret: ${AKS_AKS:0:4}****"
+          echo "First 4 characters of the AKS secret: ${AKS_AKS:0:4}**"
 
       - name: Decode Keystore
         env:
@@ -43,7 +70,7 @@ jobs:
           echo "$ENCODED_KEYSTORE" | base64 --decode > app/release.keystore
           ls -l app/release.keystore
 
-      - name: Build and Sign APK (and put the unzipped audio file)
+      - name: Build and Sign APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}

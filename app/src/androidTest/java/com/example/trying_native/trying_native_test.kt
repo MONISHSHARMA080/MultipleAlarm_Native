@@ -32,8 +32,8 @@ import java.util.concurrent.atomic.AtomicInteger
 @RunWith(AndroidJUnit4::class)
 class AlarmContainerTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
-    private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val coroutineScope = TestScope()
+    val helperClass = E2ETestHelper()
 
     @get:Rule
     val composeTestRule = createAndroidComposeRule<MainActivity>()
@@ -41,21 +41,16 @@ class AlarmContainerTest {
     @get:Rule
     val alarmActivityRule = createAndroidComposeRule<AlarmActivity>()
 
-    val helperClass = E2ETestHelper()
-
-
     @Test
 //    fun testAlarmScheduling() = runTest {
     fun testToSeeThatTheAlarmSetAreEqualToAlarmReceivedAfterTimeSkipping()  {
-        // Reset the counter at start of test
-
         val activityContext = composeTestRule.activity
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val alarmDao = helperClass.getAlarmDao(context)
 
         // Test parameters
-        val startInMin = 5
-        val endMin = 15
+        val startInMin = 12
+        val endMin = 63
         val freqToSkipAlarm = 1
 
         val expectedAlarms = helperClass.expectedAlarmToBePlayed(endMin, startInMin, freqToSkipAlarm)
@@ -74,6 +69,7 @@ class AlarmContainerTest {
             )
 
         }
+
         assertNull("Error scheduling alarms: $exception", exception)
         logD("Number of alarms scheduled: $expectedAlarms")
         logD("---------skipping the time---------")
