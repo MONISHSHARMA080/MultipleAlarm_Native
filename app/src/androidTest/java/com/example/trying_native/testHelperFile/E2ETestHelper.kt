@@ -1,6 +1,8 @@
 package com.example.trying_native.testHelperFile
 
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
 import androidx.compose.ui.test.TestContext
 import androidx.room.Room
 import com.example.trying_native.dataBase.AlarmDao
@@ -57,6 +59,32 @@ class E2ETestHelper {
         } catch (e: Exception) {
           Pair("",e)
         }
+    }
+
+    fun expectedAlarmToBePlayed(endTimeInMin:Int, startTimeInMin:Int, freq:Int):Int{
+        // get the time in the calender form
+        var startTime = getTheCalenderInstanceAndSkipTheMinIn(startTimeInMin).timeInMillis
+        val endTime = getTheCalenderInstanceAndSkipTheMinIn(endTimeInMin).timeInMillis
+        var frequency = freq  * 60000
+       var i =0
+       while (startTime <= endTime){
+           startTime += frequency
+           i++
+       }
+        return  i
+    }
+    fun getTestAlarmReceiverClass(): Class<out BroadcastReceiver> {
+        return object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                logD("Test Alarm Receiver: Received alarm with intent: $intent")
+                logD("Test Alarm Receiver: Trigger time: ${intent.getLongExtra("triggerTime", -1)}")
+                logD("Test Alarm Receiver: Has message: ${intent.getBooleanExtra("isMessagePresent", false)}")
+                if (intent.getBooleanExtra("isMessagePresent", false)) {
+                    logD("Test Alarm Receiver: Message content: ${intent.getStringExtra("message")}")
+                }
+//                alarmReceiverCounter.incrementAndGet()
+            }
+        }.javaClass
     }
 
 }

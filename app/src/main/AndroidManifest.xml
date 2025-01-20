@@ -44,6 +44,15 @@
         <receiver
             android:name=".AlarmReceiver"
             android:exported="true" />
+        <receiver
+            android:name=".TestAlarmReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.trying_native.ALARM_TRIGGERED" />
+            </intent-filter>
+        </receiver>
+
+
     </application>
 
 </manifest>

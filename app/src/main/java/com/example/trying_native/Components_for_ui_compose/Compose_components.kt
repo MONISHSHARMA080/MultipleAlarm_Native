@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -864,11 +865,16 @@ fun freq_without_dialog(
     }
 }
 
- fun scheduleAlarm(triggerTime: Long, alarmManager:AlarmManager, componentActivity: ComponentActivity, message:String? = null) {
+const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
+ fun scheduleAlarm(triggerTime: Long, alarmManager:AlarmManager, componentActivity: ComponentActivity, message:String? = null, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java ) {
+
     logD( "Clicked on the schedule alarm func")
     var triggerTime_1 = triggerTime
-    val intent = Intent(componentActivity, AlarmReceiver::class.java)
+//    val intent = Intent(componentActivity, AlarmReceiver::class.java)
+     val intent = Intent(ALARM_ACTION) // Use the action string
+     intent.setClass(componentActivity, receiverClass)
      if (!message.isNullOrEmpty()){
+
          intent.putExtra("message", message)
          intent.putExtra("isMessagePresent", true)
      }else{
@@ -886,7 +892,8 @@ fun freq_without_dialog(
 
  suspend fun scheduleMultipleAlarms(alarmManager: AlarmManager, selected_date_for_display:String, date_in_long: Long, coroutineScope: CoroutineScope, is_alarm_ready_to_use:Boolean,
                                     calendar_for_start_time:Calendar, calendar_for_end_time:Calendar, freq_after_the_callback:Int, activity_context:ComponentActivity, alarmDao:AlarmDao,
-                                    is_this_func_call_to_update_an_existing_alarm: Boolean = false , new_is_ready_to_use:Boolean,   message: String?=null) :Exception? {
+                                    is_this_func_call_to_update_an_existing_alarm: Boolean = false , new_is_ready_to_use:Boolean,   message: String?=null,
+                                    receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java  ) :Exception? {
     // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
      var startTimeInMillis = calendar_for_start_time.timeInMillis
     val startTimeInMillisendForDb= startTimeInMillis
@@ -908,14 +915,14 @@ fun freq_without_dialog(
     while (startTimeInMillis <= endTimeInMillis){
         logD("round $i")
         try {
-            scheduleAlarm(startTimeInMillis,alarmManager, activity_context, message = message)
+            scheduleAlarm(startTimeInMillis,alarmManager, activity_context, message = message, receiverClass = receiverClass)
         }catch (e:Exception){
             logD("error occurred in the schedule multiple alarms-->${e}")
             return e
         }
         startTimeInMillis = startTimeInMillis + freq_in_min
         // this line added the freq in the last pending intent and now to get time for the last time we
-        // need to - frq from it
+        // need to - fstartTimerq from it
         i+=1
     }
     // making a broadcast to the receiver to update the alarm
