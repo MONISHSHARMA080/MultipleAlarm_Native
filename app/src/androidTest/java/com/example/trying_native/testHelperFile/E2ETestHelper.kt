@@ -1,10 +1,12 @@
 package com.example.trying_native.testHelperFile
 
+import android.app.AlarmManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.compose.ui.test.TestContext
 import androidx.room.Room
+import androidx.test.platform.app.InstrumentationRegistry
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmDatabase
 import com.example.trying_native.logD
@@ -12,8 +14,12 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 class E2ETestHelper {
+    private val WAIT_TIME = 30400L
+
     fun getAlarmDao(applicationContext: Context):AlarmDao{
         return Room.databaseBuilder(
             applicationContext,
@@ -85,6 +91,28 @@ class E2ETestHelper {
 //                alarmReceiverCounter.incrementAndGet()
             }
         }.javaClass
+    }
+    fun triggerPendingAlarms(context: Context) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+
+        // Create a latch to wait for alarm processing
+        val latch = CountDownLatch(1)
+
+        instrumentation.runOnMainSync {
+            // Get next alarm time
+            val info = alarmManager.nextAlarmClock
+            if (info != null) {
+                // Fast forward to just after the alarm time
+                alarmManager.setTime(info.triggerTime + 100)
+                // Allow for alarm processing
+                Thread.sleep(WAIT_TIME)
+            }
+            latch.countDown()
+        }
+
+        // Wait for alarm processing to complete
+        latch.await(WAIT_TIME, TimeUnit.MILLISECONDS)
     }
 
 }

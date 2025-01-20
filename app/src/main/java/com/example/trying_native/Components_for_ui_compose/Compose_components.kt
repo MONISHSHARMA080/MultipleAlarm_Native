@@ -869,7 +869,7 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
  fun scheduleAlarm(triggerTime: Long, alarmManager:AlarmManager, componentActivity: ComponentActivity, message:String? = null, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java ) {
 
     logD( "Clicked on the schedule alarm func")
-    var triggerTime_1 = triggerTime
+    val triggerTime_1 = triggerTime
 //    val intent = Intent(componentActivity, AlarmReceiver::class.java)
      val intent = Intent(ALARM_ACTION) // Use the action string
      intent.setClass(componentActivity, receiverClass)
