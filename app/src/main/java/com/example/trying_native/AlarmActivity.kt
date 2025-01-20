@@ -251,11 +251,13 @@ class AlarmActivity : ComponentActivity() {
 
     @SuppressLint("UnsafeIntentLaunch")
     override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        Log.d("AA", "New Intent received in AlarmActivity")
+//        super.onNewIntent(intent)
+        logD("New Intent received in AlarmActivity")
         // Finish the previous activity when a new intent is received
-        finish()
-        startActivity(intent) // Optionally, restart the activity with the new intent
+//        finish()
+//        startActivity(intent) // Optionally, restart the activity with the new intent
+        super.onNewIntent(intent)
+        setIntent(intent)
     }
 
     override fun onDestroy() {
