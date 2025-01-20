@@ -7,14 +7,6 @@ on:
   pull_request:
     branches: ["main"]
 
-name: Android CI
-
-on:
-  push:
-    branches: ["main", "pauseBackgroundAudioOnceAlarmStart"]
-  pull_request:
-    branches: ["main"]
-
 permissions:
   contents: write
 
