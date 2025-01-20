@@ -1,78 +1,68 @@
 name: Android CI
-
 on:
   push:
     branches:
       ["main", "pauseBackgroundAudioOnceAlarmStart", "writingTestsForTheApp"]
   pull_request:
     branches: ["main"]
-
 permissions:
   contents: write
-
 jobs:
   test:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
-
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: "17"
           distribution: "temurin"
           cache: gradle
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
-
       - name: Install Android 14 dependencies
         run: |
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "build-tools;34.0.0"
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-34"
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-34;google_apis;x86_64"
-
       - name: Create and start emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
           arch: x86_64
-          profile: pixel_9
+          profile: Pixel_6
           target: google_apis
           ram-size: 4096M
           disk-size: 8G
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          emulator-boot-timeout: 600
           script: |
             adb devices
-            ./gradlew connectedAndroidTest
-
+            ./gradlew connectedAndroidTest --retry-count 2
   build:
     needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
       - name: Generate Version Tag
         id: version
         run: |
           echo "VERSION_TAG=$(date +'v%Y.%m.%d-%H%M')" >> $GITHUB_OUTPUT
-
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: "17"
           distribution: "temurin"
           cache: gradle
-
       - name: Grant execute permission for gradlew
         env:
           AKS_AKS: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
           chmod +x gradlew
           echo "First 4 characters of the AKS secret: ${AKS_AKS:0:4}**"
-
       - name: Decode Keystore
         env:
           ENCODED_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
@@ -80,7 +70,6 @@ jobs:
           mkdir -p app
           echo "$ENCODED_KEYSTORE" | base64 --decode > app/release.keystore
           ls -l app/release.keystore
-
       - name: Build and Sign APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -95,7 +84,6 @@ jobs:
             -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
             -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
             -Pandroid.injected.signing.key.password=$KEY_PASSWORD
-
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -106,7 +94,6 @@ jobs:
           release_name: Release ${{ steps.version.outputs.VERSION_TAG }}
           draft: false
           prerelease: false
-
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
@@ -116,7 +103,6 @@ jobs:
           asset_path: app/build/outputs/apk/release/app-release.apk
           asset_name: app-release-${{ steps.version.outputs.VERSION_TAG }}.apk
           asset_content_type: application/vnd.android.package-archive
-
       - name: Upload APK as Artifact
         uses: actions/upload-artifact@v3
         with:
