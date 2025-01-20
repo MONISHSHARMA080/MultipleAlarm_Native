@@ -7,12 +7,20 @@ on:
   pull_request:
     branches: ["main"]
 
+name: Android CI
+
+on:
+  push:
+    branches: ["main", "pauseBackgroundAudioOnceAlarmStart"]
+  pull_request:
+    branches: ["main"]
+
 permissions:
   contents: write
 
 jobs:
   test:
-    runs-on: macos-latest # Using macOS runner for better Android emulator performance
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
 
@@ -26,18 +34,27 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Create and start emulator
-        run: |
-          echo "y" | $ANDROID_HOME/tools/bin/sdkmanager --install "system-images;android-29;google_apis;x86"
-          echo "no" | $ANDROID_HOME/tools/bin/avdmanager create avd -n test_device -k "system-images;android-29;google_apis;x86"
-          $ANDROID_HOME/emulator/emulator -avd test_device -no-window -no-audio -no-boot-anim -camera-back none -camera-front none &
-          adb wait-for-device shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done;'
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
 
-      - name: Run integration tests
-        run: ./gradlew connectedAndroidTest
+      - name: Install JAXB dependencies
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "build-tools;30.0.3"
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-30"
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-30;google_apis;x86_64"
+
+      - name: Create and start emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          profile: Nexus 6
+          script: |
+            adb devices
+            ./gradlew connectedAndroidTest
 
   build:
-    needs: test # This ensures tests must pass before building
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
