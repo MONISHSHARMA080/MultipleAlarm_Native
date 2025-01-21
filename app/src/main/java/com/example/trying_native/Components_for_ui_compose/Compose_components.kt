@@ -871,6 +871,7 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
     val triggerTime_1 = triggerTime
 //    val intent = Intent(componentActivity, AlarmReceiver::class.java)
      val intent = Intent(ALARM_ACTION) // Use the action string
+     logD("++++++++ receiver class in the schedule alarm is -->${receiverClass.name} +++ $receiverClass")
      intent.setClass(componentActivity, receiverClass)
      if (!message.isNullOrEmpty()){
 
@@ -907,7 +908,7 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
     logD(" \n\n am_pm_start_time-->$start_time_for_display $start_am_pm ; endtime-->$end_time_for_display $end_am_pm")
     var freq_in_milli : Long
      freq_in_milli = freq_after_the_callback.toLong()
-    var freq_in_min = freq_in_milli * 60000
+    val freq_in_min = freq_in_milli * 60000
     logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:: freq->$freq_in_min")
     var i=0
 

@@ -3,26 +3,39 @@ package com.example.trying_native.testHelperFile
 import android.app.Activity
 import android.app.AlarmManager
 import android.app.Instrumentation
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import androidx.compose.ui.test.TestContext
 import androidx.room.Room
 import androidx.test.platform.app.InstrumentationRegistry
+import com.example.trying_native.AlarmActivity
 import com.example.trying_native.AlarmReceiver
+import com.example.trying_native.components_for_ui_compose.ALARM_ACTION
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmDatabase
 import com.example.trying_native.logD
+import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertNotNull
+import junit.framework.TestCase.assertTrue
+import org.junit.Test
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 class E2ETestHelper {
-    private val WAIT_TIME = 30400L
+    private val WAIT_TIME = 3000L
      var currentMonitor: Instrumentation.ActivityMonitor? = null
+     lateinit var instrumentation :Instrumentation
 
     fun getAlarmDao(applicationContext: Context):AlarmDao{
         return Room.databaseBuilder(
@@ -86,42 +99,85 @@ class E2ETestHelper {
         return  i
     }
 
-    fun getTestAlarmReceiverClass(): Class<out BroadcastReceiver> {
-        return object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                logD("Test Alarm Receiver: Received alarm with intent: $intent")
-                logD("Test Alarm Receiver: Trigger time: ${intent.getLongExtra("triggerTime", -1)}")
-                logD("Test Alarm Receiver: Has message: ${intent.getBooleanExtra("isMessagePresent", false)}")
-                if (intent.getBooleanExtra("isMessagePresent", false)) {
-                    logD("Test Alarm Receiver: Message content: ${intent.getStringExtra("message")}")
-                }
-//                alarmReceiverCounter.incrementAndGet()
-            }
-        }.javaClass
-    }
-
-    fun triggerPendingAlarms(context: Context, endMin:Int) {
+    fun triggerPendingAlarms(context: Context, startTimeMin: Int, endTimeMin: Int, frequency: Int) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
 
-        // Create a latch to wait for alarm processing
-        val latch = CountDownLatch(1)
+        // Calculate how many alarms should be triggered
+        val expectedAlarms = expectedAlarmCount(startTimeMin, endTimeMin, frequency)
+        var triggeredCount = 0
 
-        instrumentation.runOnMainSync {
-            // Get next alarm time
-            val info = alarmManager.nextAlarmClock
-            if (info != null) {
-                // Fast forward to just after the alarm time
-                alarmManager.setTime(getTheCalenderInstanceAndSkipTheMinIn(endMin).timeInMillis + 19000)
-                // Allow for alarm processing
-                Thread.sleep(WAIT_TIME)
-            }
-            latch.countDown()
+        val startTime = getCalendarWithMinutes(startTimeMin).timeInMillis
+        val endTime = getCalendarWithMinutes(endTimeMin).timeInMillis
+        var currentTime = startTime
+
+        while (currentTime <= endTime) {
+            // Set a test alarm clock for the current time
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                currentTime.toInt(),
+                Intent("TEST_ALARM_ACTION"),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            alarmManager.setAlarmClock(
+                AlarmManager.AlarmClockInfo(currentTime, pendingIntent),
+                pendingIntent
+            )
+
+            // Wait for alarm processing
+            Thread.sleep(WAIT_TIME)
+
+            triggeredCount++
+            currentTime += (frequency * 60 * 1000) // Add frequency minutes in milliseconds
         }
 
-        // Wait for alarm processing to complete
-        latch.await(WAIT_TIME, TimeUnit.MILLISECONDS)
+        // Verify alarms were triggered
+        assertEquals("Expected number of alarms should be triggered", expectedAlarms, triggeredCount)
     }
+
+    /**
+     * Calculates expected number of alarms
+     */
+    private fun expectedAlarmCount(startMin: Int, endMin: Int, frequencyMin: Int): Int {
+        val totalMinutes = endMin - startMin
+        return (totalMinutes / frequencyMin) + 1 // +1 for initial alarm
+    }
+
+    /**
+     * Creates Calendar instance for specified minutes
+     */
+    private fun getCalendarWithMinutes(minutes: Int): Calendar {
+        return Calendar.getInstance().apply {
+            set(Calendar.MINUTE, minutes)
+        }
+    }
+
+    /**
+     * Monitors alarm triggers using ActivityMonitor
+     */
+    fun monitorAlarmActivity(): Instrumentation.ActivityMonitor {
+        instrumentation = InstrumentationRegistry.getInstrumentation()
+        return instrumentation.addMonitor(
+            AlarmActivity::class.java.name,
+            null,
+            false
+        )
+    }
+
+    /**
+     * Clean up resources
+     */
+    fun cleanup(context: Context, receiver: BroadcastReceiver?) {
+        receiver?.let {
+            context.unregisterReceiver(it)
+        }
+        // Clear any pending alarms
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmManager.cancelAll()
+    }
+
+
+
 
     /**
      * Triggers the next pending alarm by advancing the alarm clock to exactly that alarm's time
@@ -157,7 +213,7 @@ class E2ETestHelper {
      * @param activityClass The class of the activity to monitor
      */
     fun startMonitoringActivity(activityClass: Class<out Activity>) {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
+         instrumentation = InstrumentationRegistry.getInstrumentation()
 
         // Clean up any existing monitor
         currentMonitor?.let {
@@ -179,6 +235,7 @@ class E2ETestHelper {
      * @return The number of hits for the monitored activity, or 0 if no monitor is active
      */
     fun getActivityHits(): Int {
+        instrumentation.waitForIdleSync()
         return currentMonitor?.hits ?: 0
     }
 
@@ -191,4 +248,5 @@ class E2ETestHelper {
             currentMonitor = null
         }
     }
+
 }

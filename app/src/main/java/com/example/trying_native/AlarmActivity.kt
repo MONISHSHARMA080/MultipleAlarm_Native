@@ -257,6 +257,7 @@ class AlarmActivity : ComponentActivity() {
         //finish()
         wakeLock?.release()
         onDestroy()
+        finish()
         startActivity(intent) // Optionally, restart the activity with the new intent
     }
 
