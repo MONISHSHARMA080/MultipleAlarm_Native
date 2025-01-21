@@ -19,33 +19,10 @@ jobs:
           java-version: "17"
           distribution: "temurin"
           cache: gradle
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v2
-        with:
-          api-level: 33
-          target: "google_apis"
-          arch: "x86_64"
-          emulator: true
-
-      - name: Install System Image
-        run: |
-          sdkmanager "system-images;android-33;google_apis;x86_64"
-
-      - name: Create AVD
-        run: avdmanager create avd -n test -k "system-images;android-33;google_apis;x86_64" --device "pixel"
-
-      - name: Start Android Emulator
-        run: |
-          nohup emulator -avd test -no-snapshot-save -noaudio -no-boot-anim -accel on -gpu swiftshader_indirect &
-          adb wait-for-device
-
-      - name: Unlock Emulator
-        run: adb shell input keyevent 82
-
-      - name: Run Tests
-        run: |
-          ./gradlew connectedAndroidTest
-          adb logcat -d > logcat.txt
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Build APK
+        run: ./gradlew assembleDebug
 
   build:
     needs: test
@@ -113,3 +90,23 @@ jobs:
         with:
           name: app-release
           path: app/build/outputs/apk/release/app-release.apk
+
+  emulator:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: "17"
+          distribution: "temurin"
+      - name: Start Android Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: "default"
+          arch: "x86_64"
+          profile: "pixel_9"
+          script: |
+            ./gradlew connectedAndroidTest
