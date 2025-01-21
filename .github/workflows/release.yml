@@ -23,22 +23,24 @@ jobs:
         uses: android-actions/setup-android@v2
         with:
           api-level: 33
-          target: "default"
+          target: "google_apis"
           arch: "x86_64"
           emulator: true
-          profile: "pixel_9"
-          ndk: "23.1.7779620"
 
-      - name: Start Android Emulator
+      - name: Install System Image
+        run: |
+          sdkmanager "system-images;android-33;google_apis;x86_64"
+
+      - name: Create AVD
         run: avdmanager create avd -n test -k "system-images;android-33;google_apis;x86_64" --device "pixel"
 
-      - name: Run Emulator
+      - name: Start Android Emulator
         run: |
           nohup emulator -avd test -no-snapshot-save -noaudio -no-boot-anim -accel on -gpu swiftshader_indirect &
           adb wait-for-device
 
-          # Verify the device is ready
-          adb shell input keyevent 82
+      - name: Unlock Emulator
+        run: adb shell input keyevent 82
 
       - name: Run Tests
         run: |
