@@ -92,12 +92,10 @@ val activity_context = this
 
         PostHogAndroid.setup(this, config)
 
-//        lifecycleScope.launch(Dispatchers.IO) {
 
         super.onCreate(savedInstanceState)
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
         setContent {
-            var a by remember { mutableStateOf(false) }
             Trying_nativeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
                     Column(modifier = Modifier.padding(paddingValues)) {
