@@ -172,8 +172,6 @@ class E2ETestHelper {
             context.unregisterReceiver(it)
         }
         // Clear any pending alarms
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        alarmManager.cancelAll()
     }
 
 
