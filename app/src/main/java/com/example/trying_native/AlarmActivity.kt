@@ -251,13 +251,13 @@ class AlarmActivity : ComponentActivity() {
 
     @SuppressLint("UnsafeIntentLaunch")
     override fun onNewIntent(intent: Intent) {
-//        super.onNewIntent(intent)
+        super.onNewIntent(intent)
         logD("New Intent received in AlarmActivity")
         // Finish the previous activity when a new intent is received
-//        finish()
-//        startActivity(intent) // Optionally, restart the activity with the new intent
-        super.onNewIntent(intent)
-        setIntent(intent)
+        //finish()
+        wakeLock?.release()
+        onDestroy()
+        startActivity(intent) // Optionally, restart the activity with the new intent
     }
 
     override fun onDestroy() {
@@ -277,7 +277,6 @@ class AlarmActivity : ComponentActivity() {
         }
         mediaPlayer?.release()
         mediaPlayer = null
-        wakeLock?.release()
         finishAndRemoveTask()
         activityScope.cancel()
     }

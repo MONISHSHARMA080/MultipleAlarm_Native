@@ -164,7 +164,6 @@ class E2ETestHelper {
             instrumentation.removeMonitor(it)
         }
 
-
         // Create and set new monitor
         currentMonitor = Instrumentation.ActivityMonitor(
             activityClass.name,

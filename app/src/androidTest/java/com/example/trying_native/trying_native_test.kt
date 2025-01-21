@@ -42,14 +42,14 @@ class AlarmContainerTest {
     val alarmActivityRule = createAndroidComposeRule<AlarmActivity>()
 
     @Test
-//    fun testAlarmScheduling() = runTest {
-    fun testToSeeThatTheAlarmSetAreEqualToAlarmReceivedAfterTimeSkipping()  {
+    fun testToSeeThatTheAlarmSetAreEqualToAlarmReceivedAfterTimeSkipping() = runTest {
+//    fun testToSeeThatTheAlarmSetAreEqualToAlarmReceivedAfterTimeSkipping()  {
         val activityContext = composeTestRule.activity
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val alarmDao = helperClass.getAlarmDao(context)
 
         // Test parameters
-        val startInMin = 12
+        val startInMin = 2
         val endMin = 63
         val freqToSkipAlarm = 1
 
@@ -58,8 +58,7 @@ class AlarmContainerTest {
         logD("current activity hits are --> ${helperClass.getActivityHits()}")
 
         // Schedule the alarms
-        val exception =   runBlocking {
-            scheduleMultipleAlarms(
+        val exception = scheduleMultipleAlarms(
                 alarmManager = alarmManager, activity_context = activityContext, alarmDao = alarmDao,
                 calendar_for_start_time = helperClass.getTheCalenderInstanceAndSkipTheMinIn(startInMin),
                 calendar_for_end_time = helperClass.getTheCalenderInstanceAndSkipTheMinIn(endMin),
@@ -68,7 +67,7 @@ class AlarmContainerTest {
                 is_alarm_ready_to_use = true, new_is_ready_to_use = false, message = "--- Graduation ---",
             )
 
-        }
+
 
         assertNull("Error scheduling alarms: $exception", exception)
         logD("Number of alarms scheduled: $expectedAlarms")
@@ -77,7 +76,7 @@ class AlarmContainerTest {
         // Fast forward time for each expected alarm
             helperClass.triggerPendingAlarms(context, endMin)
 
-            SystemClock.sleep(5000)
+            SystemClock.sleep(14000)
         logD("-----about to exit")
         logD(" activity hits are --> ${helperClass.getActivityHits()} and the alarms scheduled are --> $expectedAlarms")
 
