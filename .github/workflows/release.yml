@@ -46,6 +46,9 @@ jobs:
           disable-animations: false
           script: echo "Generated AVD snapshot for caching."
 
+      - name: unzip alarms
+        run: unzip alarm_sound.zip
+
       - name: run tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
