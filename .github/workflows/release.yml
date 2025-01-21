@@ -7,9 +7,10 @@ on:
     branches: ["main"]
 permissions:
   contents: write
+
 jobs:
   test:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK 17
@@ -18,32 +19,32 @@ jobs:
           java-version: "17"
           distribution: "temurin"
           cache: gradle
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-      - name: Setup Android SDK
+      - name: Set up Android SDK
         uses: android-actions/setup-android@v2
-      - name: Install Android 14 dependencies
-        run: |
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "build-tools;34.0.0"
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-34"
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-34;google_apis;x86_64"
-      - name: List available devices
-        run: avdmanager list device
-      - name: Create and start emulator
-        uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
-          arch: x86_64
-          profile: pixel_5
-          target: google_apis
-          ram-size: 4096M
-          disk-size: 8G
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: true
-          emulator-boot-timeout: 600
-          script: |
-            adb devices
-            ./gradlew connectedAndroidTest --retry-count 2
+          api-level: 33
+          target: "default"
+          arch: "x86_64"
+          emulator: true
+          profile: "pixel_9"
+          ndk: "23.1.7779620"
+
+      - name: Start Android Emulator
+        run: avdmanager create avd -n test -k "system-images;android-33;google_apis;x86_64" --device "pixel"
+
+      - name: Run Emulator
+        run: |
+          nohup emulator -avd test -no-snapshot-save -noaudio -no-boot-anim -accel on -gpu swiftshader_indirect &
+          adb wait-for-device
+
+          # Verify the device is ready
+          adb shell input keyevent 82
+
+      - name: Run Tests
+        run: |
+          ./gradlew connectedAndroidTest
+          adb logcat -d > logcat.txt
+
   build:
     needs: test
     runs-on: ubuntu-latest
