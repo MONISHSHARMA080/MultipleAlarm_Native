@@ -82,6 +82,7 @@ class AlarmContainerTest {
         logD(" activity hits are --> ${helperClass.getActivityHits()} and the alarms scheduled are --> $expectedAlarms")
 
         assertTrue("the number of expected alarms played does not match the alarms set  ", helperClass.getActivityHits() == expectedAlarms)
+        SystemClock.sleep(5000)
 
         helperClass.cleanupActivityMonitor()
 
