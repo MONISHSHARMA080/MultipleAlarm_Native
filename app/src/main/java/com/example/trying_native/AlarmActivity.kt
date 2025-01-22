@@ -258,7 +258,16 @@ class AlarmActivity : ComponentActivity() {
         logD("New Intent received in AlarmActivity")
         // Finish the previous activity when a new intent is received
         //finish()
-        wakeLock?.release()
+        try {
+            wakeLock?.let {
+                if (it.isHeld) {
+                    it.release()
+                }
+            }
+        } catch (e: Exception) {
+            logD("Error releasing WakeLock: ${e.message}")
+        }
+
         onDestroy()
         finish()
         startActivity(intent) // Optionally, restart the activity with the new intent
@@ -266,6 +275,15 @@ class AlarmActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        try {
+            wakeLock?.let {
+                if (it.isHeld) {
+                    it.release()
+                }
+            }
+        } catch (e: Exception) {
+            logD("Error releasing WakeLock in onDestroy: ${e.message}")
+        }
         resumeBackgroundAudio()
         // Release MediaPlayer resources when the activity is destroyed
          audioFocusRequest?.let { request ->
@@ -291,7 +309,9 @@ class AlarmActivity : ComponentActivity() {
             powerManager.newWakeLock(
                 PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
                 "AlarmActivity::WakeLock"
-            )
+            ).apply {
+                setReferenceCounted(false)
+            }
         window.addFlags(
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                     WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
