@@ -134,14 +134,13 @@ class AlarmContainerTest : Application.ActivityLifecycleCallbacks {
             selected_date_for_display = helperClass.getDateString(helperClass.getDateInLong()),
             is_alarm_ready_to_use = true,
             new_is_ready_to_use = false,
-            message = "--- Graduation ---"
+            message = "--- Burn ---"
         )
 
         helperClass.triggerPendingAlarms(context, startInMin, endMin, freqToSkipAlarm)
 
         // Wait for all alarms to trigger
         delay( 15000L)  // Adjust delay as needed
-
 
         logD("Actual alarm triggers: $alarmActivityCount")
         assertEquals(

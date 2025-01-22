@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import com.example.trying_native.ui.theme.Trying_nativeTheme
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -50,11 +51,10 @@ class AlarmActivity : ComponentActivity() {
     private var wakeLock: PowerManager.WakeLock? = null
     private var audioManager: AudioManager? = null
     private val AUTO_FINISH_DELAY = 120000L
-    private var previousAudioVolume = 2
+    private var previousAudioVolume = 1
     private var audioFocusRequest: AudioFocusRequest? = null
     private var wasBackgroundPlaying = false
     private lateinit var mediaSessionManager: MediaSessionManager
-    private lateinit var message: String
 //    private var  by Delegates.notNull<Boolean>()
     private var mediaControllerList: List<MediaController>? = null
     private val activityScope = CoroutineScope(
@@ -85,15 +85,18 @@ class AlarmActivity : ComponentActivity() {
         audioFocusRequest =  audioFocusRequestBuilder()
 //        pauseBackgroundAudio()
 //        keepScreenON()
-        activityScope.launch { pauseBackgroundAudio() }
-        activityScope.launch { keepScreenON() }
+        lifecycleScope.launch(Dispatchers.IO){
+            pauseBackgroundAudio()
+            keepScreenON()
+        }
+//        activityScope.launch { pauseBackgroundAudio() }
+//        activityScope.launch {keepScreenON()   }
 
         val rawFields: Array<Field> = R.raw::class.java.fields
         val rawResources = rawFields.map { field -> Pair(field.name, field.getInt(null)) }
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         // Get the maximum volume for alarm stream
-        previousAudioVolume =
-                audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: previousAudioVolume
+        previousAudioVolume = audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: previousAudioVolume
         // val maxVolume = audioManager?.getStreamMaxVolume(AudioManager.STREAM_ALARM) ?: 7
         // Set volume to maximum for alarm
         audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, previousAudioVolume, 0)
