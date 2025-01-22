@@ -303,7 +303,7 @@ class AlarmActivity : ComponentActivity() {
         activityScope.cancel()
     }
 
-    fun keepScreenON(){
+    private fun keepScreenON(){
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
         wakeLock =
             powerManager.newWakeLock(
