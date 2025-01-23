@@ -11,26 +11,25 @@ import android.content.Intent
 import android.content.IntentFilter
 import androidx.compose.ui.test.TestContext
 import androidx.room.Room
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.trying_native.AlarmActivity
 import com.example.trying_native.AlarmReceiver
+import com.example.trying_native.MainActivity
 import com.example.trying_native.components_for_ui_compose.ALARM_ACTION
+import com.example.trying_native.components_for_ui_compose.scheduleMultipleAlarms
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmDatabase
 import com.example.trying_native.logD
 import junit.framework.TestCase.assertEquals
-import junit.framework.TestCase.assertNotNull
-import junit.framework.TestCase.assertTrue
-import org.junit.Test
-import java.io.BufferedReader
-import java.io.InputStreamReader
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
 
 class E2ETestHelper {
     private val WAIT_TIME = 3000L
@@ -42,6 +41,31 @@ class E2ETestHelper {
             applicationContext,
             AlarmDatabase::class.java, "alarm-database"
         ).build().alarmDao()
+    }
+
+    fun scheduleMultipleAlarmHelper(activityContext:MainActivity, context: Context, startInMin: Int, endMin: Int,freqToSkipAlarm:Int, coroutineScope: CoroutineScope) :Exception? {
+//        val context =  ApplicationProvider.getApplicationContext<Context>()
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val alarmDao = getAlarmDao(context)
+
+
+        val exception = runBlocking {
+            scheduleMultipleAlarms(
+                alarmManager = alarmManager,
+                activity_context = activityContext,
+                alarmDao = alarmDao,
+                calendar_for_start_time = getTheCalenderInstanceAndSkipTheMinIn(startInMin),
+                calendar_for_end_time = getTheCalenderInstanceAndSkipTheMinIn(endMin),
+                date_in_long = getDateInLong(),
+                coroutineScope = coroutineScope,
+                freq_after_the_callback = freqToSkipAlarm,
+                selected_date_for_display = getDateString(getDateInLong()),
+                is_alarm_ready_to_use = true,
+                new_is_ready_to_use = false,
+                message = "--- Burn ---"
+            )
+        }
+        return exception
     }
 
     fun getTheCalenderInstanceAndSkipTheMinIn(min:Int):Calendar{
@@ -205,45 +229,42 @@ class E2ETestHelper {
         return alarmTriggered
     }
 
-
-    /**
-     * Starts monitoring launches for a specific activity
-     * @param activityClass The class of the activity to monitor
-     */
-    fun startMonitoringActivity(activityClass: Class<out Activity>) {
-         instrumentation = InstrumentationRegistry.getInstrumentation()
-
-        // Clean up any existing monitor
-        currentMonitor?.let {
-            instrumentation.removeMonitor(it)
+    fun getAllPendingIntentsOfAllAlarms(startTimeMin: Int, endTimeInMin: Int, frequencyMin: Int, context: Context, makeTheIntentNullIfAny:Boolean ):List<PendingIntent>{
+        val receiverClass: Class<out BroadcastReceiver> = AlarmReceiver::class.java
+        val pendingIntentsList = mutableListOf<PendingIntent>()
+        val frequencyMilliSec = frequencyMin * 60000
+        var startTimeInMilliSec =getTheCalenderInstanceAndSkipTheMinIn(startTimeMin).timeInMillis
+        val endTimeInMilliSec =getTheCalenderInstanceAndSkipTheMinIn(endTimeInMin).timeInMillis
+        val intent = Intent(ALARM_ACTION)
+        intent.setClass(context, receiverClass)
+        var intentAdded = 0
+//        var pendingIntent:PendingIntent = PendingIntent()
+//        logD("checking if the intent is null or not -->${intent !== null}")
+        val flags = if (makeTheIntentNullIfAny) {
+            // Keep existing flags if makeTheIntentNullIfAny is true
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+        } else {
+            // Only use FLAG_NO_CREATE if makeTheIntentNullIfAny is false
+            PendingIntent.FLAG_IMMUTABLE
         }
-
-        // Create and set new monitor
-        currentMonitor = Instrumentation.ActivityMonitor(
-            activityClass.name,
-            null,
-            false
-        ).also {
-            instrumentation.addMonitor(it)
+        while (startTimeInMilliSec <= endTimeInMilliSec){
+            val  pendingIntent = PendingIntent.getBroadcast(context, startTimeInMilliSec.toInt(), intent, flags )
+            logD("adding the pending intent to the list")
+            pendingIntent?.let { pendingIntentsList.add(it) ; intentAdded++ }
+            startTimeInMilliSec += frequencyMilliSec
         }
+        return pendingIntentsList
+
     }
 
-    /**
-     * Gets the number of times the monitored activity was launched
-     * @return The number of hits for the monitored activity, or 0 if no monitor is active
-     */
-    fun getActivityHits(): Int {
-        instrumentation.waitForIdleSync()
-        return currentMonitor?.hits ?: 0
-    }
-
-    /**
-     * Cleans up the activity monitor. Call this in your test cleanup.
-     */
-    fun cleanupActivityMonitor() {
-        currentMonitor?.let {
-            InstrumentationRegistry.getInstrumentation().removeMonitor(it)
-            currentMonitor = null
+    fun printPendingIntents(pendingIntents: List<PendingIntent>) {
+        logD("about to log the intent ")
+        pendingIntents.forEachIndexed { index, pendingIntent ->
+            logD("Intent $index: ${pendingIntent.intentSender}")
+            // You can add more details like:
+            val originalIntent = pendingIntent.javaClass.name
+            logD( "Intent class name: ${originalIntent}")
+            logD( "Request Code: ${pendingIntent.creatorUid}")
         }
     }
 

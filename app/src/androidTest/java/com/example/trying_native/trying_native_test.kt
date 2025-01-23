@@ -111,8 +111,6 @@ class AlarmContainerTest : Application.ActivityLifecycleCallbacks {
     @Test
     fun testToSeeThatTheAlarmSetAreEqualToAlarmReceivedAfterTimeSkipping() = runTest {
         val activityContext = composeTestRule.activity
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val alarmDao = helperClass.getAlarmDao(context)
 
         // Test parameters
         val startInMin = 2
@@ -122,20 +120,8 @@ class AlarmContainerTest : Application.ActivityLifecycleCallbacks {
 
         logD("expected alarm to played is $expectedAlarms")
         // Schedule the alarms
-        val exception = scheduleMultipleAlarms(
-            alarmManager = alarmManager,
-            activity_context = activityContext,
-            alarmDao = alarmDao,
-            calendar_for_start_time = helperClass.getTheCalenderInstanceAndSkipTheMinIn(startInMin),
-            calendar_for_end_time = helperClass.getTheCalenderInstanceAndSkipTheMinIn(endMin),
-            date_in_long = helperClass.getDateInLong(),
-            coroutineScope = coroutineScope,
-            freq_after_the_callback = freqToSkipAlarm,
-            selected_date_for_display = helperClass.getDateString(helperClass.getDateInLong()),
-            is_alarm_ready_to_use = true,
-            new_is_ready_to_use = false,
-            message = "--- Burn ---"
-        )
+
+        val exception = helperClass.scheduleMultipleAlarmHelper(activityContext, context, startInMin, endMin, freqToSkipAlarm, coroutineScope)
 
         helperClass.triggerPendingAlarms(context, startInMin, endMin, freqToSkipAlarm)
 

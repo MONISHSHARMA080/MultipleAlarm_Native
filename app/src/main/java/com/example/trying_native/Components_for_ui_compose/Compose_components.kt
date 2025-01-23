@@ -884,10 +884,11 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
     logD("Trigger time in the scheduleAlarm func  is --> $triggerTime_1 ")
     intent.putExtra("triggerTime", triggerTime_1)
     val pendingIntent = PendingIntent.getBroadcast(componentActivity, triggerTime.toInt(), intent,
-        PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
 )
     alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime_1, pendingIntent)
 }
+
 
 
  suspend fun scheduleMultipleAlarms(alarmManager: AlarmManager, selected_date_for_display:String, date_in_long: Long, coroutineScope: CoroutineScope, is_alarm_ready_to_use:Boolean,

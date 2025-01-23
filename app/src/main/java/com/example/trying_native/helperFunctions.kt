@@ -55,7 +55,7 @@ suspend fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, fr
         // don't have to call the schedule alarm func , create pending intent yourself
         //            scheduleAlarm(startTime,alarmManager)
         intent.putExtra("triggerTime", startTime)
-        pendingIntent = PendingIntent.getBroadcast(context_of_activity, startTime.toInt(), intent, PendingIntent.FLAG_MUTABLE )
+        pendingIntent = PendingIntent.getBroadcast(context_of_activity, startTime.toInt(), intent, PendingIntent.FLAG_IMMUTABLE )
         pendingIntent.let { alarmManager.cancel(it); it.cancel() }
 //        alarmManager.cancel(pendingIntent)
 //        cancelAPendingIntent(startTime,  context_of_activity, alarmManager)
