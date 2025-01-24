@@ -51,7 +51,6 @@ class AlarmContainerTest : Application.ActivityLifecycleCallbacks {
     @get:Rule
     val alarmActivityRule = createAndroidComposeRule<AlarmActivity>()
 
-    // Lifecycle callback implementations
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
         if (activity is AlarmActivity && savedInstanceState == null) {
             alarmActivityCount++
