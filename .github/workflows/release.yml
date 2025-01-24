@@ -61,7 +61,12 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
-             ./gradlew connectedDebugAndroidTest 
+           ./gradlew connectedDebugAndroidTest &
+             GRADLE_PID=$!
+            adb logcat | grep "D AAA" &
+            LOGCAT_PID=$!
+            wait $GRADLE_PID
+            kill $LOGCAT_PID
 
   build:
     needs: test
