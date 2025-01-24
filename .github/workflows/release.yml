@@ -69,11 +69,10 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
-           ./gradlew connectedDebugAndroidTest
-            adb logcat | grep "D AAA" & 
-            logcat_pid=$!
-            sleep 160  # Limit log capture to 10 seconds
-            kill $logcat_pid
+            adb logcat -c
+            adb logcat | grep "D AAA" &
+            ./gradlew connectedDebugAndroidTest
+            adb logcat -d | grep "D AAA"
 
   build:
     needs: test
