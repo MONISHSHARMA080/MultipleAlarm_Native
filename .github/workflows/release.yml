@@ -49,8 +49,8 @@ jobs:
         with:
           path: |
             ~/.android/avd/snapshot/*
-            key: avd-snapshot-${{ matrix.api-level }}-${{ github.sha }}
-            restore-keys: |
+          key: avd-snapshot-${{ matrix.api-level }}-${{ github.sha }}
+          restore-keys: |
             avd-snapshot-${{ matrix.api-level }}- 
 
       - name: create AVD and generate snapshot for caching
