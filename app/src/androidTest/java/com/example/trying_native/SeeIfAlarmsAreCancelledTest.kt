@@ -63,8 +63,6 @@ class SeeIfAlarmsAreCancelledTest{
         logD("the pending intents list is ${pendingIntentList.size}, expected alarms are $expectedAlarms")
         assertTrue("the pending alarm list should have been 0 as all the alarms are cancelled", pendingIntentList.isEmpty())
 //        run the cancel func and see before and after that if the pending intent is cancelled
-
-
     }
 
 }
