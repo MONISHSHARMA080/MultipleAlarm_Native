@@ -247,6 +247,7 @@ class E2ETestHelper {
             // Only use FLAG_NO_CREATE if makeTheIntentNullIfAny is false
             PendingIntent.FLAG_IMMUTABLE
         }
+
         while (startTimeInMilliSec <= endTimeInMilliSec){
             val  pendingIntent = PendingIntent.getBroadcast(context, startTimeInMilliSec.toInt(), intent, flags )
             logD("adding the pending intent to the list")
