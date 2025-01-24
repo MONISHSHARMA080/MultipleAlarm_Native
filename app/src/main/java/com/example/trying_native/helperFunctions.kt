@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.activity.ComponentActivity
+import com.example.trying_native.components_for_ui_compose.ALARM_ACTION
 import com.example.trying_native.dataBase.AlarmDao
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,7 +49,10 @@ suspend fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, fr
     logD("\n after the while loop for cureent time StartTime ->$startTime --- curent_Time ->$curent_Time -- freq -> $frequency_in_min ")
     logD("Hopefully working --2")
 
-    var intent = Intent(context_of_activity, AlarmReceiver::class.java)
+//    var intent = Intent(context_of_activity, AlarmReceiver::class.java)
+//    intent.action(ALARM_ACTION)
+    val intent = Intent(ALARM_ACTION)
+    intent.setClass(context_of_activity, AlarmReceiver::class.java )
     var pendingIntent:PendingIntent
 
     while (startTime <= endTime){
