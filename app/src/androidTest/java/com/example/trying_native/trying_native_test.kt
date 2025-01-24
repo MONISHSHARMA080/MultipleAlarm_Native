@@ -139,7 +139,7 @@ class AlarmContainerTest : Application.ActivityLifecycleCallbacks {
         logD("the alarm activity played ->$alarmActivityCount and the expected alarm is $expectedAlarms")
 
         assertEquals("no of alarms created is not equal to the alarms played",alarmActivityCount, expectedAlarms )
-        helperClass.cleanup(context, null)
+//        helperClass.cleanup(context, null)
 
         // probably use something like   instrumentation.waitForIdleSync
 
