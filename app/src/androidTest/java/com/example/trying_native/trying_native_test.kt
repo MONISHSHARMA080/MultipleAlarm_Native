@@ -1,42 +1,23 @@
-
 import android.app.Activity
-import android.app.AlarmManager
 import android.app.Application
-import android.app.Instrumentation
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.os.Bundle
-import android.os.PatternMatcher
-import android.os.SystemClock
-import android.view.WindowManager
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
 import com.example.trying_native.AlarmActivity
-import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.MainActivity
-import com.example.trying_native.components_for_ui_compose.ALARM_ACTION
-import com.example.trying_native.components_for_ui_compose.scheduleMultipleAlarms
 import com.example.trying_native.logD
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
-import java.util.Calendar
 import com.example.trying_native.testHelperFile.E2ETestHelper
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
-import java.util.concurrent.atomic.AtomicInteger
-import kotlin.math.log
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class AlarmContainerTest : Application.ActivityLifecycleCallbacks {
@@ -45,11 +26,9 @@ class AlarmContainerTest : Application.ActivityLifecycleCallbacks {
     val helperClass = E2ETestHelper()
     private var alarmActivityCount = 0
 
-    @get:Rule
-    val composeTestRule = createAndroidComposeRule<MainActivity>()
+    @get:Rule val composeTestRule = createAndroidComposeRule<MainActivity>()
 
-    @get:Rule
-    val alarmActivityRule = createAndroidComposeRule<AlarmActivity>()
+    @get:Rule val alarmActivityRule = createAndroidComposeRule<AlarmActivity>()
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
         if (activity is AlarmActivity && savedInstanceState == null) {
@@ -110,39 +89,53 @@ class AlarmContainerTest : Application.ActivityLifecycleCallbacks {
     @Test
     fun testToSeeThatTheAlarmSetAreEqualToAlarmReceivedAfterTimeSkipping() = runTest {
         val activityContext = composeTestRule.activity
-
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
         // Test parameters
         val startInMin = 2
-        val endMin =13
+        val endMin = 13
         val freqToSkipAlarm = 1
-        val expectedAlarms = helperClass.expectedAlarmToBePlayed(endMin, startInMin, freqToSkipAlarm)
+        val expectedAlarms =
+                helperClass.expectedAlarmToBePlayed(endMin, startInMin, freqToSkipAlarm)
 
         logD("expected alarm to played is $expectedAlarms")
         // Schedule the alarms
 
-        val exception = helperClass.scheduleMultipleAlarmHelper(activityContext, context, startInMin, endMin, freqToSkipAlarm, coroutineScope)
+        val exception =
+                helperClass.scheduleMultipleAlarmHelper(
+                        activityContext,
+                        context,
+                        startInMin,
+                        endMin,
+                        freqToSkipAlarm,
+                        coroutineScope
+                )
 
         helperClass.triggerPendingAlarms(context, startInMin, endMin, freqToSkipAlarm)
 
         // Wait for all alarms to trigger
-        delay( 15000L)  // Adjust delay as needed
+        // delay( 15000L)  // Adjust delay as needed
+        instrumentation.waitForIdleSync()
 
         logD("Actual alarm triggers: $alarmActivityCount")
         assertEquals(
-            "Number of alarm triggers doesn't match expected",
-            expectedAlarms,
-            alarmActivityCount
+                "Number of alarm triggers doesn't match expected",
+                expectedAlarms,
+                alarmActivityCount
         )
 
-
         assertNull("Error scheduling alarms: $exception", exception)
-        logD("the alarm activity played ->$alarmActivityCount and the expected alarm is $expectedAlarms")
+        logD(
+                "the alarm activity played ->$alarmActivityCount and the expected alarm is $expectedAlarms"
+        )
 
-        assertEquals("no of alarms created is not equal to the alarms played",alarmActivityCount, expectedAlarms )
-//        helperClass.cleanup(context, null)
+        assertEquals(
+                "no of alarms created is not equal to the alarms played",
+                alarmActivityCount,
+                expectedAlarms
+        )
+        //        helperClass.cleanup(context, null)
 
         // probably use something like   instrumentation.waitForIdleSync
 
     }
-
 }
