@@ -10,9 +10,7 @@ import android.media.MediaPlayer
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.os.Bundle
-import android.os.Message
 import android.os.PowerManager
-import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -31,20 +29,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import com.example.trying_native.ui.theme.Trying_nativeTheme
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import java.io.File
 import java.io.FileWriter
 import java.lang.reflect.Field
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.concurrent.timerTask
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.properties.Delegates
 
 class AlarmActivity : ComponentActivity() {
     private var mediaPlayer: MediaPlayer? = null
@@ -55,15 +52,15 @@ class AlarmActivity : ComponentActivity() {
     private var audioFocusRequest: AudioFocusRequest? = null
     private var wasBackgroundPlaying = false
     private lateinit var mediaSessionManager: MediaSessionManager
-//    private var  by Delegates.notNull<Boolean>()
     private var mediaControllerList: List<MediaController>? = null
-    private val activityScope = CoroutineScope(
-        SupervisorJob() +
-                Dispatchers.Main +
-                CoroutineExceptionHandler { _, throwable ->
-                    logD("Coroutine exception: ${throwable.message}")
-                }
-    )
+    private val activityScope =
+            CoroutineScope(
+                    SupervisorJob() +
+                            Dispatchers.Main +
+                            CoroutineExceptionHandler { _, throwable ->
+                                logD("Coroutine exception: ${throwable.message}")
+                            }
+            )
 
     // Add AudioFocus callback
     private val audioFocusChangeListener =
@@ -82,53 +79,60 @@ class AlarmActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        audioFocusRequest =  audioFocusRequestBuilder()
-//        pauseBackgroundAudio()
-//        keepScreenON()
-        lifecycleScope.launch(Dispatchers.IO){
-            launch {pauseBackgroundAudio()}
-            launch {keepScreenON()}
+        audioFocusRequest = audioFocusRequestBuilder()
+        //        pauseBackgroundAudio()
+        //        keepScreenON()
+        lifecycleScope.launch(Dispatchers.IO) {
+            launch { pauseBackgroundAudio() }
+            launch { keepScreenON() }
         }
-//        activityScope.launch { pauseBackgroundAudio() }
-//        activityScope.launch {keepScreenON()   }
+        //        activityScope.launch { pauseBackgroundAudio() }
+        //        activityScope.launch {keepScreenON()   }
 
         val rawFields: Array<Field> = R.raw::class.java.fields
         val rawResources = rawFields.map { field -> Pair(field.name, field.getInt(null)) }
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         // Get the maximum volume for alarm stream
-        previousAudioVolume = audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: previousAudioVolume
+        previousAudioVolume =
+                audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: previousAudioVolume
         // val maxVolume = audioManager?.getStreamMaxVolume(AudioManager.STREAM_ALARM) ?: 7
         // Set volume to maximum for alarm
         audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, previousAudioVolume, 0)
         // if the BG audio is active then pause it
         val result = audioManager?.requestAudioFocus(audioFocusRequest!!)
         // call it no matter what, but would prefer to pause the resource
-        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED){
+        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             activityScope.launch { playAlarmWithRandomSound(rawResources) }
-        }else{
+        } else {
             activityScope.launch { playAlarmWithRandomSound(rawResources) }
         }
 
-      var  isMessagePresent= intent.getBooleanExtra("isMessagePresent", false)
-      var message =""
-      if (  isMessagePresent){
-          val messagetemp =intent.getStringExtra("message")
-          logD("the meessage form the intent in the AlarmActivity is  ->${messagetemp}<-")
-          if (messagetemp==null){
-              isMessagePresent = false
-          }else{
-              message =messagetemp
-          }
-      }
+        var isMessagePresent = intent.getBooleanExtra("isMessagePresent", false)
+        var message = ""
+        if (isMessagePresent) {
+            val messagetemp = intent.getStringExtra("message")
+            logD("the meessage form the intent in the AlarmActivity is  ->${messagetemp}<-")
+            if (messagetemp == null) {
+                isMessagePresent = false
+            } else {
+                message = messagetemp
+            }
+        }
         logD("is the message is present is -->${isMessagePresent}")
 
         setContent {
             Trying_nativeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) {
-                    TimeDisplay(onFinish = {
-                        mediaPlayer?.release() // I can remove it as it is unnecessary and is there in the onDestroy()
-                        mediaPlayer = null; finishAndRemoveTask()
-                    }, message = message,  isMessagePresent=  isMessagePresent
+                    TimeDisplay(
+                            onFinish = {
+                                mediaPlayer
+                                        ?.release() // I can remove it as it is unnecessary and is
+                                // there in the onDestroy()
+                                mediaPlayer = null
+                                finishAndRemoveTask()
+                            },
+                            message = message,
+                            isMessagePresent = isMessagePresent
                     )
                 }
             }
@@ -152,22 +156,21 @@ class AlarmActivity : ComponentActivity() {
         }
     }
 
-    private fun pauseBackgroundAudio(){
-//        if (mediaPlayer?.isPlaying() == true){
-//            mediaPlayer.pause()
-//            wasBackgroundPlaying = true
-//        }
+    private fun pauseBackgroundAudio() {
+        //        if (mediaPlayer?.isPlaying() == true){
+        //            mediaPlayer.pause()
+        //            wasBackgroundPlaying = true
+        //        }
         try {
             // Initialize MediaSessionManager
-            mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
+            mediaSessionManager =
+                    getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
 
             // Get a list of active media controllers
             mediaControllerList = mediaSessionManager.getActiveSessions(null)
 
             // Pause all active media controllers
-            mediaControllerList?.forEach { controller ->
-                controller.transportControls.pause()
-            }
+            mediaControllerList?.forEach { controller -> controller.transportControls.pause() }
         } catch (e: SecurityException) {
             e.printStackTrace()
             // Handle the exception if required permissions are not granted
@@ -177,16 +180,14 @@ class AlarmActivity : ComponentActivity() {
     private fun resumeBackgroundAudio() {
         try {
             // Resume all active media controllers
-            mediaControllerList?.forEach { controller ->
-                controller.transportControls.play()
-            }
+            mediaControllerList?.forEach { controller -> controller.transportControls.play() }
         } catch (e: SecurityException) {
             e.printStackTrace()
             // Handle the exception if required permissions are not granted
         }
     }
 
-    private fun audioFocusRequestBuilder(): AudioFocusRequest{
+    private fun audioFocusRequestBuilder(): AudioFocusRequest {
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         // Create AudioFocusRequest
         return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
@@ -201,63 +202,63 @@ class AlarmActivity : ComponentActivity() {
         // Request audio focus before playing alarm
     }
 
-   private fun playAlarmWithRandomSound(rawResources:List<Pair<String, Int>>){
-       val randomSound = rawResources.random()
-       var randomSoundName = randomSound.first
-       if (randomSoundName == null) {
-           randomSoundName = " <--string is null--> "
-       }
-       val randomSoundResId = randomSound.second
-       try {
-                 mediaPlayer =
-                         MediaPlayer().apply {
-                             setAudioAttributes(
-                                     AudioAttributes.Builder()
-                                             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                                             .setUsage(AudioAttributes.USAGE_ALARM)
-                                             .build()
-                             )
-                             setDataSource(resources.openRawResourceFd(randomSoundResId))
-                             prepare()
-                             isLooping = true // Make the alarm loop until dismissed
-                             start()
-                             Timer().schedule(timerTask { finish() }, AUTO_FINISH_DELAY)
-                         }
-                 logD("Playing alarm sound: $randomSoundResId")
-                 logSoundPlay(randomSoundName)
-             } catch (e: Exception) {
-                 try {
-                     // Fallback sound with alarm stream
-                     mediaPlayer =
-                             MediaPlayer().apply {
-                                 setAudioAttributes(
-                                         AudioAttributes.Builder()
-                                                 .setContentType(
-                                                         AudioAttributes.CONTENT_TYPE_SONIFICATION
-                                                 )
-                                                 .setUsage(AudioAttributes.USAGE_ALARM)
-                                                 .build()
-                                 )
-                                 setDataSource(resources.openRawResourceFd(R.raw.renaissancemp))
-                                 prepare()
-                                 isLooping = true
-                                 start()
-                             }
-                     logSoundPlay("renaissance")
-                 } catch (e: Exception) {
-                     logD("Exception occurred in starting the fallback alarm \n--> $e <-- \n ")
-                     finish()
-                 }
-                 logD("Exception occurred in starting the alarm sound \n-->  $e  <-- \n")
-             }
-   }
+    private fun playAlarmWithRandomSound(rawResources: List<Pair<String, Int>>) {
+        val randomSound = rawResources.random()
+        var randomSoundName = randomSound.first
+        if (randomSoundName == null) {
+            randomSoundName = " <--string is null--> "
+        }
+        val randomSoundResId = randomSound.second
+        try {
+            mediaPlayer =
+                    MediaPlayer().apply {
+                        setAudioAttributes(
+                                AudioAttributes.Builder()
+                                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                                        .setUsage(AudioAttributes.USAGE_ALARM)
+                                        .build()
+                        )
+                        setDataSource(resources.openRawResourceFd(randomSoundResId))
+                        prepare()
+                        isLooping = true // Make the alarm loop until dismissed
+                        start()
+                        Timer().schedule(timerTask { finish() }, AUTO_FINISH_DELAY)
+                    }
+            logD("Playing alarm sound: $randomSoundResId")
+            logSoundPlay(randomSoundName)
+        } catch (e: Exception) {
+            try {
+                // Fallback sound with alarm stream
+                mediaPlayer =
+                        MediaPlayer().apply {
+                            setAudioAttributes(
+                                    AudioAttributes.Builder()
+                                            .setContentType(
+                                                    AudioAttributes.CONTENT_TYPE_SONIFICATION
+                                            )
+                                            .setUsage(AudioAttributes.USAGE_ALARM)
+                                            .build()
+                            )
+                            setDataSource(resources.openRawResourceFd(R.raw.renaissancemp))
+                            prepare()
+                            isLooping = true
+                            start()
+                        }
+                logSoundPlay("renaissance")
+            } catch (e: Exception) {
+                logD("Exception occurred in starting the fallback alarm \n--> $e <-- \n ")
+                finish()
+            }
+            logD("Exception occurred in starting the alarm sound \n-->  $e  <-- \n")
+        }
+    }
 
     @SuppressLint("UnsafeIntentLaunch")
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         logD("New Intent received in AlarmActivity")
         // Finish the previous activity when a new intent is received
-        //finish()
+        // finish()
         try {
             wakeLock?.let {
                 if (it.isHeld) {
@@ -286,11 +287,9 @@ class AlarmActivity : ComponentActivity() {
         }
         resumeBackgroundAudio()
         // Release MediaPlayer resources when the activity is destroyed
-         audioFocusRequest?.let { request ->
-                   audioManager?.abandonAudioFocusRequest(request)
-         }
+        audioFocusRequest?.let { request -> audioManager?.abandonAudioFocusRequest(request) }
         audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, previousAudioVolume, 0)
-         try {
+        try {
             if (wasBackgroundPlaying) {
                 mediaPlayer?.start()
             }
@@ -303,20 +302,20 @@ class AlarmActivity : ComponentActivity() {
         activityScope.cancel()
     }
 
-    private fun keepScreenON(){
+    private fun keepScreenON() {
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
         wakeLock =
-            powerManager.newWakeLock(
-                PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
-                "AlarmActivity::WakeLock"
-            ).apply {
-                setReferenceCounted(false)
-            }
+                powerManager.newWakeLock(
+                                PowerManager.SCREEN_BRIGHT_WAKE_LOCK or
+                                        PowerManager.ACQUIRE_CAUSES_WAKEUP,
+                                "AlarmActivity::WakeLock"
+                        )
+                        .apply { setReferenceCounted(false) }
         window.addFlags(
-            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
+                        WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
         )
         setShowWhenLocked(true)
         setTurnScreenOn(true)
@@ -325,7 +324,7 @@ class AlarmActivity : ComponentActivity() {
 }
 
 @Composable
-fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent:Boolean  ) {
+fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean) {
     var currentTime by remember { mutableStateOf(getCurrentTime()) }
 
     // Updates the time every second
@@ -361,21 +360,20 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent:Boolean 
 
             Spacer(modifier = Modifier.height(34.dp)) // Space between the time and the button
 
-            if(isMessagePresent){
+            if (isMessagePresent) {
                 Text(
-                    text = message,
-                    color = Color.Cyan,
-                    fontSize = 46.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center, // Center align the text
-                    lineHeight = 60.sp,
-                    modifier = Modifier
-                        .fillMaxWidth() // Take full width
-                        .padding(horizontal = 8.dp), // Add padding
-                    softWrap = true // Enable text wrapping
+                        text = message,
+                        color = Color.Cyan,
+                        fontSize = 46.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center, // Center align the text
+                        lineHeight = 60.sp,
+                        modifier =
+                                Modifier.fillMaxWidth() // Take full width
+                                        .padding(horizontal = 8.dp), // Add padding
+                        softWrap = true // Enable text wrapping
                 )
             }
-
         }
     }
 }
