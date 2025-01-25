@@ -86,8 +86,8 @@ class AlarmActivity : ComponentActivity() {
 //        pauseBackgroundAudio()
 //        keepScreenON()
         lifecycleScope.launch(Dispatchers.IO){
-            pauseBackgroundAudio()
-            keepScreenON()
+            launch {pauseBackgroundAudio()}
+            launch {keepScreenON()}
         }
 //        activityScope.launch { pauseBackgroundAudio() }
 //        activityScope.launch {keepScreenON()   }
