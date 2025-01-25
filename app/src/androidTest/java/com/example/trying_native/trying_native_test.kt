@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import com.example.trying_native.AlarmActivity
 import com.example.trying_native.MainActivity
 import com.example.trying_native.logD
