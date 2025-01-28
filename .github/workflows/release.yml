@@ -3,9 +3,6 @@ on:
   push:
     branches:
       ["main", "pauseBackgroundAudioOnceAlarmStart", "writingTestsForTheApp"]
-    # removing it as I only want it to work it on push req
-  # pull_request:
-  #   branches: ["main"]
 permissions:
   contents: write
 jobs:
