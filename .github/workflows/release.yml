@@ -3,8 +3,9 @@ on:
   push:
     branches:
       ["main", "pauseBackgroundAudioOnceAlarmStart", "writingTestsForTheApp"]
-  pull_request:
-    branches: ["main"]
+    # removing it as I only want it to work it on push req
+  # pull_request:
+  #   branches: ["main"]
 permissions:
   contents: write
 jobs:
@@ -51,7 +52,7 @@ jobs:
             ~/.android/avd/snapshot/*
           key: avd-snapshot-${{ matrix.api-level }}-${{ github.sha }}
           restore-keys: |
-            avd-snapshot-${{ matrix.api-level }}- 
+            avd-snapshot-${{ matrix.api-level }}-
 
       - name: create AVD and generate snapshot for caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
@@ -104,11 +105,11 @@ jobs:
       - name: Android build cache
         uses: actions/cache@v4
         with:
-            path: |
-              app/build
-            key: build-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/*.kt', '**/*.java') }}
-            restore-keys: |
-              build-  
+          path: |
+            app/build
+          key: build-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/*.kt', '**/*.java') }}
+          restore-keys: |
+            build-
 
       - name: Generate Version Tag
         id: version
