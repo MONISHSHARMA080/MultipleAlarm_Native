@@ -6,8 +6,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.currentCompositionErrors
 import com.example.trying_native.components_for_ui_compose.ALARM_ACTION
 import com.example.trying_native.dataBase.AlarmDao
+import com.example.trying_native.dataBase.AlarmData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -96,4 +98,25 @@ fun lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarm_start_tim
     )
     logD("Pending intent set with start time: $alarm_start_time_to_search_db and end time: $alarm_end_time_to_search_db")
     logD("intent -->${intent.extras} ||||| and pending intent -->${pendingIntent}\n ${Calendar.getInstance().timeInMillis < alarm_end_time_to_search_db}")
+}
+
+fun resetAlarms(alarmData:AlarmData){
+
+    // -- should probably store the message in the db to use later --
+
+    val startTime = alarmData.first_value
+    val endTime = alarmData.second_value
+    val calendarInstance =Calendar.getInstance()
+    val currentTime =  calendarInstance.timeInMillis
+
+    if ( currentTime >= endTime && currentTime >= startTime ) {
+        // here the user is asking us to reset the alarm for the next day on the same time of the day
+    }
+    else if (currentTime <= startTime && currentTime <= endTime){
+        //  alarm is in future still:-> here we will set the alarm as it was cause the user is asking us to reset the alarm
+        //  that had not gone before, eg if I set the alarm 5 hour form now and hit remove it, and want to reset it again
+    }
+    else if (currentTime in startTime..endTime){
+        // here set the alarm after the start alarm till the end time
+    }
 }

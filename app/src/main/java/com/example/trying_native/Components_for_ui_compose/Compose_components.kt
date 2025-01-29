@@ -340,6 +340,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                         }
                                        // -------------------------
                                         else {
+                                            // -- reset function abstract it away and change it --
                                             val calenderInstance = Calendar.getInstance()
                                             val cal1 = calenderInstance.apply { timeInMillis = Calendar.getInstance().timeInMillis }
                                             val cal2 = calenderInstance.apply { timeInMillis = individualAlarm.date_in_long }
