@@ -1,6 +1,9 @@
 import android.app.Activity
 import android.app.Application
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.core.app.ApplicationProvider
@@ -8,6 +11,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.trying_native.AlarmActivity
 import com.example.trying_native.MainActivity
+import com.example.trying_native.components_for_ui_compose.ALARM_ACTION
 import com.example.trying_native.logD
 import com.example.trying_native.testHelperFile.E2ETestHelper
 import kotlinx.coroutines.test.TestScope
@@ -19,7 +23,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-
 
 @RunWith(AndroidJUnit4::class)
 class AlarmContainerTest : Application.ActivityLifecycleCallbacks {
@@ -93,8 +96,8 @@ class AlarmContainerTest : Application.ActivityLifecycleCallbacks {
         val activityContext = composeTestRule.activity
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         // Test parameters
-        val startInMin = 2
-        val endMin = 13
+        val startInMin = 0
+        val endMin = 3
         val freqToSkipAlarm = 1
         val expectedAlarms =
                 helperClass.expectedAlarmToBePlayed(endMin, startInMin, freqToSkipAlarm)
@@ -109,15 +112,15 @@ class AlarmContainerTest : Application.ActivityLifecycleCallbacks {
                         startInMin,
                         endMin,
                         freqToSkipAlarm,
-                        coroutineScope
+                        coroutineScope,
                 )
 
         helperClass.triggerPendingAlarms(context, startInMin, endMin, freqToSkipAlarm)
 
         // Wait for all alarms to trigger
         // delay( 15000L)  // Adjust delay as needed
+//        Thread.sleep(5 * 60 * 1000)
         instrumentation.waitForIdleSync()
-
         logD("Actual alarm triggers: $alarmActivityCount")
         assertEquals(
                 "Number of alarm triggers doesn't match expected",
@@ -136,8 +139,6 @@ class AlarmContainerTest : Application.ActivityLifecycleCallbacks {
                 expectedAlarms
         )
         //        helperClass.cleanup(context, null)
-
         // probably use something like   instrumentation.waitForIdleSync
-
     }
 }

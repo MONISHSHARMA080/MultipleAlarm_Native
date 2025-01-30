@@ -28,6 +28,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
+import java.util.Objects
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -43,27 +44,47 @@ class E2ETestHelper {
         ).build().alarmDao()
     }
 
-    fun scheduleMultipleAlarmHelper(activityContext:MainActivity, context: Context, startInMin: Int, endMin: Int,freqToSkipAlarm:Int, coroutineScope: CoroutineScope) :Exception? {
+    fun scheduleMultipleAlarmHelper(activityContext:MainActivity, context: Context, startInMin: Int, endMin: Int,freqToSkipAlarm:Int, coroutineScope: CoroutineScope,  broadcastReceiverClass: BroadcastReceiver? = null   ) :Exception? {
 //        val context =  ApplicationProvider.getApplicationContext<Context>()
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val alarmDao = getAlarmDao(context)
 
 
         val exception = runBlocking {
-            scheduleMultipleAlarms(
-                alarmManager = alarmManager,
-                activity_context = activityContext,
-                alarmDao = alarmDao,
-                calendar_for_start_time = getTheCalenderInstanceAndSkipTheMinIn(startInMin),
-                calendar_for_end_time = getTheCalenderInstanceAndSkipTheMinIn(endMin),
-                date_in_long = getDateInLong(),
-                coroutineScope = coroutineScope,
-                freq_after_the_callback = freqToSkipAlarm,
-                selected_date_for_display = getDateString(getDateInLong()),
-                is_alarm_ready_to_use = true,
-                new_is_ready_to_use = false,
-                message = "--- Burn ---"
-            )
+            if(broadcastReceiverClass != null){
+                logD("-----++------++----++---11111")
+                scheduleMultipleAlarms(
+                    alarmManager = alarmManager,
+                    activity_context = activityContext,
+                    alarmDao = alarmDao,
+                    calendar_for_start_time = getTheCalenderInstanceAndSkipTheMinIn(startInMin),
+                    calendar_for_end_time = getTheCalenderInstanceAndSkipTheMinIn(endMin),
+                    date_in_long = getDateInLong(),
+                    coroutineScope = coroutineScope,
+                    freq_after_the_callback = freqToSkipAlarm,
+                    selected_date_for_display = getDateString(getDateInLong()),
+                    is_alarm_ready_to_use = true,
+                    new_is_ready_to_use = false,
+                    message = "--- Burn ---",
+                    receiverClass = broadcastReceiverClass.javaClass
+                )
+            }else{
+                scheduleMultipleAlarms(
+                    alarmManager = alarmManager,
+                    activity_context = activityContext,
+                    alarmDao = alarmDao,
+                    calendar_for_start_time = getTheCalenderInstanceAndSkipTheMinIn(startInMin),
+                    calendar_for_end_time = getTheCalenderInstanceAndSkipTheMinIn(endMin),
+                    date_in_long = getDateInLong(),
+                    coroutineScope = coroutineScope,
+                    freq_after_the_callback = freqToSkipAlarm,
+                    selected_date_for_display = getDateString(getDateInLong()),
+                    is_alarm_ready_to_use = true,
+                    new_is_ready_to_use = false,
+                    message = "--- Burn ---",
+                )
+
+            }
         }
         return exception
     }
@@ -123,7 +144,7 @@ class E2ETestHelper {
         return  i
     }
 
-    fun triggerPendingAlarms(context: Context, startTimeMin: Int, endTimeMin: Int, frequency: Int) {
+    fun triggerPendingAlarms(context: Context, startTimeMin: Int, endTimeMin: Int, frequency: Int,) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         // Calculate how many alarms should be triggered

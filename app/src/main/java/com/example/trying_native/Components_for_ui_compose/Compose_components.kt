@@ -865,6 +865,7 @@ fun freq_without_dialog(
     }
 }
 
+
 const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
  fun scheduleAlarm(triggerTime: Long, alarmManager:AlarmManager, componentActivity: ComponentActivity, message:String? = null, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java ) {
 
