@@ -2,7 +2,7 @@ name: Android CI
 on:
   push:
     branches:
-      - '**'  # This will run on all branches
+      - "**" # This will run on all branches
 permissions:
   contents: write
 jobs:
@@ -87,7 +87,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Gradle cache
         uses: actions/cache@v4
