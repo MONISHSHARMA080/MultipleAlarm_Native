@@ -6,12 +6,11 @@ import android.content.Context
 import androidx.core.app.NotificationCompat
 import com.example.trying_native.R
 
-class NotificationBuilder(context:Context, notificationText:String, title:String ) {
+class NotificationBuilder(context:Context, notificationText:String, title:String, val NOTIFICATIO_ID: Int = 69 ) {
      companion object {
         private const val CHANNEL_ID = "default_channel"
         private const val CHANNEL_NAME = "Default Channel"
         private const val CHANNEL_DESCRIPTION = "Default notification channel"
-         private  const val NOTIFICATIO_ID = 69
     }
     private val notificationManager: NotificationManager by lazy {
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

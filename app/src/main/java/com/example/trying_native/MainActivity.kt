@@ -178,5 +178,5 @@ val activity_context = this
 }
 
 fun logD(message:String):Unit{
-    Log.d("AAA","-->$message")
+    Log.d("AAAAA","-->$message")
 }
