@@ -58,16 +58,16 @@ class SeeIfBroadcastReceiverIsReceivingIntentTest {
     @get:Rule
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
-    @Before
-    fun setup() {
-        Dispatchers.setMain(testDispatcher)
-        mockAlarmReceiverForTest.resetIntents()
-    }
-
-    @After
-    fun teardown() {
-        Dispatchers.resetMain()
-    }
+//    @Before
+//    fun setup() {
+//        Dispatchers.setMain(testDispatcher)
+//        mockAlarmReceiverForTest.resetIntents()
+//    }
+//
+//    @After
+//    fun teardown() {
+//        Dispatchers.resetMain()
+//    }
 
     @Test
     fun seeIfMyBroadCastReceiverGetsAppropriateIntents() = runTest {

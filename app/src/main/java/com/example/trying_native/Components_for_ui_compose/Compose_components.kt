@@ -81,14 +81,18 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.testTag
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.FirstLaunchAskForPermission.FirstLaunchAskForPermission
 import com.example.trying_native.LastAlarmUpdateDBReceiver
 import com.example.trying_native.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime
 import com.example.trying_native.notification.NotificationBuilder
+import com.example.trying_native.resetAlarms
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import java.time.format.DateTimeFormatter
 
@@ -193,6 +197,7 @@ fun NumberField(
 }
 
 
+@SuppressLint("FlowOperatorInvokedInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: ComponentActivity, askUserForPermissionToScheduleAlarm:()->Unit) {
@@ -202,10 +207,14 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
 
 //    val coroutineScope = remember {CoroutineScope(SupervisorJob() + Dispatchers.Default)  }
     val coroutineScope = context_of_activity.lifecycleScope
+    val uncancellableScope = remember {
+        CoroutineScope(coroutineScope.coroutineContext + NonCancellable)
+    }
+
     val askUserForPermission by remember { mutableStateOf(Settings.canDrawOverlays(context_of_activity)) }
 
     // Collect the Flow as State
-    val alarms by AlarmDao.getAllAlarmsFlow().collectAsState(initial = emptyList())
+    val alarms by AlarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO).collectAsStateWithLifecycle(initialValue = emptyList())
     var showTheDialogToTheUserToAskForPermission by remember { mutableStateOf(false) }
 
 
@@ -233,7 +242,6 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                     color = if (!individualAlarm.isReadyToUse) Color(0xFF666b75) else Color(
                                         0xFF0D388C
                                     )
-
                                 )
                                 .padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
@@ -341,41 +349,49 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                        // -------------------------
                                         else {
                                             // -- reset function abstract it away and change it --
-                                            val calenderInstance = Calendar.getInstance()
-                                            val cal1 = calenderInstance.apply { timeInMillis = Calendar.getInstance().timeInMillis }
-                                            val cal2 = calenderInstance.apply { timeInMillis = individualAlarm.date_in_long }
-                                            // dates in db and the current
-                                            val areTheDatesSame = cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
-                                                    cal1.get(Calendar.MONTH) == cal2.get(Calendar.MONTH) &&
-                                                    cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH)
-
-                                            logD("are the both the date same --> $areTheDatesSame, ")
-                                            var startTime_obj_form_calender:Calendar = calenderInstance.apply {
-                                                timeInMillis = individualAlarm.first_value
+                                            uncancellableScope.launch {
+                                                logD("about to reset the alarm-+")
+                                              val exception=  resetAlarms(alarmData = individualAlarm, alarmManager = alarmManager,
+                                                    activityContext = context_of_activity, alarmDao = AlarmDao, coroutineScope = coroutineScope
+                                                )
+                                              logD("the exception form the resetAlarm is ->$exception")
                                             }
-                                            var endTime_obj_form_calender = calenderInstance.apply {
-                                                timeInMillis = individualAlarm.second_value
-                                            }
-                                            var date : Long
-                                            if (areTheDatesSame){
-                                                date = individualAlarm.date_in_long
-                                            }else  {
-                                                date = cal1.timeInMillis
-                                            }
-                                            coroutineScope.launch(Dispatchers.IO) {
-                                                try {
-                                                    val exceptionOccurred = scheduleMultipleAlarms(alarmManager, activity_context = context_of_activity, alarmDao = AlarmDao,
-                                                        calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = individualAlarm.freq_in_min_to_display,
-                                                        selected_date_for_display =  individualAlarm.date_for_display , date_in_long= date, coroutineScope = this, is_alarm_ready_to_use = true , is_this_func_call_to_update_an_existing_alarm = true, new_is_ready_to_use = true  )
-                                                    if(exceptionOccurred !== null){
-                                                        NotificationBuilder(context_of_activity,"error returned in creating multiple alarm ","execution returned exception in schedule multiple alarm  -->${exceptionOccurred}").showNotification()
-                                                        logD("error in the schedulemultiple -->${exceptionOccurred}")
-                                                    }
-                                                }catch (e:Exception){
-                                                    logD("exception occurred in try catch for multiple alarm -->${e} ")
-                                                    NotificationBuilder(context_of_activity,"error returned in creating multiple alarm ","execution returned exception in schedule multiple alarm  -->${e}").showNotification()
-                                                }
-                                            }
+//
+//                                            val calenderInstance = Calendar.getInstance()
+//                                            val cal1 = calenderInstance.apply { timeInMillis = Calendar.getInstance().timeInMillis }
+//                                            val cal2 = calenderInstance.apply { timeInMillis = individualAlarm.date_in_long }
+//                                            // dates in db and the current
+//                                            val areTheDatesSame = cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+//                                                    cal1.get(Calendar.MONTH) == cal2.get(Calendar.MONTH) &&
+//                                                    cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH)
+//
+//                                            logD("are the both the date same --> $areTheDatesSame, ")
+//                                            var startTime_obj_form_calender:Calendar = calenderInstance.apply {
+//                                                timeInMillis = individualAlarm.first_value
+//                                            }
+//                                            var endTime_obj_form_calender = calenderInstance.apply {
+//                                                timeInMillis = individualAlarm.second_value
+//                                            }
+//                                            var date : Long
+//                                            if (areTheDatesSame){
+//                                                date = individualAlarm.date_in_long
+//                                            }else  {
+//                                                date = cal1.timeInMillis
+//                                            }
+//                                            coroutineScope.launch(Dispatchers.IO) {
+//                                                try {
+//                                                    val exceptionOccurred = scheduleMultipleAlarms(alarmManager, activity_context = context_of_activity, alarmDao = AlarmDao,
+//                                                        calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = individualAlarm.freq_in_min_to_display,
+//                                                        selected_date_for_display =  individualAlarm.date_for_display , date_in_long= date, coroutineScope = this, is_alarm_ready_to_use = true , is_this_func_call_to_update_an_existing_alarm = true, new_is_ready_to_use = true, messageForDB = ""  )
+//                                                    if(exceptionOccurred !== null){
+//                                                        NotificationBuilder(context_of_activity,"error returned in creating multiple alarm ","execution returned exception in schedule multiple alarm  -->${exceptionOccurred}").showNotification()
+//                                                        logD("error in the schedulemultiple -->${exceptionOccurred}")
+//                                                    }
+//                                                }catch (e:Exception){
+//                                                    logD("exception occurred in try catch for multiple alarm -->${e} ")
+//                                                    NotificationBuilder(context_of_activity,"error returned in creating multiple alarm ","execution returned exception in schedule multiple alarm  -->${e}").showNotification()
+//                                                }
+//                                            }
                                         }
                                     },
                                     colors = ButtonDefaults.buttonColors(Color(0xFF0eaae3))
@@ -737,7 +753,7 @@ fun DialogToAskUserAboutAlarm(
                             try {
                                val exception= scheduleMultipleAlarms(alarmManager, activity_context = activity_context, alarmDao = alarmDao,
                                 calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = freq_returned_by_user,
-                                selected_date_for_display =  date!!, date_in_long = dateInMilliSec, coroutineScope = this, is_alarm_ready_to_use = true, new_is_ready_to_use = false, message = messageInAlarm  )
+                                selected_date_for_display =  date!!, date_in_long = dateInMilliSec, coroutineScope = this, is_alarm_ready_to_use = true, new_is_ready_to_use = false, messageForDB = messageInAlarm  )
                                 if (exception != null){
                                     logD("there is a error while scheduling alarm-->${exception}")
                                     NotificationBuilder(activity_context,"the error was -->${exception}", "Error occurred in creating alarm", ).showNotification()
@@ -896,7 +912,7 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
  suspend fun scheduleMultipleAlarms(alarmManager: AlarmManager, selected_date_for_display:String, date_in_long: Long, coroutineScope: CoroutineScope, is_alarm_ready_to_use:Boolean,
                                     calendar_for_start_time:Calendar, calendar_for_end_time:Calendar, freq_after_the_callback:Int, activity_context:ComponentActivity, alarmDao:AlarmDao,
                                     is_this_func_call_to_update_an_existing_alarm: Boolean = false , new_is_ready_to_use:Boolean,   message: String?=null,
-                                    receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java  ) :Exception? {
+                                    receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java,messageForDB:String   ) :Exception? {
     // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
      var startTimeInMillis = calendar_for_start_time.timeInMillis
     val startTimeInMillisendForDb= startTimeInMillis
@@ -928,13 +944,9 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
         // need to - fstartTimerq from it
         i+=1
     }
-    // making a broadcast to the receiver to update the alarm
-//        cancelAPendingIntent(startTimeInMillis - freq_in_min,activity_context, alarmManager)
-    // now making the last
     logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
     lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())
 
-//        lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime((startTimeInMillis - freq_in_min)+2000,activity_context, alarmManager, startTimeNow, startTimeNow, "form the lastPendingIntentWithMessageForDbOperations form", AlarmReceiver() )
  if (!is_this_func_call_to_update_an_existing_alarm ){
      withContext(Dispatchers.IO) {
          logD("here to  insert a new one")
@@ -950,7 +962,8 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
                  start_am_pm = start_am_pm,
                  end_am_pm = end_am_pm,
                  freq_in_min_to_display = (freq_in_min / 60000).toInt(),
-                 date_in_long = date_in_long
+                 date_in_long = date_in_long,
+                 message = messageForDB
              )
              val insertedId = alarmDao.insert(newAlarm)
              logD("Inserted alarm with ID: $insertedId")
@@ -971,4 +984,61 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
     )
      }
      return null
+}
+
+
+suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_for_display:String, calendar_for_start_time:Calendar,
+                                    calendar_for_end_time:Calendar, freq_after_the_callback:Int, activity_context:ComponentActivity, alarmDao:AlarmDao,
+                                    message: String?=null,alarmData:AlarmData,
+                                    receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, i:Int = 0,isAlarmReadyToUse:Boolean= true   ) :Exception? {
+    // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
+    logD("in the ++scheduleMultipleAlarms2  ++ and  the i is $i")
+    var startTimeInMillis = calendar_for_start_time.timeInMillis
+    val startTimeInMillisendForDb = startTimeInMillis
+    val start_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_start_time.time)
+    val start_am_pm = SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
+
+    var endTimeInMillis = calendar_for_end_time.timeInMillis
+    val endTimeInMillisendForDb = endTimeInMillis
+    val end_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_end_time.time)
+    val end_am_pm = SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
+
+    logD(" \n\n am_pm_start_time-->$start_time_for_display $start_am_pm ; endtime-->$end_time_for_display $end_am_pm")
+    var freq_in_milli: Long
+    freq_in_milli = freq_after_the_callback.toLong()
+    val freq_in_min = freq_in_milli * 60000
+    logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis == endTimeInMillis} ::--:: freq->$freq_in_min")
+    var i = 0
+
+    while (startTimeInMillis <= endTimeInMillis) {
+        logD("round $i")
+        try {
+            scheduleAlarm(
+                startTimeInMillis,
+                alarmManager,
+                activity_context,
+                message = message,
+                receiverClass = receiverClass
+            )
+        } catch (e: Exception) {
+            logD("error occurred in the schedule multiple alarms-->${e}")
+            return e
+        }
+        startTimeInMillis = startTimeInMillis + freq_in_min
+        // this line added the freq in the last pending intent and now to get time for the last time we
+        // need to - fstartTimerq from it
+        i += 1
+    }
+    logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
+    lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager,
+        "alarm_start_time_to_search_db", "alarm_end_time_to_search_db",
+        endTimeInMillisendForDb, LastAlarmUpdateDBReceiver()
+    )
+    try {
+        alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =startTimeInMillisendForDb, second_value = endTimeInMillis, date_for_display =  selected_date_for_display, isReadyToUse = isAlarmReadyToUse)
+    }catch (e:Exception){
+        logD("the update in the alarm in db fail and the exception is -->$e")
+        return e
+    }
+    return null
 }

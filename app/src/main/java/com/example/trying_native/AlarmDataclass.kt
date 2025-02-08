@@ -20,13 +20,13 @@ data class AlarmData(
     @ColumnInfo(name = "first_value") val first_value: Long,
     @ColumnInfo(name = "second_value") val second_value: Long,
 
-    // take all of this below and
     @ColumnInfo(name = "start_time_for_display") val start_time_for_display: String,
     @ColumnInfo(name = "start_am_pm") val start_am_pm: String,
     @ColumnInfo(name = "end_time_for_display") val end_time_for_display: String,
     @ColumnInfo(name = "end_am_pm") val end_am_pm: String,
 
     @ColumnInfo(name = "date_in_long") val date_in_long: Long,
+    @ColumnInfo(name = "message") val message:String,
 
     @ColumnInfo(name = "date_for_display") val date_for_display: String,
     @ColumnInfo(name = "freq_in_min") val freq_in_min: Long,
@@ -35,7 +35,7 @@ data class AlarmData(
 
 )
 
-@Database(entities = [AlarmData::class], version = 2)
+@Database(entities = [AlarmData::class], version = 1)
 abstract class AlarmDatabase : RoomDatabase() {
     abstract fun alarmDao(): AlarmDao
 }
@@ -66,21 +66,14 @@ interface AlarmDao {
     @Query("UPDATE AlarmData SET is_ready_to_use = :isReadyToUse WHERE first_value = :firstValue AND second_value = :second_value")
     suspend fun updateReadyToUseInAlarm(firstValue: Long, second_value:Long, isReadyToUse: Boolean)
 
+    @Query(" UPDATE AlarmData SET is_ready_to_use = :isReadyToUse ,first_value = :firstValue, second_value = :second_value, date_for_display = :date_for_display  WHERE id = :id")
+    suspend fun updateAlarmForReset(id: Int, firstValue: Long, second_value: Long, date_for_display: String, isReadyToUse: Boolean)
+
     @Query("""
-        UPDATE AlarmData 
-        SET is_ready_to_use = :isReadyToUse 
-        WHERE first_value = :firstValue 
-        AND second_value = :secondValue 
-        AND freq_in_min = :freqInMin 
-        AND date_in_long = :dateInLong
+        UPDATE AlarmData  SET is_ready_to_use = :isReadyToUse  WHERE first_value = :firstValue 
+        AND second_value = :secondValue  AND freq_in_min = :freqInMin AND date_in_long = :dateInLong
     """)
-    suspend fun updateReadyToUse(
-        firstValue: Long,
-        secondValue: Long,
-        freqInMin: Long,
-        dateInLong: Long,
-        isReadyToUse: Boolean
-    )
+    suspend fun updateReadyToUse(firstValue: Long, secondValue: Long, freqInMin: Long, dateInLong: Long, isReadyToUse: Boolean)
 }
 
 //
