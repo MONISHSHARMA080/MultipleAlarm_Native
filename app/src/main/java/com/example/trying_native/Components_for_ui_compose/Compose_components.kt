@@ -934,7 +934,7 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
     while (startTimeInMillis <= endTimeInMillis){
         logD("round $i")
         try {
-            scheduleAlarm(startTimeInMillis,alarmManager, activity_context, message = message, receiverClass = receiverClass)
+            scheduleAlarm(startTimeInMillis,alarmManager, activity_context, message = messageForDB, receiverClass = receiverClass)
         }catch (e:Exception){
             logD("error occurred in the schedule multiple alarms-->${e}")
             return e
