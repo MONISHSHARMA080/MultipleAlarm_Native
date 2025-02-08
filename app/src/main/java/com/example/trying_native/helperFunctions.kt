@@ -18,6 +18,7 @@ import kotlinx.coroutines.withContext
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
+import kotlin.math.log
 
 suspend fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequency_in_min:Long, alarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity:ComponentActivity, delete_the_alarm_from_db:Boolean) {
 
@@ -137,18 +138,20 @@ suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activit
 //        --> incrementTheStartCalenderTimeUntilItIsInFuture <-- this is the problem as the end time is going forward
        // may be take the date of the
 
+        logD("--++---++--++--|||")
         endCalendar = incrementTheStartCalenderTimeUntilItIsInFuture(endCalendar, calendarInstance)
         var startCalendar = Calendar.getInstance().apply { timeInMillis = startTime }
         logD("start time in the startCalender is -> ${startCalendar.timeInMillis}")
         startCalendar = incrementTheStartCalenderTimeUntilItIsInFuture(startCalendar = startCalendar, currentCalendar = calendarInstance)
         logD("start time in the startCalender is -> ${startCalendar.timeInMillis} and the statement that it is greater than the current time is ${startCalendar.timeInMillis >= currentTime}")
-        logD("start time is ${startCalendar.time} and the end time is ${endCalendar.time} and the freq is ${alarmData.freq_in_min} and the frequency in int is ${alarmData.freq_in_min.toInt()} ")
+        val alarmFreqInInt = (alarmData.freq_in_min / 60000 ).toInt()
+        logD("start time is ${startCalendar.time} and the end time is ${endCalendar.time} and the freq is ${alarmData.freq_in_min} and the frequency in int is $alarmFreqInInt  ")
         // now the start time is greater that the current time we can set the alarm
 
         // --- the problem is frequency in min to int is giving 60000, that's why the alarm is low
         val exception = scheduleMultipleAlarms2(alarmManager, activity_context = activityContext, alarmDao = alarmDao,
-            calendar_for_start_time = startCalendar, calendar_for_end_time = endCalendar, freq_after_the_callback = alarmData.freq_in_min.toInt(),
-            selected_date_for_display = getDateForDisplay(startCalendar),  coroutineScope = coroutineScope,
+            calendar_for_start_time = startCalendar, calendar_for_end_time = endCalendar, freq_after_the_callback = alarmFreqInInt,
+            selected_date_for_display = getDateForDisplay(startCalendar),
               message = alarmData.message, alarmData = alarmData, i = 1
         )
         return exception
@@ -160,7 +163,7 @@ suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activit
         val startCalendar = Calendar.getInstance().apply { timeInMillis = startTime }
         val exception = scheduleMultipleAlarms2(alarmManager, activity_context = activityContext, alarmDao = alarmDao,
             calendar_for_start_time = startCalendar, calendar_for_end_time = endCalendar, freq_after_the_callback = alarmData.freq_in_min.toInt(),
-            selected_date_for_display = getDateForDisplay(startCalendar),  coroutineScope = coroutineScope,
+            selected_date_for_display = getDateForDisplay(startCalendar),
             message = alarmData.message, alarmData = alarmData, i=2
         )
         return exception

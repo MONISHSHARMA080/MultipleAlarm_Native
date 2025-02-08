@@ -66,8 +66,8 @@ interface AlarmDao {
     @Query("UPDATE AlarmData SET is_ready_to_use = :isReadyToUse WHERE first_value = :firstValue AND second_value = :second_value")
     suspend fun updateReadyToUseInAlarm(firstValue: Long, second_value:Long, isReadyToUse: Boolean)
 
-    @Query(" UPDATE AlarmData SET first_value = :firstValue, second_value = :second_value, date_for_display = :date_for_display WHERE id = :id")
-    suspend fun updateAlarmForReset(id: Int, firstValue: Long, second_value: Long, date_for_display: String)
+    @Query(" UPDATE AlarmData SET is_ready_to_use = :isReadyToUse ,first_value = :firstValue, second_value = :second_value, date_for_display = :date_for_display  WHERE id = :id")
+    suspend fun updateAlarmForReset(id: Int, firstValue: Long, second_value: Long, date_for_display: String, isReadyToUse: Boolean)
 
     @Query("""
         UPDATE AlarmData  SET is_ready_to_use = :isReadyToUse  WHERE first_value = :firstValue 

@@ -242,7 +242,6 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                     color = if (!individualAlarm.isReadyToUse) Color(0xFF666b75) else Color(
                                         0xFF0D388C
                                     )
-
                                 )
                                 .padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
@@ -988,10 +987,10 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
 }
 
 
-suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_for_display:String,  coroutineScope: CoroutineScope,
-                                   calendar_for_start_time:Calendar, calendar_for_end_time:Calendar, freq_after_the_callback:Int, activity_context:ComponentActivity, alarmDao:AlarmDao,
-                                   is_this_func_call_to_update_an_existing_alarm: Boolean = false , message: String?=null,alarmData:AlarmData,
-                                   receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, i:Int = 0  ) :Exception? {
+suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_for_display:String, calendar_for_start_time:Calendar,
+                                    calendar_for_end_time:Calendar, freq_after_the_callback:Int, activity_context:ComponentActivity, alarmDao:AlarmDao,
+                                    message: String?=null,alarmData:AlarmData,
+                                    receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, i:Int = 0,isAlarmReadyToUse:Boolean= true   ) :Exception? {
     // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
     logD("in the ++scheduleMultipleAlarms2  ++ and  the i is $i")
     var startTimeInMillis = calendar_for_start_time.timeInMillis
@@ -1036,11 +1035,10 @@ suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_fo
         endTimeInMillisendForDb, LastAlarmUpdateDBReceiver()
     )
     try {
-        alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =startTimeInMillisendForDb, second_value = endTimeInMillis, date_for_display =  selected_date_for_display)
+        alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =startTimeInMillisendForDb, second_value = endTimeInMillis, date_for_display =  selected_date_for_display, isReadyToUse = isAlarmReadyToUse)
     }catch (e:Exception){
         logD("the update in the alarm in db fail and the exception is -->$e")
         return e
     }
-
     return null
 }
