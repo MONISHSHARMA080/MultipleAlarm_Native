@@ -8,9 +8,6 @@
       <SelectionState runConfigName="AlarmContainerTest">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="MainActivity">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="seeIfCancellingAlarmWorks()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
