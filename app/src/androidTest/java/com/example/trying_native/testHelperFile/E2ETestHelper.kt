@@ -66,7 +66,8 @@ class E2ETestHelper {
                     is_alarm_ready_to_use = true,
                     new_is_ready_to_use = false,
                     message = "--- Burn ---",
-                    receiverClass = broadcastReceiverClass.javaClass
+                    receiverClass = broadcastReceiverClass.javaClass,
+                    messageForDB = "--- Burn ---"
                 )
             }else{
                 scheduleMultipleAlarms(
@@ -82,6 +83,7 @@ class E2ETestHelper {
                     is_alarm_ready_to_use = true,
                     new_is_ready_to_use = false,
                     message = "--- Burn ---",
+                    messageForDB= "--- Burn ---"
                 )
 
             }
