@@ -575,7 +575,12 @@ fun DialogToAskUserAboutAlarm(
     } else {
         screenHeight_if_message_not_present
     }
-    val coroutineScope = rememberCoroutineScope()
+//    val coroutineScope = rememberCoroutineScope()
+    val coroutineScope = activity_context.lifecycleScope
+    val uncancellableScope = remember {
+        CoroutineScope(coroutineScope.coroutineContext + NonCancellable)
+    }
+
 
     Dialog(onDismissRequest = { onDismissRequest() },
     ) {
@@ -749,7 +754,7 @@ fun DialogToAskUserAboutAlarm(
                         val date = pickedDateState?.let {
                             java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
                         }?.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                        coroutineScope.launch {
+                        uncancellableScope.launch {
                             try {
                                val exception= scheduleMultipleAlarms(alarmManager, activity_context = activity_context, alarmDao = alarmDao,
                                 calendar_for_start_time = startTime_obj_form_calender, calendar_for_end_time = endTime_obj_form_calender, freq_after_the_callback = freq_returned_by_user,
