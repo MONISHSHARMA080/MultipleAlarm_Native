@@ -5,15 +5,19 @@ import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -78,8 +82,14 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -216,6 +226,12 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
     // Collect the Flow as State
     val alarms by AlarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO).collectAsStateWithLifecycle(initialValue = emptyList())
     var showTheDialogToTheUserToAskForPermission by remember { mutableStateOf(false) }
+    // Setup clipboard manager
+    val clipboardManager = LocalClipboardManager.current
+
+    // State for Snackbar
+
+    val snackbarHostState = remember { SnackbarHostState() }
 
 
     Box(
@@ -224,6 +240,12 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
             .fillMaxSize()
             .background(color = Color.Black)
     ) {
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp)
+        )
+
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -232,6 +254,28 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(screenHeight / 4)
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onLongPress = {
+                                        // Copy the alarm message to clipboard
+                                        logD(
+                                            "the snack bar message is ->" + AnnotatedString(
+                                                individualAlarm.message
+                                            ).toString()
+                                        )
+//                                        Toast.makeText(this, "", Toast.LENGTH_SHORT).show()
+                                        clipboardManager.setText(AnnotatedString((individualAlarm.message)))
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                message = "Copied the alarm message",
+                                                duration = SnackbarDuration.Short
+                                            )
+                                        }
+
+                                    }
+                                )
+
+                            }
                             .padding(horizontal = 8.dp, vertical = 6.dp),
                         shape = RoundedCornerShape(45.dp)
                     ) {
@@ -1047,3 +1091,27 @@ suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_fo
     }
     return null
 }
+
+
+//@Composable
+//@SuppressLint("ServiceCast")
+//fun CopyToClipBoard(textMessageToCopy: String, context_of_activity: ComponentActivity, snackbarHostState: SnackbarHostState): Unit {
+//        val coroutineScope = context_of_activity.lifecycleScope
+////        val clipboardManager = context_of_activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+//        val clipboardManager = LocalClipboardManager.current
+//
+//        // For Xiaomi devices, we need a special label that won't be overridden
+//        val label =  "custom_alarm_message_label"
+//
+//        val clipData = ClipData.newPlainText(label, textMessageToCopy)
+//        clipboardManager.setPrimaryClip(clipData)
+//
+//        // Show custom snackbar with the actual copied text for verification
+//        coroutineScope.launch {
+//            snackbarHostState.showSnackbar(
+//                // Include the actual text that was copied in the message
+//                message = "Copied: ${textMessageToCopy.take(20)}${if (textMessageToCopy.length > 20) "..." else ""}",
+//                duration = SnackbarDuration.Short
+//            )
+//        }
+//}
