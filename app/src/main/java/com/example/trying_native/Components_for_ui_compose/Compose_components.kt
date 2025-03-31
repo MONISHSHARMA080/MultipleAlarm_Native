@@ -82,6 +82,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -229,7 +230,6 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
     // Setup clipboard manager
     val clipboardManager = LocalClipboardManager.current
 
-    // State for Snackbar
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -240,11 +240,26 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
             .fillMaxSize()
             .background(color = Color.Black)
     ) {
+
         SnackbarHost(
             hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter)
-                .padding(bottom = 16.dp)
-        )
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 106.dp)
+                .zIndex(10f)
+        ) { snackbarData ->
+            Snackbar(
+                snackbarData = snackbarData,
+                shape = RoundedCornerShape(45.dp), // Apply the same rounding as your alarm card
+                containerColor = Color.Blue, // Set background color
+                contentColor = Color.White, // Set text color for contrast
+                modifier = Modifier
+//                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .fillMaxWidth()
+
+            )
+        }
+
 
         LazyColumn(
             modifier = Modifier.fillMaxSize()
