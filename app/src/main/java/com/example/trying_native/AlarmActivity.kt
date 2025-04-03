@@ -48,7 +48,7 @@ class AlarmActivity : ComponentActivity() {
     private var wakeLock: PowerManager.WakeLock? = null
     private var audioManager: AudioManager? = null
     private val AUTO_FINISH_DELAY = 120000L
-    private var previousAudioVolume = 1
+//    private var previousAudioVolume = 1
     private var audioFocusRequest: AudioFocusRequest? = null
     private var wasBackgroundPlaying = false
     private lateinit var mediaSessionManager: MediaSessionManager
@@ -287,7 +287,7 @@ class AlarmActivity : ComponentActivity() {
         resumeBackgroundAudio()
         // Release MediaPlayer resources when the activity is destroyed
         audioFocusRequest?.let { request -> audioManager?.abandonAudioFocusRequest(request) }
-        audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, previousAudioVolume, 0)
+//        audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, previousAudioVolume, 0)
         try {
             if (wasBackgroundPlaying) {
                 mediaPlayer?.start()
