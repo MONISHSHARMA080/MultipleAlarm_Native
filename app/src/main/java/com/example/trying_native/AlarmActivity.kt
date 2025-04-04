@@ -78,6 +78,7 @@ class AlarmActivity : ComponentActivity() {
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
+        logD("about to create a new alarm")
         super.onCreate(savedInstanceState)
         audioFocusRequest = audioFocusRequestBuilder()
         //        pauseBackgroundAudio()

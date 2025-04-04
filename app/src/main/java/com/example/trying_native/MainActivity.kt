@@ -84,6 +84,7 @@ val activity_context = this
         config.sessionReplayConfig.screenshot = true
 
         PostHogAndroid.setup(this, config)
+        logD(" in the main activity")
 //        val broadcast = PendingIntent.getBroadcast(this, )
 
         super.onCreate(savedInstanceState)
