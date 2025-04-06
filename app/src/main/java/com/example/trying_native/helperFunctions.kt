@@ -116,6 +116,7 @@ suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activit
     val calendarInstance =Calendar.getInstance()
     val currentTime =  calendarInstance.timeInMillis
     val alarmFreqInInt = (alarmData.freq_in_min / 60000 ).toInt()
+    logD("alarm freq in int is :${alarmFreqInInt} and alarmData.freq_in_min / 60000 ${alarmData.freq_in_min / 60000} and alarmData.freq_in_min = ${alarmData.freq_in_min} ")
     // get the date time form the start time as I set the date in the calender instance when setting it for the startTime
     if ( currentTime >= endTime && currentTime >= startTime ) {
         logD("in the current time  greater than the start time and the end time")
@@ -150,7 +151,7 @@ suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activit
 
         // --- the problem is frequency in min to int is giving 60000, that's why the alarm is low
         val exception = scheduleMultipleAlarms2(alarmManager, activity_context = activityContext, alarmDao = alarmDao,
-            calendar_for_start_time = startCalendar, calendar_for_end_time = endCalendar, freq_after_the_callback = alarmFreqInInt,
+            calendar_for_start_time = startCalendar, calendar_for_end_time = endCalendar, freq_after_the_callback = alarmData.freqGottenAfterCallback,
             selected_date_for_display = getDateForDisplay(startCalendar),
               message = alarmData.message, alarmData = alarmData, i = 1
         )
@@ -160,10 +161,11 @@ suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activit
         //  alarm is in future still:-> here we will set the alarm as it was cause the user is asking us to reset the alarm
         //  that had not gone before, eg if I set the alarm 5 hour form now and hit remove it, and want to reset it again
         // do not increment as the time is not arrived
+        logD("the freq is in current time <= start time and end time ${alarmData.freq_in_min.toInt()} ")
         val endCalendar = Calendar.getInstance().apply { timeInMillis = alarmData.second_value }
         val startCalendar = Calendar.getInstance().apply { timeInMillis = startTime }
         val exception = scheduleMultipleAlarms2(alarmManager, activity_context = activityContext, alarmDao = alarmDao,
-            calendar_for_start_time = startCalendar, calendar_for_end_time = endCalendar, freq_after_the_callback = alarmData.freq_in_min.toInt(),
+            calendar_for_start_time = startCalendar, calendar_for_end_time = endCalendar, freq_after_the_callback = alarmData.freqGottenAfterCallback,
             selected_date_for_display = getDateForDisplay(startCalendar),
             message = alarmData.message, alarmData = alarmData, i=2
         )
@@ -175,21 +177,26 @@ suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activit
         var startTimeOfTheAlarm  = startTime
         val currentTimeOfTheAlarm = Calendar.getInstance().timeInMillis
         // going to increment the start time until we get it to be greater or equal than the current time
-        while (startTime <= currentTimeOfTheAlarm){
-            startTimeOfTheAlarm+=alarmFreqInInt
+        logD("the alarm freq in alarm Data is ${alarmData.freq_in_min} and the frq in milisec is ${alarmFreqInInt}")
+        while (startTimeOfTheAlarm <= currentTimeOfTheAlarm){
+            startTimeOfTheAlarm+=alarmData.freq_in_min
+            logD("start time changed to ${startTimeOfTheAlarm}")
         }
+        logD("start time changed to ${startTimeOfTheAlarm} -- outside the while loop")
         val endCalendar = Calendar.getInstance().apply { timeInMillis = alarmData.second_value }
         // as we have changed the alarm time to be the latest time
         val startCalendar = Calendar.getInstance().apply { timeInMillis = startTimeOfTheAlarm }
         val exception = scheduleMultipleAlarms2(alarmManager, activity_context = activityContext, alarmDao = alarmDao,
-            calendar_for_start_time = startCalendar, calendar_for_end_time = endCalendar, freq_after_the_callback = alarmData.freq_in_min.toInt(),
+            calendar_for_start_time = startCalendar, calendar_for_end_time = endCalendar, freq_after_the_callback = alarmData.freqGottenAfterCallback,
             selected_date_for_display = getDateForDisplay(startCalendar),
             message = alarmData.message, alarmData = alarmData, i=2
         )
-        return exception
-
-
-        return Exception("this one is not implemented yet")
+        if (exception != null){
+            logD("there is a exception found and it is ${exception}")
+            return exception
+        }
+        logD("((there is a exception found and it is ${exception}")
+        return null
     }
     logD("last case about to return")
     return Exception(" did not hit any of the if condition  ")
@@ -199,7 +206,7 @@ fun incrementTheStartCalenderTimeUntilItIsInFuture(startCalendar: Calendar, curr
     // cause we will start the comparison from the date today else the hard limit will not work
     startCalendar.set(Calendar.DATE, currentCalendar.get(Calendar.DATE) )
 
-    for (i in 0..10){
+    for (i in 0..100){
         logD("the loop iteration in the incrementStartCalender is ->$i")
         if (startCalendar.timeInMillis >= currentCalendar.timeInMillis){
             break

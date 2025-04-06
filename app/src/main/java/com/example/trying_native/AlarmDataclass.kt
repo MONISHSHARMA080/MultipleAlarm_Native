@@ -28,14 +28,19 @@ data class AlarmData(
     @ColumnInfo(name = "date_in_long") val date_in_long: Long,
     @ColumnInfo(name = "message") val message:String,
 
-    @ColumnInfo(name = "date_for_display") val date_for_display: String,
     @ColumnInfo(name = "freq_in_min") val freq_in_min: Long,
+
+    // we can just add freq_in_min to the start time in millisecond to recreate the behaviour
+    /** this is same as the oen used to skip the time just provide it and will just skip it */
+    @ColumnInfo(name = "freq_used_to_skip_start_alarm") val freqGottenAfterCallback: Long,
+
+    @ColumnInfo(name = "date_for_display") val date_for_display: String,
     @ColumnInfo(name = "freq_in_min_to_display") val freq_in_min_to_display: Int,
     @ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean
 
 )
 
-@Database(entities = [AlarmData::class], version = 1)
+@Database(entities = [AlarmData::class], version = 2)
 abstract class AlarmDatabase : RoomDatabase() {
     abstract fun alarmDao(): AlarmDao
 }

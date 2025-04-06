@@ -11,6 +11,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -232,8 +233,6 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
 
 
     val snackbarHostState = remember { SnackbarHostState() }
-
-
     Box(
         modifier = Modifier
             .testTag("AlarmContainer")
@@ -286,10 +285,8 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                                 duration = SnackbarDuration.Short
                                             )
                                         }
-
                                     }
                                 )
-
                             }
                             .padding(horizontal = 8.dp, vertical = 6.dp),
                         shape = RoundedCornerShape(45.dp)
@@ -414,6 +411,12 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                                     activityContext = context_of_activity, alarmDao = AlarmDao, coroutineScope = coroutineScope
                                                 )
                                               logD("the exception form the resetAlarm is ->$exception")
+                                                if(exception != null){
+                                                        NotificationBuilder(context_of_activity,"error returned in creating multiple alarm ","execution returned exception in schedule multiple alarm  -->${exception}").showNotification()
+                                                        logD("error in the schedulemultiple -->${exception}")
+//                                                    }
+
+                                                }
                                             }
 //
 //                                            val calenderInstance = Calendar.getInstance()
@@ -989,6 +992,7 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
     val end_am_pm =  SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
 
     logD(" \n\n am_pm_start_time-->$start_time_for_display $start_am_pm ; endtime-->$end_time_for_display $end_am_pm")
+     logD("\n\n\n-IIIIIIIIII----------"+" freqAfterCallback ->${freq_after_the_callback} freqAfterCallback.toLong/freq_in_milli  ->${freq_after_the_callback.toLong()} freqInMin ->${freq_after_the_callback.toLong() *60000}"+"\n\n\n---------")
     var freq_in_milli : Long
      freq_in_milli = freq_after_the_callback.toLong()
     val freq_in_min = freq_in_milli * 60000
@@ -1003,7 +1007,7 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
             logD("error occurred in the schedule multiple alarms-->${e}")
             return e
         }
-        startTimeInMillis = startTimeInMillis + freq_in_min
+        startTimeInMillis += freq_in_min
         // this line added the freq in the last pending intent and now to get time for the last time we
         // need to - fstartTimerq from it
         i+=1
@@ -1027,7 +1031,8 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
                  end_am_pm = end_am_pm,
                  freq_in_min_to_display = (freq_in_min / 60000).toInt(),
                  date_in_long = date_in_long,
-                 message = messageForDB
+                 message = messageForDB,
+                 freqGottenAfterCallback = freq_after_the_callback.toLong()
              )
              val insertedId = alarmDao.insert(newAlarm)
              logD("Inserted alarm with ID: $insertedId")
@@ -1052,7 +1057,7 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
 
 
 suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_for_display:String, calendar_for_start_time:Calendar,
-                                    calendar_for_end_time:Calendar, freq_after_the_callback:Int, activity_context:ComponentActivity, alarmDao:AlarmDao,
+                                    calendar_for_end_time:Calendar, freq_after_the_callback:Long, activity_context:ComponentActivity, alarmDao:AlarmDao,
                                     message: String?=null,alarmData:AlarmData,
                                     receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, i:Int = 0,isAlarmReadyToUse:Boolean= true   ) :Exception? {
     // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
@@ -1067,15 +1072,17 @@ suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_fo
     val end_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_end_time.time)
     val end_am_pm = SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
 
-    logD(" \n\n am_pm_start_time-->$start_time_for_display $start_am_pm ; endtime-->$end_time_for_display $end_am_pm")
+    logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:")
+    logD("\n\n\n-IIIIIIIIII----------"+" freqAfterCallback ->${freq_after_the_callback} freqAfterCallback.toLong/freq_in_milli  ->${freq_after_the_callback.toLong()} freqInMin ->${freq_after_the_callback.toLong() *60000}"+"\n\n\n---------")
+
     var freq_in_milli: Long
-    freq_in_milli = freq_after_the_callback.toLong()
+    freq_in_milli = freq_after_the_callback
     val freq_in_min = freq_in_milli * 60000
-    logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis == endTimeInMillis} ::--:: freq->$freq_in_min")
-    var i = 0
+    logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis == endTimeInMillis} ::--:: freqInMin->$freq_in_min")
+    var index = 0
 
     while (startTimeInMillis <= endTimeInMillis) {
-        logD("round $i")
+        logD("round $index")
         try {
             scheduleAlarm(
                 startTimeInMillis,
@@ -1091,7 +1098,7 @@ suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_fo
         startTimeInMillis = startTimeInMillis + freq_in_min
         // this line added the freq in the last pending intent and now to get time for the last time we
         // need to - fstartTimerq from it
-        i += 1
+        index += 1
     }
     logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
     lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager,
