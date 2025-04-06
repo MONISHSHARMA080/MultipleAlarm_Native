@@ -27,10 +27,6 @@ import com.posthog.android.PostHogAndroidConfig
 
 class MainActivity : ComponentActivity() {
 
-    companion object {
-        const val POSTHOG_API_KEY = "phc_HKK1ZuTn3bjPFLZs0yA8ApLpgPt48JvrB614zbOduFQ"
-        const val POSTHOG_HOST = "https://us.i.posthog.com"
-    }
 
     private val overlayPermissionLauncher = registerForActivityResult(StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
@@ -44,12 +40,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
     private val exactAlarmPermissionLauncher = registerForActivityResult(StartActivityForResult()) { result ->
         // Check the result to see if the permission was granted
         permissionToScheduleAlarm() // Schedule the alarm anyway, as the system might still allow it
     }
-
 
 
     var startHour_after_the_callback: Int? = null
@@ -61,7 +55,6 @@ class MainActivity : ComponentActivity() {
 //    var selected_date_for_display :String? = null
 
 
-    private lateinit var alarmDao: AlarmDao
 
 //    val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "AlarmData")
 //    val database = DatabaseManager.getInstance(applicationContext)
@@ -71,19 +64,7 @@ val activity_context = this
 
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
-        val config = PostHogAndroidConfig(
-            apiKey = POSTHOG_API_KEY,
-            host = POSTHOG_HOST
-        )
-        config.sessionReplay = true
-        // choose whether to mask images or text
-        config.sessionReplayConfig.maskAllImages = false
-        config.sessionReplayConfig.maskAllTextInputs = true
-        // screenshot is disabled by default
-        // The screenshot may contain sensitive information, use with caution
-        config.sessionReplayConfig.screenshot = true
 
-        PostHogAndroid.setup(this, config)
         logD(" in the main activity")
 //        val broadcast = PendingIntent.getBroadcast(this, )
 
