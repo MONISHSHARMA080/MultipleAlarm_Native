@@ -82,10 +82,6 @@ class AlarmActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         //        pauseBackgroundAudio()
         //        keepScreenON()
-        lifecycleScope.launch(Dispatchers.IO) {
-            launch { pauseBackgroundAudio() }
-            launch { keepScreenON() }
-        }
         //        activityScope.launch { pauseBackgroundAudio() }
         //        activityScope.launch {keepScreenON()   }
 
@@ -117,6 +113,11 @@ class AlarmActivity : ComponentActivity() {
                 }
             }
         }
+        lifecycleScope.launch(Dispatchers.Default) {
+            launch { pauseBackgroundAudio() }
+            launch { keepScreenON() }
+        }
+
     }
     private  fun playRandomSound(){
         audioFocusRequest = audioFocusRequestBuilder()
