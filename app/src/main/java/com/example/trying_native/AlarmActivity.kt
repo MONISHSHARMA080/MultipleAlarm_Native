@@ -31,7 +31,6 @@ import androidx.lifecycle.lifecycleScope
 import com.example.trying_native.ui.theme.Trying_nativeTheme
 import java.io.File
 import java.io.FileWriter
-import java.lang.reflect.Field
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.concurrent.timerTask
@@ -76,6 +75,7 @@ class AlarmActivity : ComponentActivity() {
                 }
             }
 
+
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         logD("about to create a new alarm")
@@ -89,8 +89,7 @@ class AlarmActivity : ComponentActivity() {
         }
         //        activityScope.launch { pauseBackgroundAudio() }
         //        activityScope.launch {keepScreenON()   }
-
-        val rawFields: Array<Field> = R.raw::class.java.fields
+        val rawFields =R.raw::class.java.fields
         val rawResources = rawFields.map { field -> Pair(field.name, field.getInt(null)) }
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         // Get the maximum volume for alarm stream
@@ -107,20 +106,17 @@ class AlarmActivity : ComponentActivity() {
             activityScope.launch { playAlarmWithRandomSound(rawResources) }
         }
 
-        var isMessagePresent = intent.getBooleanExtra("isMessagePresent", false)
-        var message = ""
-        if (isMessagePresent) {
-            val messagetemp = intent.getStringExtra("message")
-            logD("the meessage form the intent in the AlarmActivity is  ->${messagetemp}<-")
-            if (messagetemp == null) {
-                isMessagePresent = false
-            } else {
-                message = messagetemp
-            }
-        }
-        logD("is the message is present is -->${isMessagePresent}")
-
         setContent {
+            val coroutineScope = rememberCoroutineScope()
+
+            // state vals
+            var messageVarToSet by remember { mutableStateOf("") }
+
+            LaunchedEffect(Unit) {
+                messageVarToSet = this@AlarmActivity.parseTheIntentAndGetMessage()
+            }
+
+
             Trying_nativeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) {
                     TimeDisplay(
@@ -131,8 +127,8 @@ class AlarmActivity : ComponentActivity() {
                                 mediaPlayer = null
                                 finishAndRemoveTask()
                             },
-                            message = message,
-                            isMessagePresent = isMessagePresent
+                            message = messageVarToSet,
+                            isMessagePresent = true,
                     )
                 }
             }
@@ -154,6 +150,24 @@ class AlarmActivity : ComponentActivity() {
         } catch (e: Exception) {
             logD("Failed to log sound play: ${e.message}")
         }
+    }
+
+    /** this  function will get the message form the intent and will set it on the mutable State  that is  passed in */
+    private fun parseTheIntentAndGetMessage():String{
+        var messageToReturn:String =""
+        val isMessagePresent = intent.getBooleanExtra("isMessagePresent", false)
+        if (isMessagePresent) {
+            val messageTemp = intent.getStringExtra("message")
+            logD("the message form the intent in the AlarmActivity is  ->${messageTemp}<-")
+            if (messageTemp == null) {
+//                isMessagePresent = false // cause why are we doing this
+                messageToReturn = ""
+            } else {
+                messageToReturn = messageTemp
+            }
+        }
+        logD("is the message is present is -->${isMessagePresent} and the message is $messageToReturn")
+        return messageToReturn
     }
 
     private fun pauseBackgroundAudio() {

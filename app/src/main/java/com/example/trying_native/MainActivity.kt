@@ -17,19 +17,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
+import androidx.lifecycle.lifecycleScope
 import com.example.trying_native.ui.theme.Trying_nativeTheme
 import androidx.room.Room
 import com.example.trying_native.components_for_ui_compose.AlarmContainer
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmDatabase
-import com.posthog.android.PostHogAndroid
-import com.posthog.android.PostHogAndroidConfig
+import kotlinx.coroutines.launch
+import kotlin.time.measureTime
 
 class MainActivity : ComponentActivity() {
 
 
     private val overlayPermissionLauncher = registerForActivityResult(StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
+        if (result.resultCode == RESULT_OK) {
             if (Settings.canDrawOverlays(this)) {
                 // Permission granted, schedule the alarm
 
@@ -64,12 +65,18 @@ val activity_context = this
 
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
+        val alarmManager:AlarmManager
+        val timeTaken =measureTime {
+            super.onCreate(savedInstanceState)
+            alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        }
+//        lifecycleScope.launch{
+//
+//        }
 
-        logD(" in the main activity")
+        logD(" in the main activity and time taken to launch is $timeTaken")
 //        val broadcast = PendingIntent.getBroadcast(this, )
 
-        super.onCreate(savedInstanceState)
-        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
         setContent {
             Trying_nativeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
