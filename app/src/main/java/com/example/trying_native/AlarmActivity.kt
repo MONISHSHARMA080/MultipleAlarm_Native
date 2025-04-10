@@ -45,12 +45,12 @@ import kotlinx.coroutines.launch
 class AlarmActivity : ComponentActivity() {
     private var mediaPlayer: MediaPlayer? = null
     private var wakeLock: PowerManager.WakeLock? = null
-    private var audioManager: AudioManager? = null
+    private val audioManager by lazy { getSystemService(Context.AUDIO_SERVICE) as AudioManager }
     private val AUTO_FINISH_DELAY = 120000L
 //    private var previousAudioVolume = 1
     private var audioFocusRequest: AudioFocusRequest? = null
     private var wasBackgroundPlaying = false
-    private lateinit var mediaSessionManager: MediaSessionManager
+    private val mediaSessionManager by lazy {getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager }
     private var mediaControllerList: List<MediaController>? = null
     private val activityScope =
             CoroutineScope(
@@ -123,7 +123,6 @@ class AlarmActivity : ComponentActivity() {
         audioFocusRequest = audioFocusRequestBuilder()
         val rawFields =R.raw::class.java.fields
         val rawResources = rawFields.map { field -> Pair(field.name, field.getInt(null)) }
-        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         // Get the maximum volume for alarm stream
 //        previousAudioVolume = audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: previousAudioVolume
         // val maxVolume = audioManager?.getStreamMaxVolume(AudioManager.STREAM_ALARM) ?: 7
@@ -182,9 +181,6 @@ class AlarmActivity : ComponentActivity() {
         //        }
         try {
             // Initialize MediaSessionManager
-            mediaSessionManager =
-                    getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
-
             // Get a list of active media controllers
             mediaControllerList = mediaSessionManager.getActiveSessions(null)
 
@@ -207,7 +203,6 @@ class AlarmActivity : ComponentActivity() {
     }
 
     private fun audioFocusRequestBuilder(): AudioFocusRequest {
-        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         // Create AudioFocusRequest
         return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
                 .setAudioAttributes(
