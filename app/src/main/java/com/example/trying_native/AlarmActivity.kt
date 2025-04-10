@@ -80,7 +80,6 @@ class AlarmActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         logD("about to create a new alarm")
         super.onCreate(savedInstanceState)
-        audioFocusRequest = audioFocusRequestBuilder()
         //        pauseBackgroundAudio()
         //        keepScreenON()
         lifecycleScope.launch(Dispatchers.IO) {
@@ -89,31 +88,16 @@ class AlarmActivity : ComponentActivity() {
         }
         //        activityScope.launch { pauseBackgroundAudio() }
         //        activityScope.launch {keepScreenON()   }
-        val rawFields =R.raw::class.java.fields
-        val rawResources = rawFields.map { field -> Pair(field.name, field.getInt(null)) }
-        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        // Get the maximum volume for alarm stream
-//        previousAudioVolume = audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: previousAudioVolume
-        // val maxVolume = audioManager?.getStreamMaxVolume(AudioManager.STREAM_ALARM) ?: 7
-        // Set volume to maximum for alarm
-//        audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, previousAudioVolume, 0)
-        // if the BG audio is active then pause it
-        val result = audioManager?.requestAudioFocus(audioFocusRequest!!)
-        // call it no matter what, but would prefer to pause the resource
-        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            activityScope.launch { playAlarmWithRandomSound(rawResources) }
-        } else {
-            activityScope.launch { playAlarmWithRandomSound(rawResources) }
-        }
 
         setContent {
-            val coroutineScope = rememberCoroutineScope()
-
             // state vals
             var messageVarToSet by remember { mutableStateOf("") }
 
             LaunchedEffect(Unit) {
                 messageVarToSet = this@AlarmActivity.parseTheIntentAndGetMessage()
+            }
+           LaunchedEffect(Unit) {
+                this@AlarmActivity.playRandomSound()
             }
 
 
@@ -133,6 +117,26 @@ class AlarmActivity : ComponentActivity() {
                 }
             }
         }
+    }
+    private  fun playRandomSound(){
+        audioFocusRequest = audioFocusRequestBuilder()
+        val rawFields =R.raw::class.java.fields
+        val rawResources = rawFields.map { field -> Pair(field.name, field.getInt(null)) }
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        // Get the maximum volume for alarm stream
+//        previousAudioVolume = audioManager?.getStreamVolume(AudioManager.STREAM_ALARM) ?: previousAudioVolume
+        // val maxVolume = audioManager?.getStreamMaxVolume(AudioManager.STREAM_ALARM) ?: 7
+        // Set volume to maximum for alarm
+//        audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, previousAudioVolume, 0)
+        // if the BG audio is active then pause it
+        val result = audioManager?.requestAudioFocus(audioFocusRequest!!)
+        // call it no matter what, but would prefer to pause the resource
+        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            activityScope.launch { playAlarmWithRandomSound(rawResources) }
+        } else {
+            activityScope.launch { playAlarmWithRandomSound(rawResources) }
+        }
+
     }
 
     private fun logSoundPlay(soundName: String) {
