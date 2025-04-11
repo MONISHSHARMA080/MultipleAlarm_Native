@@ -88,6 +88,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
@@ -226,7 +227,14 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
     val askUserForPermission by remember { mutableStateOf(Settings.canDrawOverlays(context_of_activity)) }
 
     // Collect the Flow as State
-    val alarms by AlarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO).collectAsStateWithLifecycle(initialValue = emptyList())
+    val alarms1 by produceState<List<AlarmData>>(initialValue = emptyList()) {
+        withContext(Dispatchers.IO){
+            AlarmDao.getAllAlarmsFlow().collect{
+                value = it
+            }
+        }
+    }
+//    val alarms by AlarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO).collectAsStateWithLifecycle(initialValue = emptyList())
     var showTheDialogToTheUserToAskForPermission by remember { mutableStateOf(false) }
     // Setup clipboard manager
     val clipboardManager = LocalClipboardManager.current
@@ -263,7 +271,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
-            itemsIndexed(alarms){indexOfIndividualAlarmInAlarm, individualAlarm ->
+            itemsIndexed(alarms1){indexOfIndividualAlarmInAlarm, individualAlarm ->
                     ElevatedCard(
                         modifier = Modifier
                             .fillMaxWidth()
