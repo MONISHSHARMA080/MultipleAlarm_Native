@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -28,6 +30,7 @@ import kotlin.time.measureTime
 
 class MainActivity : ComponentActivity() {
 
+    private val alarmManager by lazy {getSystemService(ALARM_SERVICE) as AlarmManager}
 
     private val overlayPermissionLauncher = registerForActivityResult(StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
@@ -61,28 +64,16 @@ class MainActivity : ComponentActivity() {
 //    val database = DatabaseManager.getInstance(applicationContext)
  //-form docsd
 
-val activity_context = this
-
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
-        val alarmManager:AlarmManager
-        val timeTaken =measureTime {
             super.onCreate(savedInstanceState)
-            alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-        }
-//        lifecycleScope.launch{
-//
-//        }
-
-        logD(" in the main activity and time taken to launch is $timeTaken")
-//        val broadcast = PendingIntent.getBroadcast(this, )
 
         setContent {
             Trying_nativeTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
                     Column(modifier = Modifier.padding(paddingValues)) {
 
-                      AlarmContainer(getAlarmDao(), alarmManager, activity_context, askUserForPermissionToScheduleAlarm = { permissionToScheduleAlarm() } )
+                      AlarmContainer(getAlarmDao(), alarmManager, this@MainActivity, askUserForPermissionToScheduleAlarm = { permissionToScheduleAlarm() } )
                     }
                 }
             }
