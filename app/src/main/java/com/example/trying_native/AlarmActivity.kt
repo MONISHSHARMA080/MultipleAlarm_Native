@@ -85,6 +85,7 @@ class AlarmActivity : ComponentActivity() {
         //        activityScope.launch { pauseBackgroundAudio() }
         //        activityScope.launch {keepScreenON()   }
 
+
         setContent {
             // state vals
             var messageVarToSet by remember { mutableStateOf("") }

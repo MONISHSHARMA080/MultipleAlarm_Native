@@ -93,8 +93,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.FirstLaunchAskForPermission.FirstLaunchAskForPermission
@@ -105,88 +103,9 @@ import com.example.trying_native.resetAlarms
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import java.time.format.DateTimeFormatter
 
-@Composable
-fun AdvancedTimePickerDialog(
-    title: String = "Select Time",
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
-    toggle: @Composable () -> Unit = {},
-    content: @Composable () -> Unit,
-) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false),
-    ) {
-        Surface(
-            shape = MaterialTheme.shapes.extraLarge,
-            tonalElevation = 6.dp,
-            modifier =
-            Modifier
-                .width(IntrinsicSize.Min)
-                .height(IntrinsicSize.Min)
-                .background(
-                    shape = MaterialTheme.shapes.extraLarge,
-                    color = MaterialTheme.colorScheme.surface
-                ),
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 20.dp),
-                    text = title,
-                    style = MaterialTheme.typography.labelMedium
-                )
-                content()
-                Row(
-                    modifier = Modifier
-                        .height(40.dp)
-                        .fillMaxWidth()
-                ) {
-                    toggle()
-                    Spacer(modifier = Modifier.weight(1f))
-                    TextButton(onClick = onDismiss) { Text("Cancel") }
-                    TextButton(onClick = onConfirm) { Text("OK") }
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DatePickerModal(
-    onDateSelected: (Long?) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val datePickerState = rememberDatePickerState()
-
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = {
-                onDateSelected(datePickerState.selectedDateMillis)
-                onDismiss()
-            }) {
-                Text("OK")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    ) {
-        DatePicker(state = datePickerState)
-    }
-}
 
 @Composable
 fun NumberField(
@@ -247,7 +166,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
             .fillMaxSize()
             .background(color = Color.Black)
     ) {
-
+                                                                                                                                                                                                                                                                                                                                                    
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
@@ -263,7 +182,6 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                 modifier = Modifier
 //                    .padding(horizontal = 16.dp, vertical = 8.dp)
                     .fillMaxWidth()
-
             )
         }
 
@@ -984,6 +902,9 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
 
 
 
+
+
+
  suspend fun scheduleMultipleAlarms(alarmManager: AlarmManager, selected_date_for_display:String, date_in_long: Long, coroutineScope: CoroutineScope, is_alarm_ready_to_use:Boolean,
                                     calendar_for_start_time:Calendar, calendar_for_end_time:Calendar, freq_after_the_callback:Int, activity_context:ComponentActivity, alarmDao:AlarmDao,
                                     is_this_func_call_to_update_an_existing_alarm: Boolean = false , new_is_ready_to_use:Boolean,   message: String?=null,
@@ -1008,6 +929,7 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
     var i=0
 
     while (startTimeInMillis <= endTimeInMillis){
+        // alright only set one alarm here and in the receiver class set the other one after the min
         logD("round $i")
         try {
             scheduleAlarm(startTimeInMillis,alarmManager, activity_context, message = messageForDB, receiverClass = receiverClass)
@@ -1072,13 +994,9 @@ suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_fo
     logD("in the ++scheduleMultipleAlarms2  ++ and  the i is $i")
     var startTimeInMillis = calendar_for_start_time.timeInMillis
     val startTimeInMillisendForDb = startTimeInMillis
-    val start_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_start_time.time)
-    val start_am_pm = SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
 
     var endTimeInMillis = calendar_for_end_time.timeInMillis
     val endTimeInMillisendForDb = endTimeInMillis
-    val end_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_end_time.time)
-    val end_am_pm = SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
 
     logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:")
     logD("\n\n\n-IIIIIIIIII----------"+" freqAfterCallback ->${freq_after_the_callback} freqAfterCallback.toLong/freq_in_milli  ->${freq_after_the_callback.toLong()} freqInMin ->${freq_after_the_callback.toLong() *60000}"+"\n\n\n---------")
@@ -1122,26 +1040,45 @@ suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_fo
     return null
 }
 
+/**
+ * this function sets the next alarm, if the alarm is ending then we will
+ */
+ fun scheduleNextAlarm(alarmManager: AlarmManager, activity_context:ComponentActivity, alarmData:AlarmData,
+            receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java ) :Exception? {
+    // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
+    logD("in the ++scheduleNextAlarm  ++ ")
 
-//@Composable
-//@SuppressLint("ServiceCast")
-//fun CopyToClipBoard(textMessageToCopy: String, context_of_activity: ComponentActivity, snackbarHostState: SnackbarHostState): Unit {
-//        val coroutineScope = context_of_activity.lifecycleScope
-////        val clipboardManager = context_of_activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-//        val clipboardManager = LocalClipboardManager.current
-//
-//        // For Xiaomi devices, we need a special label that won't be overridden
-//        val label =  "custom_alarm_message_label"
-//
-//        val clipData = ClipData.newPlainText(label, textMessageToCopy)
-//        clipboardManager.setPrimaryClip(clipData)
-//
-//        // Show custom snackbar with the actual copied text for verification
-//        coroutineScope.launch {
-//            snackbarHostState.showSnackbar(
-//                // Include the actual text that was copied in the message
-//                message = "Copied: ${textMessageToCopy.take(20)}${if (textMessageToCopy.length > 20) "..." else ""}",
-//                duration = SnackbarDuration.Short
-//            )
-//        }
-//}
+    // took the freq and converted it to the min by *60000
+    // -- cause we do not have to set the alarm in DB, just set the next alarm
+    // -- NOTE:-> we do need to set the last pending intent to close the alarm
+    try {
+        val startTimeInMillis = alarmData.first_value + alarmData.freqGottenAfterCallback.toLong() *60000
+        // take the arguments form the alarmData
+        if (startTimeInMillis >= alarmData.second_value){
+            // means that the alarm cycle has ended
+            logD("it's time to cancel any future alarms, and set the last one to make it gray")
+            logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
+            lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarmData.first_value, activity_context, alarmManager,
+                "alarm_start_time_to_search_db", "alarm_end_time_to_search_db",
+                alarmData.second_value, LastAlarmUpdateDBReceiver()
+            )
+
+        }else{
+            // alarm cycle has not ended
+            logD("it's time to set the next alarm")
+            scheduleAlarm(
+                startTimeInMillis,
+                alarmManager,
+                activity_context,
+                message = alarmData.message,
+                receiverClass = receiverClass
+            )
+        }
+
+    } catch (e: Exception) {
+        logD("error occurred in the schedule multiple alarms-->${e}")
+        return e
+    }
+
+    return null
+}
