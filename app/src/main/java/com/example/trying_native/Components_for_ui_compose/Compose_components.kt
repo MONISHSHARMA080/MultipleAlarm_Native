@@ -1007,7 +1007,13 @@ suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_fo
 
 //        startTimeInMillis = startTimeInMillis + freq_in_min
     // have to use the calander one here as this is the reset function and the ine form the alarmData could be old
-        if ( startTimeInMillis >= endTimeInMillis){
+        if (  startTimeInMillis > endTimeInMillis){
+            logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
+            lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager,
+                "alarm_start_time_to_search_db", "alarm_end_time_to_search_db",
+                endTimeInMillisendForDb, LastAlarmUpdateDBReceiver()
+            )
+        }else{
             try {
                 scheduleAlarm(
                     startTimeInMillis,
@@ -1021,15 +1027,8 @@ suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_fo
                 logD("error occurred in the schedule multiple alarms-->${e}")
                 return e
             }
-        }else{
-            logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
-            lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager,
-                "alarm_start_time_to_search_db", "alarm_end_time_to_search_db",
-                endTimeInMillisendForDb, LastAlarmUpdateDBReceiver()
-            )
         }
         // this line added the freq in the last pending intent and now to get time for the last time we
-        // need to - fstartTimerq from it
     try {
         alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =startTimeInMillisendForDb, second_value = endTimeInMillis, date_for_display =  selected_date_for_display, isReadyToUse = isAlarmReadyToUse)
     }catch (e:Exception){

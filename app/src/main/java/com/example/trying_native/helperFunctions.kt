@@ -148,6 +148,7 @@ suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activit
         logD("start time in the startCalender is -> ${startCalendar.timeInMillis} and the statement that it is greater than the current time is ${startCalendar.timeInMillis >= currentTime}")
         logD("start time is ${startCalendar.time} and the end time is ${endCalendar.time} and the freq is ${alarmData.freq_in_min} and the frequency in int is $alarmFreqInInt  ")
         // now the start time is greater that the current time we can set the alarm
+//        logD("is start time > end time  ")
 
         // --- the problem is frequency in min to int is giving 60000, that's why the alarm is low
         val exception = scheduleMultipleAlarms2(alarmManager, activity_context = activityContext, alarmDao = alarmDao,
