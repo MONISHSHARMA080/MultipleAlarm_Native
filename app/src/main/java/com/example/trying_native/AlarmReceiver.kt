@@ -33,8 +33,9 @@ class AlarmReceiver : BroadcastReceiver() {
 
     private suspend fun  scheduleFutureAlarm( activityContext: Context, alarmManager: AlarmManager, oldIntent: Intent ){
         val startTime = oldIntent.getLongExtra("startTimeForDb",0)
+        val firstStartTimeOfDBObject = oldIntent.getLongExtra("startTime",0)
         val endTIme = oldIntent.getLongExtra("endTime",0)
-        if ( (startTime+endTIme )  <= 0L){
+        if ( (firstStartTimeOfDBObject+endTIme )  <= 0L){
             logD("\n ---- the startTime($startTime) or endTime($endTIme) is not valid - as they are either 0 or less that that , which should not be possible, you messed up sp bad we are crashing-----  \n")
             exitProcess(69)
         }
@@ -42,7 +43,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
         // get this form the DB
         val alarmDao = getAlarmDao(context)
-        val alarmData =   alarmDao.getAlarmByValues(startTime, endTIme)
+        val alarmData =   alarmDao.getAlarmByValues(firstStartTimeOfDBObject, endTIme)
         if (alarmData == null){
             logD("\n ---- the alarm is not found in the DB, which should not be possible, you messed up sp bad we are crashing-----  \n")
             exitProcess(69)
