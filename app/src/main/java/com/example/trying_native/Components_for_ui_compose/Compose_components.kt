@@ -865,7 +865,7 @@ fun freq_without_dialog(
 
 
 const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
- fun scheduleAlarm(startTime: Long, endTime:Long,  alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java ) {
+ fun scheduleAlarm(startTime: Long, endTime:Long,  alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java,thisIsForNextAlarmDoNotSetStartTimeForDB: Boolean = false  ) {
 
     logD( "Clicked on the schedule alarm func")
     val triggerTime_1 = startTime
@@ -874,7 +874,10 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
      logD("++++++++ receiver class in the schedule alarm is -->${receiverClass.name} +++ $receiverClass")
      intent.setClass(componentActivity, receiverClass)
      // we need this  to get the alarm for the DB in the alarm receiver
-     intent.putExtra("startTimeForDb", startTime)
+     if (thisIsForNextAlarmDoNotSetStartTimeForDB){
+         logD("this sechudle alarm call is form the next function and we are setting the start time for the db :)")
+         intent.putExtra("startTimeForDb", startTime)
+     }
 
      intent.putExtra("startTime", startTime)
      intent.putExtra("endTime", endTime)
@@ -1066,7 +1069,8 @@ suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_fo
                 alarmData.second_value,
                 alarmManager,
                 activityContext,
-                receiverClass = receiverClass
+                receiverClass = receiverClass,
+                thisIsForNextAlarmDoNotSetStartTimeForDB = true
             )
         }
     } catch (e: Exception) {
