@@ -161,7 +161,7 @@ class AlarmActivity : ComponentActivity() {
     private fun parseTheIntentAndGetMessage():String{
         val messageTemp = intent.getStringExtra("message")
         logD("the message present in the intent is $messageTemp")
-        return messageTemp.toString()
+        return if (messageTemp.isNullOrEmpty()) "" else messageTemp
     }
 
     private fun pauseBackgroundAudio() {

@@ -873,6 +873,9 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
      val intent = Intent(ALARM_ACTION) // Use the action string
      logD("++++++++ receiver class in the schedule alarm is -->${receiverClass.name} +++ $receiverClass")
      intent.setClass(componentActivity, receiverClass)
+     // we need this  to get the alarm for the DB in the alarm receiver
+     intent.putExtra("startTimeForDb", startTime)
+
      intent.putExtra("startTime", startTime)
      intent.putExtra("endTime", endTime)
     logD("Trigger time in the scheduleAlarm func  is --> $triggerTime_1 ")
@@ -887,7 +890,7 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
 
 
 
-
+// this func is called only at the first time
  suspend fun scheduleMultipleAlarms(alarmManager: AlarmManager, selected_date_for_display:String, date_in_long: Long, coroutineScope: CoroutineScope, is_alarm_ready_to_use:Boolean,
                                     calendar_for_start_time:Calendar, calendar_for_end_time:Calendar, freq_after_the_callback:Int, activity_context:ComponentActivity, alarmDao:AlarmDao,
                                     is_this_func_call_to_update_an_existing_alarm: Boolean = false , new_is_ready_to_use:Boolean,   message: String?=null,
@@ -911,22 +914,26 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
     logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:: freq->$freq_in_min")
     var i=0
 
-    while (startTimeInMillis <= endTimeInMillis){
         // alright only set one alarm here and in the receiver class set the other one after the min
+    if (startTimeInMillis >= endTimeInMillis){
+        i+=1
+        logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
+        lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())
+
+    }else{
         logD("round $i")
+        logD("setting the alarm and the startTime is $startTimeInMillis and the endTime is $endTimeInMillis")
         try {
-            scheduleAlarm(startTimeInMillis,alarmManager, activity_context, message = messageForDB, receiverClass = receiverClass)
+            scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activity_context,  receiverClass = receiverClass)
         }catch (e:Exception){
             logD("error occurred in the schedule multiple alarms-->${e}")
             return e
         }
+
+    }
         startTimeInMillis += freq_in_min
         // this line added the freq in the last pending intent and now to get time for the last time we
         // need to - fstartTimerq from it
-        i+=1
-    }
-    logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
-    lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())
 
  if (!is_this_func_call_to_update_an_existing_alarm ){
      withContext(Dispatchers.IO) {
@@ -1026,6 +1033,7 @@ suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_fo
     return null
 }
 
+// in this function the end time will not
 /**
  * this function sets the next alarm, if the alarm is ending then we will
  */

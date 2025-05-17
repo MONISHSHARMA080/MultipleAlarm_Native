@@ -32,12 +32,14 @@ class AlarmReceiver : BroadcastReceiver() {
     }
 
     private suspend fun  scheduleFutureAlarm( activityContext: Context, alarmManager: AlarmManager, oldIntent: Intent ){
-        val startTime = oldIntent.getLongExtra("startTime",0)
+        val startTime = oldIntent.getLongExtra("startTimeForDb",0)
         val endTIme = oldIntent.getLongExtra("endTime",0)
         if ( (startTime+endTIme )  <= 0L){
             logD("\n ---- the startTime($startTime) or endTime($endTIme) is not valid - as they are either 0 or less that that , which should not be possible, you messed up sp bad we are crashing-----  \n")
             exitProcess(69)
         }
+        logD("about to set the future alarm form the broadcast receiverthe startTime is $startTime and the endTime is $endTIme")
+
         // get this form the DB
         val alarmDao = getAlarmDao(context)
         val alarmData =   alarmDao.getAlarmByValues(startTime, endTIme)
