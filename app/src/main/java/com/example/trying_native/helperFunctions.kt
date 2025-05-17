@@ -175,12 +175,13 @@ suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activit
         var startTimeOfTheAlarm  = startTime
         val currentTimeOfTheAlarm = Calendar.getInstance().timeInMillis
         // going to increment the start time until we get it to be greater or equal than the current time
-        logD("the alarm freq in alarm Data is ${alarmData.freq_in_min} and the frq in milisec is ${alarmFreqInInt}")
+        logD("the  alarm Data is $alarmData \n }")
         while (startTimeOfTheAlarm <= currentTimeOfTheAlarm){
             startTimeOfTheAlarm+=alarmData.freq_in_min
             logD("start time changed to ${startTimeOfTheAlarm}")
         }
         logD("start time changed to ${startTimeOfTheAlarm} -- outside the while loop")
+        logD("is the startTime >= endTime ${ startTimeOfTheAlarm >= endTime}  -- startTime >= secondValue ${startTimeOfTheAlarm >= alarmData.second_value}-- stratTime - $startTimeOfTheAlarm, endTime: $endTime, secondTime:${alarmData.second_value} ")
         val endCalendar = Calendar.getInstance().apply { timeInMillis = alarmData.second_value }
         // as we have changed the alarm time to be the latest time
         val startCalendar = Calendar.getInstance().apply { timeInMillis = startTimeOfTheAlarm }
