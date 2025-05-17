@@ -120,7 +120,7 @@ suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activit
     // get the date time form the start time as I set the date in the calender instance when setting it for the startTime
     if ( currentTime >= endTime && currentTime >= startTime ) {
         logD("in the current time  greater than the start time and the end time")
-        //        withContext(Dispatchers.Default){}
+
         // here the user is asking us to reset the alarm for the next day on the same time of the day
         // also the date_in_Long on the alarmData is right, do I need to set the date to be on the
         // also imagine alarm was on tuesday form 12:00 --> 14:00 and now the time is 18:00 of the same day, here I
@@ -152,8 +152,7 @@ suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activit
         // --- the problem is frequency in min to int is giving 60000, that's why the alarm is low
         val exception = scheduleMultipleAlarms2(alarmManager, activity_context = activityContext, alarmDao = alarmDao,
             calendar_for_start_time = startCalendar, calendar_for_end_time = endCalendar, freq_after_the_callback = alarmData.freqGottenAfterCallback,
-            selected_date_for_display = getDateForDisplay(startCalendar),
-              message = alarmData.message, alarmData = alarmData, i = 1
+            selected_date_for_display = getDateForDisplay(startCalendar), alarmData = alarmData, i = 1
         )
         return exception
     }
@@ -166,8 +165,7 @@ suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activit
         val startCalendar = Calendar.getInstance().apply { timeInMillis = startTime }
         val exception = scheduleMultipleAlarms2(alarmManager, activity_context = activityContext, alarmDao = alarmDao,
             calendar_for_start_time = startCalendar, calendar_for_end_time = endCalendar, freq_after_the_callback = alarmData.freqGottenAfterCallback,
-            selected_date_for_display = getDateForDisplay(startCalendar),
-            message = alarmData.message, alarmData = alarmData, i=2
+            selected_date_for_display = getDateForDisplay(startCalendar), alarmData = alarmData, i=2
         )
         return exception
     }
@@ -188,8 +186,7 @@ suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activit
         val startCalendar = Calendar.getInstance().apply { timeInMillis = startTimeOfTheAlarm }
         val exception = scheduleMultipleAlarms2(alarmManager, activity_context = activityContext, alarmDao = alarmDao,
             calendar_for_start_time = startCalendar, calendar_for_end_time = endCalendar, freq_after_the_callback = alarmData.freqGottenAfterCallback,
-            selected_date_for_display = getDateForDisplay(startCalendar),
-            message = alarmData.message, alarmData = alarmData, i=2
+            selected_date_for_display = getDateForDisplay(startCalendar), alarmData = alarmData, i=2
         )
         if (exception != null){
             logD("there is a exception found and it is ${exception}")

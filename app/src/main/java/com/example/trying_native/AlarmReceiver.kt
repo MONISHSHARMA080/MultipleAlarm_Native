@@ -1,32 +1,68 @@
 package com.example.trying_native
+import android.app.AlarmManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
+import androidx.room.Room
+import com.example.trying_native.components_for_ui_compose.scheduleNextAlarm
+import com.example.trying_native.dataBase.AlarmDao
+import com.example.trying_native.dataBase.AlarmDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlin.system.exitProcess
 
 class AlarmReceiver : BroadcastReceiver() {
+    private lateinit var context: Context
+    private val coroutineScopeThatDoesNotCancel = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val coroutineScope = CoroutineScope( Dispatchers.IO)
+    private val alarmManager by lazy { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
+
+
     override fun onReceive(context: Context, intent: Intent) {
         logD("in the alarm receiver func and here is the intent --> $intent")
-        val intent_1 = Intent(context, AlarmActivity::class.java)
-        val time_By_Me = intent.getExtras()?.getLong("triggerTime",-1000)
-        val isMessagePresent = intent.getBooleanExtra("isMessagePresent", false)
-        if (isMessagePresent==false){
-            intent_1.putExtra("message", "")
-            intent_1.putExtra("isMessagePresent", false)
-        }else{
-            intent.putExtra("isMessagePresent", true)
-            val message = intent.getStringExtra("message")
-            if (message ==""){
-                intent_1.putExtra("message", "")
-                intent_1.putExtra("isMessagePresent", false)
-            }
-            intent_1.putExtra("message", message)
-            intent_1.putExtra("isMessagePresent", true)
+        this.context = context
+        coroutineScope.launch {
+            launchAlarmActivity(intent)
         }
-        val triggerTime = intent.getLongExtra("triggerTime", 0)
-        logD("Trigger time in the alarm receiver's func is -->$triggerTime; intent -->${intent.extras} ; time_By_Me -->$time_By_Me ")
-        intent_1.putExtra("triggerTime", triggerTime)
-        intent_1.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        context.startActivity(intent_1)
+        coroutineScopeThatDoesNotCancel.launch {
+            scheduleFutureAlarm(context, alarmManager, intent)
+        }
     }
+
+    private suspend fun  scheduleFutureAlarm( activityContext: Context, alarmManager: AlarmManager, oldIntent: Intent ){
+        val startTime = oldIntent.getLongExtra("startTime",0)
+        val endTIme = oldIntent.getLongExtra("endTime",0)
+        if ( (startTime+endTIme )  <= 0L){
+            logD("\n ---- the startTime($startTime) or endTime($endTIme) is not valid - as they are either 0 or less that that , which should not be possible, you messed up sp bad we are crashing-----  \n")
+            exitProcess(69)
+        }
+        // get this form the DB
+        val alarmDao = getAlarmDao(context)
+        val alarmData =   alarmDao.getAlarmByValues(startTime, endTIme)
+        if (alarmData == null){
+            logD("\n ---- the alarm is not found in the DB, which should not be possible, you messed up sp bad we are crashing-----  \n")
+            exitProcess(69)
+        }
+        val execption = scheduleNextAlarm(alarmManager,  alarmData = alarmData,   activityContext = activityContext, currentAlarmTime =  startTime)
+        if (execption !== null){
+            logD("the alarm Execption is not null and it is ${execption.message}-----and it is ${execption} ")
+        }
+    }
+    private  fun launchAlarmActivity(oldIntent: Intent){
+        val newIntent = Intent(context, AlarmActivity::class.java)
+        newIntent.putExtras(oldIntent)
+        newIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        context.startActivity(newIntent)
+    }
+    private  fun getAlarmDao(context: Context): AlarmDao{
+        val db = Room.databaseBuilder(
+            context,
+            AlarmDatabase::class.java, "alarm-database"
+        ).build()
+        return db.alarmDao()
+
+    }
+
 }

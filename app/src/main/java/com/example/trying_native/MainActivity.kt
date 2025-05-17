@@ -1,12 +1,9 @@
 package com.example.trying_native
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.AlarmManager
 import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
-import android.media.AudioManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -19,14 +16,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
-import androidx.lifecycle.lifecycleScope
 import com.example.trying_native.ui.theme.Trying_nativeTheme
 import androidx.room.Room
 import com.example.trying_native.components_for_ui_compose.AlarmContainer
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmDatabase
-import kotlinx.coroutines.launch
-import kotlin.time.measureTime
 
 class MainActivity : ComponentActivity() {
 

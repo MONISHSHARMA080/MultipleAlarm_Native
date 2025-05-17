@@ -159,20 +159,9 @@ class AlarmActivity : ComponentActivity() {
 
     /** this  function will get the message form the intent and will set it on the mutable State  that is  passed in */
     private fun parseTheIntentAndGetMessage():String{
-        var messageToReturn:String =""
-        val isMessagePresent = intent.getBooleanExtra("isMessagePresent", false)
-        if (isMessagePresent) {
-            val messageTemp = intent.getStringExtra("message")
-            logD("the message form the intent in the AlarmActivity is  ->${messageTemp}<-")
-            if (messageTemp == null) {
-//                isMessagePresent = false // cause why are we doing this
-                messageToReturn = ""
-            } else {
-                messageToReturn = messageTemp
-            }
-        }
-        logD("is the message is present is -->${isMessagePresent} and the message is $messageToReturn")
-        return messageToReturn
+        val messageTemp = intent.getStringExtra("message")
+        logD("the message present in the intent is $messageTemp")
+        return messageTemp.toString()
     }
 
     private fun pauseBackgroundAudio() {

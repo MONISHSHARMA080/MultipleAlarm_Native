@@ -1,18 +1,12 @@
 package com.example.trying_native.components_for_ui_compose
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.provider.Settings
-import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -22,7 +16,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,8 +32,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -55,7 +46,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import java.util.Calendar
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ButtonDefaults
@@ -65,8 +55,6 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
@@ -446,6 +434,7 @@ fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Col
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun timePicker_without_dialog(onConfirm: (TimePickerState) -> Unit, onDismiss: () -> Unit, nextButton:String = "Next", text_at_the_top:String, mistake_message:String = "" ){
+
 
     var user_mistake_message_show by remember { mutableStateOf(mistake_message) }
     val currentTime = Calendar.getInstance()
@@ -876,25 +865,19 @@ fun freq_without_dialog(
 
 
 const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
- fun scheduleAlarm(triggerTime: Long, alarmManager:AlarmManager, componentActivity: ComponentActivity, message:String? = null, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java ) {
+ fun scheduleAlarm(startTime: Long, endTime:Long,  alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java ) {
 
     logD( "Clicked on the schedule alarm func")
-    val triggerTime_1 = triggerTime
+    val triggerTime_1 = startTime
 //    val intent = Intent(componentActivity, AlarmReceiver::class.java)
      val intent = Intent(ALARM_ACTION) // Use the action string
      logD("++++++++ receiver class in the schedule alarm is -->${receiverClass.name} +++ $receiverClass")
      intent.setClass(componentActivity, receiverClass)
-     if (!message.isNullOrEmpty()){
-
-         intent.putExtra("message", message)
-         intent.putExtra("isMessagePresent", true)
-     }else{
-         intent.putExtra("isMessagePresent", false)
-     }
-    intent.putExtra("last_alarm_info1","from the schedule alarm function")
+     intent.putExtra("startTime", startTime)
+     intent.putExtra("endTime", endTime)
     logD("Trigger time in the scheduleAlarm func  is --> $triggerTime_1 ")
     intent.putExtra("triggerTime", triggerTime_1)
-    val pendingIntent = PendingIntent.getBroadcast(componentActivity, triggerTime.toInt(), intent,
+    val pendingIntent = PendingIntent.getBroadcast(componentActivity, startTime.toInt(), intent,
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
 )
     alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime_1, pendingIntent)
@@ -986,12 +969,13 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
 }
 
 
-suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_for_display:String, calendar_for_start_time:Calendar,
-                                    calendar_for_end_time:Calendar, freq_after_the_callback:Long, activity_context:ComponentActivity, alarmDao:AlarmDao,
-                                    message: String?=null,alarmData:AlarmData,
+// only used in the helper func for the resting the alarms
+suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_for_display:String, calendar_for_start_time:Calendar, calendar_for_end_time:Calendar,
+                                    freq_after_the_callback:Long, activity_context:ComponentActivity, alarmDao:AlarmDao, alarmData:AlarmData,
                                     receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, i:Int = 0,isAlarmReadyToUse:Boolean= true   ) :Exception? {
     // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
     logD("in the ++scheduleMultipleAlarms2  ++ and  the i is $i")
+    // we can't get it form the alarmData as this func is for the reset alarm and that could be only one
     var startTimeInMillis = calendar_for_start_time.timeInMillis
     val startTimeInMillisendForDb = startTimeInMillis
 
@@ -1007,30 +991,32 @@ suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_fo
     logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis == endTimeInMillis} ::--:: freqInMin->$freq_in_min")
     var index = 0
 
-    while (startTimeInMillis <= endTimeInMillis) {
-        logD("round $index")
-        try {
-            scheduleAlarm(
-                startTimeInMillis,
-                alarmManager,
-                activity_context,
-                message = message,
-                receiverClass = receiverClass
-            )
-        } catch (e: Exception) {
-            logD("error occurred in the schedule multiple alarms-->${e}")
-            return e
-        }
         startTimeInMillis = startTimeInMillis + freq_in_min
+        logD("round $index")
+    // have to use the calander one here as this is the reset function and the ine form the alarmData could be old
+        if ( startTimeInMillis >= endTimeInMillis){
+            try {
+                scheduleAlarm(
+                    startTimeInMillis,
+                    alarmData.second_value,
+                    alarmManager,
+                    activity_context,
+                    receiverClass = receiverClass
+                )
+            } catch (e: Exception) {
+                logD("error occurred in the schedule multiple alarms-->${e}")
+                return e
+            }
+        }else{
+            index += 1
+            logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
+            lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager,
+                "alarm_start_time_to_search_db", "alarm_end_time_to_search_db",
+                endTimeInMillisendForDb, LastAlarmUpdateDBReceiver()
+            )
+        }
         // this line added the freq in the last pending intent and now to get time for the last time we
         // need to - fstartTimerq from it
-        index += 1
-    }
-    logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
-    lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager,
-        "alarm_start_time_to_search_db", "alarm_end_time_to_search_db",
-        endTimeInMillisendForDb, LastAlarmUpdateDBReceiver()
-    )
     try {
         alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =startTimeInMillisendForDb, second_value = endTimeInMillis, date_for_display =  selected_date_for_display, isReadyToUse = isAlarmReadyToUse)
     }catch (e:Exception){
@@ -1043,22 +1029,23 @@ suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_fo
 /**
  * this function sets the next alarm, if the alarm is ending then we will
  */
- fun scheduleNextAlarm(alarmManager: AlarmManager, activity_context:ComponentActivity, alarmData:AlarmData,
-            receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java ) :Exception? {
+ fun scheduleNextAlarm(alarmManager: AlarmManager, activityContext: Context, alarmData:AlarmData,
+                       receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java , currentAlarmTime:Long) :Exception? {
     // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
     logD("in the ++scheduleNextAlarm  ++ ")
 
-    // took the freq and converted it to the min by *60000
     // -- cause we do not have to set the alarm in DB, just set the next alarm
     // -- NOTE:-> we do need to set the last pending intent to close the alarm
     try {
-        val startTimeInMillis = alarmData.first_value + alarmData.freqGottenAfterCallback.toLong() *60000
+        // we are not doing the alarmData.first_value as this is the first value and in the 3rd alarm iteration(for eg), this will still be same
+        // took the freq and converted it to the min by *60000
+        val startTimeInMillis = currentAlarmTime + alarmData.freqGottenAfterCallback.toLong() *60000
         // take the arguments form the alarmData
         if (startTimeInMillis >= alarmData.second_value){
             // means that the alarm cycle has ended
             logD("it's time to cancel any future alarms, and set the last one to make it gray")
             logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
-            lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarmData.first_value, activity_context, alarmManager,
+            lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarmData.first_value, activityContext, alarmManager,
                 "alarm_start_time_to_search_db", "alarm_end_time_to_search_db",
                 alarmData.second_value, LastAlarmUpdateDBReceiver()
             )
@@ -1068,17 +1055,15 @@ suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_fo
             logD("it's time to set the next alarm")
             scheduleAlarm(
                 startTimeInMillis,
+                alarmData.second_value,
                 alarmManager,
-                activity_context,
-                message = alarmData.message,
+                activityContext,
                 receiverClass = receiverClass
             )
         }
-
     } catch (e: Exception) {
         logD("error occurred in the schedule multiple alarms-->${e}")
         return e
     }
-
     return null
 }
