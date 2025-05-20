@@ -872,14 +872,8 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
      val intent = Intent(ALARM_ACTION) // Use the action string
      logD("++++++++ receiver class in the schedule alarm is -->${receiverClass.name} +++ $receiverClass")
      intent.setClass(componentActivity, receiverClass)
-     // we need this  to get the alarm for the DB in the alarm receiver
-//     if (thisIsForNextAlarmDoNotSetStartTimeForDB){
-//         logD("this seclude alarm call is form the next function and we are setting the start time for the db :)")
-//         intent.putExtra("startTimeForDb", startTime)
-//     }else{
-//         logD("this schedule alarm call is not from the next alarm and we are not setting the start time for the db :( ")
-//     }
      logD("the startTimeForReceiverToGetTheAlarmIs is $startTimeForReceiverToGetTheAlarmIs ")
+     logD("the message in the startTime is $alarmMessage")
 
      intent.putExtra("startTimeForDb", startTimeForReceiverToGetTheAlarmIs)
      intent.putExtra("startTime", startTime)
@@ -1083,7 +1077,8 @@ fun scheduleNextAlarm(
                 componentActivity = activityContext,
                 receiverClass = receiverClass,
                 // Pass the original series start time to the next intent
-                startTimeForReceiverToGetTheAlarmIs = startTimeForReceiverToGetTheAlarmIs
+                startTimeForReceiverToGetTheAlarmIs = startTimeForReceiverToGetTheAlarmIs,
+                alarmMessage = alarmData.message
             )
         }
     } catch (e: Exception) {
