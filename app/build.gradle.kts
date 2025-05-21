@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.testImplementation
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -68,6 +70,23 @@ android {
             force("androidx.test.espresso:espresso-core:3.6.1")
         }
     }
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            // Add these for Robolectric
+            all {
+                it.systemProperty("robolectric.logging", "stdout")
+                it.systemProperty("robolectric.graphicsMode", "NATIVE")
+
+                // Increase memory for tests
+
+                // Important for avoiding bytecode verification errors
+                it.jvmArgs("-noverify")
+            }
+
+        }
+    }
+
 }
 
 dependencies {
@@ -82,6 +101,16 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation(libs.androidx.junit.ktx)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+
+
+    // -- roboelectric tests ---
+
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.14.1")
+
+
+    // -- roboelectric tests ---
+
 
     implementation(libs.androidx.media3.common)
     implementation(libs.androidx.ui.test.android)
