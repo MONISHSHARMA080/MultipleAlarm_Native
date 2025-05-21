@@ -1,5 +1,6 @@
 [versions]
-agp = "8.9.1"
+agp = "8.10.0"
+coreKtxVersion = "1.6.1"
 datastore = "1.1.1"
 datastoreVersion = "1.0.0"
 kotlin = "1.9.0"
@@ -7,6 +8,7 @@ coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
+kotlinxCoroutinesTest = "1.8.1"
 lifecycleRuntimeKtx = "2.8.4"
 activityCompose = "1.9.1"
 composeBom = "2024.04.01"
@@ -14,6 +16,9 @@ materialIconsExtended = "1.7.0"
 protobufJavaliteVersion = "3.21.12"
 protobufKotlin = "3.18.0"
 media3Common = "1.4.1"
+robolectric = "4.13"
+robolectricVersion = "4.14"
+roomRuntime = "2.6.1"
 uiTestAndroid = "1.7.1"
 junitKtx = "1.2.1"
 espressoContrib = "3.6.1"
@@ -31,6 +36,10 @@ androidx-datastore-rxjava3 = { module = "androidx.datastore:datastore-rxjava3", 
 androidx-datastore-v100 = { module = "androidx.datastore:datastore", version.ref = "datastoreVersion" }
 androidx-material-icons-core = { module = "androidx.compose.material:material-icons-core", version.ref = "materialIconsExtended" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
+androidx-room-room-compiler2 = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
+androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "roomRuntime" }
+core-ktx = { module = "androidx.test:core-ktx", version.ref = "coreKtxVersion" }
 google-protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufJavaliteVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -45,12 +54,18 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 protobuf-kotlin = { module = "com.google.protobuf:protobuf-kotlin", version.ref = "protobufKotlin" }
 androidx-media3-common = { group = "androidx.media3", name = "media3-common", version.ref = "media3Common" }
 androidx-ui-test-android = { group = "androidx.compose.ui", name = "ui-test-android", version.ref = "uiTestAndroid" }
 androidx-junit-ktx = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "junitKtx" }
 androidx-espresso-contrib = { group = "androidx.test.espresso", name = "espresso-contrib", version.ref = "espressoContrib" }
 androidx-ui-test-junit4-android = { group = "androidx.compose.ui", name = "ui-test-junit4-android", version.ref = "uiTestJunit4Android" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+robolectric-robolectric = { module = "org.robolectric:robolectric" }
+robolectric-v414 = { module = "org.robolectric:robolectric", version.ref = "robolectricVersion" }
+shadows-framework = { module = "org.robolectric:shadows-framework" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

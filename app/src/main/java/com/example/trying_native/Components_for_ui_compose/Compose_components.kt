@@ -893,9 +893,9 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
 
 // this func is called only at the first time
  suspend fun scheduleMultipleAlarms(alarmManager: AlarmManager, selected_date_for_display:String, date_in_long: Long, coroutineScope: CoroutineScope, is_alarm_ready_to_use:Boolean,
-                                    calendar_for_start_time:Calendar, calendar_for_end_time:Calendar, freq_after_the_callback:Int, activity_context:ComponentActivity, alarmDao:AlarmDao,
-                                    is_this_func_call_to_update_an_existing_alarm: Boolean = false , new_is_ready_to_use:Boolean,   message: String?=null,
-                                    receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java,messageForDB:String   ) :Exception? {
+                                    calendar_for_start_time:Calendar, calendar_for_end_time:Calendar, freq_after_the_callback:Int, activity_context: Context, alarmDao:AlarmDao,
+                                    is_this_func_call_to_update_an_existing_alarm: Boolean = false, new_is_ready_to_use:Boolean, message: String?=null,
+                                    receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, messageForDB:String   ) :Exception? {
     // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
      var startTimeInMillis = calendar_for_start_time.timeInMillis
     val startTimeInMillisendForDb= startTimeInMillis
@@ -914,6 +914,8 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
     val freq_in_min = freq_in_milli * 60000
     logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:: freq->$freq_in_min")
     var i=0
+    val messageToSend: String
+    if (message.isNullOrEmpty()) messageToSend = "" else messageToSend = message
 
         // alright only set one alarm here and in the receiver class set the other one after the min
     if (startTimeInMillis >= endTimeInMillis){
@@ -926,7 +928,7 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
         logD("setting the alarm and the startTime is $startTimeInMillis and the endTime is $endTimeInMillis")
         try {
             // since this is oru first time the startTimeForReceiverToGetTheAlarmIs->
-            scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activity_context,  receiverClass = receiverClass, startTimeForReceiverToGetTheAlarmIs = startTimeInMillisendForDb)
+            scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activity_context,  receiverClass = receiverClass, startTimeForReceiverToGetTheAlarmIs = startTimeInMillisendForDb, alarmMessage = messageToSend)
         }catch (e:Exception){
             logD("error occurred in the schedule multiple alarms-->${e}")
             return e
@@ -1015,7 +1017,8 @@ suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_fo
                     alarmManager,
                     activity_context,
                     receiverClass = receiverClass,
-                    startTimeInMillis
+                    startTimeInMillis,
+                    alarmMessage = alarmData.message
                 )
             } catch (e: Exception) {
                 logD("error occurred in the schedule multiple alarms-->${e}")

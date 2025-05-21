@@ -1,3 +1,6 @@
+import org.gradle.kotlin.dsl.androidTestImplementation
+import org.gradle.kotlin.dsl.testImplementation
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -15,7 +18,6 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -45,12 +47,24 @@ android {
         }
     }
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+    // roboelec tests
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
     }
+
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    kotlin {
+        jvmToolchain(11) // Or 17, matching your desired JVM target
+    }
+
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
     buildFeatures {
         compose = true
@@ -71,13 +85,37 @@ android {
 }
 
 dependencies {
-//    implementation("com.posthog:posthog-android:3.+")
     implementation(libs.androidx.espresso.contrib)
     implementation(libs.androidx.ui.test.junit4.android)
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation("androidx.test:runner:1.6.1")
     androidTestImplementation("androidx.test:rules:1.6.1")
+
 //    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric.robolectric)
+    testImplementation(libs.shadows.framework) // Explicitly include shadows framework
+    testImplementation(libs.core.ktx) // Needed for ApplicationProvider in Robolectric
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.kotlin.test)
+    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test")
+    androidTestImplementation ("androidx.test:core:1.5.0")
+    androidTestImplementation ("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation ("org.robolectric:robolectric:4.11.1") // Or the latest version
+
+    // JUnit for tests
+    testImplementation(libs.junit) // Assuming libs.junit points to "junit:junit:4.13.2" or similar
+    val room_version = "2.6.1"
+
+    // Room testing
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.room.compiler2)
+    implementation("androidx.room:room-ktx:$room_version")
+    testImplementation(libs.androidx.room.testing) // For in-memory database testing
+
+
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.1")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation(libs.androidx.junit.ktx)
@@ -85,7 +123,7 @@ dependencies {
 
     implementation(libs.androidx.media3.common)
     implementation(libs.androidx.ui.test.android)
-    val room_version = "2.6.1"
+
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
     implementation("androidx.room:room-runtime:$room_version")
@@ -126,4 +164,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    testImplementation(kotlin("test"))
 }
