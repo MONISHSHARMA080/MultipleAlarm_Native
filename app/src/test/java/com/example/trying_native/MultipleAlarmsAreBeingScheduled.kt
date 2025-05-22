@@ -8,6 +8,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.example.trying_native.dataBase.AlarmDao
 import org.junit.Before
+import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -52,11 +53,9 @@ class AlarmFlowRobolectricTest {
     @Test
     fun testAlarmSchedule() {
         logD("test started +++")
-        //  implement it
-//        val randomAlarm  = getRandomAlarmTimesForDay(5)
-//        logD("the result form the random alarm is $randomAlarm")
-
-        logD("hi bitch")
+        val randomAlarm  = getRandomAlarmTimesForDay(5)
+        logD("the result form the random alarm is $randomAlarm")
+        assertTrue( "error getting the random starting time form the function and it is $randomAlarm",randomAlarm.isSuccess )
 
 
     }
