@@ -883,7 +883,7 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
     logD(" in the scheduleAlarm func and the startTime is $startTime and the startTimeForDb is $startTimeForReceiverToGetTheAlarmIs  ")
 //    intent.putExtra("triggerTime", triggerTime_1)
     val pendingIntent = PendingIntent.getBroadcast(componentActivity,
-        startTimeForReceiverToGetTheAlarmIs.toInt(), intent,
+        startTime.toInt(), intent,
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
 )
     alarmManager.setExact(AlarmManager.RTC_WAKEUP, startTime, pendingIntent)
@@ -928,7 +928,7 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
         logD("setting the alarm and the startTime is $startTimeInMillis and the endTime is $endTimeInMillis")
         try {
             // since this is oru first time the startTimeForReceiverToGetTheAlarmIs->
-            scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activity_context,  receiverClass = receiverClass, startTimeForReceiverToGetTheAlarmIs = startTimeInMillisendForDb, alarmMessage = message?:"" )
+            scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activity_context,  receiverClass = receiverClass, startTimeForReceiverToGetTheAlarmIs = startTimeInMillisendForDb, alarmMessage = messageForDB )
         }catch (e:Exception){
             logD("error occurred in the schedule multiple alarms-->${e}")
             return e
