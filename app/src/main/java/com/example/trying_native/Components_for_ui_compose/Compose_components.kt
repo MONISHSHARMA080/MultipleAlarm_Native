@@ -871,6 +871,7 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
 //    val triggerTime_1 = startTime
      val intent = Intent(ALARM_ACTION) // Use the action string
      logD("++++++++ receiver class in the schedule alarm is -->${receiverClass.name} +++ $receiverClass")
+     logD(" in the scheduleAlarm func and the message is ->$alarmMessage")
      intent.setClass(componentActivity, receiverClass)
      logD("the startTimeForReceiverToGetTheAlarmIs is $startTimeForReceiverToGetTheAlarmIs ")
      logD("the message in the startTime is $alarmMessage")
@@ -927,7 +928,7 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
         logD("setting the alarm and the startTime is $startTimeInMillis and the endTime is $endTimeInMillis")
         try {
             // since this is oru first time the startTimeForReceiverToGetTheAlarmIs->
-            scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activity_context,  receiverClass = receiverClass, startTimeForReceiverToGetTheAlarmIs = startTimeInMillisendForDb)
+            scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activity_context,  receiverClass = receiverClass, startTimeForReceiverToGetTheAlarmIs = startTimeInMillisendForDb, alarmMessage = message?:"" )
         }catch (e:Exception){
             logD("error occurred in the schedule multiple alarms-->${e}")
             return e
@@ -1016,7 +1017,8 @@ suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_fo
                     alarmManager,
                     activity_context,
                     receiverClass = receiverClass,
-                    startTimeInMillis
+                    startTimeInMillis,
+                    alarmMessage = alarmData.message
                 )
             } catch (e: Exception) {
                 logD("error occurred in the schedule multiple alarms-->${e}")
@@ -1025,7 +1027,7 @@ suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_fo
         }
         // this line added the freq in the last pending intent and now to get time for the last time we
     try {
-        alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =startTimeInMillisendForDb, second_value = endTimeInMillis, date_for_display =  selected_date_for_display, isReadyToUse = isAlarmReadyToUse)
+        alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =startTimeInMillisendForDb, second_value = endTimeInMillis, date_for_display =  selected_date_for_display, isReadyToUse = isAlarmReadyToUse, )
     }catch (e:Exception){
         logD("the update in the alarm in db fail and the exception is -->$e")
         return e
@@ -1079,7 +1081,7 @@ fun scheduleNextAlarm(
                 receiverClass = receiverClass,
                 // Pass the original series start time to the next intent
                 startTimeForReceiverToGetTheAlarmIs = startTimeForReceiverToGetTheAlarmIs,
-                alarmMessage = alarmData.message+"----++"
+                alarmMessage = alarmData.message
             )
         }
     } catch (e: Exception) {
