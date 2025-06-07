@@ -881,7 +881,8 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
      intent.putExtra("message", alarmMessage)
     logD(" in the scheduleAlarm func and the startTime is $startTime and the startTimeForDb is $startTimeForReceiverToGetTheAlarmIs  ")
 //    intent.putExtra("triggerTime", triggerTime_1)
-    val pendingIntent = PendingIntent.getBroadcast(componentActivity, startTime.toInt(), intent,
+    val pendingIntent = PendingIntent.getBroadcast(componentActivity,
+        startTimeForReceiverToGetTheAlarmIs.toInt(), intent,
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
 )
     alarmManager.setExact(AlarmManager.RTC_WAKEUP, startTime, pendingIntent)
@@ -1078,7 +1079,7 @@ fun scheduleNextAlarm(
                 receiverClass = receiverClass,
                 // Pass the original series start time to the next intent
                 startTimeForReceiverToGetTheAlarmIs = startTimeForReceiverToGetTheAlarmIs,
-                alarmMessage = alarmData.message
+                alarmMessage = alarmData.message+"----++"
             )
         }
     } catch (e: Exception) {
