@@ -865,7 +865,7 @@ fun freq_without_dialog(
 
 
 const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
- fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, startTimeForReceiverToGetTheAlarmIs: Long, alarmMessage: String= ""  ) {
+ fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, startTimeForAlarmSeries: Long, alarmMessage: String= ""  ) {
 
     logD( "Clicked on the schedule alarm func")
 //    val triggerTime_1 = startTime
@@ -873,14 +873,14 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
      logD("++++++++ receiver class in the schedule alarm is -->${receiverClass.name} +++ $receiverClass")
      logD(" in the scheduleAlarm func and the message is ->$alarmMessage")
      intent.setClass(componentActivity, receiverClass)
-     logD("the startTimeForReceiverToGetTheAlarmIs is $startTimeForReceiverToGetTheAlarmIs ")
+     logD("the startTimeForReceiverToGetTheAlarmIs is $startTimeForAlarmSeries ")
      logD("the message in the startTime is $alarmMessage")
 
-     intent.putExtra("startTimeForDb", startTimeForReceiverToGetTheAlarmIs)
+     intent.putExtra("startTimeForDb", startTimeForAlarmSeries)
      intent.putExtra("startTime", startTime)
      intent.putExtra("endTime", endTime)
      intent.putExtra("message", alarmMessage)
-    logD(" in the scheduleAlarm func and the startTime is $startTime and the startTimeForDb is $startTimeForReceiverToGetTheAlarmIs  ")
+    logD(" in the scheduleAlarm func and the startTime is $startTime and the startTimeForDb is $startTimeForAlarmSeries  ")
 //    intent.putExtra("triggerTime", triggerTime_1)
     val pendingIntent = PendingIntent.getBroadcast(componentActivity,
         startTime.toInt(), intent,
@@ -928,7 +928,7 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
         logD("setting the alarm and the startTime is $startTimeInMillis and the endTime is $endTimeInMillis")
         try {
             // since this is oru first time the startTimeForReceiverToGetTheAlarmIs->
-            scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activity_context,  receiverClass = receiverClass, startTimeForReceiverToGetTheAlarmIs = startTimeInMillisendForDb, alarmMessage = messageForDB )
+            scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activity_context,  receiverClass = receiverClass, startTimeForAlarmSeries = startTimeInMillisendForDb, alarmMessage = messageForDB )
         }catch (e:Exception){
             logD("error occurred in the schedule multiple alarms-->${e}")
             return e
@@ -1040,7 +1040,7 @@ suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_fo
 /**
  * this function sets the next alarm, if the alarm is ending then we will
  * @param currentAlarmTime The time the alarm that triggered this call fired.
- * @param startTimeForReceiverToGetTheAlarmIs This parameter should represent the *original* start time of the alarm series (used for DB lookup).
+ * @param startTimeForAlarmSeries This parameter should represent the *original* start time of the alarm series (used for DB lookup).
  */
 fun scheduleNextAlarm(
     alarmManager: AlarmManager,
@@ -1048,9 +1048,9 @@ fun scheduleNextAlarm(
     alarmData: AlarmData,
     receiverClass: Class<out BroadcastReceiver> = AlarmReceiver::class.java,
     currentAlarmTime: Long,
-    startTimeForReceiverToGetTheAlarmIs: Long // This is the original series start time
+    startTimeForAlarmSeries: Long // This is the original series start time
 ): Exception? {
-    logD("in the ++scheduleNextAlarm ++ with currentAlarmTime=$currentAlarmTime and originalStartTimeForDb=$startTimeForReceiverToGetTheAlarmIs")
+    logD("in the ++scheduleNextAlarm ++ with currentAlarmTime=$currentAlarmTime and originalStartTimeForDb=$startTimeForAlarmSeries")
 
     try {
         // Calculate the start time for the *next* alarm
@@ -1071,7 +1071,7 @@ fun scheduleNextAlarm(
 
         } else {
             // Alarm cycle has not ended, schedule the next alarm
-            logD("scheduleNextAlarm: Scheduling next alarm at $nextAlarmTimeInMillis. Original series start time for DB: $startTimeForReceiverToGetTheAlarmIs")
+            logD("scheduleNextAlarm: Scheduling next alarm at $nextAlarmTimeInMillis. Original series start time for DB: $startTimeForAlarmSeries")
 
             scheduleAlarm(
                 startTime = nextAlarmTimeInMillis, // This is the time the next alarm will trigger
@@ -1080,7 +1080,7 @@ fun scheduleNextAlarm(
                 componentActivity = activityContext,
                 receiverClass = receiverClass,
                 // Pass the original series start time to the next intent
-                startTimeForReceiverToGetTheAlarmIs = startTimeForReceiverToGetTheAlarmIs,
+                startTimeForAlarmSeries = startTimeForAlarmSeries,
                 alarmMessage = alarmData.message
             )
         }

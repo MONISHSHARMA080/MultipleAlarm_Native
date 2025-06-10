@@ -11,7 +11,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import kotlin.math.log
 import kotlin.system.exitProcess
 
 class AlarmReceiver : BroadcastReceiver() {
@@ -36,27 +35,27 @@ class AlarmReceiver : BroadcastReceiver() {
         // Correctly retrieve the time the current alarm fired (from "startTime" extra)
         val currentTimeAlarmFired = oldIntent.getLongExtra("startTime", 0)
         // Correctly retrieve the original start time for DB lookup (from "startTimeForDb" extra)
-        val originalDbStartTime = oldIntent.getLongExtra("startTimeForDb", 0)
+        val startTimeForAlarmSeries = oldIntent.getLongExtra("startTimeForDb", 0)
         // Correctly retrieve the original end time for DB lookup (from "endTime" extra)
         val originalDbEndTime = oldIntent.getLongExtra("endTime", 0)
 
-        if ((currentTimeAlarmFired <= 0L) || (originalDbStartTime <= 0L) || (originalDbEndTime <= 0L)) { // Added check for originalDbStartTime/EndTime too
-            logD("\n ---- Invalid time values received in AlarmReceiver. currentAlarmTime: $currentTimeAlarmFired, originalDbStartTime: $originalDbStartTime, originalDbEndTime: $originalDbEndTime. Crashing. ----- \n")
+        if ((currentTimeAlarmFired <= 0L) || (startTimeForAlarmSeries <= 0L) || (originalDbEndTime <= 0L)) { // Added check for originalDbStartTime/EndTime too
+            logD("\n ---- Invalid time values received in AlarmReceiver. currentAlarmTime: $currentTimeAlarmFired, originalDbStartTime: $startTimeForAlarmSeries, originalDbEndTime: $originalDbEndTime. Crashing. ----- \n")
             exitProcess(69)
         }
 
         logD("about to set the future alarm form the broadcast receiver.")
         logD("Current alarm fired at: $currentTimeAlarmFired")
-        logD("Original DB Start Time: $originalDbStartTime")
+        logD("Original DB Start Time: $startTimeForAlarmSeries")
         logD("Original DB End Time: $originalDbEndTime")
 
 
         // get this form the DB using the original DB start and end times
         val alarmDao = getAlarmDao(context)
         // Lookup using the original start and end times
-        val alarmData = alarmDao.getAlarmByValues(originalDbStartTime, originalDbEndTime)
+        val alarmData = alarmDao.getAlarmByValues(startTimeForAlarmSeries, originalDbEndTime)
         if (alarmData == null) {
-            logD("\n ---- the alarm is not found in the DB for start: $originalDbStartTime, end: $originalDbEndTime, which should not be possible, you messed up sp bad we are crashing----- \n")
+            logD("\n ---- the alarm is not found in the DB for start: $startTimeForAlarmSeries, end: $originalDbEndTime, which should not be possible, you messed up sp bad we are crashing----- \n")
             exitProcess(69)
         }
         logD("the alarmData of alarm form the DB is ${alarmData}")
@@ -69,7 +68,7 @@ class AlarmReceiver : BroadcastReceiver() {
             alarmData = alarmData,
             activityContext = activityContext,
             currentAlarmTime = currentTimeAlarmFired, // Pass the time the current alarm fired
-            startTimeForReceiverToGetTheAlarmIs = originalDbStartTime // Pass the original DB start time
+            startTimeForAlarmSeries = startTimeForAlarmSeries // Pass the original DB start time
         )
 
         if (execption !== null) {

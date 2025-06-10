@@ -20,6 +20,9 @@ import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import kotlin.math.log
 
+/**
+ * startTime -  is the alarm original start time
+ */
 suspend fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequency_in_min:Long, alarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity:ComponentActivity, delete_the_alarm_from_db:Boolean) {
 
     // what am I going to do it ;  make the pending intent  and call cancel on it (of course in a loop)
@@ -76,17 +79,6 @@ suspend fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, fr
     }
 
 }
-
-fun cancelAPendingIntent(startTime:Long, context_of_activity:ComponentActivity, alarmManager:AlarmManager){
-
-    var intent = Intent(context_of_activity, AlarmReceiver::class.java)
-    intent.putExtra("triggerTime", startTime)
-    alarmManager.cancel(
-        PendingIntent.getBroadcast(context_of_activity, startTime.toInt(),
-            intent, PendingIntent.FLAG_IMMUTABLE )
-    )
-}
-
 fun lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarm_start_time_to_search_db: Long, context_of_activity:Context, alarmManager:AlarmManager, message_name_for_start_time:String, message_name_for_end_time: String, alarm_end_time_to_search_db:Long, broadcastReceiverClass:BroadcastReceiver){
 
     var intent = Intent(context_of_activity, LastAlarmUpdateDBReceiver::class.java)
