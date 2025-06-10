@@ -20,6 +20,20 @@ import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import kotlin.math.log
 
+
+
+fun  cancelTheWholeAlarmSeries(startTime:Long, endTime:Long, frequency_in_min:Long, alarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity:ComponentActivity, delete_the_alarm_from_db:Boolean){
+
+    // in the alarm db make the next alarm block that will hold the next value of the alarm or null ; if null then just remove it and move on as this was
+    //    the end of the alarmSeries
+
+    // or
+
+    // in the cancel alarm calculate the upcoming alarm; take the start time and then add the freq till it is greater or equal to the current  time and we have
+    // our next alarm
+}
+
+
 /**
  * startTime -  is the alarm original start time
  */
