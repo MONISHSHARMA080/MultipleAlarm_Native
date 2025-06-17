@@ -9,13 +9,10 @@ import androidx.activity.ComponentActivity
 import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.LastAlarmUpdateDBReceiver
 import com.example.trying_native.assertWithException
-import com.example.trying_native.components_for_ui_compose.ALARM_ACTION
-import com.example.trying_native.components_for_ui_compose.scheduleAlarm
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.getDateForDisplay
 import com.example.trying_native.incrementTheStartCalenderTimeUntilItIsInFuture
-import com.example.trying_native.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime
 import com.example.trying_native.logD
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -94,7 +91,7 @@ class AlarmsController {
                 // since this is oru first time the startTimeForReceiverToGetTheAlarmIs->
              val a  =   scope.async {scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activity_context,  receiverClass = receiverClass, startTimeForAlarmSeries = startTimeInMillisendForDb, alarmMessage = messageForDB )  }
                 logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
-                val b = scope.async {lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())  }
+                val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())  }
                 val c = scope.async {
                     val newAlarm = AlarmData(
                         first_value = startTimeInMillisendForDb,
@@ -154,9 +151,9 @@ class AlarmsController {
     // only used in the helper func for the resting the alarms
     suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_for_display:String, calendar_for_start_time:Calendar, calendar_for_end_time:Calendar,
                                         freq_after_the_callback:Long, activity_context:ComponentActivity, alarmDao:AlarmDao, alarmData:AlarmData,
-                                        receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, i:Int = 0,isAlarmReadyToUse:Boolean= true   ) :Exception? {
+                                        receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java,   ) :Exception? {
         // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
-        logD("in the ++scheduleMultipleAlarms2  ++ and  the i is $i")
+        logD("in the ++scheduleMultipleAlarms2  ++ ")
         // we can't get it form the alarmData as this func is for the reset alarm and that could be only one
         var startTimeInMillis = calendar_for_start_time.timeInMillis
         val startTimeInMillisendForDb = startTimeInMillis
@@ -178,7 +175,7 @@ class AlarmsController {
             logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
 
             try {
-                val b = scope.async {lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())}
+                val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())}
                 logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
                 val updatingDB = scope.async { this@AlarmsController.deactivateAlarm(alarmDao, alarmData, true) }
                 val alarmSchedule = scope.async {  scheduleAlarm(startTimeInMillis, alarmData.second_value, alarmManager, activity_context, receiverClass = receiverClass, startTimeInMillis, alarmMessage = alarmData.message)}
@@ -226,9 +223,9 @@ class AlarmsController {
 
                 // Schedule the final intent to update the DB (e.g., mark as finished)
 
-                lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarmData.first_value, activityContext, alarmManager,
-                    "alarm_start_time_to_search_db", "alarm_end_time_to_search_db",
-                    alarmData.second_value, LastAlarmUpdateDBReceiver())
+//                lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarmData.first_value, activityContext, alarmManager,
+//                    "alarm_start_time_to_search_db", "alarm_end_time_to_search_db",
+//                    alarmData.second_value, LastAlarmUpdateDBReceiver())
 
 
             } else {
@@ -368,7 +365,6 @@ class AlarmsController {
                     freq_after_the_callback = alarmData.freqGottenAfterCallback,
                     selected_date_for_display = getDateForDisplay(startCalendar),
                     alarmData = alarmData,
-                    i = 1
                 )
             return exception
         }
@@ -380,7 +376,7 @@ class AlarmsController {
             val endCalendar = Calendar.getInstance().apply { timeInMillis = alarmData.second_value }
             val startCalendar = Calendar.getInstance().apply { timeInMillis = startTime }
             val exception =
-                com.example.trying_native.components_for_ui_compose.scheduleMultipleAlarms2(
+              this.scheduleMultipleAlarms2(
                     alarmManager,
                     activity_context = activityContext,
                     alarmDao = alarmDao,
@@ -389,7 +385,6 @@ class AlarmsController {
                     freq_after_the_callback = alarmData.freqGottenAfterCallback,
                     selected_date_for_display = getDateForDisplay(startCalendar),
                     alarmData = alarmData,
-                    i = 2
                 )
             return exception
         }
@@ -410,7 +405,7 @@ class AlarmsController {
             // as we have changed the alarm time to be the latest time
             val startCalendar = Calendar.getInstance().apply { timeInMillis = startTimeOfTheAlarm }
             val exception =
-                com.example.trying_native.components_for_ui_compose.scheduleMultipleAlarms2(
+                this.scheduleMultipleAlarms2(
                     alarmManager,
                     activity_context = activityContext,
                     alarmDao = alarmDao,
@@ -419,7 +414,6 @@ class AlarmsController {
                     freq_after_the_callback = alarmData.freqGottenAfterCallback,
                     selected_date_for_display = getDateForDisplay(startCalendar),
                     alarmData = alarmData,
-                    i = 2
                 )
             if (exception != null){
                 logD("there is a exception found and it is ${exception}")
@@ -432,6 +426,23 @@ class AlarmsController {
         return Exception(" did not hit any of the if condition  ")
     }
 
+    fun lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarm_start_time_to_search_db: Long, context_of_activity:Context, alarmManager:AlarmManager, message_name_for_start_time:String, message_name_for_end_time: String, alarm_end_time_to_search_db:Long, broadcastReceiverClass:BroadcastReceiver){
+
+        var intent = Intent(context_of_activity, LastAlarmUpdateDBReceiver::class.java)
+
+        // probably should hardcode message_name_for_start_time to be alarm_end_time_to_search_db and same for message_name_for_end_time
+
+        intent.putExtra(message_name_for_start_time,alarm_start_time_to_search_db)
+        intent.putExtra(message_name_for_end_time,alarm_end_time_to_search_db)
+        val pendingIntent = PendingIntent.getBroadcast(context_of_activity,(alarm_end_time_to_search_db+alarm_start_time_to_search_db).toInt(), intent, PendingIntent.FLAG_IMMUTABLE)
+        alarmManager.setExact(
+            AlarmManager.RTC_WAKEUP,
+            alarm_end_time_to_search_db,
+            pendingIntent
+        )
+        logD("Pending intent set with start time: $alarm_start_time_to_search_db and end time: $alarm_end_time_to_search_db")
+        logD("intent -->${intent.extras} ||||| and pending intent -->${pendingIntent}\n ${Calendar.getInstance().timeInMillis < alarm_end_time_to_search_db}")
+    }
 
 
 }
