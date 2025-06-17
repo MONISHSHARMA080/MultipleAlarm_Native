@@ -35,7 +35,7 @@ fun  cancelTheWholeAlarmSeries(startTime:Long, endTime:Long, frequency_in_min:Lo
 
 
 /**
- * startTime -  is the alarm original start time
+ * @param startTime -  is the alarm original start time
  */
 suspend fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequency_in_min:Long, alarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity:ComponentActivity, delete_the_alarm_from_db:Boolean) {
 
@@ -91,8 +91,22 @@ suspend fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, fr
         startTime = startTime + frequency_in_min
 
     }
-
 }
+
+/**
+ * Verifies that the given [condition] is true, otherwise throws an exception.
+ *
+ * @param condition the boolean expression that must hold
+ * @param message   optional detail message to include in the exception
+ * @throws IllegalStateException if [condition] evaluates to false
+ */
+fun assertWithException(condition:Boolean, message:String){
+    if (!condition){
+        throw  IllegalStateException(message)
+    }
+}
+
+
 fun lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarm_start_time_to_search_db: Long, context_of_activity:Context, alarmManager:AlarmManager, message_name_for_start_time:String, message_name_for_end_time: String, alarm_end_time_to_search_db:Long, broadcastReceiverClass:BroadcastReceiver){
 
     var intent = Intent(context_of_activity, LastAlarmUpdateDBReceiver::class.java)

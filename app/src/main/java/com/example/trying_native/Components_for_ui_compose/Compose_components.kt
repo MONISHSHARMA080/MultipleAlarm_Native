@@ -85,6 +85,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.FirstLaunchAskForPermission.FirstLaunchAskForPermission
 import com.example.trying_native.LastAlarmUpdateDBReceiver
+import com.example.trying_native.assertWithException
 import com.example.trying_native.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime
 import com.example.trying_native.notification.NotificationBuilder
 import com.example.trying_native.resetAlarms
@@ -912,7 +913,6 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
         val end_am_pm =  SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
 
         logD(" \n\n am_pm_start_time-->$start_time_for_display $start_am_pm ; endtime-->$end_time_for_display $end_am_pm")
-        logD("\n\n\n-IIIIIIIIII----------"+" freqAfterCallback ->${freq_after_the_callback} freqAfterCallback.toLong/freq_in_milli  ->${freq_after_the_callback.toLong()} freqInMin ->${freq_after_the_callback.toLong() *60000}"+"\n\n\n---------")
         var freq_in_milli : Long
         freq_in_milli = freq_after_the_callback.toLong()
         val freq_in_min = freq_in_milli * 60000
@@ -922,9 +922,8 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
         // alright only set one alarm here and in the receiver class set the other one after the min
         i+=1
         logD("checking if the start time is < end time ")
-        assert(startTimeInMillis < endTimeInMillis) {" the value of the start time should be < end time , you made a mistake"}
+        assertWithException(startTimeInMillis < endTimeInMillis," the value of the start time should be < end time , you made a mistake" )
         logD("the start time is < endtime ")
-        assert(startTimeInMillis > endTimeInMillis) {" the value of the start time should be < end time , you made a mistake"}
         logD("round $i")
         logD("setting the alarm and the startTime is $startTimeInMillis and the endTime is $endTimeInMillis")
         try {
@@ -941,6 +940,7 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
         // this line added the freq in the last pending intent and now to get time for the last time we
         // need to - fstartTimerq from it
 
+        // make a class and abstract this thing out in its own function
         if (!is_this_func_call_to_update_an_existing_alarm ){
             withContext(Dispatchers.IO) {
                 logD("here to  insert a new one")
@@ -990,32 +990,32 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
 suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_for_display:String, calendar_for_start_time:Calendar, calendar_for_end_time:Calendar,
                                     freq_after_the_callback:Long, activity_context:ComponentActivity, alarmDao:AlarmDao, alarmData:AlarmData,
                                     receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, i:Int = 0,isAlarmReadyToUse:Boolean= true   ) :Exception? {
-    // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
-    logD("in the ++scheduleMultipleAlarms2  ++ and  the i is $i")
-    // we can't get it form the alarmData as this func is for the reset alarm and that could be only one
-    var startTimeInMillis = calendar_for_start_time.timeInMillis
-    val startTimeInMillisendForDb = startTimeInMillis
+    try {
+        // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
+        logD("in the ++scheduleMultipleAlarms2  ++ and  the i is $i")
+        // we can't get it form the alarmData as this func is for the reset alarm and that could be only one
+        var startTimeInMillis = calendar_for_start_time.timeInMillis
+        val startTimeInMillisendForDb = startTimeInMillis
 
-    var endTimeInMillis = calendar_for_end_time.timeInMillis
-    val endTimeInMillisendForDb = endTimeInMillis
+        var endTimeInMillis = calendar_for_end_time.timeInMillis
+        val endTimeInMillisendForDb = endTimeInMillis
 
-    logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:")
-    logD("\n\n\n-IIIIIIIIII----------"+" freqAfterCallback ->${freq_after_the_callback} freqAfterCallback.toLong/freq_in_milli  ->${freq_after_the_callback.toLong()} freqInMin ->${freq_after_the_callback.toLong() *60000}"+"\n\n\n---------")
+        logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:")
+        logD("\n\n\n-IIIIIIIIII----------"+" freqAfterCallback ->${freq_after_the_callback} freqAfterCallback.toLong/freq_in_milli  ->${freq_after_the_callback.toLong()} freqInMin ->${freq_after_the_callback.toLong() *60000}"+"\n\n\n---------")
 
-    var freq_in_milli: Long
-    freq_in_milli = freq_after_the_callback
-    val freq_in_min = freq_in_milli * 60000
-    logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, startTimeInMillis >= endTimeInMillis-->${startTimeInMillis >= endTimeInMillis} ::--:: freqInMin->$freq_in_min")
+        var freq_in_milli: Long
+        freq_in_milli = freq_after_the_callback
+        val freq_in_min = freq_in_milli * 60000
+        logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, startTimeInMillis >= endTimeInMillis-->${startTimeInMillis >= endTimeInMillis} ::--:: freqInMin->$freq_in_min")
 
 //        startTimeInMillis = startTimeInMillis + freq_in_min
-    // have to use the calander one here as this is the reset function and the ine form the alarmData could be old
-        if (  startTimeInMillis > endTimeInMillis){
+        // have to use the calander one here as this is the reset function and the ine form the alarmData could be old
+        assertWithException(  startTimeInMillis > endTimeInMillis, "  the value of the start time should be < end time , you made a mistake ")
             logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
             lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager,
                 "alarm_start_time_to_search_db", "alarm_end_time_to_search_db",
                 endTimeInMillisendForDb, LastAlarmUpdateDBReceiver()
             )
-        }else{
             try {
                 scheduleAlarm(
                     startTimeInMillis,
@@ -1030,15 +1030,17 @@ suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_fo
                 logD("error occurred in the schedule multiple alarms-->${e}")
                 return e
             }
-        }
         // this line added the freq in the last pending intent and now to get time for the last time we
-    try {
-        alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =startTimeInMillisendForDb, second_value = endTimeInMillis, date_for_display =  selected_date_for_display, isReadyToUse = isAlarmReadyToUse, )
-    }catch (e:Exception){
-        logD("the update in the alarm in db fail and the exception is -->$e")
+        try {
+            alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =startTimeInMillisendForDb, second_value = endTimeInMillis, date_for_display =  selected_date_for_display, isReadyToUse = isAlarmReadyToUse, )
+        }catch (e:Exception){
+            logD("the update in the alarm in db fail and the exception is -->$e")
+            return e
+        }
+        return null
+    }catch (e: Exception){
         return e
     }
-    return null
 }
 
 
@@ -1069,10 +1071,11 @@ fun scheduleNextAlarm(
             logD("scheduleNextAlarm: Setting last pending intent to update DB.")
 
             // Schedule the final intent to update the DB (e.g., mark as finished)
+            // we do not have to do this as this is done by the starting func only
 
-            lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarmData.first_value, activityContext, alarmManager,
-                "alarm_start_time_to_search_db", "alarm_end_time_to_search_db",
-                alarmData.second_value, LastAlarmUpdateDBReceiver())
+//            lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarmData.first_value, activityContext, alarmManager,
+//                "alarm_start_time_to_search_db", "alarm_end_time_to_search_db",
+//                alarmData.second_value, LastAlarmUpdateDBReceiver())
 
 
         } else {
