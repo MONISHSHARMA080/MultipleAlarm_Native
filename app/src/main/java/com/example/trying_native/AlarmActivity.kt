@@ -41,6 +41,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.jvm.java
 
 class AlarmActivity : ComponentActivity() {
     private var mediaPlayer: MediaPlayer? = null
@@ -379,4 +380,5 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean
 // Helper function to get current time
 fun getCurrentTime(): String {
     return SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date())
+
 }

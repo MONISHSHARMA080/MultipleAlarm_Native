@@ -147,10 +147,8 @@ class MainActivity : ComponentActivity() {
         // If both permissions are granted, proceed with scheduling the alarm
         // scheduleAlarmInternal()
     }
-
-
 }
 
 fun logD(message:String):Unit{
-    Log.d("AAAAA","-->$message")
+    Log.d("AAAAA",message)
 }
