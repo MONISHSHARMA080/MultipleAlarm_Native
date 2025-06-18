@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.room.Room
-import com.example.trying_native.components_for_ui_compose.scheduleNextAlarm
+import com.example.trying_native.AlarmLogic.AlarmsController
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmDatabase
 import kotlinx.coroutines.CoroutineScope
@@ -18,6 +18,7 @@ class AlarmReceiver : BroadcastReceiver() {
     private val coroutineScopeThatDoesNotCancel = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val coroutineScope = CoroutineScope( Dispatchers.IO)
     private val alarmManager by lazy { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
+    private  val alarmsController = AlarmsController()
 
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -63,7 +64,7 @@ class AlarmReceiver : BroadcastReceiver() {
         // Call scheduleNextAlarm with the correct values
         // currentAlarmTime = the time the current alarm fired (to calculate the next time)
         // startTimeForReceiverToGetTheAlarmIs = the original DB start time (to pass to the next receiver for DB lookup)
-        val execption = scheduleNextAlarm(
+        val execption = alarmsController.scheduleNextAlarm(
             alarmManager,
             alarmData = alarmData,
             activityContext = activityContext,
