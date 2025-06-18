@@ -19,14 +19,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import kotlin.math.log
 
 const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
 
@@ -152,6 +150,7 @@ class AlarmsController {
     suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_for_display:String, calendar_for_start_time:Calendar, calendar_for_end_time:Calendar,
                                         freq_after_the_callback:Long, activity_context:ComponentActivity, alarmDao:AlarmDao, alarmData:AlarmData,
                                         receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java,   ) :Exception? {
+    try {
         // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
         logD("in the ++scheduleMultipleAlarms2  ++ ")
         // we can't get it form the alarmData as this func is for the reset alarm and that could be only one
@@ -168,30 +167,34 @@ class AlarmsController {
         freq_in_milli = freq_after_the_callback
         val freq_in_min = freq_in_milli * 60000
         logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, startTimeInMillis >= endTimeInMillis-->${startTimeInMillis >= endTimeInMillis} ::--:: freqInMin->$freq_in_min")
+        logD("is startTime > endTime ${startTimeInMillis > endTimeInMillis}, this is a assertion")
 
 //        startTimeInMillis = startTimeInMillis + freq_in_min
         // have to use the calander one here as this is the reset function and the ine form the alarmData could be old
-            assertWithException(  startTimeInMillis > endTimeInMillis, "  the value of the start time should be < end time , you made a mistake ")
+        assertWithException(  startTimeInMillis < endTimeInMillis, "  the value of the start time should be < end time , you made a mistake ")
+        logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
+        try {
+            val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())}
             logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
-
+            val updatingDB = scope.async { this@AlarmsController.deactivateAlarm(alarmDao, alarmData, true) }
+            val alarmSchedule = scope.async {  scheduleAlarm(startTimeInMillis, alarmData.second_value, alarmManager, activity_context, receiverClass = receiverClass, startTimeInMillis, alarmMessage = alarmData.message)}
+            b.await()
+            updatingDB.await()
+            alarmSchedule.await()
+        } catch (e: Exception) {
+            // if we have gotten a error then we will need to cancel the alarm and return the exception and also delete the alarm
             try {
-                val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())}
-                logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
-                val updatingDB = scope.async { this@AlarmsController.deactivateAlarm(alarmDao, alarmData, true) }
-                val alarmSchedule = scope.async {  scheduleAlarm(startTimeInMillis, alarmData.second_value, alarmManager, activity_context, receiverClass = receiverClass, startTimeInMillis, alarmMessage = alarmData.message)}
-                b.await()
-                updatingDB.await()
-                alarmSchedule.await()
-            } catch (e: Exception) {
-                // if we have gotten a error then we will need to cancel the alarm and return the exception and also delete the alarm
-                try {
-                    this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq_in_min, alarmDao, alarmManager, activity_context, true)
-                }catch (e: Exception){}
-                logD("error occurred in the schedule multiple alarms, so we are going to cancel the alarm whole, in scheduleAlarm2-->${e}")
-                return e
-            }
+                this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq_in_min, alarmDao, alarmManager, activity_context, true)
+            }catch (e: Exception){}
+            logD("error occurred in the schedule multiple alarms, so we are going to cancel the alarm whole, in scheduleAlarm2-->${e}")
+            return e
+        }
         // this line added the freq in the last pending intent and now to get time for the last time we
         return null
+    }catch (e: Exception){
+        logD("there is a  error in the scheduleMultipleAlarms2  and it is-->${e}")
+        return  e
+    }
     }
 
 
@@ -221,11 +224,8 @@ class AlarmsController {
                 logD("scheduleNextAlarm: Next alarm time ($nextAlarmTimeInMillis) is at or past end time (${alarmData.second_value}). Ending series.")
                 logD("scheduleNextAlarm: Setting last pending intent to update DB.")
 
-                // Schedule the final intent to update the DB (e.g., mark as finished)
 
-//                lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarmData.first_value, activityContext, alarmManager,
-//                    "alarm_start_time_to_search_db", "alarm_end_time_to_search_db",
-//                    alarmData.second_value, LastAlarmUpdateDBReceiver())
+                // we do not need to schedule the last pending intent for the db as it is already done for us
 
 
             } else {
