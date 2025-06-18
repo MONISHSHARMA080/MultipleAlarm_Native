@@ -133,6 +133,7 @@ class AlarmsController {
      * this func is there to deactivate the already there alarm
      */
     fun deactivateAlarm(alarmDao: AlarmDao, alarmData: AlarmData,deactivate: Boolean ){
+        logD("about to deactivate the alarm")
         scope.launch {
             alarmDao.updateReadyToUse(
                 firstValue = alarmData.first_value,
@@ -173,10 +174,12 @@ class AlarmsController {
         // have to use the calander one here as this is the reset function and the ine form the alarmData could be old
         assertWithException(  startTimeInMillis < endTimeInMillis, "  the value of the start time should be < end time , you made a mistake ")
         logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
+        logD("the current start time(of values going in the db) is ${startTimeInMillis} human readable  ${getTimeInHumanReadableFormat(startTimeInMillis)} and the end time ${endTimeInMillis} and human readable   ${getTimeInHumanReadableFormat(endTimeInMillis)} and the date for display that we got is $selected_date_for_display ")
+        logD("the current start time(of values in the alarmData) is ${alarmData.first_value} human readable  ${getTimeInHumanReadableFormat(alarmData.first_value)} and the end time ${alarmData.second_value} and human readable   ${getTimeInHumanReadableFormat(alarmData.second_value)} ")
         try {
             val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())}
             logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
-            val updatingDB = scope.async { this@AlarmsController.deactivateAlarm(alarmDao, alarmData, true) }
+            val updatingDB = scope.async { alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =startTimeInMillis, second_value = endTimeInMillis, date_for_display =  selected_date_for_display, isReadyToUse = true, ) }
             val alarmSchedule = scope.async {  scheduleAlarm(startTimeInMillis, alarmData.second_value, alarmManager, activity_context, receiverClass = receiverClass, startTimeInMillis, alarmMessage = alarmData.message)}
             b.await()
             updatingDB.await()
@@ -346,10 +349,13 @@ class AlarmsController {
             // may be take the date of the
 
             logD("--++---++--++--|||")
+            logD("the current start time(Without  incrementing) is $startTime human readable  ${getTimeInHumanReadableFormat(startTime)} and the end time is $endTime and human readable ${getTimeInHumanReadableFormat(endTime)} ")
             endCalendar = incrementTheStartCalenderTimeUntilItIsInFuture(endCalendar, calendarInstance)
             var startCalendar = Calendar.getInstance().apply { timeInMillis = startTime }
             logD("start time in the startCalender is -> ${startCalendar.timeInMillis}")
             startCalendar = incrementTheStartCalenderTimeUntilItIsInFuture(startCalendar = startCalendar, currentCalendar = calendarInstance)
+            logD("the current start time( with incrementing) is ${startCalendar.timeInMillis} human readable  ${getTimeInHumanReadableFormat(startCalendar.timeInMillis)} and the end time ${endCalendar.timeInMillis} and human readable   ${getTimeInHumanReadableFormat(endCalendar.timeInMillis)} ")
+
             logD("start time in the startCalender is -> ${startCalendar.timeInMillis} and the statement that it is greater than the current time is ${startCalendar.timeInMillis >= currentTime}")
             logD("start time is ${startCalendar.time} and the end time is ${endCalendar.time} and the freq is ${alarmData.freq_in_min} and the frequency in int is $alarmFreqInInt  ")
             // now the start time is greater that the current time we can set the alarm
@@ -426,6 +432,9 @@ class AlarmsController {
         return Exception(" did not hit any of the if condition  ")
     }
 
+    // -------
+    // update it to be just get the end time and use it
+    // -------
     fun lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarm_start_time_to_search_db: Long, context_of_activity:Context, alarmManager:AlarmManager, message_name_for_start_time:String, message_name_for_end_time: String, alarm_end_time_to_search_db:Long, broadcastReceiverClass:BroadcastReceiver){
 
         var intent = Intent(context_of_activity, LastAlarmUpdateDBReceiver::class.java)
@@ -444,5 +453,8 @@ class AlarmsController {
         logD("intent -->${intent.extras} ||||| and pending intent -->${pendingIntent}\n ${Calendar.getInstance().timeInMillis < alarm_end_time_to_search_db}")
     }
 
+    private  fun getTimeInHumanReadableFormat(t:Long): String{
+        return SimpleDateFormat("yyyy-MM-dd h:mm:ss a", Locale.getDefault()).format(Date(t))
+    }
 
 }
