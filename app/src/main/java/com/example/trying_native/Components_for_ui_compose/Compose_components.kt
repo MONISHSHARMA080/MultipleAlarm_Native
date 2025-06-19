@@ -1,5 +1,7 @@
 package com.example.trying_native.components_for_ui_compose
 
+import android.R
+import android.R.attr.value
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
@@ -70,12 +72,15 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
@@ -87,8 +92,10 @@ import com.example.trying_native.notification.NotificationBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import java.time.format.DateTimeFormatter
+import java.util.Date
 
 
 @Composable
@@ -345,10 +352,17 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
             }
         }
         if (showTheDialogToTheUserToAskForPermission){
-            DialogToAskUserAboutAlarm(onDismissRequest = {
-                logD("DialogToAskUserAboutAlarm is about to be set to false")
-                showTheDialogToTheUserToAskForPermission = false }, onConfirmation = {a,b, c ->logD("in the confirm ${a.hour}:${a.minute},--||-- ${c}"); logD("got the confirmation in DialogToAskUserAboutAlarm")}
-            , activity_context = context_of_activity, alarmDao = AlarmDao, alarmManager = alarmManager)
+            logD("displaying the dialog to ask user about the alarm")
+            dialogToAskUserAboutAlarmUnified(onDismissRequest = {logD("Dismissed by new one");showTheDialogToTheUserToAskForPermission= false },
+                onConfirmation = {a,b,c,d,e,f,g->{logD("got the value in the dialogToAskUserAboutAlarmUnified and it is $a $b $c $d $e $f $g and now closing it") }
+                    showTheDialogToTheUserToAskForPermission= false
+                                 },
+                alarmDao = AlarmDao, alarmManager = alarmManager, activity_context = context_of_activity,
+            )
+//            DialogToAskUserAboutAlarm(onDismissRequest = {
+//                logD("DialogToAskUserAboutAlarm is about to be set to false")
+//                showTheDialogToTheUserToAskForPermission = false }, onConfirmation = {a,b, c ->logD("in the confirm ${a.hour}:${a.minute},--||-- ${c}"); logD("got the confirmation in DialogToAskUserAboutAlarm")}
+//            , activity_context = context_of_activity, alarmDao = AlarmDao, alarmManager = alarmManager)
         }
         Box(
             modifier = Modifier
@@ -375,6 +389,7 @@ fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Col
         logD("is granted is $isGranted")
         // No need to handle permission result since we want onClick to run anyway
     }
+    val coroutineScope = rememberCoroutineScope()
 
     Box(
         modifier = modifier
@@ -382,8 +397,13 @@ fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Col
             .zIndex(4f)
             .background(color = backgroundColor, shape = CircleShape)
             .clickable {
-                FirstLaunchAskForPermission(context).checkAndRequestPermissions()
-                onClick()
+                coroutineScope.launch {
+                    FirstLaunchAskForPermission(context).checkAndRequestPermissions()
+                }
+                coroutineScope.launch {
+                    onClick()
+                }
+                logD("Hi_--")
             },
         contentAlignment = Alignment.Center,
     ) {
@@ -394,6 +414,9 @@ fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Col
         )
     }
 }
+
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -720,6 +743,199 @@ fun DialogToAskUserAboutAlarm(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun dialogToAskUserAboutAlarmUnified(
+    alarmManager: AlarmManager,
+    activity_context: ComponentActivity, // Keep this if you need actual Android context for AlarmManager
+    alarmDao: AlarmDao, // Your DAO for database operations
+    onDismissRequest: () -> Unit,
+    onConfirmation: (startTimeHour: Int, startTimeMinute: Int, endTimeHour: Int, endTimeMinute: Int, selectedDateMillis: Long, frequency: Int, alarmMessage: String) -> Unit,
+) {
+    // State for the alarm settings
+    val calInstance = Calendar.getInstance()
+    calInstance.set(Calendar.HOUR_OF_DAY, 24)
+
+    var startHour by remember { mutableStateOf(calInstance.get(Calendar.HOUR_OF_DAY)) }
+    var startMinute by remember { mutableStateOf(calInstance.get(Calendar.MINUTE)) }
+    var endHour by remember { mutableStateOf(calInstance.get(Calendar.HOUR_OF_DAY +1)) }
+    var endMinute by remember { mutableStateOf(calInstance.get(Calendar.MINUTE)) }
+    var selectedDateMillis by remember { mutableStateOf(System.currentTimeMillis()) } // Default to current date
+    var frequency by remember { mutableStateOf(2) }
+    var alarmMessage by remember { mutableStateOf("") }
+
+    val dateFormatter = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
+    val currentDateFormatted = remember(selectedDateMillis) {
+        dateFormatter.format(Date(selectedDateMillis))
+    }
+    val dismissButtonColor by remember(frequency) {
+        derivedStateOf {
+            if (frequency < 1) Color.Red else Color(0xFF0D388D) // Use onSurfaceVariant for TextButton's default text color
+        }
+    }
+    // You would typically use actual TimePicker and DatePicker dialogs here
+    // For this example, we'll use simple text fields for display and assume pickers are triggered elsewhere.
+    // However, if you want the TimePicker and DatePicker to be *within* this dialog,
+    // you would need to manage their visibility and state.
+
+    Dialog(onDismissRequest = onDismissRequest) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(),
+            shape = RoundedCornerShape(26.dp),
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(14.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(text = "Set alarm", style = MaterialTheme.typography.headlineSmall)
+
+                // Start time
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = "Start time")
+                    // This would ideally trigger a TimePicker
+                    OutlinedTextField(
+                        value = String.format("%02d:%02d", startHour, startMinute),
+                        onValueChange = { /* Not directly editable, opened by picker */ },
+                        readOnly = true, // To indicate it's set by a picker
+                        trailingIcon = { Text("AM") }, // For AM/PM display
+                        modifier = Modifier.width(120.dp)
+                    )
+                }
+
+                // End time
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = "End time")
+                    // This would ideally trigger a TimePicker
+                    OutlinedTextField(
+                        value = String.format("%02d:%02d", endHour, endMinute),
+                        onValueChange = { /* Not directly editable, opened by picker */ },
+                        readOnly = true,
+                        trailingIcon = { Text("AM") },
+                        modifier = Modifier.width(120.dp)
+                    )
+                }
+
+                // Start date and End date (assuming they are the same in this context)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text(text = "Start date")
+                        // This would ideally trigger a DatePicker
+                        OutlinedTextField(
+                            value = currentDateFormatted,
+                            onValueChange = { /* Not directly editable, opened by picker */ },
+                            readOnly = true,
+                            modifier = Modifier.width(130.dp)
+                        )
+                    }
+                    Column {
+                        Text(text = "End date", modifier = Modifier.padding(start = 20.dp))
+                        // This would ideally trigger a DatePicker
+                        OutlinedTextField(
+                            value = currentDateFormatted,
+                            onValueChange = { /* Not directly editable, opened by picker */ },
+                            readOnly = true,
+                            modifier = Modifier.width(150.dp).padding(start = 10.dp)
+                        )
+                    }
+                }
+
+                // Frequency
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = "Frequency")
+                    OutlinedTextField(
+                        value = frequency.toString(),
+                        onValueChange = {newFreq->
+                            val newFreqquency = newFreq.toIntOrNull()
+                            logD("the new freq is ->$newFreqquency")
+                            if (newFreqquency == null){
+                                frequency = 2
+                            }else{
+                                frequency = newFreqquency
+                            }
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.width(120.dp)
+                    )
+                }
+
+                // Alarm message/name
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = "Message", modifier = Modifier.padding(end = 30.dp))
+                    OutlinedTextField(
+                        value = alarmMessage,
+                        onValueChange = { alarmMessage = it },
+                        modifier = Modifier.weight(1f)  // Takes remaining space
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp)) // Spacer before buttons
+
+                // Dismiss and Set buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+
+
+                    TextButton(onClick = onDismissRequest) {
+                        Text("Dismiss")
+                    }
+                    Button(
+                        onClick = {
+                            onConfirmation(
+                                startHour,
+                                startMinute,
+                                endHour,
+                                endMinute,
+                                selectedDateMillis,
+                                frequency,
+                                alarmMessage
+                            )
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = dismissButtonColor
+                        )
+                    ) {
+                        Text("Save")
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
 @Composable
 fun MessageInput(
     message: String,
@@ -827,238 +1043,3 @@ fun freq_without_dialog(
         }
     }
 }
-
-//
-//const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
-// fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, startTimeForAlarmSeries: Long, alarmMessage: String= ""  ) {
-//
-//    logD( "Clicked on the schedule alarm func")
-////    val triggerTime_1 = startTime
-//     val intent = Intent(ALARM_ACTION) // Use the action string
-//     logD("++++++++ receiver class in the schedule alarm is -->${receiverClass.name} +++ $receiverClass")
-//     logD(" in the scheduleAlarm func and the message is ->$alarmMessage")
-//     intent.setClass(componentActivity, receiverClass)
-//     logD("the startTimeForReceiverToGetTheAlarmIs is $startTimeForAlarmSeries ")
-//     logD("the message in the startTime is $alarmMessage")
-//
-//     intent.putExtra("startTimeForDb", startTimeForAlarmSeries)
-//     intent.putExtra("startTime", startTime)
-//     intent.putExtra("endTime", endTime)
-//     intent.putExtra("message", alarmMessage)
-//    logD(" in the scheduleAlarm func and the startTime is $startTime and the startTimeForDb is $startTimeForAlarmSeries  ")
-//     logD("\n\n++setting the pending intent of request code(startTime of alarm to int)->${startTime.toInt()} and it is in the human readable format is ${SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date(startTime)) }++\n\n")
-//    val pendingIntent = PendingIntent.getBroadcast(componentActivity,
-//        startTime.toInt(), intent,
-//        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-//    )
-//    alarmManager.setExact(AlarmManager.RTC_WAKEUP, startTime, pendingIntent)
-//}
-//
-//
-//
-//
-//
-//// this func is called only at the first time
-// suspend fun scheduleMultipleAlarms(alarmManager: AlarmManager, selected_date_for_display:String, date_in_long: Long, coroutineScope: CoroutineScope, is_alarm_ready_to_use:Boolean,
-//                                    calendar_for_start_time:Calendar, calendar_for_end_time:Calendar, freq_after_the_callback:Int, activity_context: Context, alarmDao:AlarmDao,
-//                                    is_this_func_call_to_update_an_existing_alarm: Boolean = false , new_is_ready_to_use:Boolean,   message: String?=null,
-//                                    receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java,messageForDB:String   ) :Exception? {
-//    try {
-//        // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
-//        var startTimeInMillis = calendar_for_start_time.timeInMillis
-//        val startTimeInMillisendForDb= startTimeInMillis
-//        val start_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_start_time.time)
-//        val start_am_pm = SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
-//
-//        var endTimeInMillis = calendar_for_end_time.timeInMillis
-//        val endTimeInMillisendForDb= endTimeInMillis
-//        val end_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_end_time.time)
-//        val end_am_pm =  SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
-//
-//        logD(" \n\n am_pm_start_time-->$start_time_for_display $start_am_pm ; endtime-->$end_time_for_display $end_am_pm")
-//        var freq_in_milli : Long
-//        freq_in_milli = freq_after_the_callback.toLong()
-//        val freq_in_min = freq_in_milli * 60000
-//        logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:: freq->$freq_in_min")
-//        var i=0
-//
-//        // alright only set one alarm here and in the receiver class set the other one after the min
-//        i+=1
-//        logD("checking if the start time is < end time ")
-//        assertWithException(startTimeInMillis < endTimeInMillis," the value of the start time should be < end time , you made a mistake" )
-//        logD("the start time is < endtime ")
-//        logD("round $i")
-//        logD("setting the alarm and the startTime is $startTimeInMillis and the endTime is $endTimeInMillis")
-//        try {
-//            // since this is oru first time the startTimeForReceiverToGetTheAlarmIs->
-//            scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activity_context,  receiverClass = receiverClass, startTimeForAlarmSeries = startTimeInMillisendForDb, alarmMessage = messageForDB )
-//            logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
-//            lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())
-//        }catch (e:Exception){
-//            logD("error occurred in the schedule multiple alarms-->${e}")
-//            return e
-//        }
-//
-//        startTimeInMillis += freq_in_min
-//        // this line added the freq in the last pending intent and now to get time for the last time we
-//        // need to - fstartTimerq from it
-//
-//        // make a class and abstract this thing out in its own function
-//        if (!is_this_func_call_to_update_an_existing_alarm ){
-//            withContext(Dispatchers.IO) {
-//                logD("here to  insert a new one")
-//                try {
-//                    val newAlarm = AlarmData(
-//                        first_value = startTimeInMillisendForDb,
-//                        second_value = endTimeInMillisendForDb,
-//                        freq_in_min = freq_in_min,
-//                        isReadyToUse = is_alarm_ready_to_use,
-//                        date_for_display = selected_date_for_display,
-//                        start_time_for_display = start_time_for_display,
-//                        end_time_for_display = end_time_for_display,
-//                        start_am_pm = start_am_pm,
-//                        end_am_pm = end_am_pm,
-//                        freq_in_min_to_display = (freq_in_min / 60000).toInt(),
-//                        date_in_long = date_in_long,
-//                        message = messageForDB,
-//                        freqGottenAfterCallback = freq_after_the_callback.toLong()
-//                    )
-//                    val insertedId = alarmDao.insert(newAlarm)
-//                    logD("Inserted alarm with ID: $insertedId")
-//                } catch (e: Exception) {
-//                    logD("Exception occurred when inserting in the db: $e")
-//                    return@withContext e
-//                }
-//            }
-//        }
-//        else{
-//            logD("here to update the alarm---------------------------------------")
-//            alarmDao.updateReadyToUse(
-//                firstValue = startTimeInMillisendForDb,
-//                secondValue = endTimeInMillisendForDb,
-//                freqInMin = freq_in_min,
-//                dateInLong = date_in_long,
-//                isReadyToUse = new_is_ready_to_use
-//            )
-//        }
-//        return null
-//    }catch (e: Exception){
-//        logD("there is a  error in the scheduleMultipleAlarms func-->${e}")
-//    return  e
-//    }
-//}
-//
-//
-//// only used in the helper func for the resting the alarms
-//suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_for_display:String, calendar_for_start_time:Calendar, calendar_for_end_time:Calendar,
-//                                    freq_after_the_callback:Long, activity_context:ComponentActivity, alarmDao:AlarmDao, alarmData:AlarmData,
-//                                    receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, i:Int = 0,isAlarmReadyToUse:Boolean= true   ) :Exception? {
-//    try {
-//        // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
-//        logD("in the ++scheduleMultipleAlarms2  ++ and  the i is $i")
-//        // we can't get it form the alarmData as this func is for the reset alarm and that could be only one
-//        var startTimeInMillis = calendar_for_start_time.timeInMillis
-//        val startTimeInMillisendForDb = startTimeInMillis
-//
-//        var endTimeInMillis = calendar_for_end_time.timeInMillis
-//        val endTimeInMillisendForDb = endTimeInMillis
-//
-//        logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:")
-//        logD("\n\n\n-IIIIIIIIII----------"+" freqAfterCallback ->${freq_after_the_callback} freqAfterCallback.toLong/freq_in_milli  ->${freq_after_the_callback.toLong()} freqInMin ->${freq_after_the_callback.toLong() *60000}"+"\n\n\n---------")
-//
-//        var freq_in_milli: Long
-//        freq_in_milli = freq_after_the_callback
-//        val freq_in_min = freq_in_milli * 60000
-//        logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, startTimeInMillis >= endTimeInMillis-->${startTimeInMillis >= endTimeInMillis} ::--:: freqInMin->$freq_in_min")
-//
-////        startTimeInMillis = startTimeInMillis + freq_in_min
-//        // have to use the calander one here as this is the reset function and the ine form the alarmData could be old
-//        assertWithException(  startTimeInMillis > endTimeInMillis, "  the value of the start time should be < end time , you made a mistake ")
-//            logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
-//            lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager,
-//                "alarm_start_time_to_search_db", "alarm_end_time_to_search_db",
-//                endTimeInMillisendForDb, LastAlarmUpdateDBReceiver()
-//            )
-//            try {
-//                scheduleAlarm(
-//                    startTimeInMillis,
-//                    alarmData.second_value,
-//                    alarmManager,
-//                    activity_context,
-//                    receiverClass = receiverClass,
-//                    startTimeInMillis,
-//                    alarmMessage = alarmData.message
-//                )
-//            } catch (e: Exception) {
-//                logD("error occurred in the schedule multiple alarms-->${e}")
-//                return e
-//            }
-//        // this line added the freq in the last pending intent and now to get time for the last time we
-//        try {
-//            alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =startTimeInMillisendForDb, second_value = endTimeInMillis, date_for_display =  selected_date_for_display, isReadyToUse = isAlarmReadyToUse, )
-//        }catch (e:Exception){
-//            logD("the update in the alarm in db fail and the exception is -->$e")
-//            return e
-//        }
-//        return null
-//    }catch (e: Exception){
-//        return e
-//    }
-//}
-//
-//
-//// in this function the end time will not
-///**
-// * this function sets the next alarm, if the alarm is ending then we will
-// * @param currentAlarmTime The time the alarm that triggered this call fired.
-// * @param startTimeForAlarmSeries This parameter should represent the *original* start time of the alarm series (used for DB lookup).
-// */
-//fun scheduleNextAlarm(
-//    alarmManager: AlarmManager,
-//    activityContext: Context,
-//    alarmData: AlarmData,
-//    receiverClass: Class<out BroadcastReceiver> = AlarmReceiver::class.java,
-//    currentAlarmTime: Long,
-//    startTimeForAlarmSeries: Long // This is the original series start time
-//): Exception? {
-//    logD("in the ++scheduleNextAlarm ++ with currentAlarmTime=$currentAlarmTime and originalStartTimeForDb=$startTimeForAlarmSeries")
-//
-//    try {
-//        // Calculate the start time for the *next* alarm
-//        val nextAlarmTimeInMillis = currentAlarmTime + alarmData.freqGottenAfterCallback.toLong() * 60000
-//
-//        // Check if the next calculated time is past the series end time
-//        if (nextAlarmTimeInMillis >= alarmData.second_value) {
-//            // means that the alarm cycle has ended
-//            logD("scheduleNextAlarm: Next alarm time ($nextAlarmTimeInMillis) is at or past end time (${alarmData.second_value}). Ending series.")
-//            logD("scheduleNextAlarm: Setting last pending intent to update DB.")
-//
-//            // Schedule the final intent to update the DB (e.g., mark as finished)
-//            // we do not have to do this as this is done by the starting func only
-//
-////            lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarmData.first_value, activityContext, alarmManager,
-////                "alarm_start_time_to_search_db", "alarm_end_time_to_search_db",
-////                alarmData.second_value, LastAlarmUpdateDBReceiver())
-//
-//
-//        } else {
-//            // Alarm cycle has not ended, schedule the next alarm
-//            logD("scheduleNextAlarm: Scheduling next alarm at $nextAlarmTimeInMillis. Original series start time for DB: $startTimeForAlarmSeries")
-//
-//            scheduleAlarm(
-//                startTime = nextAlarmTimeInMillis, // This is the time the next alarm will trigger
-//                endTime = alarmData.second_value, // The series end time
-//                alarmManager = alarmManager,
-//                componentActivity = activityContext,
-//                receiverClass = receiverClass,
-//                // Pass the original series start time to the next intent
-//                startTimeForAlarmSeries = startTimeForAlarmSeries,
-//                alarmMessage = alarmData.message
-//            )
-//        }
-//    } catch (e: Exception) {
-//        logD("scheduleNextAlarm: Error occurred: ${e}")
-//        return e
-//    }
-//    return null
-//}
