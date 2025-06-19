@@ -354,7 +354,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
         if (showTheDialogToTheUserToAskForPermission){
             logD("displaying the dialog to ask user about the alarm")
             dialogToAskUserAboutAlarmUnified(onDismissRequest = {logD("Dismissed by new one");showTheDialogToTheUserToAskForPermission= false },
-                onConfirmation = {a,b,c,d,e,f,g->{logD("got the value in the dialogToAskUserAboutAlarmUnified and it is $a $b $c $d $e $f $g and now closing it") }
+                onConfirmation = {a,b,c,d,e,f,g, h->{logD("got the value in the dialogToAskUserAboutAlarmUnified and it is $a $b $c $d $e $f $g and now closing it") }
                     showTheDialogToTheUserToAskForPermission= false
                                  },
                 alarmDao = AlarmDao, alarmManager = alarmManager, activity_context = context_of_activity,
@@ -750,29 +750,27 @@ fun dialogToAskUserAboutAlarmUnified(
     activity_context: ComponentActivity, // Keep this if you need actual Android context for AlarmManager
     alarmDao: AlarmDao, // Your DAO for database operations
     onDismissRequest: () -> Unit,
-    onConfirmation: (startTimeHour: Int, startTimeMinute: Int, endTimeHour: Int, endTimeMinute: Int, selectedDateMillis: Long, frequency: Int, alarmMessage: String) -> Unit,
+    onConfirmation: (startTimeHour: Int, startTimeMinute: Int, endTimeHour: Int, endTimeMinute: Int, startDateInMilliSec: Long, endDateInMilliSec: Long, frequency: Int, alarmMessage: String) -> Unit,
 ) {
-    // State for the alarm settings
+    // here user will get the time to be current and if they want it to be diff then they can just make
+    // it and would have to set the   end time
     val calInstance = Calendar.getInstance()
-    calInstance.set(Calendar.HOUR_OF_DAY, 24)
-
     var startHour by remember { mutableStateOf(calInstance.get(Calendar.HOUR_OF_DAY)) }
     var startMinute by remember { mutableStateOf(calInstance.get(Calendar.MINUTE)) }
-    var endHour by remember { mutableStateOf(calInstance.get(Calendar.HOUR_OF_DAY +1)) }
+    var endHour by remember { mutableStateOf(calInstance.get(Calendar.HOUR_OF_DAY ) ) }
     var endMinute by remember { mutableStateOf(calInstance.get(Calendar.MINUTE)) }
-    var selectedDateMillis by remember { mutableStateOf(System.currentTimeMillis()) } // Default to current date
     var frequency by remember { mutableStateOf(2) }
     var alarmMessage by remember { mutableStateOf("") }
-
-    val dateFormatter = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
-    val currentDateFormatted = remember(selectedDateMillis) {
-        dateFormatter.format(Date(selectedDateMillis))
-    }
+    var startDateToView by remember { mutableStateOf(getDateInHumanReadableFormat(calInstance.timeInMillis)) }
+    var endDateToView by remember { mutableStateOf(getDateInHumanReadableFormat(calInstance.timeInMillis)) }
+    var startDateToReturn by remember { mutableStateOf(calInstance.timeInMillis) }
+    var endDateToReturn by remember { mutableStateOf(calInstance.timeInMillis) }
     val dismissButtonColor by remember(frequency) {
         derivedStateOf {
             if (frequency < 1) Color.Red else Color(0xFF0D388D) // Use onSurfaceVariant for TextButton's default text color
         }
     }
+//    getDateInHumanReadableFormat
     // You would typically use actual TimePicker and DatePicker dialogs here
     // For this example, we'll use simple text fields for display and assume pickers are triggered elsewhere.
     // However, if you want the TimePicker and DatePicker to be *within* this dialog,
@@ -837,7 +835,7 @@ fun dialogToAskUserAboutAlarmUnified(
                         Text(text = "Start date")
                         // This would ideally trigger a DatePicker
                         OutlinedTextField(
-                            value = currentDateFormatted,
+                            value = startDateToView,
                             onValueChange = { /* Not directly editable, opened by picker */ },
                             readOnly = true,
                             modifier = Modifier.width(130.dp)
@@ -847,7 +845,7 @@ fun dialogToAskUserAboutAlarmUnified(
                         Text(text = "End date", modifier = Modifier.padding(start = 20.dp))
                         // This would ideally trigger a DatePicker
                         OutlinedTextField(
-                            value = currentDateFormatted,
+                            value = endDateToView,
                             onValueChange = { /* Not directly editable, opened by picker */ },
                             readOnly = true,
                             modifier = Modifier.width(150.dp).padding(start = 10.dp)
@@ -868,7 +866,7 @@ fun dialogToAskUserAboutAlarmUnified(
                             val newFreqquency = newFreq.toIntOrNull()
                             logD("the new freq is ->$newFreqquency")
                             if (newFreqquency == null){
-                                frequency = 2
+                                frequency = 0
                             }else{
                                 frequency = newFreqquency
                             }
@@ -906,17 +904,21 @@ fun dialogToAskUserAboutAlarmUnified(
                     TextButton(onClick = onDismissRequest) {
                         Text("Dismiss")
                     }
+
                     Button(
                         onClick = {
-                            onConfirmation(
-                                startHour,
-                                startMinute,
-                                endHour,
-                                endMinute,
-                                selectedDateMillis,
-                                frequency,
-                                alarmMessage
-                            )
+                            if(frequency >0){
+                                onConfirmation(
+                                    startHour,
+                                    startMinute,
+                                    endHour,
+                                    endMinute,
+                                    startDateToReturn,
+                                    endDateToReturn,
+                                    frequency,
+                                    alarmMessage
+                                )
+                            }else{logD("the freq is $frequency and it is <1 so can't allow you to click")}
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = dismissButtonColor
@@ -1042,4 +1044,9 @@ fun freq_without_dialog(
             Text(nextButton)
         }
     }
+}
+
+/** this fun will get you the date once you give it the time */
+private  fun getDateInHumanReadableFormat(t:Long): String{
+    return SimpleDateFormat("yyyy-MM-dd ", Locale.getDefault()).format(Date(t))
 }
