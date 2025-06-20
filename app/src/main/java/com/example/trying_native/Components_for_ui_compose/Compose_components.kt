@@ -356,15 +356,15 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
         }
         if (showTheDialogToTheUserToAskForPermission){
             logD("displaying the dialog to ask user about the alarm")
-            dialogToAskUserAboutAlarmUnified(onDismissRequest = {logD("Dismissed by new one");showTheDialogToTheUserToAskForPermission= false },
-                onConfirmation = {a,b,c,d,e,f,g, h->{logD("got the value in the dialogToAskUserAboutAlarmUnified and it is $a $b $c $d $e $f $g and now closing it") }
+            DialogToAskUserAboutAlarmUnified(onDismissRequest = {logD("Dismissed by new one");showTheDialogToTheUserToAskForPermission= false },
+                onConfirmation = {startTimeHour, startTimeMinute, endTimeHour, endTimeMinute, startDateInMilliSec, endDateInMilliSec, frequency, alarmMessage ->
+                    logD("got the value in the dialogToAskUserAboutAlarmUnified and it is startTimeHour:$startTimeHour StartMin:$startTimeMinute, endHour:$endTimeHour, endMin:$endTimeMinute, startDateMilliSecond:$startDateInMilliSec, endDateMilliSecond:$endDateInMilliSec, freq:$frequency, Message:$alarmMessage --- and now closing it")
+                    try {
+                        alarmsController.scheduleMultipleAlarms()
+                    }
                     showTheDialogToTheUserToAskForPermission= false
-                                 },
+                },
             )
-//            DialogToAskUserAboutAlarm(onDismissRequest = {
-//                logD("DialogToAskUserAboutAlarm is about to be set to false")
-//                showTheDialogToTheUserToAskForPermission = false }, onConfirmation = {a,b, c ->logD("in the confirm ${a.hour}:${a.minute},--||-- ${c}"); logD("got the confirmation in DialogToAskUserAboutAlarm")}
-//            , activity_context = context_of_activity, alarmDao = AlarmDao, alarmManager = alarmManager)
         }
         Box(
             modifier = Modifier
@@ -405,7 +405,6 @@ fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Col
                 coroutineScope.launch {
                     onClick()
                 }
-                logD("Hi_--")
             },
         contentAlignment = Alignment.Center,
     ) {
@@ -416,9 +415,6 @@ fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Col
         )
     }
 }
-
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -748,7 +744,7 @@ fun DialogToAskUserAboutAlarm(
 enum class InputPickerType { START, END }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun dialogToAskUserAboutAlarmUnified(
+fun DialogToAskUserAboutAlarmUnified(
     onDismissRequest: () -> Unit,
     onConfirmation: (startTimeHour: Int, startTimeMinute: Int, endTimeHour: Int, endTimeMinute: Int, startDateInMilliSec: Long, endDateInMilliSec: Long, frequency: Int, alarmMessage: String) -> Unit,
 ) {
@@ -780,7 +776,6 @@ fun dialogToAskUserAboutAlarmUnified(
         }
     }
 
-
     Dialog(onDismissRequest = onDismissRequest) {
         Card(
             modifier = Modifier
@@ -803,13 +798,12 @@ fun dialogToAskUserAboutAlarmUnified(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(text = "Start time")
-                    InputPickerField(String.format("%02d:%02d", startHour, startMinute), onClick = {
+                    InputPickerField(getFromattedTimeToShowUser(startHour, startMinute), onClick = {
                         showTimePickerFor = InputPickerType.START
                         logD("clicked the input for the start time and the activeTimePicker is $showTimePickerFor")
                         }
                     )
                 }
-
                 // End time
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -819,13 +813,12 @@ fun dialogToAskUserAboutAlarmUnified(
                     Text(text = "End time")
                     // This would ideally trigger a TimePicker
 
-                    InputPickerField(String.format("%02d:%02d", endHour, endMinute), onClick = {
+                    InputPickerField(getFromattedTimeToShowUser(endHour, endMinute), onClick = {
                         showTimePickerFor = InputPickerType.END
                         logD("clicked the input for the start time and the activeTimePicker is $showTimePickerFor")
                     }
                     )
                 }
-
                 // Start date and End date (assuming they are the same in this context)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1216,4 +1209,8 @@ private  fun areThePramsValid(frequency: Int, startDate: Long, endDate: Long, st
     val endTimeMillisecond =    Calendar.getInstance().apply {timeInMillis = endDate  ; set(Calendar.HOUR_OF_DAY, endTimeHour); set(Calendar.MINUTE, endTimeMinute) }.timeInMillis
     logD("the startTimeMillisecond in millisecond is $startTimeMillisecond and the endTimeMillisecond is $endTimeMillisecond and startTime < endTime ${startTimeMillisecond < endTimeMillisecond}")
     return startTimeMillisecond < endTimeMillisecond
+}
+
+private  fun  getFromattedTimeToShowUser(Hour:Int, Minute:Int):String{
+    return String.format(Locale.getDefault() , "%02d:%02d", Hour, Minute)
 }
