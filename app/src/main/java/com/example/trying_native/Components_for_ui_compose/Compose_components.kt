@@ -1,20 +1,19 @@
 package com.example.trying_native.components_for_ui_compose
 
-import android.R
-import android.R.attr.value
 import android.annotation.SuppressLint
 import android.app.AlarmManager
-import android.app.PendingIntent
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import java.util.Calendar
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -77,8 +77,11 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.input.pointer.pointerInput
@@ -92,8 +95,8 @@ import com.example.trying_native.notification.NotificationBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
 
@@ -357,7 +360,6 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                 onConfirmation = {a,b,c,d,e,f,g, h->{logD("got the value in the dialogToAskUserAboutAlarmUnified and it is $a $b $c $d $e $f $g and now closing it") }
                     showTheDialogToTheUserToAskForPermission= false
                                  },
-                alarmDao = AlarmDao, alarmManager = alarmManager, activity_context = context_of_activity,
             )
 //            DialogToAskUserAboutAlarm(onDismissRequest = {
 //                logD("DialogToAskUserAboutAlarm is about to be set to false")
@@ -743,12 +745,10 @@ fun DialogToAskUserAboutAlarm(
 }
 
 
+enum class InputPickerType { START, END }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun dialogToAskUserAboutAlarmUnified(
-    alarmManager: AlarmManager,
-    activity_context: ComponentActivity, // Keep this if you need actual Android context for AlarmManager
-    alarmDao: AlarmDao, // Your DAO for database operations
     onDismissRequest: () -> Unit,
     onConfirmation: (startTimeHour: Int, startTimeMinute: Int, endTimeHour: Int, endTimeMinute: Int, startDateInMilliSec: Long, endDateInMilliSec: Long, frequency: Int, alarmMessage: String) -> Unit,
 ) {
@@ -756,25 +756,30 @@ fun dialogToAskUserAboutAlarmUnified(
     // it and would have to set the   end time
     val calInstance = Calendar.getInstance()
     var startHour by remember { mutableStateOf(calInstance.get(Calendar.HOUR_OF_DAY)) }
-    var startMinute by remember { mutableStateOf(calInstance.get(Calendar.MINUTE)) }
-    var endHour by remember { mutableStateOf(calInstance.get(Calendar.HOUR_OF_DAY ) ) }
-    var endMinute by remember { mutableStateOf(calInstance.get(Calendar.MINUTE)) }
-    var frequency by remember { mutableStateOf(2) }
+    var startMinute by remember { mutableIntStateOf(calInstance.get(Calendar.MINUTE)) }
+    var endHour by remember { mutableIntStateOf(calInstance.get(Calendar.HOUR_OF_DAY ) ) }
+    var endMinute by remember { mutableIntStateOf(calInstance.get(Calendar.MINUTE)) }
+    var frequency by remember { mutableIntStateOf(2) }
     var alarmMessage by remember { mutableStateOf("") }
     var startDateToView by remember { mutableStateOf(getDateInHumanReadableFormat(calInstance.timeInMillis)) }
     var endDateToView by remember { mutableStateOf(getDateInHumanReadableFormat(calInstance.timeInMillis)) }
-    var startDateToReturn by remember { mutableStateOf(calInstance.timeInMillis) }
-    var endDateToReturn by remember { mutableStateOf(calInstance.timeInMillis) }
-    val dismissButtonColor by remember(frequency) {
+    var startDateToReturn by remember { mutableLongStateOf(calInstance.timeInMillis) }
+    var endDateToReturn by remember { mutableLongStateOf(calInstance.timeInMillis) }
+
+    var showTimePickerFor by remember { mutableStateOf<InputPickerType?>(null) }
+    var showDatePickerFor by remember { mutableStateOf<InputPickerType?>(null) }
+
+    val areInputsValid by remember(frequency, startDateToReturn, endDateToReturn) {
         derivedStateOf {
-            if (frequency < 1) Color.Red else Color(0xFF0D388D) // Use onSurfaceVariant for TextButton's default text color
+            areThePramsValid(frequency, startDateToReturn, endDateToReturn, startHour, startMinute, endHour, endMinute )
         }
     }
-//    getDateInHumanReadableFormat
-    // You would typically use actual TimePicker and DatePicker dialogs here
-    // For this example, we'll use simple text fields for display and assume pickers are triggered elsewhere.
-    // However, if you want the TimePicker and DatePicker to be *within* this dialog,
-    // you would need to manage their visibility and state.
+    val dismissButtonColor by remember(areInputsValid) {
+        derivedStateOf {
+            if (areInputsValid) Color(0xFF0D388D) else Color.Red
+        }
+    }
+
 
     Dialog(onDismissRequest = onDismissRequest) {
         Card(
@@ -798,13 +803,10 @@ fun dialogToAskUserAboutAlarmUnified(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(text = "Start time")
-                    // This would ideally trigger a TimePicker
-                    OutlinedTextField(
-                        value = String.format("%02d:%02d", startHour, startMinute),
-                        onValueChange = { /* Not directly editable, opened by picker */ },
-                        readOnly = true, // To indicate it's set by a picker
-                        trailingIcon = { Text("AM") }, // For AM/PM display
-                        modifier = Modifier.width(120.dp)
+                    InputPickerField(String.format("%02d:%02d", startHour, startMinute), onClick = {
+                        showTimePickerFor = InputPickerType.START
+                        logD("clicked the input for the start time and the activeTimePicker is $showTimePickerFor")
+                        }
                     )
                 }
 
@@ -816,12 +818,11 @@ fun dialogToAskUserAboutAlarmUnified(
                 ) {
                     Text(text = "End time")
                     // This would ideally trigger a TimePicker
-                    OutlinedTextField(
-                        value = String.format("%02d:%02d", endHour, endMinute),
-                        onValueChange = { /* Not directly editable, opened by picker */ },
-                        readOnly = true,
-                        trailingIcon = { Text("AM") },
-                        modifier = Modifier.width(120.dp)
+
+                    InputPickerField(String.format("%02d:%02d", endHour, endMinute), onClick = {
+                        showTimePickerFor = InputPickerType.END
+                        logD("clicked the input for the start time and the activeTimePicker is $showTimePickerFor")
+                    }
                     )
                 }
 
@@ -833,26 +834,21 @@ fun dialogToAskUserAboutAlarmUnified(
                 ) {
                     Column {
                         Text(text = "Start date")
-                        // This would ideally trigger a DatePicker
-                        OutlinedTextField(
-                            value = startDateToView,
-                            onValueChange = { /* Not directly editable, opened by picker */ },
-                            readOnly = true,
-                            modifier = Modifier.width(130.dp)
+                        InputPickerField(startDateToView, onClick = {
+                            showDatePickerFor = InputPickerType.START
+                            logD(" the start date for the date picker is $showDatePickerFor")
+                        }
                         )
                     }
                     Column {
                         Text(text = "End date", modifier = Modifier.padding(start = 20.dp))
-                        // This would ideally trigger a DatePicker
-                        OutlinedTextField(
-                            value = endDateToView,
-                            onValueChange = { /* Not directly editable, opened by picker */ },
-                            readOnly = true,
-                            modifier = Modifier.width(150.dp).padding(start = 10.dp)
+                        InputPickerField(endDateToView, onClick = {
+                            showDatePickerFor = InputPickerType.END
+                            logD(" the end date for the date picker is $showDatePickerFor")
+                        }
                         )
                     }
                 }
-
                 // Frequency
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -872,10 +868,9 @@ fun dialogToAskUserAboutAlarmUnified(
                             }
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.width(120.dp)
+                        modifier = Modifier.width(120.dp).background(Color.White).border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline))
                     )
                 }
-
                 // Alarm message/name
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -886,28 +881,24 @@ fun dialogToAskUserAboutAlarmUnified(
                     OutlinedTextField(
                         value = alarmMessage,
                         onValueChange = { alarmMessage = it },
-                        modifier = Modifier.weight(1f)  // Takes remaining space
+                        modifier = Modifier.weight(1f).background(Color.White).border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline))   // Takes remaining space
                     )
                 }
-
                 Spacer(modifier = Modifier.height(8.dp)) // Spacer before buttons
-
                 // Dismiss and Set buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
-
-
                     TextButton(onClick = onDismissRequest) {
                         Text("Dismiss")
                     }
 
                     Button(
                         onClick = {
-                            if(frequency >0){
+                            if(areInputsValid){
+                                logD("the inputs are valid")
                                 onConfirmation(
                                     startHour,
                                     startMinute,
@@ -930,10 +921,172 @@ fun dialogToAskUserAboutAlarmUnified(
             }
         }
     }
+
+    if (showTimePickerFor!= null){
+        logD("in the time picker in the dialog to ask user about alarm")
+        TimePickerDialog(
+            onDismissRequest = {    showTimePickerFor = null  },
+            onTimeSelected = { newTime ->
+                when (showTimePickerFor) {
+                    InputPickerType.START -> {
+                        logD("changed the start time to $newTime or Hour:${newTime.hour} and Min:${newTime.minute}")
+                        startHour = newTime.hour
+                        startMinute = newTime.minute
+                    }
+                    InputPickerType.END -> {
+                        logD("changed the end time to $newTime or Hour:${newTime.hour} and Min:${newTime.minute}")
+                        endHour = newTime.hour
+                        endMinute = newTime.minute
+                    }
+                    null -> { /* Should not happen */ }
+                }
+                showTimePickerFor = null
+            },
+            initialTime = when (showTimePickerFor) {
+                InputPickerType.START -> LocalTime.of(startHour, startMinute)
+                InputPickerType.END -> LocalTime.of(endHour, endMinute)
+                else -> LocalTime.now()
+            }
+        )
+    }
+    if (showDatePickerFor !== null){
+        logD("in the date picker in the dialog to ask user about alarm")
+        DatePickerDialog(
+            onDismissRequest = { showDatePickerFor = null },
+            onDateSelected = { newDateMillis ->
+                when (showDatePickerFor) {
+                    InputPickerType.START -> {
+                        startDateToReturn = newDateMillis
+                        startDateToView = getDateInHumanReadableFormat(newDateMillis)
+                        // cause most often than not my start date and the end date are the same if the
+                        // user wants a diff one they can change it
+                        endDateToReturn = newDateMillis
+                        endDateToView = getDateInHumanReadableFormat(newDateMillis)
+                        logD("the start date is $startDateToReturn and end date also set (as this is for start time) is $endDateToReturn")
+                        logD("the human readable date in start date picker is start date $startDateToView and end date $endDateToView")
+                    }
+                    InputPickerType.END -> {
+                        endDateToReturn = newDateMillis
+                        endDateToView = getDateInHumanReadableFormat(newDateMillis)
+                        logD("the human readable date in end date picker and the end date is $endDateToView")
+                        logD("the end date (in end date picker) is $endDateToReturn ")
+                    }
+                    null -> { /* Should not happen */ }
+                }
+                showDatePickerFor = null
+            },
+            initialDate = when (showDatePickerFor) {
+                InputPickerType.START -> startDateToReturn
+                InputPickerType.END -> endDateToReturn
+                else -> calInstance.timeInMillis
+            }
+        )
+    }
 }
 
 
 
+@Composable
+fun InputPickerField(valueOfSelectedInput: String, onClick: () -> Unit){
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier = Modifier
+            .padding(start = 16.dp)
+            .indication(indication = null, interactionSource =interactionSource )
+            .clickable(indication = null, interactionSource =interactionSource) {
+                onClick()
+            },
+        contentAlignment = Alignment.CenterEnd
+    ) {
+        // Use a non-clickable Surface styled like TextField
+        Surface(
+            modifier = Modifier
+                .width(120.dp)
+                .indication(indication = null, interactionSource =interactionSource )
+                .height(56.dp),
+            shape = MaterialTheme.shapes.small,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        ) {
+            Row(
+                Modifier.fillMaxSize().padding(horizontal = 12.dp)
+                    .indication(indication = null, interactionSource =interactionSource ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(valueOfSelectedInput)
+            }
+        }
+    }
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TimePickerDialog(
+    onDismissRequest: () -> Unit,
+    onTimeSelected: (LocalTime) -> Unit,
+    initialTime: LocalTime
+) {
+    val timePickerState = rememberTimePickerState(
+        initialHour = initialTime.hour,
+        initialMinute = initialTime.minute,
+        is24Hour = false
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text(text = "Select Time") },
+        text = {
+            TimePicker(state = timePickerState)
+        },
+        confirmButton = {
+            Button(onClick = {
+                val newTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
+                onTimeSelected(newTime)
+            }) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismissRequest) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DatePickerDialog(
+    onDismissRequest: () -> Unit,
+    onDateSelected: (Long) -> Unit, // Returns selected date in milliseconds
+    initialDate: Long
+) {
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initialDate
+    )
+
+    DatePickerDialog(
+        onDismissRequest = onDismissRequest,
+        confirmButton = {
+            Button(onClick = {
+                datePickerState.selectedDateMillis?.let {
+                    onDateSelected(it)
+                }
+                onDismissRequest()
+            }) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismissRequest) {
+                Text("Cancel")
+            }
+        }
+    ) {
+        DatePicker(state = datePickerState)
+    }
+}
 
 
 
@@ -1048,5 +1201,19 @@ fun freq_without_dialog(
 
 /** this fun will get you the date once you give it the time */
 private  fun getDateInHumanReadableFormat(t:Long): String{
-    return SimpleDateFormat("yyyy-MM-dd ", Locale.getDefault()).format(Date(t))
+    return SimpleDateFormat(" dd-MM-yyyy ", Locale.getDefault()).format(Date(t))
+}
+
+/**
+ * checks the params and if we are safe to send it to the setMultipleAlarms
+ * @param startTimeHour it is for the 24 hours format and not  12 hours one
+ * @param endTimeHour it is for the 24 hours format and not  12 hours one
+ * @return true if  params are valid
+ */
+private  fun areThePramsValid(frequency: Int, startDate: Long, endDate: Long, startTimeHour: Int, startTimeMinute: Int, endTimeHour: Int, endTimeMinute: Int): Boolean{
+    if (frequency < 1) return false
+    val startTimeMillisecond = Calendar.getInstance().apply { timeInMillis = startDate; set(Calendar.HOUR_OF_DAY, startTimeHour); set(Calendar.MINUTE, startTimeMinute); }.timeInMillis
+    val endTimeMillisecond =    Calendar.getInstance().apply {timeInMillis = endDate  ; set(Calendar.HOUR_OF_DAY, endTimeHour); set(Calendar.MINUTE, endTimeMinute) }.timeInMillis
+    logD("the startTimeMillisecond in millisecond is $startTimeMillisecond and the endTimeMillisecond is $endTimeMillisecond and startTime < endTime ${startTimeMillisecond < endTimeMillisecond}")
+    return startTimeMillisecond < endTimeMillisecond
 }
