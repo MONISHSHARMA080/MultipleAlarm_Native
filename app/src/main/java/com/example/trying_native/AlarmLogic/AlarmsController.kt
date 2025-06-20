@@ -118,7 +118,9 @@ class AlarmsController {
                 // if we have gotten a error then we will need to cancel the alarm and return the exception and also delete the alarm
                 try {
                     this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq_in_min, alarmDao, alarmManager, activity_context, true)
-                }catch (e: Exception){}
+                }catch (e: Exception){
+                    // lord help us!
+                }
                 return e
             }
             // no error in the try catch of the async block

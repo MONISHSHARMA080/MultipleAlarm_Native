@@ -5,8 +5,9 @@ import android.app.NotificationManager
 import android.content.Context
 import androidx.core.app.NotificationCompat
 import com.example.trying_native.R
+import kotlin.random.Random
 
-class NotificationBuilder(context:Context, notificationText:String, title:String, val NOTIFICATIO_ID: Int = 69 ) {
+class NotificationBuilder(context:Context, notificationText:String, title:String, val NOTIFICATION_ID: Int = Random.nextInt(0, 1000)) {
      companion object {
         private const val CHANNEL_ID = "default_channel"
         private const val CHANNEL_NAME = "Default Channel"
@@ -19,6 +20,7 @@ class NotificationBuilder(context:Context, notificationText:String, title:String
         .setSmallIcon(R.mipmap.ic_launcher_app_icon_name)
         .setContentTitle(title)
         .setContentText(notificationText)
+        .setStyle(NotificationCompat.BigTextStyle().bigText(notificationText)   )
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
     init {
         createNotificationChannel()
@@ -37,7 +39,7 @@ class NotificationBuilder(context:Context, notificationText:String, title:String
 
     fun showNotification() {
         val notification = builder.build()
-        notificationManager.notify(NOTIFICATIO_ID, notification)
+        notificationManager.notify(NOTIFICATION_ID, notification)
     }
     fun cancelNotification(notificationId: Int) {
         notificationManager.cancel(notificationId)

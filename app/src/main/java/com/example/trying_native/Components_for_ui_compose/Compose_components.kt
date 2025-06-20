@@ -91,6 +91,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.lifecycleScope
 import com.example.trying_native.AlarmLogic.AlarmsController
 import com.example.trying_native.FirstLaunchAskForPermission.FirstLaunchAskForPermission
+import com.example.trying_native.getDateForDisplay
 import com.example.trying_native.notification.NotificationBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -140,6 +141,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
     val uncancellableScope = remember {
         CoroutineScope(coroutineScope.coroutineContext + NonCancellable)
     }
+
 
     val askUserForPermission by remember { mutableStateOf(Settings.canDrawOverlays(context_of_activity)) }
 
@@ -360,7 +362,24 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                 onConfirmation = {startTimeHour, startTimeMinute, endTimeHour, endTimeMinute, startDateInMilliSec, endDateInMilliSec, frequency, alarmMessage ->
                     logD("got the value in the dialogToAskUserAboutAlarmUnified and it is startTimeHour:$startTimeHour StartMin:$startTimeMinute, endHour:$endTimeHour, endMin:$endTimeMinute, startDateMilliSecond:$startDateInMilliSec, endDateMilliSecond:$endDateInMilliSec, freq:$frequency, Message:$alarmMessage --- and now closing it")
                     try {
-                        alarmsController.scheduleMultipleAlarms()
+                        val dateForDisplay = if (getDateInHumanReadableFormat(startDateInMilliSec) == getDateInHumanReadableFormat(endDateInMilliSec)) getDateInHumanReadableFormat(startDateInMilliSec) else getDateInHumanReadableFormat(startDateInMilliSec)+"-->"+getDateInHumanReadableFormat(endDateInMilliSec)
+                        val startTimeCal = Calendar.getInstance().apply { timeInMillis = startDateInMilliSec; set(Calendar.HOUR_OF_DAY, startTimeHour); set(Calendar.MINUTE, startTimeMinute)  }
+                        val endTimeCal = Calendar.getInstance().apply { timeInMillis = endDateInMilliSec; set(Calendar.HOUR_OF_DAY, endTimeHour); set(Calendar.MINUTE, endTimeMinute)  }
+                        // date_in_long is safe to pass as any as it is redundant and no one is using it
+                        uncancellableScope.launch {
+                            val exception =alarmsController.scheduleMultipleAlarms(alarmManager, dateForDisplay, startDateInMilliSec, alarmDao = AlarmDao, messageForDB = alarmMessage,
+                                calendar_for_start_time = startTimeCal, calendar_for_end_time = endTimeCal, freq_after_the_callback = frequency, activity_context = context_of_activity
+                            )
+                            if (exception == null){
+                                logD("the scheduleMultipleAlarms func ran fine and no exceptions ")
+                                return@launch
+                            }
+                            NotificationBuilder(context = context_of_activity, title = "there is a error/Exception  in making new alarm", notificationText = exception.toString()).showNotification()
+                            logD("there is a error/Exception  in making new alarm-->${exception}")
+                        }
+                    }catch (e: Exception){
+                        NotificationBuilder(context = context_of_activity, title = "there is a error/Exception  in making new alarm", notificationText = e.toString()).showNotification()
+                        logD(" there is a error/Exception  in making new alarm and was cought by the try catch-->${e} ")
                     }
                     showTheDialogToTheUserToAskForPermission= false
                 },
