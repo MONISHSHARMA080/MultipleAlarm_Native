@@ -33,7 +33,7 @@ class AlarmsController {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
 
-    private fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, startTimeForAlarmSeries: Long, alarmMessage: String= ""  ) {
+    private fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, startTimeForAlarmSeries: Long, alarmMessage: String= ""  ): Exception? {
         logD( "Clicked on the schedule alarm func")
 //    val triggerTime_1 = startTime
         val intent = Intent(ALARM_ACTION) // Use the action string
@@ -43,6 +43,11 @@ class AlarmsController {
         logD("the startTimeForReceiverToGetTheAlarmIs is $startTimeForAlarmSeries ")
         logD("the message in the startTime is $alarmMessage")
 
+        // assert that the start time is > endTime
+        if (startTime >  endTime){
+            logD("the startTime:${startTime} is > endTime:${endTime}  and human redable is startTIem:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
+            return Exception("the startTime:${startTime} is not > endTime:${endTime} ")
+        }
         intent.putExtra("startTimeForDb", startTimeForAlarmSeries)
         intent.putExtra("startTime", startTime)
         intent.putExtra("endTime", endTime)
@@ -51,9 +56,24 @@ class AlarmsController {
         logD("\n\n++setting the pending intent of request code(startTime of alarm to int)->${startTime.toInt()} and it is in the human readable format is ${SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date(startTime)) }++\n\n")
         val pendingIntent = PendingIntent.getBroadcast(componentActivity,
             startTime.toInt(), intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE
         )
-        alarmManager.setExact(AlarmManager.RTC_WAKEUP, startTime, pendingIntent)
+        logD("is pendingIntent in the scheduleAlarm() null ${pendingIntent == null}, and it is $pendingIntent")
+        if (pendingIntent == null){
+            // meaning that the pending intent does not exist and it is safe to create one
+            logD("PendingIntent does not exist. Creating a new one.")
+            val pendingIntent = PendingIntent.getBroadcast(
+                componentActivity,
+                startTime.toInt(),
+                intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT // Use UPDATE_CURRENT for creation
+            )
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, startTime, pendingIntent)
+            logD("Alarm successfully scheduled.")
+            return  null
+        }else{
+            return Exception("Alarm on (${getTimeInHumanReadableFormat(startTime)}) already exists and you are trying to create new one")
+        }
     }
 
     // this func is called only at the first time to schedule multiple alarms
@@ -111,7 +131,13 @@ class AlarmsController {
                 }
 
                 // I will not know of the exception until I await so that's why
-                awaitAll(a,b,c)
+                awaitAll(b,c)
+                val exception = a.await()
+                if (exception == null) {
+                    return null
+                }else{
+                    return exception
+                }
             }catch (e:Exception){
                 logD("error occurred in the schedule multiple alarms-->${e}")
                 logD("we are not able to set the alarm so we are going to cancel it all and return  ")
@@ -185,7 +211,12 @@ class AlarmsController {
             val alarmSchedule = scope.async {  scheduleAlarm(startTimeInMillis, alarmData.second_value, alarmManager, activity_context, receiverClass = receiverClass, startTimeInMillis, alarmMessage = alarmData.message)}
             b.await()
             updatingDB.await()
-            alarmSchedule.await()
+            val excep = alarmSchedule.await()
+            if (excep != null){
+                return  excep
+            }else {
+                return  null
+            }
         } catch (e: Exception) {
             // if we have gotten a error then we will need to cancel the alarm and return the exception and also delete the alarm
             try {
@@ -237,7 +268,7 @@ class AlarmsController {
                 // Alarm cycle has not ended, schedule the next alarm
                 logD("scheduleNextAlarm: Scheduling next alarm at $nextAlarmTimeInMillis. Original series start time for DB: $startTimeForAlarmSeries")
 
-                scheduleAlarm(
+               val exception= scheduleAlarm(
                     startTime = nextAlarmTimeInMillis, // This is the time the next alarm will trigger
                     endTime = alarmData.second_value, // The series end time
                     alarmManager = alarmManager,
@@ -247,6 +278,11 @@ class AlarmsController {
                     startTimeForAlarmSeries = startTimeForAlarmSeries,
                     alarmMessage = alarmData.message
                 )
+                if (exception != null){
+                    return  exception
+                }else{
+                    return  null
+                }
             }
         } catch (e: Exception) {
             logD("scheduleNextAlarm: Error occurred: ${e}")
