@@ -338,7 +338,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                                 )
                                               logD("the exception form the resetAlarm is ->$exception")
                                                 if(exception != null){
-                                                        NotificationBuilder(context_of_activity,"error returned in creating multiple alarm ","execution returned exception in schedule multiple alarm  -->${exception}").showNotification()
+                                                        NotificationBuilder(context_of_activity, title = "error returned in creating multiple alarm ", notificationText = "execution returned exception in schedule multiple alarm  -->${exception}").showNotification()
                                                         logD("error in the schedulemultiple -->${exception}")
 //                                                    }
 
