@@ -61,6 +61,7 @@ class AlarmActivity : ComponentActivity() {
                                 logD("Coroutine exception: ${throwable.message}")
                             }
             )
+    private lateinit var intentReceived: Intent
 
     // Add AudioFocus callback
     private val audioFocusChangeListener =
@@ -80,13 +81,9 @@ class AlarmActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         logD("about to create a new alarm")
+        this.intentReceived = intent
+
         super.onCreate(savedInstanceState)
-        //        pauseBackgroundAudio()
-        //        keepScreenON()
-        //        activityScope.launch { pauseBackgroundAudio() }
-        //        activityScope.launch {keepScreenON()   }
-
-
         setContent {
             // state vals
             var messageVarToSet by remember { mutableStateOf("") }
@@ -135,10 +132,14 @@ class AlarmActivity : ComponentActivity() {
 
     }
 
-    private fun logSoundPlay(soundName: String) {
+    private fun logSoundPlay(soundName: String, intent: Intent) {
         try {
             val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-            val logEntry = "$soundName played at $now\n"
+            val alarmSeriesStartTime = intent.getLongExtra( "startTimeForDb", 0)
+            val alarmStartTime = intent.getLongExtra( "startTime", 0)
+            val alarmEndTime = intent.getLongExtra( "endTime", 0)
+
+            val logEntry = "alarm series start time:${getTimeInHumanReadableFormat(alarmSeriesStartTime)}  alarm start time(time for the alarm to be received):${getTimeInHumanReadableFormat(alarmStartTime)}  alarm end time:${getTimeInHumanReadableFormat(alarmEndTime)} \n soundName:$soundName played at $now \n\n"
 
             // Get the app's external files directory
             val file = File(getExternalFilesDir(null), "sound_log.txt")
@@ -146,7 +147,7 @@ class AlarmActivity : ComponentActivity() {
             // Append the log entry to the file
             FileWriter(file, true).use { writer -> writer.append(logEntry) }
 
-            logD("Logged sound play: $logEntry")
+            logD(logEntry)
         } catch (e: Exception) {
             logD("Failed to log sound play: ${e.message}")
         }
@@ -224,7 +225,7 @@ class AlarmActivity : ComponentActivity() {
                         Timer().schedule(timerTask { finish() }, AUTO_FINISH_DELAY)
                     }
             logD("Playing alarm sound: $randomSoundResId")
-            logSoundPlay(randomSoundName)
+            logSoundPlay(randomSoundName, this.intentReceived)
         } catch (e: Exception) {
             try {
                 // Fallback sound with alarm stream
@@ -243,7 +244,7 @@ class AlarmActivity : ComponentActivity() {
                             isLooping = true
                             start()
                         }
-                logSoundPlay("renaissance")
+                logSoundPlay("renaissance", this.intentReceived)
             } catch (e: Exception) {
                 logD("Exception occurred in starting the fallback alarm \n--> $e <-- \n ")
                 finish()
@@ -319,6 +320,10 @@ class AlarmActivity : ComponentActivity() {
         setShowWhenLocked(true)
         setTurnScreenOn(true)
         wakeLock?.acquire(4 * 60 * 1000L /*10 minutes*/)
+    }
+    private  fun getTimeInHumanReadableFormat(t:Long): String{
+        if (t == 0L) return "--the time here(probablyFromTheIntent) is 0--"
+        return SimpleDateFormat("yyyy-MM-dd h:mm:ss a", Locale.getDefault()).format(Date(t))
     }
 }
 

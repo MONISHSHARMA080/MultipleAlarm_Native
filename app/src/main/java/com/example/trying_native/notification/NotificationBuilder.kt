@@ -20,7 +20,9 @@ class NotificationBuilder(context:Context, notificationText:String, title:String
         private const val CHANNEL_DESCRIPTION = "Default notification channel"
 
     }
-    private  val logFile = File(context.getExternalFilesDir(null), "Notification_logs.txt")
+    private  val logFile: File by lazy {
+        File(context.getExternalFilesDir(null), "Notification_logs.txt")
+    }
     private val notificationManager: NotificationManager by lazy {
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }

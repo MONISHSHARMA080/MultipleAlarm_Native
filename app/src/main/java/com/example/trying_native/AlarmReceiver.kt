@@ -27,18 +27,24 @@ class AlarmReceiver : BroadcastReceiver() {
     private val coroutineScope = CoroutineScope( Dispatchers.IO)
     private val alarmManager by lazy { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
     private  val alarmsController = AlarmsController()
-    private  val logFile = File(context.getExternalFilesDir(null), "Alarm_Receiver_logs.txt")
+    private  val logFile : File by lazy {
+        File(context.getExternalFilesDir(null), "Alarm_Receiver_logs.txt")
+    }
 
 
     override fun onReceive(context: Context, intent: Intent) {
         logD("in the alarm receiver func and here is the intent --> $intent")
         this.context = context
-        runBlocking {
-            scheduleFutureAlarm(context, alarmManager, intent)
-        }
         coroutineScope.launch {
             launchAlarmActivity(intent)
         }
+//        runBlocking {
+//            scheduleFutureAlarm(context, alarmManager, intent)
+//        }
+        coroutineScope.launch {
+            scheduleFutureAlarm(context, alarmManager, intent)
+        }
+        return
     }
 
 

@@ -42,11 +42,16 @@ class AlarmsController {
         intent.setClass(componentActivity, receiverClass)
         logD("the startTimeForReceiverToGetTheAlarmIs is $startTimeForAlarmSeries ")
         logD("the message in the startTime is $alarmMessage")
-
+        val currentTimeViaCalander =Calendar.getInstance().timeInMillis
         // assert that the start time is > endTime
         if (startTime >  endTime){
             logD("the startTime:${startTime} is > endTime:${endTime}  and human redable is startTIem:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
             return Exception("the startTime:${startTime} is not > endTime:${endTime} ")
+        }
+         else if (currentTimeViaCalander>= startTime){
+         // if current time (given by calender) is > start time then we have a problem and we will not let you
+         // proceed, this will not impact the reset alarm as the current time there is > currenttime(by calender)
+            return Exception("the startTime:${startTime} is not greater than the current time(from cal):${currentTimeViaCalander} ")
         }
         intent.putExtra("startTimeForDb", startTimeForAlarmSeries)
         intent.putExtra("startTime", startTime)
@@ -200,7 +205,8 @@ class AlarmsController {
 
 //        startTimeInMillis = startTimeInMillis + freq_in_min
         // have to use the calander one here as this is the reset function and the ine form the alarmData could be old
-        assertWithException(  startTimeInMillis < endTimeInMillis, "  the value of the start time should be < end time , you made a mistake ")
+        // if this one is called from the reset alarm func then the assertin will fail
+//        assertWithException(  startTimeInMillis < endTimeInMillis, "  the value of the start time should be < end time , you made a mistake ")
         logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
         logD("the current start time(of values going in the db) is ${startTimeInMillis} human readable  ${getTimeInHumanReadableFormat(startTimeInMillis)} and the end time ${endTimeInMillis} and human readable   ${getTimeInHumanReadableFormat(endTimeInMillis)} and the date for display that we got is $selected_date_for_display ")
         logD("the current start time(of values in the alarmData) is ${alarmData.first_value} human readable  ${getTimeInHumanReadableFormat(alarmData.first_value)} and the end time ${alarmData.second_value} and human readable   ${getTimeInHumanReadableFormat(alarmData.second_value)} ")
@@ -212,11 +218,7 @@ class AlarmsController {
             b.await()
             updatingDB.await()
             val excep = alarmSchedule.await()
-            if (excep != null){
-                return  excep
-            }else {
-                return  null
-            }
+            return excep // could be null or
         } catch (e: Exception) {
             // if we have gotten a error then we will need to cancel the alarm and return the exception and also delete the alarm
             try {
