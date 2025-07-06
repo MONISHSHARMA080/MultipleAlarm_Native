@@ -11,7 +11,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import java.io.File
+import java.io.FileWriter
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.system.exitProcess
+
+
 
 class AlarmReceiver : BroadcastReceiver() {
     private lateinit var context: Context
@@ -19,18 +27,20 @@ class AlarmReceiver : BroadcastReceiver() {
     private val coroutineScope = CoroutineScope( Dispatchers.IO)
     private val alarmManager by lazy { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
     private  val alarmsController = AlarmsController()
+    private  val logFile = File(context.getExternalFilesDir(null), "Alarm_Receiver_logs.txt")
 
 
     override fun onReceive(context: Context, intent: Intent) {
         logD("in the alarm receiver func and here is the intent --> $intent")
         this.context = context
+        runBlocking {
+            scheduleFutureAlarm(context, alarmManager, intent)
+        }
         coroutineScope.launch {
             launchAlarmActivity(intent)
         }
-        coroutineScopeThatDoesNotCancel.launch {
-            scheduleFutureAlarm(context, alarmManager, intent)
-        }
     }
+
 
     private suspend fun scheduleFutureAlarm(activityContext: Context, alarmManager: AlarmManager, oldIntent: Intent) {
         // Correctly retrieve the time the current alarm fired (from "startTime" extra)
@@ -41,14 +51,14 @@ class AlarmReceiver : BroadcastReceiver() {
         val originalDbEndTime = oldIntent.getLongExtra("endTime", 0)
 
         if ((currentTimeAlarmFired <= 0L) || (startTimeForAlarmSeries <= 0L) || (originalDbEndTime <= 0L)) { // Added check for originalDbStartTime/EndTime too
-            logD("\n ---- Invalid time values received in AlarmReceiver. currentAlarmTime: $currentTimeAlarmFired, originalDbStartTime: $startTimeForAlarmSeries, originalDbEndTime: $originalDbEndTime. Crashing. ----- \n")
+            logSoundPlay("\n ---- Invalid time values received in AlarmReceiver. currentAlarmTime: $currentTimeAlarmFired, originalDbStartTime: $startTimeForAlarmSeries, originalDbEndTime: $originalDbEndTime. Crashing. ----- \n")
             exitProcess(69)
         }
 
-        logD("about to set the future alarm form the broadcast receiver.")
-        logD("Current alarm fired at: $currentTimeAlarmFired")
-        logD("Original DB Start Time: $startTimeForAlarmSeries")
-        logD("Original DB End Time: $originalDbEndTime")
+        logSoundPlay("about to set the future alarm form the broadcast receiver.")
+        logSoundPlay("Current alarm fired at: $currentTimeAlarmFired")
+        logSoundPlay("Original DB Start Time: $startTimeForAlarmSeries")
+        logSoundPlay("Original DB End Time: $originalDbEndTime")
 
 
         // get this form the DB using the original DB start and end times
@@ -56,10 +66,10 @@ class AlarmReceiver : BroadcastReceiver() {
         // Lookup using the original start and end times
         val alarmData = alarmDao.getAlarmByValues(startTimeForAlarmSeries, originalDbEndTime)
         if (alarmData == null) {
-            logD("\n ---- the alarm is not found in the DB for start: $startTimeForAlarmSeries, end: $originalDbEndTime, which should not be possible, you messed up sp bad we are crashing----- \n")
+            logSoundPlay("\n ---- the alarm is not found in the DB for start: $startTimeForAlarmSeries, end: $originalDbEndTime, which should not be possible, you messed up sp bad we are crashing----- \n")
             exitProcess(69)
         }
-        logD("the alarmData of alarm form the DB is ${alarmData}")
+        logSoundPlay("the alarmData of alarm form the DB is ${alarmData}")
 
         // Call scheduleNextAlarm with the correct values
         // currentAlarmTime = the time the current alarm fired (to calculate the next time)
@@ -73,7 +83,9 @@ class AlarmReceiver : BroadcastReceiver() {
         )
 
         if (execption !== null) {
-            logD("the alarm Exception is not null and it is ${execption.message}-----and it is ${execption} ")
+            logSoundPlay("the alarm Exception is not null and it is ${execption.message}-----and it is ${execption} ")
+        }else{
+            logSoundPlay("there was no exception in scheduling the future alarm \n")
         }
     }
 
@@ -90,6 +102,18 @@ class AlarmReceiver : BroadcastReceiver() {
         ).build()
         return db.alarmDao()
 
+    }
+
+    private fun logSoundPlay(logMessage: String) {
+        try {
+            val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+            val logEntry = "AlarmReceiver ($now) : --$logMessage --\n"
+            // Append the log entry to the file
+            FileWriter(logFile, true).use { writer -> writer.append(logEntry) }
+            logD("Logged from AlarmReceiver: $logEntry")
+        } catch (e: Exception) {
+            logD("Failed to log from AlarmReceiver: ${e.message}")
+        }
     }
 
 }

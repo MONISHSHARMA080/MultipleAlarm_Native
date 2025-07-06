@@ -259,11 +259,7 @@ class AlarmsController {
                 // means that the alarm cycle has ended
                 logD("scheduleNextAlarm: Next alarm time ($nextAlarmTimeInMillis) is at or past end time (${alarmData.second_value}). Ending series.")
                 logD("scheduleNextAlarm: Setting last pending intent to update DB.")
-
-
                 // we do not need to schedule the last pending intent for the db as it is already done for us
-
-
             } else {
                 // Alarm cycle has not ended, schedule the next alarm
                 logD("scheduleNextAlarm: Scheduling next alarm at $nextAlarmTimeInMillis. Original series start time for DB: $startTimeForAlarmSeries")
