@@ -139,7 +139,7 @@ class AlarmActivity : ComponentActivity() {
             val alarmStartTime = intent.getLongExtra( "startTime", 0)
             val alarmEndTime = intent.getLongExtra( "endTime", 0)
 
-            val logEntry = "alarm series start time:${getTimeInHumanReadableFormat(alarmSeriesStartTime)}  alarm start time(time for the alarm to be received):${getTimeInHumanReadableFormat(alarmStartTime)}  alarm end time:${getTimeInHumanReadableFormat(alarmEndTime)} \n soundName:$soundName played at $now \n\n"
+            val logEntry = " \n ------- \n alarm series start time:${getTimeInHumanReadableFormat(alarmSeriesStartTime)}  \n alarm expected fire time:${getTimeInHumanReadableFormat(alarmStartTime)}  \n alarm end time:${getTimeInHumanReadableFormat(alarmEndTime)} \n soundName:$soundName played at $now \n ------- \n\n\n"
 
             // Get the app's external files directory
             val file = File(getExternalFilesDir(null), "sound_log.txt")
@@ -330,7 +330,6 @@ class AlarmActivity : ComponentActivity() {
 @Composable
 fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean) {
     var currentTime by remember { mutableStateOf(getCurrentTime()) }
-
     // Updates the time every second
     LaunchedEffect(Unit) {
         while (true) {
@@ -338,7 +337,6 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean
             delay(999)
         }
     }
-
     // Display time in red on black background with a button to finish the activity
     Box(
             modifier = Modifier.fillMaxSize().background(Color.Black),
@@ -385,5 +383,4 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean
 // Helper function to get current time
 fun getCurrentTime(): String {
     return SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date())
-
 }
