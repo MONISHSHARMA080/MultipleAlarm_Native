@@ -39,9 +39,6 @@ class AlarmReceiver : BroadcastReceiver() {
         coroutineScope.launch {
             launchAlarmActivity(intent)
         }
-//        runBlocking {
-//            scheduleFutureAlarm(context, alarmManager, intent)
-//        }
         coroutineScope.launch {
             scheduleFutureAlarm(context, alarmManager, intent)
         }

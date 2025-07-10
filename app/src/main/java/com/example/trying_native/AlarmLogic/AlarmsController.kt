@@ -35,7 +35,6 @@ class AlarmsController {
 
     private fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, startTimeForAlarmSeries: Long, alarmMessage: String= ""  ): Exception? {
         logD( "Clicked on the schedule alarm func")
-//    val triggerTime_1 = startTime
         val intent = Intent(ALARM_ACTION) // Use the action string
         logD("++++++++ receiver class in the schedule alarm is -->${receiverClass.name} +++ $receiverClass")
         logD(" in the scheduleAlarm func and the message is ->$alarmMessage")
@@ -43,7 +42,6 @@ class AlarmsController {
         logD("the startTimeForReceiverToGetTheAlarmIs is $startTimeForAlarmSeries ")
         logD("the message in the startTime is $alarmMessage")
         val currentTimeViaCalander =Calendar.getInstance().timeInMillis
-        // assert that the start time is > endTime
         if (startTime >  endTime){
             logD("the startTime:${startTime} is > endTime:${endTime}  and human redable is startTIem:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
             return Exception("the startTime:${startTime} is not > endTime:${endTime} ")
@@ -480,11 +478,7 @@ class AlarmsController {
         intent.putExtra(message_name_for_start_time,alarm_start_time_to_search_db)
         intent.putExtra(message_name_for_end_time,alarm_end_time_to_search_db)
         val pendingIntent = PendingIntent.getBroadcast(context_of_activity,(alarm_end_time_to_search_db+alarm_start_time_to_search_db).toInt(), intent, PendingIntent.FLAG_IMMUTABLE)
-        alarmManager.setExact(
-            AlarmManager.RTC_WAKEUP,
-            alarm_end_time_to_search_db,
-            pendingIntent
-        )
+        alarmManager.setExact(AlarmManager.RTC_WAKEUP, alarm_end_time_to_search_db, pendingIntent)
         logD("Pending intent set with start time: $alarm_start_time_to_search_db and end time: $alarm_end_time_to_search_db")
         logD("intent -->${intent.extras} ||||| and pending intent -->${pendingIntent}\n ${Calendar.getInstance().timeInMillis < alarm_end_time_to_search_db}")
     }
