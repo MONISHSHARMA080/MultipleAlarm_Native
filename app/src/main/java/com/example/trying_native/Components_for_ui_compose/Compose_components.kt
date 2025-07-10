@@ -203,7 +203,6 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                                 individualAlarm.message
                                             ).toString()
                                         )
-//                                        Toast.makeText(this, "", Toast.LENGTH_SHORT).show()
                                         clipboardManager.setText(AnnotatedString((individualAlarm.message)))
                                         coroutineScope.launch {
                                             snackbarHostState.showSnackbar(

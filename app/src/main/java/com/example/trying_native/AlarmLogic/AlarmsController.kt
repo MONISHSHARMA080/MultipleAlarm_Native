@@ -29,9 +29,7 @@ import java.util.Locale
 const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
 
 class AlarmsController {
-
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
 
     private fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, startTimeForAlarmSeries: Long, alarmMessage: String= ""  ): Exception? {
         logD( "Clicked on the schedule alarm func")
@@ -71,7 +69,8 @@ class AlarmsController {
                 intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT // Use UPDATE_CURRENT for creation
             )
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, startTime, pendingIntent)
+//            alarmManager.setExact(AlarmManager.RTC_WAKEUP, startTime, pendingIntent)
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, startTime, pendingIntent)
             logD("Alarm successfully scheduled.")
             return  null
         }else{
@@ -109,19 +108,15 @@ class AlarmsController {
             logD("round $i")
             logD("setting the alarm and the startTime is $startTimeInMillis and the endTime is $endTimeInMillis")
             try {
-                // since this is oru first time the startTimeForReceiverToGetTheAlarmIs->
+                // since this is our first time the startTimeForReceiverToGetTheAlarmIs->
              val a  =   scope.async {scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activity_context,  receiverClass = receiverClass, startTimeForAlarmSeries = startTimeInMillisendForDb, alarmMessage = messageForDB )  }
                 logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
                 val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())  }
                 val c = scope.async {
-                    val newAlarm = AlarmData(
-                        first_value = startTimeInMillisendForDb,
-                        second_value = endTimeInMillisendForDb,
+                    val newAlarm = AlarmData(first_value = startTimeInMillisendForDb, second_value = endTimeInMillisendForDb,
                         freq_in_min = freq_in_min,
-                        isReadyToUse = true, // we have just made a new alarm do duh!!
-                        date_for_display = selected_date_for_display,
-                        start_time_for_display = start_time_for_display,
-                        end_time_for_display = end_time_for_display,
+                        isReadyToUse = true, date_for_display = selected_date_for_display,
+                        start_time_for_display = start_time_for_display, end_time_for_display = end_time_for_display,
                         start_am_pm = start_am_pm,
                         end_am_pm = end_am_pm,
                         freq_in_min_to_display = (freq_in_min / 60000).toInt(),
@@ -451,9 +446,7 @@ class AlarmsController {
                     alarmDao = alarmDao,
                     calendar_for_start_time = startCalendar,
                     calendar_for_end_time = endCalendar,
-                    freq_after_the_callback = alarmData.freqGottenAfterCallback,
-                    selected_date_for_display = getDateForDisplay(startCalendar),
-                    alarmData = alarmData,
+                    freq_after_the_callback = alarmData.freqGottenAfterCallback, selected_date_for_display = getDateForDisplay(startCalendar), alarmData = alarmData,
                 )
             if (exception != null){
                 logD("there is a exception found and it is ${exception}")
