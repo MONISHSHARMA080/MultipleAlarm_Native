@@ -26,10 +26,10 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
-const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
 
 class AlarmsController {
 
+    private val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
 
@@ -46,7 +46,7 @@ class AlarmsController {
         // assert that the start time is > endTime
         if (startTime >  endTime){
             logD("the startTime:${startTime} is > endTime:${endTime}  and human redable is startTIem:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
-            return Exception("the startTime:${startTime} is not > endTime:${endTime} ")
+            return Exception("the startTime:${getTimeInHumanReadableFormat(startTime)}($startTime) is not > endTime:${getTimeInHumanReadableFormat(endTime)}($endTime) ")
         }
          else if (currentTimeViaCalander>= startTime){
          // if current time (given by calender) is > start time then we have a problem and we will not let you
