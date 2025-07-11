@@ -272,6 +272,8 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                     onClick = {
                                         // change the alarmData field so that we can store the end date in it too
                                         //
+                                        // also there is a b ug where when the start time is in am and end time is in pm
+                                        // then the end time becomes in pm
                                         DialogToAskUserAboutAlarmUnified(
 
                                         )

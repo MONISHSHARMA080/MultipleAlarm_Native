@@ -42,38 +42,28 @@ class AlarmsController {
   ): Exception? {
     logD("Clicked on the schedule alarm func")
     val intent = Intent(ALARM_ACTION) // Use the action string
-    logD(
-            "++++++++ receiver class in the schedule alarm is -->${receiverClass.name} +++ $receiverClass"
-    )
+    logD("++++++++ receiver class in the schedule alarm is -->${receiverClass.name} +++ $receiverClass")
     logD(" in the scheduleAlarm func and the message is ->$alarmMessage")
     intent.setClass(componentActivity, receiverClass)
     logD("the startTimeForReceiverToGetTheAlarmIs is $startTimeForAlarmSeries ")
     logD("the message in the startTime is $alarmMessage")
     val currentTimeViaCalander = Calendar.getInstance().timeInMillis
     if (startTime > endTime) {
-      logD(
-              "the startTime:${startTime} is > endTime:${endTime}  and human redable is startTIem:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n"
-      )
+      logD("the startTime:${startTime} is > endTime:${endTime}  and human redable is startTIem:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
       return Exception("the startTime:${startTime} is not > endTime:${endTime} ")
     } else if (currentTimeViaCalander >= startTime) {
       // if current time (given by calender) is > start time then we have a problem and we will not
       // let you
       // proceed, this will not impact the reset alarm as the current time there is > currenttime(by
       // calender)
-      return Exception(
-              "the startTime:${startTime} is not greater than the current time(from cal):${currentTimeViaCalander} "
-      )
+      return Exception("the startTime:${startTime} is not greater than the current time(from cal):${currentTimeViaCalander}")
     }
     intent.putExtra("startTimeForDb", startTimeForAlarmSeries)
     intent.putExtra("startTime", startTime)
     intent.putExtra("endTime", endTime)
     intent.putExtra("message", alarmMessage)
-    logD(
-            " in the scheduleAlarm func and the startTime is $startTime and the startTimeForDb is $startTimeForAlarmSeries  "
-    )
-    logD(
-            "\n\n++setting the pending intent of request code(startTime of alarm to int)->${startTime.toInt()} and it is in the human readable format is ${SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date(startTime)) }++\n\n"
-    )
+    logD(            " in the scheduleAlarm func and the startTime is $startTime and the startTimeForDb is $startTimeForAlarmSeries  ")
+    logD(            "\n\n++setting the pending intent of request code(startTime of alarm to int)->${startTime.toInt()} and it is in the human readable format is ${SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date(startTime)) }++\n\n")
     val pendingIntent =
             PendingIntent.getBroadcast(
                     componentActivity,
@@ -81,28 +71,20 @@ class AlarmsController {
                     intent,
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE
             )
-    logD(
-            "is pendingIntent in the scheduleAlarm() null ${pendingIntent == null}, and it is $pendingIntent"
-    )
+    logD("is pendingIntent in the scheduleAlarm() null ${pendingIntent == null}, and it is $pendingIntent")
     if (pendingIntent == null) {
       // meaning that the pending intent does not exist and it is safe to create one
       logD("PendingIntent does not exist. Creating a new one.")
       val pendingIntent =
-              PendingIntent.getBroadcast(
-                      componentActivity,
-                      startTime.toInt(),
-                      intent,
-                      PendingIntent.FLAG_IMMUTABLE or
-                              PendingIntent.FLAG_UPDATE_CURRENT // Use UPDATE_CURRENT for creation
+              PendingIntent.getBroadcast(componentActivity, startTime.toInt(), intent,
+                      PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT // Use UPDATE_CURRENT for creation
               )
       alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, startTime, pendingIntent)
       //            alarmManager.setAlarmClock()
       logD("Alarm successfully scheduled.")
       return null
     } else {
-      return Exception(
-              "Alarm on (${getTimeInHumanReadableFormat(startTime)}) already exists and you are trying to create new one"
-      )
+      return Exception(              "Alarm on (${getTimeInHumanReadableFormat(startTime)}) already exists and you are trying to create new one")
     }
   }
 
@@ -124,21 +106,15 @@ class AlarmsController {
       // tomorrow (basically should be in a day)
       var startTimeInMillis = calendar_for_start_time.timeInMillis
       val startTimeInMillisendForDb = startTimeInMillis
-      val start_time_for_display =
-              SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_start_time.time)
-      val start_am_pm =
-              SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
+      val start_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_start_time.time)
+      val start_am_pm = SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
 
       var endTimeInMillis = calendar_for_end_time.timeInMillis
       val endTimeInMillisendForDb = endTimeInMillis
-      val end_time_for_display =
-              SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_end_time.time)
-      val end_am_pm =
-              SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
+      val end_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_end_time.time)
+      val end_am_pm = SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_end_time.time).trim()
 
-      logD(
-              " \n\n am_pm_start_time-->$start_time_for_display $start_am_pm ; endtime-->$end_time_for_display $end_am_pm"
-      )
+      logD(" \n\n am_pm_start_time-->$start_time_for_display $start_am_pm ; endtime-->$end_time_for_display $end_am_pm")
       var freq_in_milli: Long
       freq_in_milli = freq_after_the_callback.toLong()
       val freq_in_min = freq_in_milli * 60000
