@@ -46,7 +46,7 @@ import kotlin.jvm.java
 class AlarmActivity : ComponentActivity() {
     private var mediaPlayer: MediaPlayer? = null
     private var wakeLock: PowerManager.WakeLock? = null
-    private val audioManager by lazy { getSystemService(Context.AUDIO_SERVICE) as AudioManager }
+    private val audioManager by lazy { getSystemService(AUDIO_SERVICE) as AudioManager }
     private val AUTO_FINISH_DELAY = 120000L
 //    private var previousAudioVolume = 1
     private var audioFocusRequest: AudioFocusRequest? = null
