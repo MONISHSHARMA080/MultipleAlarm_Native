@@ -92,7 +92,7 @@ class AlarmsController {
             var endTimeInMillis = calendar_for_end_time.timeInMillis
             val endTimeInMillisendForDb= endTimeInMillis
             val end_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_end_time.time)
-            val end_am_pm =  SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
+            val end_am_pm =  SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_end_time.time).trim()
 
             logD(" \n\n am_pm_start_time-->$start_time_for_display $start_am_pm ; endtime-->$end_time_for_display $end_am_pm")
             var freq_in_milli : Long
