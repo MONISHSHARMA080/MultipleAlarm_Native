@@ -69,8 +69,8 @@ class AlarmsController {
                 intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT // Use UPDATE_CURRENT for creation
             )
-//            alarmManager.setExact(AlarmManager.RTC_WAKEUP, startTime, pendingIntent)
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, startTime, pendingIntent)
+//            alarmManager.setAlarmClock()
             logD("Alarm successfully scheduled.")
             return  null
         }else{
