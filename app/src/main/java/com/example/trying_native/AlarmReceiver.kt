@@ -36,13 +36,10 @@ class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         logD("in the alarm receiver func and here is the intent --> $intent")
         this.context = context
-        coroutineScope.launch {
+        coroutineScopeThatDoesNotCancel.launch {
             launchAlarmActivity(intent)
         }
-//        runBlocking {
-//            scheduleFutureAlarm(context, alarmManager, intent)
-//        }
-        coroutineScope.launch {
+        coroutineScopeThatDoesNotCancel.launch {
             scheduleFutureAlarm(context, alarmManager, intent)
         }
         return
@@ -50,18 +47,14 @@ class AlarmReceiver : BroadcastReceiver() {
 
 
     private suspend fun scheduleFutureAlarm(activityContext: Context, alarmManager: AlarmManager, oldIntent: Intent) {
-        // Correctly retrieve the time the current alarm fired (from "startTime" extra)
         val currentTimeAlarmFired = oldIntent.getLongExtra("startTime", 0)
-        // Correctly retrieve the original start time for DB lookup (from "startTimeForDb" extra)
         val startTimeForAlarmSeries = oldIntent.getLongExtra("startTimeForDb", 0)
-        // Correctly retrieve the original end time for DB lookup (from "endTime" extra)
         val originalDbEndTime = oldIntent.getLongExtra("endTime", 0)
 
         if ((currentTimeAlarmFired <= 0L) || (startTimeForAlarmSeries <= 0L) || (originalDbEndTime <= 0L)) { // Added check for originalDbStartTime/EndTime too
             logSoundPlay(alarmData = null, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "---- Invalid time values received in AlarmReceiver. currentAlarmTime: $currentTimeAlarmFired, originalDbStartTime: $startTimeForAlarmSeries, originalDbEndTime: $originalDbEndTime. Crashing. ----- ")
             exitProcess(69)
         }
-        // get this form the DB using the original DB start and end times
         val alarmDao = getAlarmDao(context)
         // Lookup using the original start and end times
         val alarmData = alarmDao.getAlarmByValues(startTimeForAlarmSeries, originalDbEndTime)
@@ -70,11 +63,6 @@ class AlarmReceiver : BroadcastReceiver() {
             exitProcess(69)
             return
         }
-//        logSoundPlay("the alarmData of alarm form the DB is ${alarmData}")
-
-        // Call scheduleNextAlarm with the correct values
-        // currentAlarmTime = the time the current alarm fired (to calculate the next time)
-        // startTimeForReceiverToGetTheAlarmIs = the original DB start time (to pass to the next receiver for DB lookup)
         val execption = alarmsController.scheduleNextAlarm(
             alarmManager,
             alarmData = alarmData,
@@ -84,7 +72,6 @@ class AlarmReceiver : BroadcastReceiver() {
         )
 
         if (execption !== null) {
-//            logSoundPlay("")
             logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "the alarm Exception is not null and it is ${execption.message}-----and it is ${execption} ")
         }else{
             logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "there was no exception in scheduling the future alarm ")
@@ -106,9 +93,8 @@ class AlarmReceiver : BroadcastReceiver() {
     }
     private fun logSoundPlay(alarmData: AlarmData?,alarmSeriesStartTime: Long,alarmStartTime: Long, alarmEndTime: Long, alarmScheduleMessage: String ) {
         try {
-            val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+            val now = getTimeInHumanReadableFormat(Date().time)
             val logEntry = " \n\n\n --------(at $now)--------- \n  alarm series start time:${getTimeInHumanReadableFormat(alarmSeriesStartTime)}  \n alarm start time(time for the alarm to be received):${getTimeInHumanReadableFormat(alarmStartTime)}  \n alarm end time:${getTimeInHumanReadableFormat(alarmEndTime)} \n alarmData ->$alarmData \n alarmScheduleMessage: $alarmScheduleMessage  \n ------- \n\n\n"
-            // Append the log entry to the file
             FileWriter(logFile, true).use { writer -> writer.append(logEntry) }
             logD("Logged from AlarmReceiver: $logEntry")
         } catch (e: Exception) {
