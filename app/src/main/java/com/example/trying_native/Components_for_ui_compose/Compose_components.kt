@@ -446,8 +446,16 @@ fun DialogToAskUserAboutAlarmUnified(
     var startHour by remember { mutableIntStateOf(calInstance.get(Calendar.HOUR_OF_DAY)) }
     var startMinute by remember { mutableIntStateOf(calInstance.get(Calendar.MINUTE)) }
 //    endCalendar.add(Calendar.MINUTE, distanceForEndTime.toInt() )
-    var endHour   by remember { mutableIntStateOf(endCalendar.get(Calendar.HOUR_OF_DAY ) ) }
-    var endMinute by remember { mutableIntStateOf(endCalendar.get(Calendar.MINUTE)) }
+//    var endHour   by remember { mutableIntStateOf(endCalendar.get(Calendar.HOUR_OF_DAY ) ) }
+//    var endMinute by remember { mutableIntStateOf(endCalendar.get(Calendar.MINUTE)) }
+    val endHour by remember(endCalendar){
+        derivedStateOf { endCalendar.get(Calendar.HOUR_OF_DAY) }
+    }
+    val endMinute by remember(endCalendar){
+        derivedStateOf {endCalendar.get(Calendar.MINUTE)  }
+    }
+
+
     var frequency by remember { mutableIntStateOf(2) }
     var alarmMessage by remember { mutableStateOf("") }
     var startDateToView by remember { mutableStateOf(getDateInHumanReadableFormat(calInstance.timeInMillis)) }
@@ -626,11 +634,23 @@ fun DialogToAskUserAboutAlarmUnified(
                         logD("changed the start time to $newTime or Hour:${newTime.hour} and Min:${newTime.minute}")
                         startHour = newTime.hour
                         startMinute = newTime.minute
+                        val updatedEndCal =Calendar.getInstance().apply { timeInMillis = calInstance.timeInMillis
+                         set(Calendar.HOUR_OF_DAY, newTime.hour)
+                         set(Calendar.MINUTE, newTime.minute)
+                        }
+                        endCalendar = updatedEndCal.apply { timeInMillis = updatedEndCal.timeInMillis + distanceForEndTime }
+
                     }
                     InputPickerType.END -> {
                         logD("changed the end time to $newTime or Hour:${newTime.hour} and Min:${newTime.minute}")
-                        endHour = newTime.hour
-                        endMinute = newTime.minute
+//                        endHour = newTime.hour
+//                        endMinute = newTime.minute
+                        endCalendar = Calendar.getInstance().apply {
+                            timeInMillis = endCalendar.timeInMillis
+                            set(Calendar.HOUR_OF_DAY, newTime.hour)
+                            set(Calendar.MINUTE, newTime.minute)
+                        }
+
                     }
                     null -> { /* Should not happen */ }
                 }
