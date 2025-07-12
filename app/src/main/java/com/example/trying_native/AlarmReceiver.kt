@@ -94,7 +94,7 @@ class AlarmReceiver : BroadcastReceiver() {
     private fun logSoundPlay(alarmData: AlarmData?,alarmSeriesStartTime: Long,alarmStartTime: Long, alarmEndTime: Long, alarmScheduleMessage: String ) {
         try {
             val now = getTimeInHumanReadableFormat(Date().time)
-            val logEntry = " \n\n\n --------(at $now)--------- \n  alarm series start time:${getTimeInHumanReadableFormat(alarmSeriesStartTime)}  \n alarm start time(time for the alarm to be received):${getTimeInHumanReadableFormat(alarmStartTime)}  \n alarm end time:${getTimeInHumanReadableFormat(alarmEndTime)} \n alarmData ->$alarmData \n alarmScheduleMessage: $alarmScheduleMessage  \n ------- \n\n\n"
+            val logEntry = " \n\n\n --------(at $now)--------- \n  alarm series start time:${getTimeInHumanReadableFormat(alarmSeriesStartTime)}  \n alarm start time(time for the alarm to be received):${getTimeInHumanReadableFormat(alarmStartTime)}  \n alarm end time:${getTimeInHumanReadableFormat(alarmEndTime)} \n alarmData ->\n $alarmData \n<--- \n alarmScheduleMessage: $alarmScheduleMessage  \n ------- \n\n\n"
             FileWriter(logFile, true).use { writer -> writer.append(logEntry) }
             logD("Logged from AlarmReceiver: $logEntry")
         } catch (e: Exception) {
