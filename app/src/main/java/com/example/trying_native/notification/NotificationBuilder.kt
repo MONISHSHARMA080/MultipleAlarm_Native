@@ -63,7 +63,7 @@ class NotificationBuilder(context:Context, notificationText:String, title:String
     private fun writeLogToFile(title: String, message: String) {
         try {
             val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-            val logEntry = "NotificationClass ($now) : --title:$title --\n\n --message:$message--- \n"
+            val logEntry = "\n ----- NotificationClass ($now) : \n --title:$title --\n\n --message:$message----- \n\n\n"
             // Append the log entry to the file
             FileWriter(logFile, true).use { writer -> writer.append(logEntry) }
             logD("Logged from Notification Builder: $logEntry")
@@ -71,5 +71,11 @@ class NotificationBuilder(context:Context, notificationText:String, title:String
             logD("Failed to log from AlarmReceiver: ${e.message}")
         }
     }
+
+    private  fun getTimeInHumanReadableFormat(t:Long): String{
+        if (t == 0L) return "--the time here(probablyFromTheIntent) is 0--"
+        return SimpleDateFormat("yyyy-MM-dd h:mm:ss a", Locale.getDefault()).format(Date(t))
+    }
+
 
 }
