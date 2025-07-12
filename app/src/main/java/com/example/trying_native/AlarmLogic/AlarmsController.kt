@@ -42,12 +42,12 @@ class AlarmsController {
         val currentTimeViaCalander =Calendar.getInstance().timeInMillis
         if (startTime >  endTime){
             logD("the startTime:${startTime} is > endTime:${endTime}  and human redable is startTIem:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
-            return Exception("the startTime:${startTime} is not > endTime:${endTime} ")
+            return Exception("the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not > endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} ")
         }
          else if (currentTimeViaCalander>= startTime){
          // if current time (given by calender) is > start time then we have a problem and we will not let you
          // proceed, this will not impact the reset alarm as the current time there is > currenttime(by calender)
-            return Exception("the startTime:${startTime} is not greater than the current time(from cal):${currentTimeViaCalander} ")
+            return Exception("the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not greater than the current time(from cal):${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalander)} ")
         }
         intent.putExtra("startTimeForDb", startTimeForAlarmSeries)
         intent.putExtra("startTime", startTime)
@@ -477,6 +477,10 @@ class AlarmsController {
     }
 
     private  fun getTimeInHumanReadableFormat(t:Long): String{
+        return SimpleDateFormat("yyyy-MM-dd h:mm:ss a", Locale.getDefault()).format(Date(t))
+    }
+    private  fun getTimeInHumanReadableFormatProtectFrom0Included(t:Long): String{
+        if (t == 0L) return "--the time here(probablyFromTheIntent) is 0--"
         return SimpleDateFormat("yyyy-MM-dd h:mm:ss a", Locale.getDefault()).format(Date(t))
     }
 
