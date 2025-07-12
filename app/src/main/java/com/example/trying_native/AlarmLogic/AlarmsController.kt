@@ -43,8 +43,8 @@ class AlarmsController {
         // removing milliseconds cause when we try to schedule the next alarm it will get a bit behind
         val currentTimeViaCalender = currentCalTime - removeSecForAccuracy
         logD("the current time via calender is: ${this.getTimeInHumanReadableFormatProtectFrom0Included(currentCalTime)}" +
-                " and Current time is: ${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalender)}  " +
-                "startTime of alarm is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)}")
+                " \n and Current time(adjusted for some min diff) is: ${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalender)}  " +
+                "\n startTime of alarm is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)}")
         if (startTime >  endTime){
             logD("the startTime:${startTime} is > endTime:${endTime}  and human redable is startTIem:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
             return Exception("the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not > endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} ")
