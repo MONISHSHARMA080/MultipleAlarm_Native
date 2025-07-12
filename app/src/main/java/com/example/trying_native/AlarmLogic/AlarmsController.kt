@@ -19,7 +19,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -39,15 +38,21 @@ class AlarmsController {
         intent.setClass(componentActivity, receiverClass)
         logD("the startTimeForReceiverToGetTheAlarmIs is $startTimeForAlarmSeries ")
         logD("the message in the startTime is $alarmMessage")
-        val currentTimeViaCalander =Calendar.getInstance().timeInMillis
+        val removeSecForAccuracy = 2 * 60 * 1000L // min in millisec
+        val currentCalTime = Calendar.getInstance().timeInMillis
+        // removing milliseconds cause when we try to schedule the next alarm it will get a bit behind
+        val currentTimeViaCalender = currentCalTime - removeSecForAccuracy
+        logD("the current time via calender is: ${this.getTimeInHumanReadableFormatProtectFrom0Included(currentCalTime)}" +
+                " and Current time is: ${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalender)}  " +
+                "startTime of alarm is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)}")
         if (startTime >  endTime){
             logD("the startTime:${startTime} is > endTime:${endTime}  and human redable is startTIem:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
             return Exception("the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not > endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} ")
         }
-         else if (currentTimeViaCalander>= startTime){
+         else if (currentTimeViaCalender>= startTime){
          // if current time (given by calender) is > start time then we have a problem and we will not let you
-         // proceed, this will not impact the reset alarm as the current time there is > currenttime(by calender)
-            return Exception("the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not greater than the current time(from cal):${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalander)} ")
+         // proceed, this will not impact the reset alarm as the current time there is > current time(by calender)
+            return Exception("the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not greater than the current time(from cal):${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalender)} ")
         }
         intent.putExtra("startTimeForDb", startTimeForAlarmSeries)
         intent.putExtra("startTime", startTime)
@@ -155,24 +160,6 @@ class AlarmsController {
         }
     }
 
-    /***
-     * this func is there to deactivate the already there alarm
-     */
-    fun deactivateAlarm(alarmDao: AlarmDao, alarmData: AlarmData,deactivate: Boolean ){
-        logD("about to deactivate the alarm")
-        scope.launch {
-            alarmDao.updateReadyToUse(
-                firstValue = alarmData.first_value,
-                secondValue = alarmData.second_value,
-                freqInMin = alarmData.freq_in_min,
-                dateInLong = alarmData.date_in_long,
-                isReadyToUse = deactivate
-            )
-        }
-
-    }
-
-
     // only used in the helper func for the resting the alarms
     suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_for_display:String, calendar_for_start_time:Calendar, calendar_for_end_time:Calendar,
                                         freq_after_the_callback:Long, activity_context:ComponentActivity, alarmDao:AlarmDao, alarmData:AlarmData,
@@ -229,22 +216,17 @@ class AlarmsController {
     }
 
 
-// in this function the end time will not
     /**
      * this function sets the next alarm, if the alarm is ending then we will
      * @param currentAlarmTime The time the alarm that triggered this call fired.
      * @param startTimeForAlarmSeries This parameter should represent the *original* start time of the alarm series (used for DB lookup).
      */
     fun scheduleNextAlarm(
-        alarmManager: AlarmManager,
-        activityContext: Context,
-        alarmData: AlarmData,
+        alarmManager: AlarmManager, activityContext: Context, alarmData: AlarmData,
         receiverClass: Class<out BroadcastReceiver> = AlarmReceiver::class.java,
-        currentAlarmTime: Long,
-        startTimeForAlarmSeries: Long // This is the original series start time
+        currentAlarmTime: Long, startTimeForAlarmSeries: Long // This is the original series start time
     ): Exception? {
         logD("in the ++scheduleNextAlarm ++ with currentAlarmTime=$currentAlarmTime and originalStartTimeForDb=$startTimeForAlarmSeries")
-
         try {
             // Calculate the start time for the *next* alarm
             val nextAlarmTimeInMillis = currentAlarmTime + alarmData.freqGottenAfterCallback.toLong() * 60000
