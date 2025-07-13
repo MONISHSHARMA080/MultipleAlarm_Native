@@ -50,6 +50,21 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".BroadcastReceiver.BootReceiver"
+        android:enabled="true"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.intent.action.BOOT_COMPLETED" />
+            <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+        </intent-filter>
+    </receiver>
+
+    <!-- AlarmRescheduleService can remain in the root package or be moved to a 'services' package -->
+<!--    <service-->
+<!--        android:name=".AlarmRescheduleService"-->
+<!--        android:exported="false" />-->
+
     </application>
 
 </manifest>
