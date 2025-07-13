@@ -83,7 +83,6 @@ jobs:
 #             adb logcat -d | grep "D AAA"
 
   build:
-    # needs: test
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     steps:
@@ -166,7 +165,7 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            app/build/outputs/apk/release/app-${{ steps.version.outputs.VERSION_TAG }}.apk # Updated path
+            app/build/outputs/apk/release/app-${{ steps.version.outputs.VERSION_TAG }}.apk
           body: Release ${{ steps.version.outputs.VERSION_TAG }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -175,6 +174,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-release-${{ steps.version.outputs.VERSION_TAG }}
-          path: app/build/outputs/apk/release/app-${{ steps.version.outputs.VERSION_TAG }}.apk # Updated path
+          path: app/build/outputs/apk/release/app-${{ steps.version.outputs.VERSION_TAG }}.apk
           retention-days: 90
-
+    # needs: test

@@ -1,25 +1,12 @@
 package com.example.trying_native
 
-import android.app.AlarmManager
-import android.app.PendingIntent
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import androidx.activity.ComponentActivity
-import androidx.compose.runtime.currentCompositionErrors
-import com.example.trying_native.dataBase.AlarmDao
-import com.example.trying_native.dataBase.AlarmData
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
-import kotlin.math.log
 
 
 
-fun  cancelTheWholeAlarmSeries(startTime:Long, endTime:Long, frequency_in_min:Long, alarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity:ComponentActivity, delete_the_alarm_from_db:Boolean){
+//fun  cancelTheWholeAlarmSeries(startTime:Long, endTime:Long, frequency_in_min:Long, alarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity:ComponentActivity, delete_the_alarm_from_db:Boolean){
 
     // in the alarm db make the next alarm block that will hold the next value of the alarm or null ; if null then just remove it and move on as this was
     //    the end of the alarmSeries
@@ -28,7 +15,7 @@ fun  cancelTheWholeAlarmSeries(startTime:Long, endTime:Long, frequency_in_min:Lo
 
     // in the cancel alarm calculate the upcoming alarm; take the start time and then add the freq till it is greater or equal to the current  time and we have
     // our next alarm
-}
+//}
 
 
 ///**
