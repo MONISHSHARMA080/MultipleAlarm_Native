@@ -150,6 +150,13 @@ jobs:
             -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
             -Pandroid.injected.signing.key.password=$KEY_PASSWORD
 
+      - name: Rename APK
+        run: |
+          APK_PATH="app/build/outputs/apk/release/app-release.apk"
+          NEW_APK_NAME="app-${{ steps.version.outputs.VERSION_TAG }}.apk"
+          mv "$APK_PATH" "app/build/outputs/apk/release/$NEW_APK_NAME"
+          echo "Renamed APK to: $NEW_APK_NAME"
+
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v2
@@ -159,7 +166,7 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            app/build/outputs/apk/release/app-release.apk
+            app/build/outputs/apk/release/app-${{ steps.version.outputs.VERSION_TAG }}.apk # Updated path
           body: Release ${{ steps.version.outputs.VERSION_TAG }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -168,5 +175,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-release-${{ steps.version.outputs.VERSION_TAG }}
-          path: app/build/outputs/apk/release/app-release.apk
+          path: app/build/outputs/apk/release/app-${{ steps.version.outputs.VERSION_TAG }}.apk # Updated path
           retention-days: 90
+

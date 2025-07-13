@@ -639,18 +639,14 @@ fun DialogToAskUserAboutAlarmUnified(
                          set(Calendar.MINUTE, newTime.minute)
                         }
                         endCalendar = updatedEndCal.apply { timeInMillis = updatedEndCal.timeInMillis + distanceForEndTime }
-
                     }
                     InputPickerType.END -> {
                         logD("changed the end time to $newTime or Hour:${newTime.hour} and Min:${newTime.minute}")
-//                        endHour = newTime.hour
-//                        endMinute = newTime.minute
                         endCalendar = Calendar.getInstance().apply {
                             timeInMillis = endCalendar.timeInMillis
                             set(Calendar.HOUR_OF_DAY, newTime.hour)
                             set(Calendar.MINUTE, newTime.minute)
                         }
-
                     }
                     null -> { /* Should not happen */ }
                 }
