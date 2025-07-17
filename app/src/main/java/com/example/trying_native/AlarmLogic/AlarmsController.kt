@@ -74,8 +74,15 @@ class AlarmsController {
                 intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT // Use UPDATE_CURRENT for creation
             )
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, startTime, pendingIntent)
-//            alarmManager.setAlarmClock()
+//            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, startTime, pendingIntent)
+            // here implement a notification class in PI on the  AlarmClockInfo such that when the user click via system on the alarm
+            // we give them the knowledge of the alarm , eg time at when it will fire the series time and the freq, message  and  id if possible
+            //
+            // ----
+            // 2) and we will use the alarm ID in the PI to uniquely identify the alarm/PI such that if we can't schedule the series then
+            // we have messed up and if we are having problem use some sort of uuid based on the id and execution time
+            val alarmClockInfoObject = AlarmManager.AlarmClockInfo(startTime, pendingIntent)
+            alarmManager.setAlarmClock(alarmClockInfoObject, pendingIntent)
             logD("Alarm successfully scheduled.")
             return  null
         }else{
