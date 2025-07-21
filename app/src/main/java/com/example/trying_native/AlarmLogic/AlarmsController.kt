@@ -210,7 +210,7 @@ class AlarmsController {
             val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())}
             logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
             val updatingDB = scope.async { alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =startTimeInMillis, second_value = endTimeInMillis, date_for_display =  selected_date_for_display, isReadyToUse = true, ) }
-            val alarmSchedule = scope.async {  scheduleAlarm(startTimeInMillis, alarmData.second_value, alarmManager, activity_context, receiverClass = receiverClass, startTimeInMillis, alarmMessage = alarmData.message)}
+            val alarmSchedule = scope.async {  scheduleAlarm( startTimeInMillis, alarmData.second_value, alarmManager, activity_context, receiverClass = receiverClass,  startTimeForAlarmSeries = startTimeInMillis, alarmMessage = alarmData.message)}
             b.await()
             updatingDB.await()
             val excep = alarmSchedule.await()
