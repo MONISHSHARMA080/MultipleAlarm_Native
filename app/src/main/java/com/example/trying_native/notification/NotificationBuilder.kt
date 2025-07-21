@@ -13,7 +13,7 @@ import java.util.Date
 import java.util.Locale
 import kotlin.random.Random
 
-class NotificationBuilder(context:Context, notificationText:String, title:String, val NOTIFICATION_ID: Int = Random.nextInt(0, 1000)) {
+open class NotificationBuilder(context:Context, notificationText:String, title:String, val NOTIFICATION_ID: Int = Random.nextInt(0, 1000)) {
      companion object {
         private const val CHANNEL_ID = "default_channel"
         private const val CHANNEL_NAME = "Default Channel"

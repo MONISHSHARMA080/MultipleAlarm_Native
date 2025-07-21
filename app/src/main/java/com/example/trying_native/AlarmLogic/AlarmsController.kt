@@ -6,7 +6,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.activity.ComponentActivity
+import com.example.trying_native.AlarmLogic.AlarmsController
 import com.example.trying_native.AlarmReceiver
+import com.example.trying_native.BroadCastReceivers.AlarmInfoNotification
 import com.example.trying_native.LastAlarmUpdateDBReceiver
 import com.example.trying_native.assertWithException
 import com.example.trying_native.dataBase.AlarmDao
@@ -24,16 +26,16 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import kotlin.jvm.java
 
 const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
 
 class AlarmsController {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    private fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, startTimeForAlarmSeries: Long, alarmMessage: String= ""  ): Exception? {
+    private fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, alarmInfoNotificationClass:Class<out BroadcastReceiver> = AlarmInfoNotification::class.java  , startTimeForAlarmSeries: Long, alarmMessage: String= ""  ): Exception? {
         logD( "Clicked on the schedule alarm func")
         val intent = Intent(ALARM_ACTION) // Use the action string
-        logD("++++++++ receiver class in the schedule alarm is -->${receiverClass.name} +++ $receiverClass")
         logD(" in the scheduleAlarm func and the message is ->$alarmMessage")
         intent.setClass(componentActivity, receiverClass)
         logD("the startTimeForReceiverToGetTheAlarmIs is $startTimeForAlarmSeries ")
@@ -49,9 +51,9 @@ class AlarmsController {
             logD("the startTime:${startTime} is > endTime:${endTime}  and human redable is startTIem:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
             return Exception("the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not > endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} ")
         }
-         else if (currentTimeViaCalender>= startTime){
-         // if current time (given by calender) is > start time then we have a problem and we will not let you
-         // proceed, this will not impact the reset alarm as the current time there is > current time(by calender)
+        else if (currentTimeViaCalender>= startTime){
+            // if current time (given by calender) is > start time then we have a problem and we will not let you
+            // proceed, this will not impact the reset alarm as the current time there is > current time(by calender)
             return Exception("the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not greater than the current time(from cal):${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalender)} ")
         }
         intent.putExtra("startTimeForDb", startTimeForAlarmSeries)
@@ -74,14 +76,21 @@ class AlarmsController {
                 intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT // Use UPDATE_CURRENT for creation
             )
-//            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, startTime, pendingIntent)
+            val intentForAlarmMetaData:Intent = intent.clone() as Intent
+            intentForAlarmMetaData.setClass(componentActivity, alarmInfoNotificationClass)
+            val pendingIntentForAlarmInfo = PendingIntent.getBroadcast(
+                componentActivity,
+                startTime.toInt(),
+                intentForAlarmMetaData,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT // Use UPDATE_CURRENT for creation
+            )
             // here implement a notification class in PI on the  AlarmClockInfo such that when the user click via system on the alarm
             // we give them the knowledge of the alarm , eg time at when it will fire the series time and the freq, message  and  id if possible
             //
             // ----
             // 2) and we will use the alarm ID in the PI to uniquely identify the alarm/PI such that if we can't schedule the series then
             // we have messed up and if we are having problem use some sort of uuid based on the id and execution time
-            val alarmClockInfoObject = AlarmManager.AlarmClockInfo(startTime, pendingIntent)
+            val alarmClockInfoObject = AlarmManager.AlarmClockInfo(startTime, pendingIntentForAlarmInfo)
             alarmManager.setAlarmClock(alarmClockInfoObject, pendingIntent)
             logD("Alarm successfully scheduled.")
             return  null
