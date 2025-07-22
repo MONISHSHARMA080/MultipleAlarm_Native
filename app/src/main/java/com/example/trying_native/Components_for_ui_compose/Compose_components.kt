@@ -294,7 +294,8 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                                 frequency_in_min = individualAlarm.freq_in_min,
                                                 alarmDao = AlarmDao,
                                                 alarmManager = alarmManager,
-                                                delete_the_alarm_from_db = true
+                                                delete_the_alarm_from_db = true,
+                                                alarmData = individualAlarm
                                             )
                                         }
                                     },
@@ -320,7 +321,8 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                                     frequency_in_min = individualAlarm.freq_in_min,
                                                     alarmDao = AlarmDao,
                                                     alarmManager = alarmManager,
-                                                    delete_the_alarm_from_db = false
+                                                    delete_the_alarm_from_db = false,
+                                                    alarmData = individualAlarm
                                                 )
                                             }
                                         }

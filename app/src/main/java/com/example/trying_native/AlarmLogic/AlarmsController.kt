@@ -80,7 +80,7 @@ class AlarmsController {
             logD("PendingIntent does not exist. Creating a new one.")
             val pendingIntent = PendingIntent.getBroadcast(
                 componentActivity,
-                alarmData.id.toInt(),
+                alarmData.id,
                 intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT // Use UPDATE_CURRENT for creation
             )
@@ -164,17 +164,13 @@ class AlarmsController {
                 val alarm = c.await()
                 val a  =   scope.async {scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activity_context,  receiverClass = receiverClass, startTimeForAlarmSeries = startTimeInMillisendForDb, alarmMessage = messageForDB, alarmData = alarm )  }
                 val exception = a.await()
-                if (exception == null) {
-                    return null
-                }else{
-                    return exception
-                }
+                return  exception
             }catch (e:Exception){
                 logD("error occurred in the schedule multiple alarms-->${e}")
                 logD("we are not able to set the alarm so we are going to cancel it all and return  ")
                 // if we have gotten a error then we will need to cancel the alarm and return the exception and also delete the alarm
                 try {
-                    this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq_in_min, alarmDao, alarmManager, activity_context, true)
+//                    this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq_in_min, alarmDao, alarmManager, activity_context, true, alarmData = alarm)
                 }catch (e: Exception){
                     // lord help us!
                 }
@@ -227,7 +223,7 @@ class AlarmsController {
         } catch (e: Exception) {
             // if we have gotten a error then we will need to cancel the alarm and return the exception and also delete the alarm
             try {
-                this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq_in_min, alarmDao, alarmManager, activity_context, true)
+                this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq_in_min, alarmDao, alarmManager, activity_context, true, alarmData)
             }catch (e: Exception){}
             logD("error occurred in the schedule multiple alarms, so we are going to cancel the alarm whole, in scheduleAlarm2-->${e}")
             return e
@@ -290,9 +286,8 @@ class AlarmsController {
     /**
      * @param startTime -  is the alarm original start time
      */
-    suspend fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequency_in_min:Long, alarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: Context, delete_the_alarm_from_db:Boolean) {
+    suspend fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequency_in_min:Long, alarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: Context, delete_the_alarm_from_db:Boolean, alarmData: AlarmData) {
 
-        // what am I going to do it ;  make the pending intent  and call cancel on it (of course in a loop)
         val calendar = Calendar.getInstance()
         var curent_Time = calendar.timeInMillis
         var startTime = startTime
@@ -322,7 +317,7 @@ class AlarmsController {
             curent_Time = calendar.timeInMillis
         }
 
-        logD("\n after the while loop for cureent time StartTime ->$startTime --- curent_Time ->$curent_Time -- freq -> $frequency_in_min ")
+        logD("\n after the while loop for current time StartTime ->$startTime --- current_Time ->$curent_Time -- freq -> $frequency_in_min ")
         logD("Hopefully working --2")
 
 //    var intent = Intent(context_of_activity, AlarmReceiver::class.java)
@@ -335,7 +330,7 @@ class AlarmsController {
             // don't have to call the schedule alarm func , create pending intent yourself
             //            scheduleAlarm(startTime,alarmManager)
             intent.putExtra("triggerTime", startTime)
-            pendingIntent = PendingIntent.getBroadcast(context_of_activity, startTime.toInt(), intent, PendingIntent.FLAG_IMMUTABLE )
+            pendingIntent = PendingIntent.getBroadcast(context_of_activity, alarmData.id, intent, PendingIntent.FLAG_IMMUTABLE )
             pendingIntent.let { alarmManager.cancel(it); it.cancel() }
 //        alarmManager.cancel(pendingIntent)
 //        cancelAPendingIntent(startTime,  context_of_activity, alarmManager)
