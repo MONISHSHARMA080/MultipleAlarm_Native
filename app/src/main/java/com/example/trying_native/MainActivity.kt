@@ -30,7 +30,6 @@ class MainActivity : ComponentActivity() {
         if (result.resultCode == RESULT_OK) {
             if (Settings.canDrawOverlays(this)) {
                 // Permission granted, schedule the alarm
-
                 permissionToScheduleAlarm()
             } else {
                 logD( "Overlay permission denied")
@@ -38,25 +37,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private val exactAlarmPermissionLauncher = registerForActivityResult(StartActivityForResult()) { result ->
-        // Check the result to see if the permission was granted
-        permissionToScheduleAlarm() // Schedule the alarm anyway, as the system might still allow it
-    }
-
-
     var startHour_after_the_callback: Int? = null
     var startMin_after_the_callback: Int? = null
     var endHour_after_the_callback: Int? = null
     var endMin_after_the_callback: Int? = null
     var date_after_the_callback: Long? = null
     var freq_after_the_callback: Long? = null
-//    var selected_date_for_display :String? = null
-
-
-
-//    val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "AlarmData")
-//    val database = DatabaseManager.getInstance(applicationContext)
- //-form docsd
 
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
