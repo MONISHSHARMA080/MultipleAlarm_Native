@@ -29,11 +29,7 @@ import java.util.Locale
 import kotlin.jvm.java
 
 const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
-
-
-
-// -------------old implementation --------
-
+// ---- old implementation --------
 
 //class AlarmsController {
 //    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -476,14 +472,8 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
 //
 //}
 
-// -------------old implementation --------
 
-
-
-
-
-
-
+// ---- old implementation --------
 
 class AlarmsController {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -497,7 +487,8 @@ class AlarmsController {
         intent.setClass(componentActivity, receiverClass)
         logD("the startTimeForReceiverToGetTheAlarmIs is $startTimeForAlarmSeries ")
         logD("the message in the startTime is $alarmMessage")
-        val removeSecForAccuracy = 2 * 60 * 1000L // min in millisec
+        logD("the startTime:${startTime} is > endTime:${endTime}  and human readable is startTIem:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
+        val removeSecForAccuracy = 222 * 60 * 1000L // min in millisec
         val currentCalTime = Calendar.getInstance().timeInMillis
         // removing milliseconds cause when we try to schedule the next alarm it will get a bit behind
         // also convert this to a switch statement
@@ -642,73 +633,67 @@ class AlarmsController {
     }
 
 
-    suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_for_display:String, upcommingExecutionTimeCal:Calendar, calendar_for_end_time:Calendar,
+    suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_for_display:String, calendar_for_start_time:Calendar, calendar_for_end_time:Calendar,
                                         freq_after_the_callback:Long, activity_context:ComponentActivity, alarmDao:AlarmDao, alarmData:AlarmData,
-                                        receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java,    ) :Exception? {
+                                        receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java,   ) :Exception? {
         try {
+            // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
             logD("in the ++scheduleMultipleAlarms2  ++ ")
-
-            var startTimeInMillis = upcommingExecutionTimeCal.timeInMillis
+            // we can't get it form the alarmData as this func is for the reset alarm and that could be only one
+            var startTimeInMillis = calendar_for_start_time.timeInMillis
             val startTimeInMillisendForDb = startTimeInMillis
 
             var endTimeInMillis = calendar_for_end_time.timeInMillis
             val endTimeInMillisendForDb = endTimeInMillis
-            val startDate =upcommingExecutionTimeCal.get(Calendar.DATE)
-            val endDate =calendar_for_end_time.get(Calendar.DATE)
-            if (startDate > endDate && startTimeInMillis > endTimeInMillis){
-                logD(" the startTime is > endTime ${startTimeInMillis> endTimeInMillis}")
-                return  Exception("the start date:$startDate is > end date:$endDate or the start time:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTimeInMillis)} is > end time:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTimeInMillis)} ")
-            }
+
             logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:")
-            logD("\n\n\n-IIIIIIIIII----------"+" freqAfterCallback ->${freq_after_the_callback} freqAfterCallback.toLong/freq_in_milli  ->${freq_after_the_callback.toLong()} freqInMin ->${freq_after_the_callback.toLong() *60000}"+"\n\n\n---------")
 
             var freq_in_milli: Long
             freq_in_milli = freq_after_the_callback
             val freq_in_min = freq_in_milli * 60000
             logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, startTimeInMillis >= endTimeInMillis-->${startTimeInMillis >= endTimeInMillis} ::--:: freqInMin->$freq_in_min")
             logD("is startTime > endTime ${startTimeInMillis > endTimeInMillis}, this is a assertion")
-
             logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
-            logD("the current start time(of values going in the db) is ${startTimeInMillis} human readable  ${getTimeInHumanReadableFormat(startTimeInMillis)} and the end time ${endTimeInMillis} and human readable    ${getTimeInHumanReadableFormat(endTimeInMillis)} and the date for display that we got is $selected_date_for_display ")
-            logD("the current start time(of values in the alarmData) is ${alarmData.first_value} human readable  ${getTimeInHumanReadableFormat(alarmData.first_value)} and the end time ${alarmData.second_value} and human readable    ${getTimeInHumanReadableFormat(alarmData.second_value)} ")
+            logD("the current start time(of values going in the db) is ${startTimeInMillis} human readable  ${getTimeInHumanReadableFormat(startTimeInMillis)} and the end time ${endTimeInMillis} and human readable   ${getTimeInHumanReadableFormat(endTimeInMillis)} and the date for display that we got is $selected_date_for_display ")
+            logD("the current start time(of values in the alarmData) is ${alarmData.first_value} human readable  ${getTimeInHumanReadableFormat(alarmData.first_value)} and the end time ${alarmData.second_value} and human readable   ${getTimeInHumanReadableFormat(alarmData.second_value)} ")
+
             try {
-                val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())}
+
                 logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
-                val updatingDB = scope.async {
+                val res = scope.async {
                     alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =startTimeInMillis, second_value = endTimeInMillis, date_for_display =  selected_date_for_display, isReadyToUse = true, )
                     alarmDao.getAlarmById(alarmData.id)
                 }
 
-                // here the series start time is the  var startTimeInMillis cause in the scheduleAlarm fun we need to put something in the intent that can help us retrieve
-                // the AlarmData , and since (see up) we are updating the DB's start time(series one) to be this, so it make sense to use it
-
-                val updatedAlarmData = updatingDB.await()
-                if (updatedAlarmData == null){
-                    return Exception("the alarmData from the DB is null(can't fetch updated alarmFrom the DB)")
-                }
-                val alarmSchedule = scope.async {
-//                    var alarmDataUpdated = alarmData
-//                    alarmDataUpdated.first_value = startTimeInMillis
-//                    alarmDataUpdated.second_value= endTimeInMillisendForDb
-                    scheduleAlarm(startTimeInMillis, updatedAlarmData.second_value, alarmManager, activity_context, receiverClass = receiverClass,  alarmMessage = alarmData.message, alarmData = updatedAlarmData, startTimeForAlarmSeries = startTimeInMillis)
+                val newAlarm = res.await()
+                if (newAlarm == null){
+                    alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =startTimeInMillis, second_value = endTimeInMillis, date_for_display =  selected_date_for_display, isReadyToUse = false, )
+                    return Exception("we were not able to update the alarm in the DB and it returned null for the updatedAlarm")
                 }
 
-                b.await()
+                val alarmSchedule = scope.async {  scheduleAlarm(startTimeInMillis, alarmData.second_value, alarmManager, activity_context, receiverClass = receiverClass, startTimeForAlarmSeries = startTimeInMillis , alarmMessage = alarmData.message, alarmData = alarmData)}
                 val excep = alarmSchedule.await()
+                if (excep != null){
+                    val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())}
+                    b.await()
+                }
                 return excep
             } catch (e: Exception) {
+                // if we have gotten a error then we will need to cancel the alarm and return the exception and also delete the alarm
                 try {
-                    this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq_in_min, alarmDao, alarmManager, activity_context, true, alarmData)
+//                    this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq_in_min, alarmDao, alarmManager, activity_context, true)
                 }catch (e: Exception){}
                 logD("error occurred in the schedule multiple alarms, so we are going to cancel the alarm whole, in scheduleAlarm2-->${e}")
                 return e
             }
+            // this line added the freq in the last pending intent and now to get time for the last time we
             return null
         }catch (e: Exception){
             logD("there is a  error in the scheduleMultipleAlarms2  and it is-->${e}")
             return  e
         }
     }
+
 
 
     /**
@@ -861,7 +846,7 @@ class AlarmsController {
                     alarmManager,
                     activity_context = activityContext,
                     alarmDao = alarmDao,
-                    upcommingExecutionTimeCal = startCalendar,
+                    calendar_for_start_time = startCalendar,
                     calendar_for_end_time = endCalendar,
                     freq_after_the_callback = alarmData.freqGottenAfterCallback,
                     selected_date_for_display = getDateForDisplay(startCalendar),
@@ -881,7 +866,7 @@ class AlarmsController {
                     alarmManager,
                     activity_context = activityContext,
                     alarmDao = alarmDao,
-                    upcommingExecutionTimeCal = startCalendar,
+                    calendar_for_start_time = startCalendar,
                     calendar_for_end_time = endCalendar,
                     freq_after_the_callback = alarmData.freqGottenAfterCallback,
                     selected_date_for_display = getDateForDisplay(startCalendar),
@@ -910,7 +895,7 @@ class AlarmsController {
                     alarmManager,
                     activity_context = activityContext,
                     alarmDao = alarmDao,
-                    upcommingExecutionTimeCal = startCalendar,
+                    calendar_for_start_time = startCalendar,
                     calendar_for_end_time = endCalendar,
                     freq_after_the_callback = alarmData.freqGottenAfterCallback, selected_date_for_display = getDateForDisplay(startCalendar), alarmData = alarmData,
                 )
