@@ -17,8 +17,8 @@ import kotlinx.coroutines.flow.Flow
 data class AlarmData(
 
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    @ColumnInfo(name = "first_value") val first_value: Long,
-    @ColumnInfo(name = "second_value") val second_value: Long,
+    @ColumnInfo(name = "first_value") var first_value: Long,
+    @ColumnInfo(name = "second_value") var second_value: Long,
 
     @ColumnInfo(name = "start_time_for_display") val start_time_for_display: String,
     @ColumnInfo(name = "start_am_pm") val start_am_pm: String,
