@@ -234,7 +234,7 @@ class AlarmsController {
                 }
 
                 assertWithException(this.getDisplayTimeWithoutAMPM(newAlarm.first_value  ) == newAlarm.start_time_for_display
-                    , "the first value(start time for series):(${this.getTimeInHumanReadableFormatProtectFrom0Included(newAlarm.first_value)})" +
+                    , "the first value(start time for series):(${this.getDisplayTimeWithoutAMPM(newAlarm.first_value)})" +
                       " of the alarmData is not equal to the series start time for display:(${newAlarm.start_time_for_display}) " )
 
                 alarmDataForDeleting = newAlarm
@@ -290,7 +290,7 @@ class AlarmsController {
                 logD("scheduleNextAlarm: Scheduling next alarm at $nextAlarmTimeInMillis. Original series start time for DB: $startTimeForAlarmSeries")
 
                 assertWithException(this.getDisplayTimeWithoutAMPM(alarmData.first_value  ) == alarmData.start_time_for_display
-                    , "the first value(start time for series):(${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.first_value)})" +
+                    , "the first value(start time for series):(${this.getDisplayTimeWithoutAMPM(alarmData.first_value)})" +
                       " of the alarmData is not equal to the series start time for display:(${alarmData.start_time_for_display}) " )
                val exception= scheduleAlarm(
                     startTime = nextAlarmTimeInMillis, // This is the time the next alarm will trigger
