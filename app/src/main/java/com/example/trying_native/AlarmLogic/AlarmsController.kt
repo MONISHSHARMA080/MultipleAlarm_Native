@@ -120,7 +120,7 @@ class AlarmsController {
             // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
             var startTimeInMillis = calendar_for_start_time.timeInMillis
             val startTimeInMillisendForDb= startTimeInMillis
-            val start_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_start_time.time)
+            val start_time_for_display = this.getDisplayTimeWithoutAMPM(calendar_for_start_time)
             val start_am_pm = SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
 
             var endTimeInMillis = calendar_for_end_time.timeInMillis
@@ -232,6 +232,11 @@ class AlarmsController {
                     alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =startTimeInMillis, second_value = endTimeInMillis, date_for_display =  selected_date_for_display, isReadyToUse = false, )
                     return Exception("we were not able to update the alarm in the DB and it returned null for the updatedAlarm")
                 }
+
+                assertWithException(this.getDisplayTimeWithoutAMPM(newAlarm.first_value  ) == newAlarm.start_time_for_display
+                    , "the first value(start time for series):(${this.getTimeInHumanReadableFormatProtectFrom0Included(newAlarm.first_value)})" +
+                      " of the alarmData is not equal to the series start time for display:(${newAlarm.start_time_for_display}) " )
+
                 alarmDataForDeleting = newAlarm
 
 //                val alarmSchedule = scope.async {  scheduleAlarm(startTimeInMillis, alarmData.second_value, alarmManager, activity_context, receiverClass = receiverClass, startTimeForAlarmSeries = startTimeInMillis , alarmMessage = alarmData.message, alarmData = alarmData)}
@@ -284,6 +289,9 @@ class AlarmsController {
                 // Alarm cycle has not ended, schedule the next alarm
                 logD("scheduleNextAlarm: Scheduling next alarm at $nextAlarmTimeInMillis. Original series start time for DB: $startTimeForAlarmSeries")
 
+                assertWithException(this.getDisplayTimeWithoutAMPM(alarmData.first_value  ) == alarmData.start_time_for_display
+                    , "the first value(start time for series):(${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.first_value)})" +
+                      " of the alarmData is not equal to the series start time for display:(${alarmData.start_time_for_display}) " )
                val exception= scheduleAlarm(
                     startTime = nextAlarmTimeInMillis, // This is the time the next alarm will trigger
                     endTime = alarmData.second_value, // The series end time
@@ -292,7 +300,7 @@ class AlarmsController {
                     receiverClass = receiverClass,
                     // Pass the original series start time to the next intent
                     startTimeForAlarmSeries = startTimeForAlarmSeries,
-                   alarmData = alarmData,
+                    alarmData = alarmData,
                     alarmMessage = alarmData.message
                 )
                 return exception
@@ -498,6 +506,22 @@ class AlarmsController {
     private  fun getTimeInHumanReadableFormatProtectFrom0Included(t:Long): String{
         if (t == 0L) return "--the time here(probablyFromTheIntent) is 0--"
         return SimpleDateFormat("yyyy-MM-dd h:mm:ss a", Locale.getDefault()).format(Date(t))
+    }
+//    private  fun getTimeInHumanReadableFormatProtectFrom0Included(t: Calendar): String{
+//        if (t == 0L) return "--the time here(probablyFromTheIntent) is 0--"
+//        return SimpleDateFormat("yyyy-MM-dd h:mm:ss a", Locale.getDefault()).format(Date(t))
+//    }
+
+    /** this func returns the time that is in human readable format  and for display, eg 10:50 ***WITHOUT*** am or pm*/
+    private  fun getDisplayTimeWithoutAMPM(cal: Calendar ): String{
+       return SimpleDateFormat("hh:mm", Locale.getDefault()).format(cal.time)
+    }
+    /** this func returns the time that is in human readable format  and for display, eg 10:50 ***WITHOUT*** am or pm
+     *  where [cal] is the Long that will be converted into Calender of [cal] time in millis..  internally
+     */
+    private  fun getDisplayTimeWithoutAMPM(cal: Long ): String{
+        val cal = Calendar.getInstance().apply { timeInMillis = cal }
+        return SimpleDateFormat("hh:mm", Locale.getDefault()).format(cal.time)
     }
 
 }
