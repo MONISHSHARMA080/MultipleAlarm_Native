@@ -223,7 +223,7 @@ class AlarmsController {
 
                 logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
                 val res = scope.async {
-                    alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =startTimeInMillis, second_value = endTimeInMillis, date_for_display =  selected_date_for_display, isReadyToUse = true, )
+                    alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =alarmData.first_value, second_value = alarmData.second_value, date_for_display =  selected_date_for_display, isReadyToUse = true, )
                     alarmDao.getAlarmById(alarmData.id)
                 }
 
@@ -236,6 +236,10 @@ class AlarmsController {
                 assertWithException(this.getDisplayTimeWithoutAMPM(newAlarm.first_value  ) == newAlarm.start_time_for_display
                     , "the first value(start time for series):(${this.getDisplayTimeWithoutAMPM(newAlarm.first_value)})" +
                       " of the alarmData is not equal to the series start time for display:(${newAlarm.start_time_for_display}) " )
+
+                assertWithException(this.getDisplayTimeWithoutAMPM(newAlarm.second_value  ) == newAlarm.end_time_for_display
+                    , "end time for series:(${this.getDisplayTimeWithoutAMPM(newAlarm.second_value)})" +
+                      " of the alarmData is not equal to the series start time for display:(${newAlarm.end_time_for_display}) " )
 
                 alarmDataForDeleting = newAlarm
 
