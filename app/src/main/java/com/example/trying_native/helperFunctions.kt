@@ -208,7 +208,7 @@ fun incrementTheStartCalenderTimeUntilItIsInFuture(startCalendar: Calendar, curr
     // cause we will start the comparison from the date today else the hard limit will not work
     startCalendar.set(Calendar.DATE, currentCalendar.get(Calendar.DATE) )
 
-    for (i in 0..100){
+    for (i in 0..1000){
         logD("the loop iteration in the incrementStartCalender is ->$i")
         if (startCalendar.timeInMillis >= currentCalendar.timeInMillis){
             break

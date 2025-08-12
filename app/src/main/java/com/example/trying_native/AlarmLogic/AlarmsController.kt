@@ -62,7 +62,6 @@ class AlarmsController {
         }
         // assert
         if (alarmData.first_value != startTimeForAlarmSeries ){
-            logD("8======D")
             return Exception("the SeriesStartTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTimeForAlarmSeries)} is not same as the one from the alarmData(DB):${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.first_value)} ")
         }else if (alarmData.second_value != endTime){
             return Exception("the endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} is not same as the one from the alarmData(DB):${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.second_value)} ")
@@ -201,37 +200,45 @@ class AlarmsController {
             // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
             logD("in the ++scheduleMultipleAlarms2  ++ ")
             // we can't get it form the alarmData as this func is for the reset alarm and that could be only one
-            var startTimeInMillis = calendar_for_start_time.timeInMillis
-            val startTimeInMillisendForDb = startTimeInMillis
+//            var startTimeInMillis = calendar_for_start_time.timeInMillis
+//            val startTimeInMillisendForDb = startTimeInMillis
+//
+//            var endTimeInMillis = calendar_for_end_time.timeInMillis
+//            val endTimeInMillisendForDb = endTimeInMillis
 
-            var endTimeInMillis = calendar_for_end_time.timeInMillis
-            val endTimeInMillisendForDb = endTimeInMillis
-
-            logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:")
 
             var freq_in_milli: Long
             freq_in_milli = freq_after_the_callback
             val freq_in_min = freq_in_milli * 60000
-            logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, startTimeInMillis >= endTimeInMillis-->${startTimeInMillis >= endTimeInMillis} ::--:: freqInMin->$freq_in_min")
-            logD("is startTime > endTime ${startTimeInMillis > endTimeInMillis}, this is a assertion")
             logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
-            logD("the current start time(of values going in the db) is ${startTimeInMillis} human readable  ${getTimeInHumanReadableFormat(startTimeInMillis)} and the end time ${endTimeInMillis} and human readable   ${getTimeInHumanReadableFormat(endTimeInMillis)} and the date for display that we got is $selected_date_for_display ")
-            logD("the current start time(of values in the alarmData) is ${alarmData.first_value} human readable  ${getTimeInHumanReadableFormat(alarmData.first_value)} and the end time ${alarmData.second_value} and human readable   ${getTimeInHumanReadableFormat(alarmData.second_value)} ")
+            val startTimeInMillis = calendar_for_start_time.timeInMillis
+            val endTimeInMillis = calendar_for_end_time.timeInMillis
+
+            val originalSeriesStartTime = alarmData.first_value
+            val originalSeriesEndTime = alarmData.second_value
 
             var alarmDataForDeleting: AlarmData = alarmData
             try {
 
-                logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
+                logD("the next alarm fire time is   ${getTimeInHumanReadableFormat(startTimeInMillis)} and the end time    ${getTimeInHumanReadableFormat(endTimeInMillis)} and the date for display that we got is $selected_date_for_display ")
+                logD("the series start time is ${getTimeInHumanReadableFormat(originalSeriesStartTime)} and the end time  ${getTimeInHumanReadableFormat(originalSeriesEndTime)} ")
+
+
+                logD("Effective Start(next/upcomming alarm): ${getTimeInHumanReadableFormat(startTimeInMillis)}, Series End: ${getTimeInHumanReadableFormat(endTimeInMillis)}")
+                logD("Original Series Start: ${getTimeInHumanReadableFormat(originalSeriesStartTime)}, Original Series End: ${getTimeInHumanReadableFormat(originalSeriesEndTime)}")
+
                 val res = scope.async {
-                    alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =alarmData.first_value, second_value = alarmData.second_value, date_for_display =  selected_date_for_display, isReadyToUse = true, )
+                    alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =originalSeriesStartTime, second_value = originalSeriesEndTime, date_for_display =  selected_date_for_display, isReadyToUse = true, )
                     alarmDao.getAlarmById(alarmData.id)
                 }
 
                 val newAlarm = res.await()
                 if (newAlarm == null){
-                    alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =startTimeInMillis, second_value = endTimeInMillis, date_for_display =  selected_date_for_display, isReadyToUse = false, )
+                    alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =alarmData.first_value, second_value = alarmData.second_value, date_for_display =  selected_date_for_display, isReadyToUse = false, )
                     return Exception("we were not able to update the alarm in the DB and it returned null for the updatedAlarm")
                 }
+
+                alarmDataForDeleting = newAlarm
 
                 assertWithException(this.getDisplayTimeWithoutAMPM(newAlarm.first_value  ) == newAlarm.start_time_for_display
                     , "the first value(start time for series):(${this.getDisplayTimeWithoutAMPM(newAlarm.first_value)})" +
@@ -241,13 +248,11 @@ class AlarmsController {
                     , "end time for series:(${this.getDisplayTimeWithoutAMPM(newAlarm.second_value)})" +
                       " of the alarmData is not equal to the series start time for display:(${newAlarm.end_time_for_display}) " )
 
-                alarmDataForDeleting = newAlarm
-
 //                val alarmSchedule = scope.async {  scheduleAlarm(startTimeInMillis, alarmData.second_value, alarmManager, activity_context, receiverClass = receiverClass, startTimeForAlarmSeries = startTimeInMillis , alarmMessage = alarmData.message, alarmData = alarmData)}
-                val alarmSchedule = scope.async {  scheduleAlarm(startTimeInMillis, endTimeInMillis, alarmManager, activity_context, receiverClass = receiverClass, startTimeForAlarmSeries = startTimeInMillis , alarmMessage = alarmData.message, alarmData = newAlarm)}
+                val alarmSchedule = scope.async {  scheduleAlarm(startTimeInMillis, endTimeInMillis, alarmManager, activity_context, receiverClass = receiverClass, startTimeForAlarmSeries = originalSeriesStartTime , alarmMessage = alarmData.message, alarmData = newAlarm)}
                 val excep = alarmSchedule.await()
                 if (excep != null){
-                    val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())}
+                    val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(originalSeriesStartTime, activity_context, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillis, LastAlarmUpdateDBReceiver())}
                     b.await()
                 }
                 return excep
