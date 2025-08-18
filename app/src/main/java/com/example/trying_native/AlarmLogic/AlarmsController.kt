@@ -113,8 +113,6 @@ class AlarmsController {
             // we give them the knowledge of the alarm , eg time at when it will fire the series time and the freq, message  and  id if
             // possible
             //
-            // ----
-            //
             val alarmClockInfoObject = AlarmManager.AlarmClockInfo(startTime, pendingIntentForAlarmInfo)
             alarmManager.setAlarmClock(alarmClockInfoObject, pendingIntent)
             logD("Alarm successfully scheduled.")
