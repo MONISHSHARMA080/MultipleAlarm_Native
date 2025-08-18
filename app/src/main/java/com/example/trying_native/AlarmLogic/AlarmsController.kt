@@ -12,7 +12,6 @@ import com.example.trying_native.LastAlarmUpdateDBReceiver
 import com.example.trying_native.assertWithException
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
-import com.example.trying_native.getDateForDisplay
 import com.example.trying_native.incrementTheStartCalenderTimeUntilItIsInFuture
 import com.example.trying_native.logD
 import kotlinx.coroutines.CoroutineScope
@@ -21,6 +20,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -51,12 +52,10 @@ class AlarmsController {
     private fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, alarmInfoNotificationClass:Class<out BroadcastReceiver> = AlarmInfoNotification::class.java  , startTimeForAlarmSeries: Long, alarmMessage: String= "",
     alarmData: AlarmData
     ): Exception? {
-        logD( "Clicked on the schedule alarm func")
         val intent = Intent(ALARM_ACTION) // Use the action string
-        logD(" in the scheduleAlarm func and the message is ->$alarmMessage")
         intent.setClass(componentActivity, receiverClass)
         logD("the message in the startTime is $alarmMessage")
-        logD("the startTime:${startTime} is > endTime:${endTime}  and human readable is startTIem:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
+        logD(" startTime:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
         val removeSecForAccuracy = 222 * 60 * 1000L // min in millisec
         val currentCalTime = Calendar.getInstance().timeInMillis
         // removing milliseconds cause when we try to schedule the next alarm it will get a bit behind
@@ -207,9 +206,9 @@ class AlarmsController {
     }
 
 
-    suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, selected_date_for_display:String, calendar_for_start_time:Calendar, calendar_for_end_time:Calendar,
+    suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager,  calendar_for_start_time:Calendar, calendar_for_end_time:Calendar,
                                         freq_after_the_callback:Long, activity_context:ComponentActivity, alarmDao:AlarmDao, alarmData:AlarmData,
-                                        receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, nextAlarmInfo: NextAlarmInfo? = null  ) :Exception? {
+                                        receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, nextAlarmInfo: NextAlarmInfo ) :Exception? {
         try {
             // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
             logD("in the ++scheduleMultipleAlarms2  ++ ")
@@ -227,25 +226,27 @@ class AlarmsController {
 
             var alarmDataForDeleting: AlarmData = alarmData
 
-            try {
-                logD("the next alarm fire time is   ${getTimeInHumanReadableFormat(startTimeInMillis)} and the end time    ${getTimeInHumanReadableFormat(endTimeInMillis)} and the date for display that we got is $selected_date_for_display ")
-                logD("the series start time is ${getTimeInHumanReadableFormat(originalSeriesStartTime)} and the end time  ${getTimeInHumanReadableFormat(originalSeriesEndTime)} ")
+            val dateForDisplay =getDateForDisplay(nextAlarmInfo.newSeriesStartTime)
+            assertWithException(this.getDateForDisplay(nextAlarmInfo.newSeriesStartTime) == this.getDateForDisplay(nextAlarmInfo.newSeriesEndTime), " startDate from " +
+                    "new startSeries time is ${this.getDateForDisplay(nextAlarmInfo.newSeriesStartTime)} and the end date from the new endSeries time is ${this.getDateForDisplay(nextAlarmInfo.newSeriesEndTime)}")
 
+            try {
+                logD("the next alarm fire time is   ${getTimeInHumanReadableFormat(startTimeInMillis)} and the end time  ${getTimeInHumanReadableFormat(endTimeInMillis)} and the date for display that we got is $dateForDisplay ")
+                logD("the series start time is ${getTimeInHumanReadableFormat(originalSeriesStartTime)} and the end time  ${getTimeInHumanReadableFormat(originalSeriesEndTime)} ")
 
                 logD("Effective Start(next/upcoming alarm): ${getTimeInHumanReadableFormat(startTimeInMillis)}, Series End: ${getTimeInHumanReadableFormat(endTimeInMillis)}")
                 logD("Original Series Start: ${getTimeInHumanReadableFormat(originalSeriesStartTime)}, Original Series End: ${getTimeInHumanReadableFormat(originalSeriesEndTime)}")
 
                 logD("(-updating DB with new time-)the new start time is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startTimeInMillis)} and the end time is ${this.getTimeInHumanReadableFormatProtectFrom0Included(endTimeInMillis)} ")
 
-
                 val res = scope.async {
-                    alarmDao.updateAlarmForReset(id= alarmData.id, firstValue = startTimeInMillis, second_value = endTimeInMillis, date_for_display =  selected_date_for_display, isReadyToUse = true, )
+                    alarmDao.updateAlarmForReset(id= alarmData.id, firstValue = nextAlarmInfo.newSeriesStartTime, second_value = nextAlarmInfo.newSeriesEndTime, date_for_display =  dateForDisplay, isReadyToUse = true, )
                     alarmDao.getAlarmById(alarmData.id)
                 }
 
                 val newAlarm = res.await()
                 if (newAlarm == null){
-                    alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =alarmData.first_value, second_value = alarmData.second_value, date_for_display =  selected_date_for_display, isReadyToUse = false, )
+                    alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =alarmData.first_value, second_value = alarmData.second_value, date_for_display =  alarmData.date_for_display, isReadyToUse = false, )
                     return Exception("we were not able to update the alarm in the DB and it returned null for the updatedAlarm")
                 }
 
@@ -260,7 +261,7 @@ class AlarmsController {
                       " of the alarmData is not equal to the series start time for display:(${newAlarm.end_time_for_display}) " )
 
 //                val alarmSchedule = scope.async {  scheduleAlarm(startTimeInMillis, alarmData.second_value, alarmManager, activity_context, receiverClass = receiverClass, startTimeForAlarmSeries = startTimeInMillis , alarmMessage = alarmData.message, alarmData = alarmData)}
-                val alarmSchedule = scope.async {  scheduleAlarm(startTimeInMillis, endTimeInMillis, alarmManager, activity_context, receiverClass = receiverClass, startTimeForAlarmSeries = originalSeriesStartTime , alarmMessage = alarmData.message, alarmData = newAlarm)}
+                val alarmSchedule = scope.async {  scheduleAlarm(nextAlarmInfo.nextAlarmTriggerTime, nextAlarmInfo.newSeriesEndTime, alarmManager, activity_context, receiverClass = receiverClass, startTimeForAlarmSeries = nextAlarmInfo.newSeriesStartTime , alarmMessage = alarmData.message, alarmData = newAlarm)}
                 val excep = alarmSchedule.await()
                 if (excep != null){
                     val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(originalSeriesStartTime, activity_context, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillis, LastAlarmUpdateDBReceiver())}
@@ -438,8 +439,8 @@ class AlarmsController {
                     calendar_for_start_time = startCalendar,
                     calendar_for_end_time = endCalendar,
                     freq_after_the_callback = alarmData.freqGottenAfterCallback,
-                    selected_date_for_display = getDateForDisplay(startCalendar),
                     alarmData = alarmData,
+                    nextAlarmInfo =  nextAlarmInfo
                 )
             return exception
         }
@@ -464,8 +465,8 @@ class AlarmsController {
                     calendar_for_start_time = startCalendar,
                     calendar_for_end_time = endCalendar,
                     freq_after_the_callback = alarmData.freqGottenAfterCallback,
-                    selected_date_for_display = getDateForDisplay(startCalendar),
                     alarmData = alarmData,
+                    nextAlarmInfo =  nextAlarmInfo
                 )
             return exception
         }
@@ -499,7 +500,8 @@ class AlarmsController {
                     alarmDao = alarmDao,
                     calendar_for_start_time = startCalendar,
                     calendar_for_end_time = endCalendar,
-                    freq_after_the_callback = alarmData.freqGottenAfterCallback, selected_date_for_display = getDateForDisplay(startCalendar), alarmData = alarmData,
+                    freq_after_the_callback = alarmData.freqGottenAfterCallback, alarmData = alarmData,
+                    nextAlarmInfo =  nextAlarmInfo
                 )
             if (exception != null){
                 logD("there is a exception found and it is ${exception}")
@@ -543,6 +545,20 @@ class AlarmsController {
     private  fun getDisplayTimeWithoutAMPM(cal: Long ): String{
         val cal = Calendar.getInstance().apply { timeInMillis = cal }
         return SimpleDateFormat("hh:mm", Locale.getDefault()).format(cal.time)
+    }
+
+    private fun getDateForDisplay(calendar: Calendar):String{
+        return  calendar.time.toInstant()
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+            .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+    }
+    fun getDateForDisplay(a: Long):String{
+        val calendar = Calendar.getInstance().apply { timeInMillis = a }
+        return  calendar.time.toInstant()
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+            .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
     }
 
 
