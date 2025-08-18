@@ -332,7 +332,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                             uncancellableScope.launch {
                                                 logD("about to reset the alarm-+")
                                               val exception=  alarmsController.resetAlarms(alarmData = individualAlarm, alarmManager = alarmManager,
-                                                    activityContext = context_of_activity, alarmDao = AlarmDao, coroutineScope = coroutineScope
+                                                    activityContext = context_of_activity, alarmDao = AlarmDao,
                                                 )
                                               logD("the exception form the resetAlarm is ->$exception")
                                                 if(exception != null){
