@@ -35,14 +35,15 @@ class AlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         logD("in the alarm receiver func and here is the intent --> $intent")
+        val pendingResult = goAsync() // Extends execution time
         this.context = context
         coroutineScopeThatDoesNotCancel.launch {
             launchAlarmActivity(intent)
         }
         coroutineScopeThatDoesNotCancel.launch {
             scheduleFutureAlarm(context, alarmManager, intent)
+            pendingResult.finish()
         }
-        return
     }
 
 
