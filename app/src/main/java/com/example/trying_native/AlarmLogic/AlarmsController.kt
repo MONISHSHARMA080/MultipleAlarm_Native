@@ -8,17 +8,21 @@ import android.content.Intent
 import androidx.activity.ComponentActivity
 import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.BroadCastReceivers.AlarmInfoNotification
+import com.example.trying_native.BroadCastReceivers.NextAlarmReceiver
 import com.example.trying_native.LastAlarmUpdateDBReceiver
 import com.example.trying_native.assertWithException
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
+import com.example.trying_native.getDateForDisplay
 import com.example.trying_native.incrementTheStartCalenderTimeUntilItIsInFuture
 import com.example.trying_native.logD
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import java.nio.file.Files.exists
 import java.text.SimpleDateFormat
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -32,6 +36,9 @@ const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
 
 class AlarmsController {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val alarmInfoNotificationClass:Class<out BroadcastReceiver> = AlarmInfoNotification::class.java
+    private val alarmReceiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java
+    private val nextAlarmReceiver:Class<out BroadcastReceiver> = NextAlarmReceiver::class.java
     /**
      * A simple data class to hold the result of calculating the next alarm trigger.
      * @param nextAlarmTriggerTime The exact epoch milliseconds for the next alarm.
@@ -48,12 +55,25 @@ class AlarmsController {
             return "nextAlarmTriggerTime: ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTriggerTime)}, newSeriesStartTime: ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(newSeriesStartTime)}, newSeriesEndTime: ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(newSeriesEndTime)}"
         }
     }
+    /**
+     * data class for the return value of the pending intent
+     * [pendingIntentForAlarmNotificationInfo] - this will be there(not null) when the pending intent is for the alarm and not for the
+     * [pendingIntentForAlarm] - pending intent for the upcoming alarm
+     */
+    data class PendingIntentCreated(
+        val pendingIntentForAlarmNotificationInfo: PendingIntent?,
+        val pendingIntentForAlarm: PendingIntent
+    ){
+        override fun toString(): String {
+            return "pendingIntentForAlarmNotificationInfo--$pendingIntentForAlarmNotificationInfo --  pendingIntentForAlarm--$pendingIntentForAlarm"
+        }
+    }
 
-    private fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, alarmInfoNotificationClass:Class<out BroadcastReceiver> = AlarmInfoNotification::class.java  , startTimeForAlarmSeries: Long, alarmMessage: String= "",
-    alarmData: AlarmData
+    private suspend fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, startTimeForAlarmSeries: Long, alarmMessage: String= "",
+                                      alarmData: AlarmData
     ): Exception? {
-        val intent = Intent(ALARM_ACTION) // Use the action string
-        intent.setClass(componentActivity, receiverClass)
+//        val intent = Intent(ALARM_ACTION) // Use the action string
+//        intent.setClass(componentActivity, receiverClass)
         logD("the message in the startTime is $alarmMessage")
         logD(" startTime:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
         val removeSecForAccuracy = 222 * 60 * 1000L // min in millisec
@@ -79,46 +99,87 @@ class AlarmsController {
         }else if (alarmData.second_value != endTime){
             return Exception("the endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} is not same as the one from the alarmData(DB):${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.second_value)} ")
         }
-        intent.putExtra("startTimeForDb", startTimeForAlarmSeries)
-        intent.putExtra("startTime", startTime)
-        intent.putExtra("endTime", endTime)
-        intent.putExtra("message", alarmMessage)
         logD(" in the scheduleAlarm func and the startTime is $startTime and the startTimeForDb is $startTimeForAlarmSeries  ")
         logD("\n\n++setting the pending intent of request code(startTime of alarm to int)->${startTime.toInt()} and it is in the human readable format is ${SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date(startTime)) }++\n\n")
-        val pendingIntent = PendingIntent.getBroadcast(componentActivity,
-            startTime.toInt(), intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE
+
+        // PI for the alarm receiver
+        val resultForAlarmOpr = scope.async {getPendingIntentForAlarm(alarmReceiverClass, componentActivity, startTimeForAlarmSeries, startTime, endTime, alarmMessage, alarmData.id)}
+        val resultForSettingNextAlarmOpr = scope.async {getPendingIntentForAlarm(nextAlarmReceiver, componentActivity, startTimeForAlarmSeries, startTime, endTime, alarmMessage, alarmData.id, createIntentForAlarmMetaData = false)}
+
+        val PIForAlarm = resultForAlarmOpr.await().fold(
+                onSuccess = {PI -> PI},
+                onFailure = {failureRes-> return Exception(failureRes) }
         )
-        logD("is pendingIntent in the scheduleAlarm() null ${pendingIntent == null}, and it is $pendingIntent")
-        if (pendingIntent == null){
-            // meaning that the pending intent does not exist and it is safe to create one
-            logD("PendingIntent does not exist. Creating a new one.")
-            val pendingIntent = PendingIntent.getBroadcast(
-                componentActivity,
-                alarmData.id,
-                intent,
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT // Use UPDATE_CURRENT for creation
+        val PIForSettingNextAlarm = resultForSettingNextAlarmOpr.await().fold(
+                onSuccess = {PI -> PI},
+                onFailure = {failureRes-> return Exception(failureRes) }
+        )
+        when {
+            // assertions here
+            PIForAlarm.pendingIntentForAlarmNotificationInfo == null  -> return Exception(" the pending intent for alarm's info. notification is null ")
+            PIForSettingNextAlarm.pendingIntentForAlarmNotificationInfo != null -> return Exception(" the pending intent for setting next alarm's notification info. notification is not null ")
+        }
+        logD("\n\n\n [INFO] the pending Intent for the alarm is $PIForAlarm ")
+        logD("\n\n\n [INFO] the pending Intent for setting the next alarm is $PIForSettingNextAlarm ")
+
+        val alarmClockInfoObject = AlarmManager.AlarmClockInfo(startTime, PIForAlarm.pendingIntentForAlarmNotificationInfo)
+        alarmManager.setAlarmClock(alarmClockInfoObject, PIForAlarm.pendingIntentForAlarm)
+        logD("Alarm successfully scheduled.")
+        // PI for the next/upcoming alarm
+        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, startTime, PIForSettingNextAlarm.pendingIntentForAlarm)
+        logD("set the next alarm successfully")
+        return  null
+    }
+    /**
+     * returns the Pending Intent that will be delivered to a receiver. The PendingIntent has the same properties(key-value)
+     * @param receiverClass class that will get the pending intent
+     * @param newSeriesStartTime The calculated start time for the next series instance (e.g., tomorrow at 9 AM).
+     * @param newSeriesEndTime The calculated end time for the next series instance (e.g., tomorrow at 5 PM).
+     */
+    fun getPendingIntentForAlarm(receiverClass:Class<out BroadcastReceiver>, context: Context,
+                                 startTimeForAlarmSeries:Long,startTime:Long, endTime:Long, alarmMessage: String, alarmId:Int, createIntentForAlarmMetaData:Boolean = true ): Result<PendingIntentCreated> {
+        return runCatching {
+            val intent = Intent(ALARM_ACTION) // Use the action string
+            intent.setClass(context, receiverClass)
+            intent.putExtra("startTimeForDb", startTimeForAlarmSeries)
+            intent.putExtra("startTime", startTime)
+            intent.putExtra("endTime", endTime)
+            intent.putExtra("message", alarmMessage)
+            // this is for the alarm receiver
+            var pendingIntentForAlarm = PendingIntent.getBroadcast(context,
+                startTime.toInt(), intent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE
             )
-            val intentForAlarmMetaData:Intent = intent.clone() as Intent
-            intentForAlarmMetaData.setClass(componentActivity, alarmInfoNotificationClass)
-            intent.putExtra("alarmIdInDb", alarmData.id)
-            val pendingIntentForAlarmInfo = PendingIntent.getBroadcast(
-                componentActivity,
-                startTime.toInt(),
-                intentForAlarmMetaData,
+            logD("is pendingIntent in the scheduleAlarm() null ${pendingIntentForAlarm == null}, and it is $pendingIntentForAlarm")
+            if(pendingIntentForAlarm != null){
+                return Result.failure(Exception("Alarm on (${getTimeInHumanReadableFormat(startTime)}) already exists and you are trying to create new one"))
+            }
+            pendingIntentForAlarm = PendingIntent.getBroadcast(
+                context,
+                alarmId,
+                intent,
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
-            //
-            // here implement a notification class in PI on the AlarmClockInfo such that when the user click via system on the alarm
-            // we give them the knowledge of the alarm , eg time at when it will fire the series time and the freq, message  and  id if
-            // possible
-            //
-            val alarmClockInfoObject = AlarmManager.AlarmClockInfo(startTime, pendingIntentForAlarmInfo)
-            alarmManager.setAlarmClock(alarmClockInfoObject, pendingIntent)
-            logD("Alarm successfully scheduled.")
-            return  null
-        }else{
-            return Exception("Alarm on (${getTimeInHumanReadableFormat(startTime)}) already exists and you are trying to create new one")
+
+            // meaning that the pending intent does not exist and it is safe to create one
+            logD("PendingIntent does not exist. Creating a new one.")
+            val intentForAlarmMetaData:Intent = intent.clone() as Intent
+            intentForAlarmMetaData.setClass(context, alarmInfoNotificationClass)
+            intent.putExtra("alarmIdInDb", alarmId)
+            if (createIntentForAlarmMetaData == true){
+                val pendingIntentForAlarmInfo = PendingIntent.getBroadcast(
+                    context,
+                    startTime.toInt(),
+                    intentForAlarmMetaData,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+                if(pendingIntentForAlarmInfo == null){
+                    return Result.failure(Exception("Alarm on (${getTimeInHumanReadableFormat(startTime)}) already exists and you are trying to create new one error occurred while creating the Pending intent for alarm Info "))
+                }
+                return Result.success(PendingIntentCreated(pendingIntentForAlarmInfo, pendingIntentForAlarm))
+            }
+            logD("the PI construction ran fine")
+            return Result.success(PendingIntentCreated(null, pendingIntentForAlarm))
         }
     }
 
@@ -309,17 +370,17 @@ class AlarmsController {
                 assertWithException(this.getDisplayTimeWithoutAMPM(alarmData.first_value  ) == alarmData.start_time_for_display
                     , "the first value(start time for series):(${this.getDisplayTimeWithoutAMPM(alarmData.first_value)})" +
                       " of the alarmData is not equal to the series start time for display:(${alarmData.start_time_for_display}) " )
-               val exception= scheduleAlarm(
-                    startTime = nextAlarmTimeInMillis, // This is the time the next alarm will trigger
-                    endTime = alarmData.second_value, // The series end time
-                    alarmManager = alarmManager,
-                    componentActivity = activityContext,
-                    receiverClass = receiverClass,
-                    // Pass the original series start time to the next intent
-                    startTimeForAlarmSeries = startTimeForAlarmSeries,
-                    alarmData = alarmData,
-                    alarmMessage = alarmData.message
-                )
+               val exception= runBlocking {scheduleAlarm(
+                   startTime = nextAlarmTimeInMillis, // This is the time the next alarm will trigger
+                   endTime = alarmData.second_value, // The series end time
+                   alarmManager = alarmManager,
+                   componentActivity = activityContext,
+                   receiverClass = receiverClass,
+                   // Pass the original series start time to the next intent
+                   startTimeForAlarmSeries = startTimeForAlarmSeries,
+                   alarmData = alarmData,
+                   alarmMessage = alarmData.message
+               )  }
                 return exception
             }
         } catch (e: Exception) {

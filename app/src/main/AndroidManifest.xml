@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
     <uses-permission android:name="android.permission.SET_TIME"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
@@ -50,11 +49,15 @@
             </intent-filter>
         </receiver>
         <receiver
+            android:name=".BroadCastReceivers.NextAlarmReceiver"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="com.example.trying_native.ALARM_TRIGGERED" />
+            </intent-filter>
+        </receiver>
+        <receiver
             android:name=".BroadCastReceivers.AlarmInfoNotification"
             android:exported="false" >
         </receiver>
-
-
     </application>
-
 </manifest>
