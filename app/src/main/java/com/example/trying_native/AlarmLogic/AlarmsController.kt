@@ -428,7 +428,7 @@ class AlarmsController {
         logD("Hopefully working --2")
 
         val intent = Intent(ALARM_ACTION)
-        intent.setClass(context_of_activity, AlarmReceiver::class.java )
+        intent.setClass(context_of_activity, nextAlarmReceiver::class.java )
         var pendingIntent:PendingIntent
 
         while (startTime <= endTime){
