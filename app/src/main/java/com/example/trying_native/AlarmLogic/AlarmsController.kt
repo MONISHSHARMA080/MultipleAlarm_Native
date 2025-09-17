@@ -432,13 +432,10 @@ class AlarmsController {
         var pendingIntent:PendingIntent
 
         while (startTime <= endTime){
-            // don't have to call the schedule alarm func , create pending intent yourself
-            //            scheduleAlarm(startTime,alarmManager)
             intent.putExtra("triggerTime", startTime)
             pendingIntent = PendingIntent.getBroadcast(context_of_activity, alarmData.id, intent, PendingIntent.FLAG_IMMUTABLE )
             pendingIntent.let { alarmManager.cancel(it); it.cancel() }
-//        alarmManager.cancel(pendingIntent)
-//        cancelAPendingIntent(startTime,  context_of_activity, alarmManager)
+            alarmManager.cancel(pendingIntent)
             logD("cancelling the alarm at $startTime ")
             startTime = startTime + frequency_in_min
 

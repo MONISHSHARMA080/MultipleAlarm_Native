@@ -338,8 +338,6 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                                 if(exception != null){
                                                         NotificationBuilder(context_of_activity, title = "error returned in creating multiple alarm ", notificationText = "execution returned exception in schedule multiple alarm  -->${exception}").showNotification()
                                                         logD("error in the schedule multiple -->${exception}")
-//                                                    }
-
                                                 }
                                             }
 //
