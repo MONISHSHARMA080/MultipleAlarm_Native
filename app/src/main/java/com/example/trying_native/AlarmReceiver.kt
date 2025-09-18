@@ -12,13 +12,6 @@ import java.io.File
 
 class AlarmReceiver : BroadcastReceiver() {
     private lateinit var context: Context
-    private val coroutineScopeThatDoesNotCancel = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-//    private val coroutineScope = CoroutineScope( Dispatchers.IO)
-//    private val alarmManager by lazy { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
-//    private  val alarmsController = AlarmsController()
-//    private  val logFile : File by lazy {
-//        File(context.getExternalFilesDir(null), "Alarm_Receiver_logs.txt")
-//    }
 
     override fun onReceive(context: Context, intent: Intent) {
         logD("\n\n\n ------- +++ in the alarm receiver func and here is the intent --> $intent")

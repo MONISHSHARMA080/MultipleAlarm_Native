@@ -72,8 +72,6 @@ class AlarmsController {
     private suspend fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, startTimeForAlarmSeries: Long, alarmMessage: String= "",
                                       alarmData: AlarmData
     ): Exception? {
-//        val intent = Intent(ALARM_ACTION) // Use the action string
-//        intent.setClass(componentActivity, receiverClass)
         logD("the message in the startTime is $alarmMessage")
         logD(" startTime:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
         val removeSecForAccuracy = 222 * 60 * 1000L // min in millisec
@@ -398,9 +396,10 @@ class AlarmsController {
     suspend fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequency_in_min:Long, alarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: Context, delete_the_alarm_from_db:Boolean, alarmData: AlarmData) {
 
         val calendar = Calendar.getInstance()
-        var curent_Time = calendar.timeInMillis
-        var startTime = startTime
+        var currentTime = calendar.timeInMillis
+        var currentStartTime = startTime
 
+        // Update database first
         withContext(Dispatchers.IO) {
             try {
                 if (delete_the_alarm_from_db) {
@@ -413,35 +412,107 @@ class AlarmsController {
             }
         }
 
-        // if the user cancelled the alarm when one or more alarms in the start has fired (much more succinctly before the last is fired)
-        // we will to go ahead and cancel all the alarms till the last one,
+        logD("StartTime ->$currentStartTime --- currentTime ->$currentTime -- freq -> $frequency_in_min ")
 
-        // how do we protect from calling cancel on the start one , we take the startTime and move it by the freq till it is > current time
-        // eg: 4:12 -> 6:00 , freq 1 and the user called it at 4:14,
-
-        logD("StartTime ->$startTime --- curent_Time ->$curent_Time -- freq -> $frequency_in_min ")
-        while (curent_Time >= startTime ){
-            startTime = startTime + frequency_in_min
-            curent_Time = calendar.timeInMillis
+        // Advance startTime to the next pending alarm (skip already fired alarms)
+        while (currentTime >= currentStartTime ){
+            currentStartTime = currentStartTime + frequency_in_min
+            currentTime = calendar.timeInMillis
         }
-        logD("\n after the while loop for current time StartTime ->$startTime --- current_Time ->$curent_Time -- freq -> $frequency_in_min ")
-        logD("Hopefully working --2")
 
-        val intent = Intent(ALARM_ACTION)
-        intent.setClass(context_of_activity, nextAlarmReceiver::class.java )
-        var pendingIntent:PendingIntent
+        logD("After adjustment - StartTime ->$currentStartTime --- currentTime ->$currentTime")
 
-        while (startTime <= endTime){
-            intent.putExtra("triggerTime", startTime)
-            pendingIntent = PendingIntent.getBroadcast(context_of_activity, alarmData.id, intent, PendingIntent.FLAG_IMMUTABLE )
-            pendingIntent.let { alarmManager.cancel(it); it.cancel() }
-            alarmManager.cancel(pendingIntent)
-            logD("cancelling the alarm at $startTime ")
-            startTime = startTime + frequency_in_min
+        // Cancel all remaining AlarmReceiver PendingIntents
+        val alarmReceiverIntent = Intent(ALARM_ACTION)
+        alarmReceiverIntent.setClass(context_of_activity, alarmReceiverClass)
 
+        var tempStartTime = currentStartTime
+        while (tempStartTime <= endTime) {
+            // Add the same extras as when creating the alarm
+            alarmReceiverIntent.putExtra("startTimeForDb", startTime) // Original series start time
+            alarmReceiverIntent.putExtra("startTime", tempStartTime)
+            alarmReceiverIntent.putExtra("endTime", endTime)
+            alarmReceiverIntent.putExtra("message", alarmData.message)
+            alarmReceiverIntent.putExtra("alarmIdInDb", alarmData.id)
+
+            // Use the same request code as when creating: startTime.toInt() for AlarmReceiver
+            val alarmReceiverPI = PendingIntent.getBroadcast(
+                context_of_activity,
+                alarmData.id, // This matches the request code used in getPendingIntentForAlarm
+                alarmReceiverIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE
+            )
+
+            if (alarmReceiverPI != null) {
+                alarmManager.cancel(alarmReceiverPI)
+                alarmReceiverPI.cancel()
+                logD("Cancelled AlarmReceiver alarm at $tempStartTime")
+            }
+
+            tempStartTime += frequency_in_min
         }
+
+        // Cancel all remaining NextAlarmReceiver PendingIntents
+        val nextAlarmReceiverIntent = Intent(ALARM_ACTION)
+        nextAlarmReceiverIntent.setClass(context_of_activity, nextAlarmReceiver)
+
+        tempStartTime = currentStartTime
+        while (tempStartTime <= endTime) {
+            // Add the same extras as when creating the next alarm
+            nextAlarmReceiverIntent.putExtra("startTimeForDb", startTime) // Original series start time
+            nextAlarmReceiverIntent.putExtra("startTime", tempStartTime)
+            nextAlarmReceiverIntent.putExtra("endTime", endTime)
+            nextAlarmReceiverIntent.putExtra("message", alarmData.message)
+            nextAlarmReceiverIntent.putExtra("alarmIdInDb", alarmData.id)
+
+            // Use alarmData.id as request code for NextAlarmReceiver (as seen in your code)
+            val nextAlarmPI = PendingIntent.getBroadcast(
+                context_of_activity,
+                alarmData.id,
+                nextAlarmReceiverIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE
+            )
+
+            if (nextAlarmPI != null) {
+                alarmManager.cancel(nextAlarmPI)
+                nextAlarmPI.cancel()
+                logD("Cancelled NextAlarmReceiver alarm at $tempStartTime")
+            }
+
+            tempStartTime += frequency_in_min
+        }
+
+        // Also cancel the AlarmClockInfo notification PendingIntents
+        val alarmInfoIntent = Intent(ALARM_ACTION)
+        alarmInfoIntent.setClass(context_of_activity, alarmInfoNotificationClass)
+
+        tempStartTime = currentStartTime
+        while (tempStartTime <= endTime) {
+            alarmInfoIntent.putExtra("startTimeForDb", startTime)
+            alarmInfoIntent.putExtra("startTime", tempStartTime)
+            alarmInfoIntent.putExtra("endTime", endTime)
+            alarmInfoIntent.putExtra("message", alarmData.message)
+            alarmInfoIntent.putExtra("alarmIdInDb", alarmData.id)
+
+            // Use startTime.toInt() as request code for alarm info notifications
+            val alarmInfoPI = PendingIntent.getBroadcast(
+                context_of_activity,
+                tempStartTime.toInt(),
+                alarmInfoIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE
+            )
+
+            if (alarmInfoPI != null) {
+                alarmManager.cancel(alarmInfoPI)
+                alarmInfoPI.cancel()
+                logD("Cancelled AlarmInfo notification at $tempStartTime")
+            }
+
+            tempStartTime += frequency_in_min
+        }
+
+        logD("Finished cancelling all alarm PendingIntents")
     }
-
 
     suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activityContext: ComponentActivity, alarmDao: AlarmDao):Exception?{
 
