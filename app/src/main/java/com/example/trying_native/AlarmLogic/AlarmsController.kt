@@ -72,61 +72,60 @@ class AlarmsController {
     private suspend fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, startTimeForAlarmSeries: Long, alarmMessage: String= "",
                                       alarmData: AlarmData
     ): Exception? {
-        logD("the message in the startTime is $alarmMessage")
-        logD(" startTime:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
-        val removeSecForAccuracy = 222 * 60 * 1000L // min in millisec
-        val currentCalTime = Calendar.getInstance().timeInMillis
-        // removing milliseconds cause when we try to schedule the next alarm it will get a bit behind
-        // also convert this to a switch statement
-        val currentTimeViaCalender = currentCalTime - removeSecForAccuracy
-        logD("the current time via calender is: ${this.getTimeInHumanReadableFormatProtectFrom0Included(currentCalTime)}" +
-                " \n and Current time(adjusted for some min diff) is: ${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalender)}  " +
-                "\n startTime of alarm is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)}")
-        if (startTime >  endTime){
-            logD("the startTime:${startTime} is > endTime:${endTime}  and human readable is startTIem:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
-            return Exception("the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not > endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} ")
-        }
-        else if (currentTimeViaCalender>= startTime){
-            // if current time (given by calender) is > start time then we have a problem and we will not let you
-            // proceed, this will not impact the reset alarm as the current time there is > current time(by calender)
-            return Exception("the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not greater than the current time(from cal):${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalender)} ")
-        }
-        // assert
-        if (alarmData.first_value != startTimeForAlarmSeries ){
-            return Exception("the SeriesStartTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTimeForAlarmSeries)} is not same as the one from the alarmData(DB):${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.first_value)} ")
-        }else if (alarmData.second_value != endTime){
-            return Exception("the endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} is not same as the one from the alarmData(DB):${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.second_value)} ")
-        }
-        logD(" in the scheduleAlarm func and the startTime is $startTime and the startTimeForDb is $startTimeForAlarmSeries  ")
-        logD("\n\n++setting the pending intent of request code(startTime of alarm to int)->${startTime.toInt()} and it is in the human readable format is ${SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date(startTime)) }++\n\n")
+        runCatching {
+            logD("the message in the startTime is $alarmMessage")
+            logD(" startTime:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
+            val removeSecForAccuracy = 222 * 60 * 1000L // min in millisec
+            val currentCalTime = Calendar.getInstance().timeInMillis
+            // removing milliseconds cause when we try to schedule the next alarm it will get a bit behind
+            // also convert this to a switch statement
+            val currentTimeViaCalender = currentCalTime - removeSecForAccuracy
+            logD("the current time via calender is: ${this.getTimeInHumanReadableFormatProtectFrom0Included(currentCalTime)}" +
+                    " \n and Current time(adjusted for some min diff) is: ${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalender)}  " +
+                    "\n startTime of alarm is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)}")
+            require(startTime >  endTime) { "the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not > endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} " }
+             if (currentTimeViaCalender>= startTime){
+                // if current time (given by calender) is > start time then we have a problem and we will not let you
+                // proceed, this will not impact the reset alarm as the current time there is > current time(by calender)
+                return Exception("the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not greater than the current time(from cal):${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalender)} ")
+            }
+            // assert
+            if (alarmData.first_value != startTimeForAlarmSeries ){
+                return Exception("the SeriesStartTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTimeForAlarmSeries)} is not same as the one from the alarmData(DB):${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.first_value)} ")
+            }else if (alarmData.second_value != endTime){
+                return Exception("the endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} is not same as the one from the alarmData(DB):${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.second_value)} ")
+            }
+            logD(" in the scheduleAlarm func and the startTime is $startTime and the startTimeForDb is $startTimeForAlarmSeries  ")
+            logD("\n\n++setting the pending intent of request code(startTime of alarm to int)->${startTime.toInt()} and it is in the human readable format is ${SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date(startTime)) }++\n\n")
 
-        // PI for the alarm receiver
-        val resultForAlarmOpr = scope.async {getPendingIntentForAlarm(alarmReceiverClass, componentActivity, startTimeForAlarmSeries, startTime, endTime, alarmMessage, alarmData.id)}
-        val resultForSettingNextAlarmOpr = scope.async {getPendingIntentForAlarm(nextAlarmReceiver, componentActivity, startTimeForAlarmSeries, startTime, endTime, alarmMessage, alarmData.id, createIntentForAlarmMetaData = false)}
+            // PI for the alarm receiver
+            val resultForAlarmOpr = scope.async {getPendingIntentForAlarm(alarmReceiverClass, componentActivity, startTimeForAlarmSeries, startTime, endTime, alarmMessage, alarmData.id)}
+            val resultForSettingNextAlarmOpr = scope.async {getPendingIntentForAlarm(nextAlarmReceiver, componentActivity, startTimeForAlarmSeries, startTime, endTime, alarmMessage, alarmData.id, createIntentForAlarmMetaData = false)}
 
-        val PIForAlarm = resultForAlarmOpr.await().fold(
+            val PIForAlarm = resultForAlarmOpr.await().fold(
                 onSuccess = {PI -> PI},
                 onFailure = {failureRes-> return Exception(failureRes) }
-        )
-        val PIForSettingNextAlarm = resultForSettingNextAlarmOpr.await().fold(
+            )
+            val PIForSettingNextAlarm = resultForSettingNextAlarmOpr.await().fold(
                 onSuccess = {PI -> PI},
                 onFailure = {failureRes-> return Exception(failureRes) }
-        )
-        when {
-            // assertions here
-            PIForAlarm.pendingIntentForAlarmNotificationInfo == null  -> return Exception(" the pending intent for alarm's info. notification is null ")
-            PIForSettingNextAlarm.pendingIntentForAlarmNotificationInfo != null -> return Exception(" the pending intent for setting next alarm's notification info. notification is not null ")
-        }
-        logD("\n\n\n [INFO] the pending Intent for the alarm is $PIForAlarm ")
-        logD("\n\n\n [INFO] the pending Intent for setting the next alarm is $PIForSettingNextAlarm ")
+            )
+            when {
+                // assertions here
+                PIForAlarm.pendingIntentForAlarmNotificationInfo == null  -> return Exception(" the pending intent for alarm's info. notification is null ")
+                PIForSettingNextAlarm.pendingIntentForAlarmNotificationInfo != null -> return Exception(" the pending intent for setting next alarm's notification info. notification is not null ")
+            }
+            logD("\n\n\n [INFO] the pending Intent for the alarm is $PIForAlarm ")
+            logD("\n\n\n [INFO] the pending Intent for setting the next alarm is $PIForSettingNextAlarm ")
 
-        val alarmClockInfoObject = AlarmManager.AlarmClockInfo(startTime, PIForAlarm.pendingIntentForAlarmNotificationInfo)
-        alarmManager.setAlarmClock(alarmClockInfoObject, PIForAlarm.pendingIntentForAlarm)
-        logD("Alarm successfully scheduled.")
-        // PI for the next/upcoming alarm
-        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, startTime, PIForSettingNextAlarm.pendingIntentForAlarm)
-        logD("set the next alarm successfully")
-        return  null
+            val alarmClockInfoObject = AlarmManager.AlarmClockInfo(startTime, PIForAlarm.pendingIntentForAlarmNotificationInfo)
+            alarmManager.setAlarmClock(alarmClockInfoObject, PIForAlarm.pendingIntentForAlarm)
+            logD("Alarm successfully scheduled.")
+            // PI for the next/upcoming alarm
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, startTime, PIForSettingNextAlarm.pendingIntentForAlarm)
+            logD("set the next alarm successfully")
+            return  null
+        }.fold(onFailure = {a-> return Exception(a.message)}, onSuccess = {return  null})
     }
     /**
      * returns the Pending Intent that will be delivered to a receiver. The PendingIntent has the same properties(key-value)
@@ -255,7 +254,6 @@ class AlarmsController {
                 return e
             }
             // no error in the try catch of the async block
-            return null
         }catch (e: Exception){
             logD("there is a  error in the scheduleMultipleAlarms func-->${e}")
             return  e
@@ -334,7 +332,7 @@ class AlarmsController {
                 return e
             }
             // this line added the freq in the last pending intent and now to get time for the last time we
-            return null
+//            return null
         }catch (e: Exception){
             logD("there is a  error in the scheduleMultipleAlarms2  and it is-->${e}")
             return  e

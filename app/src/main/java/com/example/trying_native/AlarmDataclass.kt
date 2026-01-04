@@ -12,6 +12,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
 import kotlinx.coroutines.flow.Flow
+import kotlin.jvm.functions.FunctionN
 
 @Entity(indices = [Index(value = ["first_value", "second_value"])])
 data class AlarmData(
@@ -37,7 +38,6 @@ data class AlarmData(
     @ColumnInfo(name = "date_for_display") val date_for_display: String,
     @ColumnInfo(name = "freq_in_min_to_display") val freq_in_min_to_display: Int,
     @ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean
-
 )
 
 @Database(entities = [AlarmData::class], version = 2)
