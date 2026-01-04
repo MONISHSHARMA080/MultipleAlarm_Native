@@ -71,8 +71,8 @@ class AlarmsController {
 
     private suspend fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, startTimeForAlarmSeries: Long, alarmMessage: String= "",
                                       alarmData: AlarmData
-    ): Exception? {
-        runCatching {
+    ): Result<Unit> {
+        return runCatching {
             logD("the message in the startTime is $alarmMessage")
             logD(" startTime:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
             val removeSecForAccuracy = 222 * 60 * 1000L // min in millisec
@@ -83,18 +83,10 @@ class AlarmsController {
             logD("the current time via calender is: ${this.getTimeInHumanReadableFormatProtectFrom0Included(currentCalTime)}" +
                     " \n and Current time(adjusted for some min diff) is: ${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalender)}  " +
                     "\n startTime of alarm is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)}")
-            require(startTime >  endTime) { "the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not > endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} " }
-             if (currentTimeViaCalender>= startTime){
-                // if current time (given by calender) is > start time then we have a problem and we will not let you
-                // proceed, this will not impact the reset alarm as the current time there is > current time(by calender)
-                return Exception("the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not greater than the current time(from cal):${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalender)} ")
-            }
-            // assert
-            if (alarmData.first_value != startTimeForAlarmSeries ){
-                return Exception("the SeriesStartTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTimeForAlarmSeries)} is not same as the one from the alarmData(DB):${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.first_value)} ")
-            }else if (alarmData.second_value != endTime){
-                return Exception("the endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} is not same as the one from the alarmData(DB):${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.second_value)} ")
-            }
+            check(startTime >  endTime) { "the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not > endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} " }
+            check(currentTimeViaCalender< startTime, {"the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not greater than the current time(from cal):${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalender)} "})
+            check( alarmData.first_value == startTimeForAlarmSeries ,{"the SeriesStartTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTimeForAlarmSeries)} is not same as the one from the alarmData(DB):${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.first_value)} "})
+            check(alarmData.second_value == endTime, {"the endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} is not same as the one from the alarmData(DB):${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.second_value)} "})
             logD(" in the scheduleAlarm func and the startTime is $startTime and the startTimeForDb is $startTimeForAlarmSeries  ")
             logD("\n\n++setting the pending intent of request code(startTime of alarm to int)->${startTime.toInt()} and it is in the human readable format is ${SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date(startTime)) }++\n\n")
 
@@ -104,28 +96,24 @@ class AlarmsController {
 
             val PIForAlarm = resultForAlarmOpr.await().fold(
                 onSuccess = {PI -> PI},
-                onFailure = {failureRes-> return Exception(failureRes) }
+                onFailure = {failureRes-> throw Exception(failureRes) }
             )
             val PIForSettingNextAlarm = resultForSettingNextAlarmOpr.await().fold(
                 onSuccess = {PI -> PI},
-                onFailure = {failureRes-> return Exception(failureRes) }
+                onFailure = {failureRes-> throw Exception(failureRes) }
             )
-            when {
-                // assertions here
-                PIForAlarm.pendingIntentForAlarmNotificationInfo == null  -> return Exception(" the pending intent for alarm's info. notification is null ")
-                PIForSettingNextAlarm.pendingIntentForAlarmNotificationInfo != null -> return Exception(" the pending intent for setting next alarm's notification info. notification is not null ")
-            }
+            check(PIForAlarm.pendingIntentForAlarmNotificationInfo != null  , {" the pending intent for alarm's info. notification is null "}  )
+            check(PIForSettingNextAlarm.pendingIntentForAlarmNotificationInfo == null ,{" the pending intent for setting next alarm's notification info. notification is not null "} )
             logD("\n\n\n [INFO] the pending Intent for the alarm is $PIForAlarm ")
             logD("\n\n\n [INFO] the pending Intent for setting the next alarm is $PIForSettingNextAlarm ")
 
             val alarmClockInfoObject = AlarmManager.AlarmClockInfo(startTime, PIForAlarm.pendingIntentForAlarmNotificationInfo)
             alarmManager.setAlarmClock(alarmClockInfoObject, PIForAlarm.pendingIntentForAlarm)
             logD("Alarm successfully scheduled.")
-            // PI for the next/upcoming alarm
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, startTime, PIForSettingNextAlarm.pendingIntentForAlarm)
             logD("set the next alarm successfully")
-            return  null
-        }.fold(onFailure = {a-> return Exception(a.message)}, onSuccess = {return  null})
+
+        }
     }
     /**
      * returns the Pending Intent that will be delivered to a receiver. The PendingIntent has the same properties(key-value)
@@ -183,87 +171,84 @@ class AlarmsController {
     // this func is called only at the first time to schedule multiple alarms
     suspend fun scheduleMultipleAlarms(alarmManager: AlarmManager, selected_date_for_display:String, date_in_long: Long,
                                        calendar_for_start_time:Calendar, calendar_for_end_time:Calendar, freq_after_the_callback:Int, activity_context: Context, alarmDao:AlarmDao,
-                                       receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java,messageForDB:String   ) :Exception? {
+                                       receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java,messageForDB:String   ) : Result<Unit>{
+    return runCatching {
+        // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
+        var startTimeInMillis = calendar_for_start_time.timeInMillis
+        val startTimeInMillisendForDb= startTimeInMillis
+        val start_time_for_display = this.getDisplayTimeWithoutAMPM(calendar_for_start_time)
+        val start_am_pm = SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
+
+        var endTimeInMillis = calendar_for_end_time.timeInMillis
+        val endTimeInMillisendForDb= endTimeInMillis
+        val end_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_end_time.time)
+        val end_am_pm =  SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_end_time.time).trim()
+
+        logD(" \n\n am_pm_start_time-->$start_time_for_display $start_am_pm ; endtime-->$end_time_for_display $end_am_pm")
+        var freq_in_milli : Long
+        freq_in_milli = freq_after_the_callback.toLong()
+        val freq_in_min = freq_in_milli * 60000
+        logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:: freq->$freq_in_min")
+        var i=0
+        // alright only set one alarm here and in the receiver class set the other one after the min
+        logD("checking if the start time is < end time ")
+        assertWithException(startTimeInMillis < endTimeInMillis," the value of the start time should be < end time , you made a mistake" )
+        logD("the start time is < endtime ")
+        logD("round $i")
+        logD("setting the alarm and the startTime is $startTimeInMillis and the endTime is $endTimeInMillis")
+        var alarmDataForDeleting: AlarmData? = null
+
         try {
-            // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
-            var startTimeInMillis = calendar_for_start_time.timeInMillis
-            val startTimeInMillisendForDb= startTimeInMillis
-            val start_time_for_display = this.getDisplayTimeWithoutAMPM(calendar_for_start_time)
-            val start_am_pm = SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
-
-            var endTimeInMillis = calendar_for_end_time.timeInMillis
-            val endTimeInMillisendForDb= endTimeInMillis
-            val end_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_end_time.time)
-            val end_am_pm =  SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_end_time.time).trim()
-
-            logD(" \n\n am_pm_start_time-->$start_time_for_display $start_am_pm ; endtime-->$end_time_for_display $end_am_pm")
-            var freq_in_milli : Long
-            freq_in_milli = freq_after_the_callback.toLong()
-            val freq_in_min = freq_in_milli * 60000
-            logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:: freq->$freq_in_min")
-            var i=0
-            // alright only set one alarm here and in the receiver class set the other one after the min
-            logD("checking if the start time is < end time ")
-            assertWithException(startTimeInMillis < endTimeInMillis," the value of the start time should be < end time , you made a mistake" )
-            logD("the start time is < endtime ")
-            logD("round $i")
-            logD("setting the alarm and the startTime is $startTimeInMillis and the endTime is $endTimeInMillis")
-            var alarmDataForDeleting: AlarmData? = null
-
-            try {
-                // since this is our first time the startTimeForReceiverToGetTheAlarmIs->
-                logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
-                val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())  }
-                val c = scope.async {
+            // since this is our first time the startTimeForReceiverToGetTheAlarmIs->
+            logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
+            val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activity_context, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisendForDb, LastAlarmUpdateDBReceiver())  }
+            val c = scope.async {
                 val newAlarm = AlarmData(first_value = startTimeInMillisendForDb, second_value = endTimeInMillisendForDb,
-                        freq_in_min = freq_in_min,
-                        isReadyToUse = true, date_for_display = selected_date_for_display,
-                        start_time_for_display = start_time_for_display, end_time_for_display = end_time_for_display,
-                        start_am_pm = start_am_pm,
-                        end_am_pm = end_am_pm,
-                        freq_in_min_to_display = (freq_in_min / 60000).toInt(),
-                        date_in_long = date_in_long,
-                        message = messageForDB,
-                        freqGottenAfterCallback = freq_after_the_callback.toLong()
-                    )
-                    val insertedId = alarmDao.insert(newAlarm)
-                    logD("Inserted alarm with ID: $insertedId")
-                    return@async newAlarm
-                }
-
-                // I will not know of the exception until I await so that's why
-                b.await()
-                val alarm = c.await()
-                alarmDataForDeleting= alarm
-                val a  =   scope.async {scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activity_context,  receiverClass = receiverClass, startTimeForAlarmSeries = startTimeInMillisendForDb, alarmMessage = messageForDB, alarmData = alarm )  }
-                val exception = a.await()
-                if (exception != null){
-                    this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq_in_min, alarmDao, alarmManager, activity_context, false, alarmData = alarm)
-                }
-                return  exception
-            }catch (e:Exception){
-                logD("error occurred in the schedule multiple alarms-->${e}")
-                logD("we are not able to set the alarm so we are going to cancel it all and return  ")
-                // if we have gotten a error then we will need to cancel the alarm and return the exception and also delete the alarm
-                try {
-                    if (alarmDataForDeleting!= null){
-                        this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq_in_min, alarmDao, alarmManager, activity_context, false, alarmData = alarmDataForDeleting)
-                    }
-                }catch (e: Exception){ // lord help us!
-                }
-                return e
+                    freq_in_min = freq_in_min,
+                    isReadyToUse = true, date_for_display = selected_date_for_display,
+                    start_time_for_display = start_time_for_display, end_time_for_display = end_time_for_display,
+                    start_am_pm = start_am_pm,
+                    end_am_pm = end_am_pm,
+                    freq_in_min_to_display = (freq_in_min / 60000).toInt(),
+                    date_in_long = date_in_long,
+                    message = messageForDB,
+                    freqGottenAfterCallback = freq_after_the_callback.toLong()
+                )
+                val insertedId = alarmDao.insert(newAlarm)
+                logD("Inserted alarm with ID: $insertedId")
+                return@async newAlarm
             }
-            // no error in the try catch of the async block
-        }catch (e: Exception){
-            logD("there is a  error in the scheduleMultipleAlarms func-->${e}")
-            return  e
+
+            // I will not know of the exception until I await so that's why
+            b.await()
+            val alarm = c.await()
+            alarmDataForDeleting= alarm
+            val a  =   scope.async {scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activity_context,  receiverClass = receiverClass, startTimeForAlarmSeries = startTimeInMillisendForDb, alarmMessage = messageForDB, alarmData = alarm )  }
+            val exception = a.await()
+            exception.fold(onFailure = { excp ->
+                this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq_in_min, alarmDao, alarmManager, activity_context, false, alarmData = alarm)
+                throw  Exception(excp.message)
+            }, onSuccess = {}
+            )
+        }catch (e:Exception){
+            logD("error occurred in the schedule multiple alarms-->${e}")
+            logD("we are not able to set the alarm so we are going to cancel it all and return  ")
+            // if we have gotten a error then we will need to cancel the alarm and return the exception and also delete the alarm
+            try {
+                if (alarmDataForDeleting!= null){
+                    this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq_in_min, alarmDao, alarmManager, activity_context, false, alarmData = alarmDataForDeleting)
+                }
+            }catch (e: Exception){ // lord help us!
+            }
         }
+        // no error in the try catch of the async block
+    }
     }
 
 
     suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager,  calendar_for_start_time:Calendar, calendar_for_end_time:Calendar,
                                         freq_after_the_callback:Long, activity_context:ComponentActivity, alarmDao:AlarmDao, alarmData:AlarmData,
-                                        receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, nextAlarmInfo: NextAlarmInfo ) :Exception? {
+                                        receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, nextAlarmInfo: NextAlarmInfo ) : Result<Unit> {
         try {
             // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
             logD("in the ++scheduleMultipleAlarms2  ++ ")
@@ -318,11 +303,12 @@ class AlarmsController {
 //                val alarmSchedule = scope.async {  scheduleAlarm(startTimeInMillis, alarmData.second_value, alarmManager, activity_context, receiverClass = receiverClass, startTimeForAlarmSeries = startTimeInMillis , alarmMessage = alarmData.message, alarmData = alarmData)}
                 val alarmSchedule = scope.async {  scheduleAlarm(nextAlarmInfo.nextAlarmTriggerTime, nextAlarmInfo.newSeriesEndTime, alarmManager, activity_context, receiverClass = receiverClass, startTimeForAlarmSeries = nextAlarmInfo.newSeriesStartTime , alarmMessage = alarmData.message, alarmData = newAlarm)}
                 val excep = alarmSchedule.await()
-                if (excep != null){
+                if (excep.isFailure){
                     val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(originalSeriesStartTime, activity_context, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillis, LastAlarmUpdateDBReceiver())}
                     b.await()
+                    return Exception("Error in scheduling the alarm")
                 }
-                return excep
+                return null
             } catch (e: Exception) {
                 // if we have gotten a error then we will need to cancel the alarm and return the exception and also delete the alarm
                 try {
@@ -377,7 +363,8 @@ class AlarmsController {
                    alarmData = alarmData,
                    alarmMessage = alarmData.message
                )  }
-                return exception
+                exception.onFailure { excp-> return Exception(excp.message) }
+                exception.onSuccess { return null }
             }
         } catch (e: Exception) {
             logD("scheduleNextAlarm: Error occurred: ${e}")
