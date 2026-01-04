@@ -249,7 +249,7 @@ class AlarmsController {
     suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager,  calendar_for_start_time:Calendar, calendar_for_end_time:Calendar,
                                         freq_after_the_callback:Long, activity_context:ComponentActivity, alarmDao:AlarmDao, alarmData:AlarmData,
                                         receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, nextAlarmInfo: NextAlarmInfo ) : Result<Unit> {
-        try {
+        return runCatching {
             // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
             logD("in the ++scheduleMultipleAlarms2  ++ ")
             // we can't get it form the alarmData as this func is for the reset alarm and that could be only one
@@ -270,6 +270,7 @@ class AlarmsController {
             assertWithException(this.getDateForDisplay(nextAlarmInfo.newSeriesStartTime) == this.getDateForDisplay(nextAlarmInfo.newSeriesEndTime), " startDate from " +
                     "new startSeries time is ${this.getDateForDisplay(nextAlarmInfo.newSeriesStartTime)} and the end date from the new endSeries time is ${this.getDateForDisplay(nextAlarmInfo.newSeriesEndTime)}")
 
+            // cause I want to see if there is a error and if there is then I want to react
             try {
                 logD("the next alarm fire time is   ${getTimeInHumanReadableFormat(startTimeInMillis)} and the end time  ${getTimeInHumanReadableFormat(endTimeInMillis)} and the date for display that we got is $dateForDisplay ")
                 logD("the series start time is ${getTimeInHumanReadableFormat(originalSeriesStartTime)} and the end time  ${getTimeInHumanReadableFormat(originalSeriesEndTime)} ")
@@ -287,18 +288,18 @@ class AlarmsController {
                 val newAlarm = res.await()
                 if (newAlarm == null){
                     alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =alarmData.first_value, second_value = alarmData.second_value, date_for_display =  alarmData.date_for_display, isReadyToUse = false, )
-                    return Exception("we were not able to update the alarm in the DB and it returned null for the updatedAlarm")
+                    throw  Exception("we were not able to update the alarm in the DB and it returned null for the updatedAlarm")
                 }
 
                 alarmDataForDeleting = newAlarm
 
                 assertWithException(this.getDisplayTimeWithoutAMPM(newAlarm.first_value  ) == newAlarm.start_time_for_display
                     , "the first value(start time for series):(${this.getDisplayTimeWithoutAMPM(newAlarm.first_value)})" +
-                      " of the alarmData is not equal to the series start time for display:(${newAlarm.start_time_for_display}) " )
+                            " of the alarmData is not equal to the series start time for display:(${newAlarm.start_time_for_display}) " )
 
                 assertWithException(this.getDisplayTimeWithoutAMPM(newAlarm.second_value  ) == newAlarm.end_time_for_display
                     , "end time for series:(${this.getDisplayTimeWithoutAMPM(newAlarm.second_value)})" +
-                      " of the alarmData is not equal to the series start time for display:(${newAlarm.end_time_for_display}) " )
+                            " of the alarmData is not equal to the series start time for display:(${newAlarm.end_time_for_display}) " )
 
 //                val alarmSchedule = scope.async {  scheduleAlarm(startTimeInMillis, alarmData.second_value, alarmManager, activity_context, receiverClass = receiverClass, startTimeForAlarmSeries = startTimeInMillis , alarmMessage = alarmData.message, alarmData = alarmData)}
                 val alarmSchedule = scope.async {  scheduleAlarm(nextAlarmInfo.nextAlarmTriggerTime, nextAlarmInfo.newSeriesEndTime, alarmManager, activity_context, receiverClass = receiverClass, startTimeForAlarmSeries = nextAlarmInfo.newSeriesStartTime , alarmMessage = alarmData.message, alarmData = newAlarm)}
@@ -306,22 +307,18 @@ class AlarmsController {
                 if (excep.isFailure){
                     val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(originalSeriesStartTime, activity_context, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillis, LastAlarmUpdateDBReceiver())}
                     b.await()
-                    return Exception("Error in scheduling the alarm")
+                    throw Exception("Error in scheduling the alarm")
                 }
-                return null
+
             } catch (e: Exception) {
                 // if we have gotten a error then we will need to cancel the alarm and return the exception and also delete the alarm
                 try {
                     this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq_in_min, alarmDao, alarmManager, activity_context, false, alarmData = alarmDataForDeleting)
                 }catch (e: Exception){}
                 logD("error occurred in the schedule multiple alarms, so we are going to cancel the alarm whole, in scheduleAlarm2-->${e}")
-                return e
+                throw e
             }
-            // this line added the freq in the last pending intent and now to get time for the last time we
-//            return null
-        }catch (e: Exception){
-            logD("there is a  error in the scheduleMultipleAlarms2  and it is-->${e}")
-            return  e
+
         }
     }
 
@@ -333,44 +330,40 @@ class AlarmsController {
     fun scheduleNextAlarm(
         alarmManager: AlarmManager, activityContext: Context, alarmData: AlarmData, receiverClass: Class<out BroadcastReceiver> = AlarmReceiver::class.java,
         currentAlarmTime: Long, startTimeForAlarmSeries: Long // This is the original series start time
-    ): Exception? {
-        logD("in the ++scheduleNextAlarm ++ with currentAlarmTime=$currentAlarmTime and originalStartTimeForDb=$startTimeForAlarmSeries")
-        try {
-            // Calculate the start time for the *next* alarm
-            val nextAlarmTimeInMillis = currentAlarmTime + alarmData.freqGottenAfterCallback.toLong() * 60000
+    ): Result<Unit> {
+        return  runCatching {
+            logD("in the ++scheduleNextAlarm ++ with currentAlarmTime=$currentAlarmTime and originalStartTimeForDb=$startTimeForAlarmSeries")
+                // Calculate the start time for the *next* alarm
+                val nextAlarmTimeInMillis = currentAlarmTime + alarmData.freqGottenAfterCallback.toLong() * 60000
 
-            // Check if the next calculated time is past the series end time
-            if (nextAlarmTimeInMillis >= alarmData.second_value) {
-                // means that the alarm cycle has ended
-                logD("scheduleNextAlarm: Next alarm time ($nextAlarmTimeInMillis) is at or past end time (${alarmData.second_value}). Ending series.")
-                logD("scheduleNextAlarm: Setting last pending intent to update DB.")
-                // we do not need to schedule the last pending intent for the db as it is already done for us
-            } else {
-                // Alarm cycle has not ended, schedule the next alarm
-                logD("scheduleNextAlarm: Scheduling next alarm at $nextAlarmTimeInMillis. Original series start time for DB: $startTimeForAlarmSeries")
+                // Check if the next calculated time is past the series end time
+                if (nextAlarmTimeInMillis >= alarmData.second_value) {
+                    // means that the alarm cycle has ended
+                    logD("scheduleNextAlarm: Next alarm time ($nextAlarmTimeInMillis) is at or past end time (${alarmData.second_value}). Ending series.")
+                    logD("scheduleNextAlarm: Setting last pending intent to update DB.")
+                    // we do not need to schedule the last pending intent for the db as it is already done for us
+                } else {
+                    // Alarm cycle has not ended, schedule the next alarm
+                    logD("scheduleNextAlarm: Scheduling next alarm at $nextAlarmTimeInMillis. Original series start time for DB: $startTimeForAlarmSeries")
 
-                assertWithException(this.getDisplayTimeWithoutAMPM(alarmData.first_value  ) == alarmData.start_time_for_display
-                    , "the first value(start time for series):(${this.getDisplayTimeWithoutAMPM(alarmData.first_value)})" +
-                      " of the alarmData is not equal to the series start time for display:(${alarmData.start_time_for_display}) " )
-               val exception= runBlocking {scheduleAlarm(
-                   startTime = nextAlarmTimeInMillis, // This is the time the next alarm will trigger
-                   endTime = alarmData.second_value, // The series end time
-                   alarmManager = alarmManager,
-                   componentActivity = activityContext,
-                   receiverClass = receiverClass,
-                   // Pass the original series start time to the next intent
-                   startTimeForAlarmSeries = startTimeForAlarmSeries,
-                   alarmData = alarmData,
-                   alarmMessage = alarmData.message
-               )  }
-                exception.onFailure { excp-> return Exception(excp.message) }
-                exception.onSuccess { return null }
-            }
-        } catch (e: Exception) {
-            logD("scheduleNextAlarm: Error occurred: ${e}")
-            return e
+                    assertWithException(this.getDisplayTimeWithoutAMPM(alarmData.first_value  ) == alarmData.start_time_for_display
+                        , "the first value(start time for series):(${this.getDisplayTimeWithoutAMPM(alarmData.first_value)})" +
+                                " of the alarmData is not equal to the series start time for display:(${alarmData.start_time_for_display}) " )
+                    val exception= runBlocking {scheduleAlarm(
+                        startTime = nextAlarmTimeInMillis, // This is the time the next alarm will trigger
+                        endTime = alarmData.second_value, // The series end time
+                        alarmManager = alarmManager,
+                        componentActivity = activityContext,
+                        receiverClass = receiverClass,
+                        // Pass the original series start time to the next intent
+                        startTimeForAlarmSeries = startTimeForAlarmSeries,
+                        alarmData = alarmData,
+                        alarmMessage = alarmData.message
+                    )  }
+                    exception.onFailure { excp-> throw Exception(excp.message) }
+                    exception.onSuccess {  }
+                }
         }
-        return null
     }
 
 
@@ -499,52 +492,50 @@ class AlarmsController {
         logD("Finished cancelling all alarm PendingIntents")
     }
 
-    suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activityContext: ComponentActivity, alarmDao: AlarmDao):Exception?{
+    suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activityContext: ComponentActivity, alarmDao: AlarmDao): Result<Unit>{
+        return runCatching {
 
-        logD("in the reset alarm func-+")
-        val startTime = alarmData.first_value
-        val endTime = alarmData.second_value
-        val calendarInstance =Calendar.getInstance()
-        val currentTime =  calendarInstance.timeInMillis
-        val alarmFreqInInt = (alarmData.freq_in_min / 60000 ).toInt()
-        logD("alarm freq in int is :${alarmFreqInInt} and alarmData.freq_in_min / 60000 ${alarmData.freq_in_min / 60000} and alarmData.freq_in_min = ${alarmData.freq_in_min} ")
-        // get the date time form the start time as I set the date in the calender instance when setting it for the startTime
-        if ( currentTime >= endTime && currentTime >= startTime ) {
-            logD("in the current time  greater than the start time and the end time")
+            logD("in the reset alarm func-+")
+            val startTime = alarmData.first_value
+            val endTime = alarmData.second_value
+            val calendarInstance =Calendar.getInstance()
+            val currentTime =  calendarInstance.timeInMillis
+            val alarmFreqInInt = (alarmData.freq_in_min / 60000 ).toInt()
+            logD("alarm freq in int is :${alarmFreqInInt} and alarmData.freq_in_min / 60000 ${alarmData.freq_in_min / 60000} and alarmData.freq_in_min = ${alarmData.freq_in_min} ")
+            // get the date time form the start time as I set the date in the calender instance when setting it for the startTime
+            if ( currentTime >= endTime && currentTime >= startTime ) {
+                logD("in the current time  greater than the start time and the end time")
 
-            // here the user is asking us to reset the alarm for the next day on the same time of the day
-            // also the date_in_Long on the alarmData is right, do I need to set the date to be on the
-            // also imagine alarm was on tuesday form 12:00 --> 14:00 and now the time is 18:00 of the same day, here I
-            // can set the date to be the next day
-            // or the time is 10:00 of the next day, here I can't set the date to be next day
-            // or the time is 13:00 of the next day, here I can set the alarm o
-            // how are we telling the diff b/w them ->
+                // here the user is asking us to reset the alarm for the next day on the same time of the day
+                // also the date_in_Long on the alarmData is right, do I need to set the date to be on the
+                // also imagine alarm was on tuesday form 12:00 --> 14:00 and now the time is 18:00 of the same day, here I
+                // can set the date to be the next day
+                // or the time is 10:00 of the next day, here I can't set the date to be next day
+                // or the time is 13:00 of the next day, here I can set the alarm o
+                // how are we telling the diff b/w them ->
 
-            // get the date of the alarm, and the start and the end time; now see if
-            // see if the current date is more or less than the date of the alarm,
-            // the start time of the day is behind
+                // get the date of the alarm, and the start and the end time; now see if
+                // see if the current date is more or less than the date of the alarm,
+                // the start time of the day is behind
 
-            // -- or -- get the current time form incrementing the date of the calender, if the prev_time >= currentTime set
-            // the alarm if <= current time then increment the date to be plus one and if still not then exit
-            var endCalendar = Calendar.getInstance().apply { timeInMillis = endTime }
-            var startCalendar = Calendar.getInstance().apply { timeInMillis = startTime }
+                // -- or -- get the current time form incrementing the date of the calender, if the prev_time >= currentTime set
+                // the alarm if <= current time then increment the date to be plus one and if still not then exit
+                var endCalendar = Calendar.getInstance().apply { timeInMillis = endTime }
+                var startCalendar = Calendar.getInstance().apply { timeInMillis = startTime }
 
-            logD("(-before incrementing-)the start time  is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startCalendar.timeInMillis)} and the end time is ${this.getTimeInHumanReadableFormatProtectFrom0Included(endCalendar.timeInMillis)} ")
+                logD("(-before incrementing-)the start time  is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startCalendar.timeInMillis)} and the end time is ${this.getTimeInHumanReadableFormatProtectFrom0Included(endCalendar.timeInMillis)} ")
 
-            endCalendar = incrementTheStartCalenderTimeUntilItIsInFuture(endCalendar, calendarInstance)
-            startCalendar = incrementTheStartCalenderTimeUntilItIsInFuture(startCalendar = startCalendar, currentCalendar = calendarInstance)
+                endCalendar = incrementTheStartCalenderTimeUntilItIsInFuture(endCalendar, calendarInstance)
+                startCalendar = incrementTheStartCalenderTimeUntilItIsInFuture(startCalendar = startCalendar, currentCalendar = calendarInstance)
 
-            logD("(-after incrementing-)the start time  is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startCalendar.timeInMillis)} and the end time is ${this.getTimeInHumanReadableFormatProtectFrom0Included(endCalendar.timeInMillis)} ")
+                logD("(-after incrementing-)the start time  is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startCalendar.timeInMillis)} and the end time is ${this.getTimeInHumanReadableFormatProtectFrom0Included(endCalendar.timeInMillis)} ")
 
 
-            // -- here what I need to do is to provide the scheduleAlarm2 with the new series start/end time and the nextAlarmFireTime for
-            // -- each if block in the reset alarm function
-            val res = this.calculateNextAlarmInfo(alarmData)
-            val nextAlarmInfo = res.getOrElse { throwable->
-                return throwable as? Exception
-                    ?: Exception("there is a problem in getting the next alarm info:", throwable)
-            }
-            val exception = this.scheduleMultipleAlarms2(
+                // -- here what I need to do is to provide the scheduleAlarm2 with the new series start/end time and the nextAlarmFireTime for
+                // -- each if block in the reset alarm function
+                val res = this.calculateNextAlarmInfo(alarmData)
+                val nextAlarmInfo = res.getOrThrow()
+                val exception = this.scheduleMultipleAlarms2(
                     alarmManager,
                     activity_context = activityContext,
                     alarmDao = alarmDao,
@@ -554,23 +545,21 @@ class AlarmsController {
                     alarmData = alarmData,
                     nextAlarmInfo =  nextAlarmInfo
                 )
-            return exception
-        }
-        else if (currentTime <= startTime && currentTime <= endTime){
-            //  alarm is in future still:-> here we will set the alarm as it was cause the user is asking us to reset the alarm
-            //  that had not gone before, eg if I set the alarm 5 hour form now and hit remove it, and want to reset it again
-            // do not increment as the time is not arrived
-            logD("the freq is in current time <= start time and end time ${alarmData.freq_in_min.toInt()} ")
-            val endCalendar = Calendar.getInstance().apply { timeInMillis = alarmData.second_value }
-            val startCalendar = Calendar.getInstance().apply { timeInMillis = startTime }
-
-            val res = this.calculateNextAlarmInfo(alarmData)
-            val nextAlarmInfo = res.getOrElse { throwable->
-                return throwable as? Exception
-                    ?: Exception("there is a problem in getting the next alarm info:", throwable)
+                exception.fold(onFailure = { throwable->
+                    throw throwable}, onSuccess = {})
             }
+            else if (currentTime <= startTime && currentTime <= endTime){
+                //  alarm is in future still:-> here we will set the alarm as it was cause the user is asking us to reset the alarm
+                //  that had not gone before, eg if I set the alarm 5 hour form now and hit remove it, and want to reset it again
+                // do not increment as the time is not arrived
+                logD("the freq is in current time <= start time and end time ${alarmData.freq_in_min.toInt()} ")
+                val endCalendar = Calendar.getInstance().apply { timeInMillis = alarmData.second_value }
+                val startCalendar = Calendar.getInstance().apply { timeInMillis = startTime }
 
-            val exception = this.scheduleMultipleAlarms2(
+                val res = this.calculateNextAlarmInfo(alarmData)
+                val nextAlarmInfo = res.getOrThrow()
+
+                val exception = this.scheduleMultipleAlarms2(
                     alarmManager,
                     activity_context = activityContext,
                     alarmDao = alarmDao,
@@ -580,50 +569,43 @@ class AlarmsController {
                     alarmData = alarmData,
                     nextAlarmInfo =  nextAlarmInfo
                 )
-            return exception
-        }
-        else if (currentTime in startTime..endTime){
-            // here set the alarm after the start alarm till the end time
-            logD("in the 3nd one")
-            var startTimeOfTheAlarm  = startTime
-            val currentTimeOfTheAlarm = Calendar.getInstance().timeInMillis
-            // going to increment the start time until we get it to be greater or equal than the current time
-            logD("the  alarm Data is $alarmData \n }")
-            while (startTimeOfTheAlarm <= currentTimeOfTheAlarm){
-                startTimeOfTheAlarm+=alarmData.freq_in_min
-                logD("start time changed to ${startTimeOfTheAlarm}")
+                exception.fold(onFailure = { throwable->
+                    throw throwable}, onSuccess = {})
             }
-            logD("start time changed to ${startTimeOfTheAlarm} -- outside the while loop")
-            logD("is the startTime >= endTime ${ startTimeOfTheAlarm >= endTime}  -- startTime >= secondValue ${startTimeOfTheAlarm >= alarmData.second_value}-- stratTime - $startTimeOfTheAlarm, endTime: $endTime, secondTime:${alarmData.second_value} ")
-            val endCalendar = Calendar.getInstance().apply { timeInMillis = alarmData.second_value }
-            // as we have changed the alarm time to be the latest time
-            val startCalendar = Calendar.getInstance().apply { timeInMillis = startTimeOfTheAlarm }
+            else if (currentTime in startTime..endTime){
+                // here set the alarm after the start alarm till the end time
+                logD("in the 3nd one")
+                var startTimeOfTheAlarm  = startTime
+                val currentTimeOfTheAlarm = Calendar.getInstance().timeInMillis
+                // going to increment the start time until we get it to be greater or equal than the current time
+                logD("the  alarm Data is $alarmData \n }")
+                while (startTimeOfTheAlarm <= currentTimeOfTheAlarm){
+                    startTimeOfTheAlarm+=alarmData.freq_in_min
+                    logD("start time changed to ${startTimeOfTheAlarm}")
+                }
+                logD("start time changed to ${startTimeOfTheAlarm} -- outside the while loop")
+                logD("is the startTime >= endTime ${ startTimeOfTheAlarm >= endTime}  -- startTime >= secondValue ${startTimeOfTheAlarm >= alarmData.second_value}-- stratTime - $startTimeOfTheAlarm, endTime: $endTime, secondTime:${alarmData.second_value} ")
+                val endCalendar = Calendar.getInstance().apply { timeInMillis = alarmData.second_value }
+                // as we have changed the alarm time to be the latest time
+                val startCalendar = Calendar.getInstance().apply { timeInMillis = startTimeOfTheAlarm }
 
-            val res = this.calculateNextAlarmInfo(alarmData)
-            val nextAlarmInfo = res.getOrElse { throwable->
-                return throwable as? Exception
-                    ?: Exception("there is a problem in getting the next alarm info:", throwable)
-            }
+                val res = this.calculateNextAlarmInfo(alarmData)
+                val nextAlarmInfo = res.getOrThrow()
 
-            val exception =
-                this.scheduleMultipleAlarms2(
-                    alarmManager,
-                    activity_context = activityContext,
-                    alarmDao = alarmDao,
-                    calendar_for_start_time = startCalendar,
-                    calendar_for_end_time = endCalendar,
-                    freq_after_the_callback = alarmData.freqGottenAfterCallback, alarmData = alarmData,
-                    nextAlarmInfo =  nextAlarmInfo
-                )
-            if (exception != null){
-                logD("there is a exception found and it is ${exception}")
-                return exception
+                val exception = this.scheduleMultipleAlarms2(
+                        alarmManager,
+                        activity_context = activityContext,
+                        alarmDao = alarmDao,
+                        calendar_for_start_time = startCalendar,
+                        calendar_for_end_time = endCalendar,
+                        freq_after_the_callback = alarmData.freqGottenAfterCallback, alarmData = alarmData,
+                        nextAlarmInfo =  nextAlarmInfo
+                    )
+                exception.fold(onFailure = { throwable->
+                    throw throwable}, onSuccess = {})
             }
-            logD("((there is a exception found and it is ${exception}")
-            return null
+            throw Exception(" did not hit any of the if condition ")
         }
-        logD("last case about to return")
-        return Exception(" did not hit any of the if condition  ")
     }
     fun lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarm_start_time_to_search_db: Long, context_of_activity:Context, alarmManager:AlarmManager, message_name_for_start_time:String, message_name_for_end_time: String, alarm_end_time_to_search_db:Long, broadcastReceiverClass:BroadcastReceiver){
 
