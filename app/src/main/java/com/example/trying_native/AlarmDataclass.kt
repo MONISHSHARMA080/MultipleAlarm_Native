@@ -38,7 +38,11 @@ data class AlarmData(
     @ColumnInfo(name = "date_for_display") val date_for_display: String,
     @ColumnInfo(name = "freq_in_min_to_display") val freq_in_min_to_display: Int,
     @ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean
-)
+){
+    public fun getFreqInMin(): Long {
+        return this.freq_in_min * 60000
+    }
+}
 
 @Database(entities = [AlarmData::class], version = 2)
 abstract class AlarmDatabase : RoomDatabase() {

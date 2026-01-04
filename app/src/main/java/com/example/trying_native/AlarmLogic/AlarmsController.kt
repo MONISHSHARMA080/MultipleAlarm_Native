@@ -83,15 +83,15 @@ class AlarmsController {
             logD("the current time via calender is: ${this.getTimeInHumanReadableFormatProtectFrom0Included(currentCalTime)}" +
                     " \n and Current time(adjusted for some min diff) is: ${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalender)}  " +
                     "\n startTime of alarm is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)}")
-            check(startTime >  endTime) { "the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not > endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} " }
-            check(currentTimeViaCalender< startTime, {"the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not greater than the current time(from cal):${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalender)} "})
-            check( alarmData.first_value == startTimeForAlarmSeries ,{"the SeriesStartTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTimeForAlarmSeries)} is not same as the one from the alarmData(DB):${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.first_value)} "})
+            require(startTime <  endTime) { "the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not > endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} " }
+            check(currentTimeViaCalender< startTime ){"the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not greater than the current time(from cal):${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalender)} "}
+            check( alarmData.first_value == startTimeForAlarmSeries ){"the SeriesStartTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTimeForAlarmSeries)} is not same as the one from the alarmData(DB):${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.first_value)} "}
             check(alarmData.second_value == endTime, {"the endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} is not same as the one from the alarmData(DB):${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.second_value)} "})
             logD(" in the scheduleAlarm func and the startTime is $startTime and the startTimeForDb is $startTimeForAlarmSeries  ")
             logD("\n\n++setting the pending intent of request code(startTime of alarm to int)->${startTime.toInt()} and it is in the human readable format is ${SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date(startTime)) }++\n\n")
 
             // PI for the alarm receiver
-            val resultForAlarmOpr = scope.async {getPendingIntentForAlarm(alarmReceiverClass, componentActivity, startTimeForAlarmSeries, startTime, endTime, alarmMessage, alarmData.id)}
+            val resultForAlarmOpr = scope.async {getPendingIntentForAlarm(receiverClass, componentActivity, startTimeForAlarmSeries, startTime, endTime, alarmMessage, alarmData.id)}
             val resultForSettingNextAlarmOpr = scope.async {getPendingIntentForAlarm(nextAlarmReceiver, componentActivity, startTimeForAlarmSeries, startTime, endTime, alarmMessage, alarmData.id, createIntentForAlarmMetaData = false)}
 
             val PIForAlarm = resultForAlarmOpr.await().fold(
@@ -209,7 +209,7 @@ class AlarmsController {
                     start_time_for_display = start_time_for_display, end_time_for_display = end_time_for_display,
                     start_am_pm = start_am_pm,
                     end_am_pm = end_am_pm,
-                    freq_in_min_to_display = (freq_in_min / 60000).toInt(),
+                    freq_in_min_to_display = freq_after_the_callback,
                     date_in_long = date_in_long,
                     message = messageForDB,
                     freqGottenAfterCallback = freq_after_the_callback.toLong()
@@ -240,6 +240,7 @@ class AlarmsController {
                 }
             }catch (e: Exception){ // lord help us!
             }
+            throw  e
         }
         // no error in the try catch of the async block
     }
@@ -603,8 +604,10 @@ class AlarmsController {
                     )
                 exception.fold(onFailure = { throwable->
                     throw throwable}, onSuccess = {})
+            }else{
+                throw Exception(" did not hit any of the if condition ")
             }
-            throw Exception(" did not hit any of the if condition ")
+
         }
     }
     fun lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarm_start_time_to_search_db: Long, context_of_activity:Context, alarmManager:AlarmManager, message_name_for_start_time:String, message_name_for_end_time: String, alarm_end_time_to_search_db:Long, broadcastReceiverClass:BroadcastReceiver){

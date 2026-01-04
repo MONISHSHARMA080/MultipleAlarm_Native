@@ -70,11 +70,12 @@ class NextAlarmReceiver: BroadcastReceiver() {
             startTimeForAlarmSeries = startTimeForAlarmSeries // Pass the original DB start time
         )
 
-        if (exception !== null) {
-            logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "the alarm Exception is not null and it is ${exception.message}-----and it is ${exception} ")
-        }else{
-            logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "there was no exception in scheduling the future alarm ")
-        }
+        exception.fold(onSuccess = {
+                logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "there was no exception in scheduling the future alarm ")
+            }, onFailure = {exp->
+                logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "the alarm Exception is not null and it is ${exp.message}-----and it is ${exp} ")
+            }
+        )
     }
     private  fun getAlarmDao(context: Context): AlarmDao{
         val db = Room.databaseBuilder(

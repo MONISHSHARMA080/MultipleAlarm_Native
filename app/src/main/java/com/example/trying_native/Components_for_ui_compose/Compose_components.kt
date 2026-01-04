@@ -335,10 +335,10 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                                     activityContext = context_of_activity, alarmDao = AlarmDao,
                                                 )
                                               logD("the exception form the resetAlarm is ->$exception")
-                                                if(exception != null){
-                                                        NotificationBuilder(context_of_activity, title = "error returned in creating multiple alarm ", notificationText = "execution returned exception in schedule multiple alarm  -->${exception}").showNotification()
-                                                        logD("error in the schedule multiple -->${exception}")
-                                                }
+                                                exception.fold(onSuccess = {}, onFailure = {
+                                                    NotificationBuilder(context_of_activity, title = "error returned in creating multiple alarm ", notificationText = "execution returned exception in schedule multiple alarm  -->${exception}").showNotification()
+                                                    logD("error in the schedule multiple -->${exception}")
+                                                })
                                             }
 //
                                         }
@@ -366,12 +366,11 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                             val exception =alarmsController.scheduleMultipleAlarms(alarmManager, dateForDisplay, startDateInMilliSec, alarmDao = AlarmDao, messageForDB = alarmMessage,
                                 calendar_for_start_time = startTimeCal, calendar_for_end_time = endTimeCal, freq_after_the_callback = frequency, activity_context = context_of_activity
                             )
-                            if (exception == null){
-                                logD("the scheduleMultipleAlarms func ran fine and no exceptions ")
-                                return@launch
-                            }
-                            NotificationBuilder(context = context_of_activity, title = "there is a error/Exception  in making new alarm", notificationText = exception.toString()).showNotification()
-                            logD("there is a error/Exception  in making new alarm-->${exception}")
+                            exception.fold(onSuccess = { return@launch}, onFailure = { excp ->
+                                NotificationBuilder(context = context_of_activity, title = "there is a error/Exception  in making new alarm", notificationText = excp.toString()).showNotification()
+                                logD("there is a error/Exception  in making new alarm-->${excp}")
+
+                            })
                         }
                     }catch (e: Exception){
                         NotificationBuilder(context = context_of_activity, title = "there is a error/Exception  in making new alarm", notificationText = e.toString()).showNotification()
