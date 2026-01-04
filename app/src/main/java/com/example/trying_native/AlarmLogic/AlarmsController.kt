@@ -335,7 +335,9 @@ class AlarmsController {
         return  runCatching {
             logD("in the ++scheduleNextAlarm ++ with currentAlarmTime=$currentAlarmTime and originalStartTimeForDb=$startTimeForAlarmSeries")
                 // Calculate the start time for the *next* alarm
-                val nextAlarmTimeInMillis = currentAlarmTime + alarmData.freqGottenAfterCallback.toLong() * 60000
+//                val nextAlarmTimeInMillis = currentAlarmTime + alarmData.freqGottenAfterCallback * 60000
+                val nextAlarmTimeInMillis = currentAlarmTime + alarmData.getFreqInMillisecond()
+//            logD("[ScheduleNextAlarm] using method -> ${getTimeInHumanReadableFormat(currentAlarmTime + alarmData.getFreqInMillisecond())} and using field is ${getTimeInHumanReadableFormat(nextAlarmTimeInMillis)}")
 
                 // Check if the next calculated time is past the series end time
                 if (nextAlarmTimeInMillis >= alarmData.second_value) {

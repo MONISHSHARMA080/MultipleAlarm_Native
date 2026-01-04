@@ -39,8 +39,13 @@ data class AlarmData(
     @ColumnInfo(name = "freq_in_min_to_display") val freq_in_min_to_display: Int,
     @ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean
 ){
-    public fun getFreqInMin(): Long {
-        return this.freq_in_min * 60000
+    /** converts the freq that we got in min to millisecond for same time, eg 6 min to 6 min in millisecond*/
+    public fun getFreqInMillisecond( ): Long {
+        return this.freqGottenAfterCallback * 60000
+    }
+    /** converts the freq that we got in min to millisecond for same time, eg 6 min to 6 min in millisecond*/
+    public fun getFreqInMillisecond(freqInMin:Long): Long {
+        return freqInMin * 60000
     }
 }
 
