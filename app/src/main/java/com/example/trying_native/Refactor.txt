@@ -2,6 +2,7 @@ a) UI Refactor : --
     * haptic feedback
     * weekly repeating alarms (like in alarm clock with circles, s,m,t,w,t,f,s
     * when we click on alarms they should expand and also give me the message and alarm information
+    * make the frequency one better, like I can type 0 and it should not have an autistic meltdown
     * stop for 10(prefer)/20 min button that can be used 3 times,
     * a restart for 30 min button, here we can create a temp value or alarm where (alarm was from 2:00--6:00) from now(7:00) to now + 30 min (7:30) , create a new
         alarm instead of making db changes as that will be easier
@@ -11,10 +12,14 @@ a) UI Refactor : --
 
 b) Code Refactor :--
     * there are 2 scheduler alarms fn make them into one as there is an abstraction there
+        [*] scheduleNextAlarm() could be just in the nextAlarmReceiver
+        -- schedulerMultipleAlarms2 we can make the alarm reset into a alarm data call, move the logic there as
+            this is better for reusability
     * use alarmData or a data class
     * there might be a need to reduce the data stored in the db as we can make fn to get the frequencies, instead of doing 60000* everytime
     * assert that the alarm is set just to be sure, after setting the alarm via Intent matching
    [X] use results in all the alarms and not the ?Exception
+    * write test, for system and alarms using robolectric
 
 
 

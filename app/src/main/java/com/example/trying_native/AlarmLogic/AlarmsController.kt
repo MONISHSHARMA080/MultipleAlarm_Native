@@ -69,7 +69,7 @@ class AlarmsController {
         }
     }
 
-    private suspend fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, startTimeForAlarmSeries: Long, alarmMessage: String= "",
+    public suspend fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, startTimeForAlarmSeries: Long, alarmMessage: String= "",
                                       alarmData: AlarmData
     ): Result<Unit> {
         return runCatching {
@@ -320,52 +320,6 @@ class AlarmsController {
                 throw e
             }
 
-        }
-    }
-
-    /**
-     * this function sets the next alarm, if the alarm is ending then we will
-     * @param currentAlarmTime The time the alarm that triggered this call fired.
-     * @param startTimeForAlarmSeries This parameter should represent the *original* start time of the alarm series (used for DB lookup).
-     */
-    fun scheduleNextAlarm(
-        alarmManager: AlarmManager, activityContext: Context, alarmData: AlarmData, receiverClass: Class<out BroadcastReceiver> = AlarmReceiver::class.java,
-        currentAlarmTime: Long, startTimeForAlarmSeries: Long // This is the original series start time
-    ): Result<Unit> {
-        return  runCatching {
-            logD("in the ++scheduleNextAlarm ++ with currentAlarmTime=$currentAlarmTime and originalStartTimeForDb=$startTimeForAlarmSeries")
-                // Calculate the start time for the *next* alarm
-//                val nextAlarmTimeInMillis = currentAlarmTime + alarmData.freqGottenAfterCallback * 60000
-                val nextAlarmTimeInMillis = currentAlarmTime + alarmData.getFreqInMillisecond()
-//            logD("[ScheduleNextAlarm] using method -> ${getTimeInHumanReadableFormat(currentAlarmTime + alarmData.getFreqInMillisecond())} and using field is ${getTimeInHumanReadableFormat(nextAlarmTimeInMillis)}")
-
-                // Check if the next calculated time is past the series end time
-                if (nextAlarmTimeInMillis >= alarmData.second_value) {
-                    // means that the alarm cycle has ended
-                    logD("scheduleNextAlarm: Next alarm time ($nextAlarmTimeInMillis) is at or past end time (${alarmData.second_value}). Ending series.")
-                    logD("scheduleNextAlarm: Setting last pending intent to update DB.")
-                    // we do not need to schedule the last pending intent for the db as it is already done for us
-                } else {
-                    // Alarm cycle has not ended, schedule the next alarm
-                    logD("scheduleNextAlarm: Scheduling next alarm at $nextAlarmTimeInMillis. Original series start time for DB: $startTimeForAlarmSeries")
-
-                    assertWithException(this.getDisplayTimeWithoutAMPM(alarmData.first_value  ) == alarmData.start_time_for_display
-                        , "the first value(start time for series):(${this.getDisplayTimeWithoutAMPM(alarmData.first_value)})" +
-                                " of the alarmData is not equal to the series start time for display:(${alarmData.start_time_for_display}) " )
-                    val exception= runBlocking {scheduleAlarm(
-                        startTime = nextAlarmTimeInMillis, // This is the time the next alarm will trigger
-                        endTime = alarmData.second_value, // The series end time
-                        alarmManager = alarmManager,
-                        componentActivity = activityContext,
-                        receiverClass = receiverClass,
-                        // Pass the original series start time to the next intent
-                        startTimeForAlarmSeries = startTimeForAlarmSeries,
-                        alarmData = alarmData,
-                        alarmMessage = alarmData.message
-                    )  }
-                    exception.onFailure { excp-> throw Exception(excp.message) }
-                    exception.onSuccess {  }
-                }
         }
     }
 
@@ -641,7 +595,7 @@ class AlarmsController {
     /** this func returns the time that is in human readable format  and for display, eg 10:50 ***WITHOUT*** am or pm
      *  where [cal] is the Long that will be converted into Calender of [cal] time in millis..  internally
      */
-    private  fun getDisplayTimeWithoutAMPM(cal: Long ): String{
+    public  fun getDisplayTimeWithoutAMPM(cal: Long ): String{
         val cal = Calendar.getInstance().apply { timeInMillis = cal }
         return SimpleDateFormat("hh:mm", Locale.getDefault()).format(cal.time)
     }

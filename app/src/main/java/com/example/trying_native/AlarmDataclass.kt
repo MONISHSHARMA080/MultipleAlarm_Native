@@ -11,6 +11,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.functions.FunctionN
 
@@ -40,11 +41,11 @@ data class AlarmData(
     @ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean
 ){
     /** converts the freq that we got in min to millisecond for same time, eg 6 min to 6 min in millisecond*/
-    public fun getFreqInMillisecond( ): Long {
+     fun getFreqInMillisecond(): Long {
         return this.freqGottenAfterCallback * 60000
     }
     /** converts the freq that we got in min to millisecond for same time, eg 6 min to 6 min in millisecond*/
-    public fun getFreqInMillisecond(freqInMin:Long): Long {
+     fun getFreqInMillisecond(freqInMin:Long): Long {
         return freqInMin * 60000
     }
 }
@@ -85,6 +86,9 @@ interface AlarmDao {
 
     @Query(" UPDATE AlarmData SET is_ready_to_use = :isReadyToUse ,first_value = :firstValue, second_value = :second_value, date_for_display = :date_for_display  WHERE id = :id")
     suspend fun updateAlarmForReset(id: Int, firstValue: Long, second_value: Long, date_for_display: String, isReadyToUse: Boolean)
+
+    @Update
+    suspend fun updateAlarmForReset(alarmData: AlarmData)
 
     @Query("""
         UPDATE AlarmData  SET is_ready_to_use = :isReadyToUse  WHERE first_value = :firstValue 

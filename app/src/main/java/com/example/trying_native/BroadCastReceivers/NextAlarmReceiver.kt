@@ -7,13 +7,16 @@ import android.content.Intent
 import androidx.room.Room
 import com.example.trying_native.AlarmActivity
 import com.example.trying_native.AlarmLogic.AlarmsController
+import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmDatabase
 import com.example.trying_native.logD
+import com.example.trying_native.notification.NotificationBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -26,12 +29,13 @@ import kotlin.system.exitProcess
 class NextAlarmReceiver: BroadcastReceiver() {
     private lateinit var context: Context
     private val coroutineScopeThatDoesNotCancel = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val coroutineScope = CoroutineScope( Dispatchers.IO)
+    private val coroutineScope = CoroutineScope( Dispatchers.Default)
     private val alarmManager by lazy { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
     private val alarmsController = AlarmsController()
     private val logFile : File by lazy {
         File(context.getExternalFilesDir(null), "Next_Alarm_Receiver_logs.txt")
     }
+    private  val receiverClass: Class<out BroadcastReceiver> = AlarmReceiver::class.java
 
 
      override  fun onReceive(context: Context, intent: Intent) {
@@ -60,23 +64,33 @@ class NextAlarmReceiver: BroadcastReceiver() {
             logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "we were not able to find the alarmData in the DB")
             exitProcess(69)
         }
+        val nextAlarmTime = currentTimeAlarmFired + alarmData.getFreqInMillisecond()
 
+        if (nextAlarmTime < alarmData.second_value){
+            require(alarmsController.getDisplayTimeWithoutAMPM(alarmData.first_value  ) == alarmData.start_time_for_display){ "the first value(start time for series):(${alarmsController.getDisplayTimeWithoutAMPM(alarmData.first_value)}) of the alarmData is not equal to the series start time for display:(${alarmData.start_time_for_display}) " }
+           val res = coroutineScope.async{
+               alarmsController.scheduleAlarm (
+               startTime = nextAlarmTime, // This is the time the next alarm will trigger
+               endTime = alarmData.second_value, // The series end time
+               alarmManager = alarmManager,
+               componentActivity = activityContext,
+               receiverClass = receiverClass,
+               startTimeForAlarmSeries = startTimeForAlarmSeries,
+               alarmData = alarmData,
+               alarmMessage = alarmData.message
+               )
+           }.await()
 
-        val exception = alarmsController.scheduleNextAlarm(
-            alarmManager,
-            alarmData = alarmData,
-            activityContext = activityContext,
-            currentAlarmTime = currentTimeAlarmFired, // Pass the time the current alarm fired
-            startTimeForAlarmSeries = startTimeForAlarmSeries // Pass the original DB start time
-        )
-
-        exception.fold(onSuccess = {
+            res.fold(onSuccess = {
                 logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "there was no exception in scheduling the future alarm ")
-            }, onFailure = {exp->
-                logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "the alarm Exception is not null and it is ${exp.message}-----and it is ${exp} ")
-            }
-        )
+            }, onFailure = {exception->
+                NotificationBuilder(context, title = "error returned in scheduling upcoming alarm ", notificationText = "error returned in scheduling upcoming alarm -->${exception}").showNotification()
+                alarmDao.updateAlarmForReset(alarmData.copy(isReadyToUse = false))
+                logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "the alarm Exception is not null and it is ${exception.message}-----and it is ${exception} ")
+            })
+        }
     }
+
     private  fun getAlarmDao(context: Context): AlarmDao{
         val db = Room.databaseBuilder(
             context,
