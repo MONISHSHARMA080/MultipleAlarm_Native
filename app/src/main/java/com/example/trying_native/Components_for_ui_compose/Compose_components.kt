@@ -36,7 +36,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -91,14 +90,12 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.lifecycleScope
 import com.example.trying_native.AlarmLogic.AlarmsController
 import com.example.trying_native.FirstLaunchAskForPermission.FirstLaunchAskForPermission
-import com.example.trying_native.getDateForDisplay
 import com.example.trying_native.notification.NotificationBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 import java.util.Date
 
 
@@ -232,13 +229,13 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                 // Start time
                                 Row(verticalAlignment = Alignment.Bottom) {
                                     Text(
-                                        text = individualAlarm.start_time_for_display,
+                                        text = individualAlarm.getTimeFormatted(individualAlarm.startTime),
                                         fontSize = (fontSize / 1.2),
                                         fontWeight = FontWeight.Black,
                                         modifier = Modifier.padding(end = 4.dp)
                                     )
                                     Text(
-                                        text = individualAlarm.start_am_pm,
+                                        text = individualAlarm.getFormattedAmPm(individualAlarm.startTime),
                                         fontSize = (fontSize / 2.2),
                                         modifier = Modifier.padding(bottom = 2.dp)
                                     )
@@ -256,13 +253,13 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                 // End time
                                 Row(verticalAlignment = Alignment.Bottom) {
                                     Text(
-                                        text = individualAlarm.end_time_for_display,
+                                        text = individualAlarm.getTimeFormatted(individualAlarm.endTime),
                                         fontSize = (fontSize / 1.2),
                                         fontWeight = FontWeight.Black,
                                         modifier = Modifier.padding(end = 4.dp)
                                     )
                                     Text(
-                                        text = individualAlarm.end_am_pm,
+                                        text = individualAlarm.getFormattedAmPm(individualAlarm.endTime),
                                         fontSize = (fontSize / 2.3),
                                         modifier = Modifier.padding(bottom = 2.dp)
                                     )
@@ -270,7 +267,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                             }
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "after every ${individualAlarm.freq_in_min_to_display} min",
+                                    text = "after every ${individualAlarm.freqGottenAfterCallback} min",
                                     fontSize = (fontSize / 2.7),
                                     fontWeight = FontWeight.W600,
                                     textAlign = TextAlign.Center
@@ -289,9 +286,9 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                         coroutineScope.launch(Dispatchers.IO) {
                                             alarmsController.cancelAlarmByCancelingPendingIntent(
                                                 context_of_activity = context_of_activity,
-                                                startTime = individualAlarm.first_value,
-                                                endTime = individualAlarm.second_value,
-                                                frequency_in_min = individualAlarm.freq_in_min,
+                                                startTime = individualAlarm.startTime,
+                                                endTime = individualAlarm.endTime,
+                                                frequency_in_min = individualAlarm.getFreqInMillisecond(),
                                                 alarmDao = AlarmDao,
                                                 alarmManager = alarmManager,
                                                 delete_the_alarm_from_db = true,
@@ -304,7 +301,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                     Text("delete")
                                 }
                                 Text(
-                                    text = "On: ${individualAlarm.date_for_display}",
+                                    text = "On: ${individualAlarm.getDateFormatted(individualAlarm.startTime)}",
                                     textAlign = TextAlign.Right,
                                     fontSize = (fontSize / 2.43),
                                     fontWeight = FontWeight.W600,
@@ -316,9 +313,9 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                             coroutineScope.launch(Dispatchers.IO) {
                                                 alarmsController.cancelAlarmByCancelingPendingIntent(
                                                     context_of_activity = context_of_activity,
-                                                    startTime = individualAlarm.first_value,
-                                                    endTime = individualAlarm.second_value,
-                                                    frequency_in_min = individualAlarm.freq_in_min,
+                                                    startTime = individualAlarm.startTime,
+                                                    endTime = individualAlarm.endTime,
+                                                    frequency_in_min = individualAlarm.getFreqInMillisecond(),
                                                     alarmDao = AlarmDao,
                                                     alarmManager = alarmManager,
                                                     delete_the_alarm_from_db = false,
@@ -363,8 +360,8 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                         val endTimeCal = Calendar.getInstance().apply { timeInMillis = endDateInMilliSec; set(Calendar.HOUR_OF_DAY, endTimeHour); set(Calendar.MINUTE, endTimeMinute);set(Calendar.SECOND, 0)   }
                         // date_in_long is safe to pass as any as it is redundant and no one is using it
                         uncancellableScope.launch {
-                            val exception =alarmsController.scheduleMultipleAlarms(alarmManager, dateForDisplay, startDateInMilliSec, alarmDao = AlarmDao, messageForDB = alarmMessage,
-                                calendar_for_start_time = startTimeCal, calendar_for_end_time = endTimeCal, freq_after_the_callback = frequency, activity_context = context_of_activity
+                            val exception =alarmsController.scheduleMultipleAlarms(alarmManager,  startDateInMilliSec, alarmDao = AlarmDao, messageForDB = alarmMessage,
+                                calendarForStartTime = startTimeCal, calendarForEndTime = endTimeCal, freqAfterTheCallback = frequency, activityContext = context_of_activity
                             )
                             exception.fold(onSuccess = { return@launch}, onFailure = { excp ->
                                 NotificationBuilder(context = context_of_activity, title = "there is a error/Exception  in making new alarm", notificationText = excp.toString()).showNotification()

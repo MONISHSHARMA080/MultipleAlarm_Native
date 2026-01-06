@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.room.Room
-import com.example.trying_native.AlarmActivity
 import com.example.trying_native.AlarmLogic.AlarmsController
 import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.dataBase.AlarmDao
@@ -17,7 +16,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.io.FileWriter
@@ -66,12 +64,11 @@ class NextAlarmReceiver: BroadcastReceiver() {
         }
         val nextAlarmTime = currentTimeAlarmFired + alarmData.getFreqInMillisecond()
 
-        if (nextAlarmTime < alarmData.second_value){
-            require(alarmsController.getDisplayTimeWithoutAMPM(alarmData.first_value  ) == alarmData.start_time_for_display){ "the first value(start time for series):(${alarmsController.getDisplayTimeWithoutAMPM(alarmData.first_value)}) of the alarmData is not equal to the series start time for display:(${alarmData.start_time_for_display}) " }
+        if (nextAlarmTime < alarmData.endTime){
            val res = coroutineScope.async{
                alarmsController.scheduleAlarm (
                startTime = nextAlarmTime, // This is the time the next alarm will trigger
-               endTime = alarmData.second_value, // The series end time
+               endTime = alarmData.endTime, // The series end time
                alarmManager = alarmManager,
                componentActivity = activityContext,
                receiverClass = receiverClass,

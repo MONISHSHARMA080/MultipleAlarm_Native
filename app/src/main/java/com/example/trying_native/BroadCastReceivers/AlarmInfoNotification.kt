@@ -26,9 +26,9 @@ class AlarmInfoNotification: BroadcastReceiver()  {
     }
     private fun DisplayAlarmsMetadataInNotification(alarmData: AlarmData){
         NotificationBuilder(context, title = "Upcoming alarm info",
-            notificationText = "Alarm:${alarmData.id} will go from  ${getTimeInHumanReadableFormatProtectFrom0Included(alarmData.first_value)}" +
-                    " --->  ${getTimeInHumanReadableFormatProtectFrom0Included(alarmData.second_value)}" +
-                    " after every ${alarmData.freq_in_min_to_display} min  "
+            notificationText = "Alarm:${alarmData.id} will go from  ${getTimeInHumanReadableFormatProtectFrom0Included(alarmData.startTime)}" +
+                    " --->  ${getTimeInHumanReadableFormatProtectFrom0Included(alarmData.endTime)}" +
+                    " after every ${alarmData.freqGottenAfterCallback} min  "
         )
     }
 
