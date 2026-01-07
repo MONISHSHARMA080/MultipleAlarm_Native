@@ -13,8 +13,9 @@ a) UI Refactor : --
 b) Code Refactor :--
     * there are 2 scheduler alarms fn make them into one as there is an abstraction there
         [X] scheduleNextAlarm() could be just in the nextAlarmReceiver
-        -- schedulerMultipleAlarms2 we can make the alarm reset into a alarm data call, move the logic there as
+        [X] schedulerMultipleAlarms2 we can make the alarm reset into a alarm data call, move the logic there as
             this is better for reusability
+        -- restructure scheduleMultipleAlarms2()
     * use alarmData or a data class and also reduce the alarmData's size by storing less
     * there might be a need to reduce the data stored in the db as we can make fn to get the frequencies, instead of doing 60000* everytime
     * assert that the alarm is set just to be sure, after setting the alarm via Intent matching

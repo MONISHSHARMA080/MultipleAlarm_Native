@@ -172,27 +172,15 @@ class AlarmsController {
         // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
         var startTimeInMillis = calendarForStartTime.timeInMillis
         val startTimeInMillisendForDb= startTimeInMillis
-//        val start_time_for_display = this.getDisplayTimeWithoutAMPM(calendar_for_start_time)
-//        val start_am_pm = SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_start_time.time).trim()
-
         val endTimeInMillis = calendarForEndTime.timeInMillis
         val endTimeInMillisecondForDb= endTimeInMillis
-//        val end_time_for_display = SimpleDateFormat("hh:mm", Locale.getDefault()).format(calendar_for_end_time.time)
-//        val end_am_pm =  SimpleDateFormat("a", Locale.getDefault()).format(calendar_for_end_time.time).trim()
-
-//        logD(" \n\n am_pm_start_time-->$start_time_for_display $start_am_pm ; endtime-->$end_time_for_display $end_am_pm")
-//        var freq_in_milli : Long
-//        freq_in_milli =
         val freq = freqAfterTheCallback.toLong() * 60000
-//        logD("startTimeInMillis --$startTimeInMillis, endTimeInMillis--$endTimeInMillis,, equal?-->${startTimeInMillis==endTimeInMillis} ::--:: freq->$freq_in_min")
-        // alright only set one alarm here and in the receiver class set the other one after the min
         logD("checking if the start time is < end time ")
+
         assertWithException(startTimeInMillis < endTimeInMillis," the value of the start time should be < end time , you made a mistake" )
         logD("the start time is < endtime ")
         logD("setting the alarm and the startTime is $startTimeInMillis and the endTime is $endTimeInMillis")
         var alarmDataForDeleting: AlarmData? = null
-
-
         try {
             // since this is our first time the startTimeForReceiverToGetTheAlarmIs->
             logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
@@ -202,16 +190,9 @@ class AlarmsController {
                     startTime = startTimeInMillisendForDb,
                     endTime = endTimeInMillisecondForDb,
                     isReadyToUse = true,
-//                    date_for_display = selectedDateForDisplay,
-                    date_in_long = dateInLong,
+                    date = dateInLong,
                     message = messageForDB,
                     freqGottenAfterCallback = freqAfterTheCallback.toLong()
-//                    freq_in_min = freq_in_min,
-//                    start_time_for_display = start_time_for_display,
-//                    end_time_for_display = end_time_for_display,
-//                    start_am_pm = start_am_pm,
-//                    end_am_pm = end_am_pm,
-//                    freq_in_min_to_display = freq_after_the_callback,
                 )
                 check(newAlarm.getDateFormatted(calendarForStartTime.timeInMillis) == newAlarm.getDateFormatted(calendarForEndTime.timeInMillis)){ "expected the date produced by startTime and endTime to be same, we got startDate -> ${newAlarm.getDateFormatted(newAlarm.startTime)} , endDate -> ${newAlarm.getDateFormatted(newAlarm.endTime) }"}
 
@@ -252,10 +233,10 @@ class AlarmsController {
                                         freqAfterCallback:Long, activityContext:ComponentActivity, alarmDao:AlarmDao, alarmData:AlarmData,
                                         receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, nextAlarmInfo: NextAlarmInfo ) : Result<Unit> {
         return runCatching {
+
             // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
             logD("in the ++scheduleMultipleAlarms2  ++ ")
             // we can't get it form the alarmData as this func is for the reset alarm and that could be only one
-//            var freq_in_milli: Long = freq_after_the_callback
             val freq = freqAfterCallback * 60000
             logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
             // these are the new/incremented/updated time
@@ -281,31 +262,16 @@ class AlarmsController {
 
                 logD("(-updating DB with new time-)the new start time is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startTimeInMillis)} and the end time is ${this.getTimeInHumanReadableFormatProtectFrom0Included(endTimeInMillis)} ")
 
+                //TO-DO: why 2 db calls when we can accomplish this in one
                 val res = scope.async {
-                    alarmDao.updateAlarmForReset(id= alarmData.id, firstValue = nextAlarmInfo.newSeriesStartTime, second_value = nextAlarmInfo.newSeriesEndTime,  isReadyToUse = true, )
-                    alarmDao.getAlarmById(alarmData.id)
+                    alarmDao.updateAlarmForReset(alarmData.copy(isReadyToUse = true))
+                    return@async alarmData.copy(isReadyToUse = true)
                 }
-
                 val newAlarm = res.await()
-                if (newAlarm == null){
-                    alarmDao.updateAlarmForReset(id= alarmData.id, firstValue =alarmData.startTime, second_value = alarmData.endTime,  isReadyToUse = false, )
-                    throw  Exception("we were not able to update the alarm in the DB and it returned null for the updatedAlarm")
-                }
-
                 alarmDataForDeleting = newAlarm
-
-//                assertWithException(this.getDisplayTimeWithoutAMPM(newAlarm.startTime  ) == newAlarm.start_time_for_display
-//                    , "the first value(start time for series):(${this.getDisplayTimeWithoutAMPM(newAlarm.startTime)})" +
-//                            " of the alarmData is not equal to the series start time for display:(${newAlarm.start_time_for_display}) " )
-
-//                assertWithException(this.getDisplayTimeWithoutAMPM(newAlarm.endTime  ) == newAlarm.end_time_for_display
-//                    , "end time for series:(${this.getDisplayTimeWithoutAMPM(newAlarm.endTime)})" +
-//                            " of the alarmData is not equal to the series start time for display:(${newAlarm.end_time_for_display}) " )
-
-//                val alarmSchedule = scope.async {  scheduleAlarm(startTimeInMillis, alarmData.second_value, alarmManager, activity_context, receiverClass = receiverClass, startTimeForAlarmSeries = startTimeInMillis , alarmMessage = alarmData.message, alarmData = alarmData)}
                 val alarmSchedule = scope.async {  scheduleAlarm(nextAlarmInfo.nextAlarmTriggerTime, nextAlarmInfo.newSeriesEndTime, alarmManager, activityContext, receiverClass = receiverClass, startTimeForAlarmSeries = nextAlarmInfo.newSeriesStartTime , alarmMessage = alarmData.message, alarmData = newAlarm)}
-                val excep = alarmSchedule.await()
-                if (excep.isFailure){
+                val result = alarmSchedule.await()
+                if (result.isFailure){
                     val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(originalSeriesStartTime, activityContext, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillis, LastAlarmUpdateDBReceiver())}
                     b.await()
                     throw Exception("Error in scheduling the alarm")
@@ -457,8 +423,6 @@ class AlarmsController {
             val endTime = alarmData.endTime
             val calendarInstance =Calendar.getInstance()
             val currentTime =  calendarInstance.timeInMillis
-//            val alarmFreqInInt = (alarmData.freq_in_min / 60000 ).toInt()
-//            logD("alarm freq in int is :${alarmFreqInInt} and alarmData.freq_in_min / 60000 ${alarmData.freq_in_min / 60000} and alarmData.freq_in_min = ${alarmData.freq_in_min} ")
             // get the date time form the start time as I set the date in the calender instance when setting it for the startTime
             if ( currentTime >= endTime && currentTime >= startTime ) {
                 logD("in the current time  greater than the start time and the end time")

@@ -27,7 +27,7 @@ data class AlarmData(
 //    @ColumnInfo(name = "start_am_pm") val start_am_pm: String,
 //    @ColumnInfo(name = "end_time_for_display") val end_time_for_display: String,
 
-    @ColumnInfo(name = "date_in_long") val date_in_long: Long,
+    @ColumnInfo(name = "date_in_long") val date: Long,
     @ColumnInfo(name = "message") val message:String,
 
 //    @ColumnInfo(name = "freq_in_min") val freq_in_min: Long,// don't need
@@ -99,6 +99,9 @@ interface AlarmDao {
 
     @Update
     suspend fun updateAlarmForReset(alarmData: AlarmData)
+
+    @Query("SELECT ")
+    suspend fun updateAlarmAndGetUpdatedValue(alarmData: AlarmData): AlarmData
 
 //    @Query("""
 //        UPDATE AlarmData  SET is_ready_to_use = :isReadyToUse  WHERE first_value = :firstValue
