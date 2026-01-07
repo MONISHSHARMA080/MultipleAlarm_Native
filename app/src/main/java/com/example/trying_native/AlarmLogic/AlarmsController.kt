@@ -87,8 +87,8 @@ class AlarmsController {
             logD("\n\n++setting the pending intent of request code(startTime of alarm to int)->${startTime.toInt()} and it is in the human readable format is ${SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date(startTime)) }++\n\n")
 
             // PI for the alarm receiver
-            val resultForAlarmOpr = scope.async {getPendingIntentForAlarm(receiverClass, componentActivity, startTimeForAlarmSeries, startTime, endTime, alarmMessage, alarmData.id)}
-            val resultForSettingNextAlarmOpr = scope.async {getPendingIntentForAlarm(nextAlarmReceiver, componentActivity, startTimeForAlarmSeries, startTime, endTime, alarmMessage, alarmData.id, createIntentForAlarmMetaData = false)}
+            var resultForAlarmOpr = scope.async {getPendingIntentForAlarm(receiverClass, componentActivity, startTimeForAlarmSeries, startTime, endTime, alarmMessage, alarmData.id)}
+            var resultForSettingNextAlarmOpr = scope.async {getPendingIntentForAlarm(nextAlarmReceiver, componentActivity, startTimeForAlarmSeries, startTime, endTime, alarmMessage, alarmData.id, createIntentForAlarmMetaData = false)}
 
             val PIForAlarm = resultForAlarmOpr.await().fold(
                 onSuccess = {PI -> PI},
@@ -108,7 +108,12 @@ class AlarmsController {
             logD("Alarm successfully scheduled.")
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, startTime, PIForSettingNextAlarm.pendingIntentForAlarm)
             logD("set the next alarm successfully")
-
+             val alarmOprPICheck =getPendingIntentForAlarm(receiverClass, componentActivity, startTimeForAlarmSeries, startTime, endTime, alarmMessage, alarmData.id).fold(
+                 onSuccess = {P->P}, onFailure = {exception -> throw exception}
+             )
+             val nextAlarmReceiverPIForCheck =getPendingIntentForAlarm(nextAlarmReceiver, componentActivity, startTimeForAlarmSeries, startTime, endTime, alarmMessage, alarmData.id, createIntentForAlarmMetaData = false).fold(
+                 onSuccess = {a->a}, onFailure = {exception -> throw exception}
+             )
         }
     }
     /**
@@ -259,7 +264,6 @@ class AlarmsController {
                 logD("Original Series Start: ${getTimeInHumanReadableFormat(originalSeriesStartTime)}, Original Series End: ${getTimeInHumanReadableFormat(originalSeriesEndTime)}")
 
                 logD("(-updating DB with new time-)the new start time is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startTimeInMillis)} and the end time is ${this.getTimeInHumanReadableFormatProtectFrom0Included(endTimeInMillis)} ")
-
                 val res = scope.async {
                     alarmDao.updateAlarmForReset(alarmData.copy(isReadyToUse = true))
                     return@async alarmData.copy(isReadyToUse = true)
@@ -287,7 +291,6 @@ class AlarmsController {
 
         }
     }
-
 
     /**
      * @param startTime -  is the alarm original start time
