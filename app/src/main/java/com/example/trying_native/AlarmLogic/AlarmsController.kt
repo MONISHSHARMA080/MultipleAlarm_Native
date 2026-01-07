@@ -65,7 +65,7 @@ class AlarmsController {
         }
     }
 
-    public suspend fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, startTimeForAlarmSeries: Long, alarmMessage: String= "",
+     suspend fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, startTimeForAlarmSeries: Long, alarmMessage: String= "",
                                       alarmData: AlarmData
     ): Result<Unit> {
         return runCatching {
@@ -170,7 +170,7 @@ class AlarmsController {
                                        receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, messageForDB:String   ) : Result<Unit>{
     return runCatching {
         // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
-        var startTimeInMillis = calendarForStartTime.timeInMillis
+        val startTimeInMillis = calendarForStartTime.timeInMillis
         val startTimeInMillisendForDb= startTimeInMillis
         val endTimeInMillis = calendarForEndTime.timeInMillis
         val endTimeInMillisecondForDb= endTimeInMillis
@@ -200,8 +200,6 @@ class AlarmsController {
                 logD("Inserted alarm with ID: $insertedId")
                 return@async newAlarm
             }
-
-            // I will not know of the exception until I await so that's why
             b.await()
             val alarm = c.await()
             alarmDataForDeleting= alarm
@@ -220,8 +218,7 @@ class AlarmsController {
                 if (alarmDataForDeleting!= null){
                     this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq, alarmDao, alarmManager, activityContext, false, alarmData = alarmDataForDeleting)
                 }
-            }catch (e: Exception){ // lord help us!
-            }
+            }catch (e: Exception){} // lord help us!
             throw  e
         }
         // no error in the try catch of the async block
@@ -229,9 +226,10 @@ class AlarmsController {
     }
 
 
-    suspend fun scheduleMultipleAlarms2(alarmManager: AlarmManager, calendarForStartTime:Calendar, calendarForEndTimer:Calendar,
-                                        freqAfterCallback:Long, activityContext:ComponentActivity, alarmDao:AlarmDao, alarmData:AlarmData,
-                                        receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, nextAlarmInfo: NextAlarmInfo ) : Result<Unit> {
+    /** takes the prev alarm and reschedules it to future date, also update the db with that alarm */
+    suspend fun rescheduleAlarm(alarmManager: AlarmManager, calendarForStartTime:Calendar, calendarForEndTimer:Calendar,
+                                freqAfterCallback:Long, activityContext:ComponentActivity, alarmDao:AlarmDao, alarmData:AlarmData,
+                                receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, nextAlarmInfo: NextAlarmInfo ) : Result<Unit> {
         return runCatching {
 
             // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
@@ -262,14 +260,15 @@ class AlarmsController {
 
                 logD("(-updating DB with new time-)the new start time is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startTimeInMillis)} and the end time is ${this.getTimeInHumanReadableFormatProtectFrom0Included(endTimeInMillis)} ")
 
-                //TO-DO: why 2 db calls when we can accomplish this in one
                 val res = scope.async {
                     alarmDao.updateAlarmForReset(alarmData.copy(isReadyToUse = true))
                     return@async alarmData.copy(isReadyToUse = true)
                 }
                 val newAlarm = res.await()
                 alarmDataForDeleting = newAlarm
-                val alarmSchedule = scope.async {  scheduleAlarm(nextAlarmInfo.nextAlarmTriggerTime, nextAlarmInfo.newSeriesEndTime, alarmManager, activityContext, receiverClass = receiverClass, startTimeForAlarmSeries = nextAlarmInfo.newSeriesStartTime , alarmMessage = alarmData.message, alarmData = newAlarm)}
+                val alarmSchedule = scope.async {
+                    scheduleAlarm(nextAlarmInfo.nextAlarmTriggerTime, nextAlarmInfo.newSeriesEndTime, alarmManager, activityContext, receiverClass = receiverClass, startTimeForAlarmSeries = nextAlarmInfo.newSeriesStartTime , alarmMessage = alarmData.message, alarmData = newAlarm)
+                }
                 val result = alarmSchedule.await()
                 if (result.isFailure){
                     val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(originalSeriesStartTime, activityContext, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillis, LastAlarmUpdateDBReceiver())}
@@ -456,7 +455,7 @@ class AlarmsController {
                 // -- each if block in the reset alarm function
                 val res = this.calculateNextAlarmInfo(alarmData)
                 val nextAlarmInfo = res.getOrThrow()
-                val exception = this.scheduleMultipleAlarms2(
+                val exception = this.rescheduleAlarm(
                     alarmManager,
                     activityContext = activityContext,
                     alarmDao = alarmDao,
@@ -480,7 +479,7 @@ class AlarmsController {
                 val res = this.calculateNextAlarmInfo(alarmData)
                 val nextAlarmInfo = res.getOrThrow()
 
-                val exception = this.scheduleMultipleAlarms2(
+                val exception = this.rescheduleAlarm(
                     alarmManager,
                     activityContext = activityContext,
                     alarmDao = alarmDao,
@@ -513,7 +512,7 @@ class AlarmsController {
                 val res = this.calculateNextAlarmInfo(alarmData)
                 val nextAlarmInfo = res.getOrThrow()
 
-                val exception = this.scheduleMultipleAlarms2(
+                val exception = this.rescheduleAlarm(
                         alarmManager,
                         activityContext = activityContext,
                         alarmDao = alarmDao,

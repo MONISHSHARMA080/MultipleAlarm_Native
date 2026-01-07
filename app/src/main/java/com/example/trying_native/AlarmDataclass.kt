@@ -20,24 +20,11 @@ data class AlarmData(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "first_value") var startTime: Long,
     @ColumnInfo(name = "second_value") var endTime: Long,
-
-//    @ColumnInfo(name = "start_time_for_display") val start_time_for_display: String, // don't need as create it on fly
-//    @ColumnInfo(name = "end_am_pm") val end_am_pm: String, // **** here we can make both of them as bools and use a simple ****
-    // case to get it
-//    @ColumnInfo(name = "start_am_pm") val start_am_pm: String,
-//    @ColumnInfo(name = "end_time_for_display") val end_time_for_display: String,
-
     @ColumnInfo(name = "date_in_long") val date: Long,
     @ColumnInfo(name = "message") val message:String,
-
-//    @ColumnInfo(name = "freq_in_min") val freq_in_min: Long,// don't need
-
     // we can just add freq_in_min to the start time in millisecond to recreate the behaviour
     /** this is same as the oen used to skip the time just provide it and will just skip it */
     @ColumnInfo(name = "freq_used_to_skip_start_alarm") val freqGottenAfterCallback: Long,
-
-//    @ColumnInfo(name = "date_for_display") val date_for_display: String, // can create it during the run time
-//    @ColumnInfo(name = "freq_in_min_to_display") val freq_in_min_to_display: Int, // use the freqGottenAfterCallback, don't need
     @ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean
 ){
     /** converts the freq that we got in min to millisecond for same time, eg 6 min to 6 min in millisecond*/
