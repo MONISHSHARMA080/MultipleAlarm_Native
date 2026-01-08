@@ -304,23 +304,29 @@ class AlarmActivity : ComponentActivity() {
 
     private fun keepScreenON() {
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        wakeLock =
-                powerManager.newWakeLock(
-                                PowerManager.SCREEN_BRIGHT_WAKE_LOCK or
-                                        PowerManager.ACQUIRE_CAUSES_WAKEUP,
-                                "AlarmActivity::WakeLock"
-                        )
-                        .apply { setReferenceCounted(false) }
+        val isScreenOn = powerManager.isInteractive
+        logD("Screen state - isScreenOn: $isScreenOn")
         window.addFlags(
-                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-                        WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                        WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+            WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
         )
+
         setShowWhenLocked(true)
         setTurnScreenOn(true)
-        wakeLock?.acquire(4 * 60 * 1000L /*10 minutes*/)
+
+//        if (!isScreenOn){
+//            wakeLock = powerManager.newWakeLock(
+//                        PowerManager.PARTIAL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+//                "AlarmActivity::WakeLock",
+//
+//
+//            ).apply {
+//                setReferenceCounted(false)
+//                acquire(4 * 60 * 1000L)
+//            }
+//        }
+//        wakeLock?.acquire(2 * 60_000 /*10 minutes*/)
     }
+
     private  fun getTimeInHumanReadableFormat(t:Long): String{
         if (t == 0L) return "--the time here(probablyFromTheIntent) is 0--"
         return SimpleDateFormat("yyyy-MM-dd h:mm:ss a", Locale.getDefault()).format(Date(t))

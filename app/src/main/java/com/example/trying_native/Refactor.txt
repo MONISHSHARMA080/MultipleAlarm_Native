@@ -28,4 +28,6 @@ c) later: abandon or work on multiple dates alarm, eg start form  today 9:00Pm t
 
 d) Publishing
 
+    * check for the restriction,
+        -- app should launch a notification with the full screen intent and can't just start a full screen activity [check, got from gemini]
     * have to change the alarm sound, should be using the system's alarm clock sound
