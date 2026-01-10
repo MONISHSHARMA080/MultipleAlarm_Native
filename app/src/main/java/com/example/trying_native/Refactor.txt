@@ -16,7 +16,7 @@ b) Code Refactor :--
         [X] schedulerMultipleAlarms2 we can make the alarm reset into a alarm data call, move the logic there as this is better for reusability
         [X] restructure scheduleMultipleAlarms2()
     [X] use alarmData or a data class and also reduce the alarmData's size by storing less
-    * better screen wake up, like check if the screen is on or not first it it is then don't wake it up
+    [X] better screen wake up, like check if the screen is on or not first it it is then don't wake it up
     [X] there might be a need to reduce the data stored in the db as we can make fn to get the frequencies, instead of doing 60000* everytime
     [X] assert that the alarm is set just to be sure, after setting the alarm via Intent matching
     [X] use results in all the alarms and not the ?Exception
@@ -24,7 +24,10 @@ b) Code Refactor :--
 
 
 
-c) later: abandon or work on multiple dates alarm, eg start form  today 9:00Pm to tomorrow 4:00 Am
+c)  later :--
+       [X] abandon or work on multiple dates alarm, eg start form  today 9:00Pm to tomorrow 4:00 Am -- decided not to
+       -- try adding the set same alarm on multiple week days form click like stock clock
+       -- can't use my alarms as they are copyrighted, would need to use the alarms present in the system
 
 d) Publishing
 

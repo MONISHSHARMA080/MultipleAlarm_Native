@@ -87,8 +87,8 @@ interface AlarmDao {
     @Update
     suspend fun updateAlarmForReset(alarmData: AlarmData)
 
-    @Query("SELECT ")
-    suspend fun updateAlarmAndGetUpdatedValue(alarmData: AlarmData): AlarmData
+//    @Update
+//    suspend fun updateAlarmAndGetUpdatedValue(alarmData: AlarmData)
 
 //    @Query("""
 //        UPDATE AlarmData  SET is_ready_to_use = :isReadyToUse  WHERE first_value = :firstValue

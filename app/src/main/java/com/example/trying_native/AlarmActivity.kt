@@ -287,7 +287,7 @@ class AlarmActivity : ComponentActivity() {
         }
         resumeBackgroundAudio()
         // Release MediaPlayer resources when the activity is destroyed
-        audioFocusRequest?.let { request -> audioManager?.abandonAudioFocusRequest(request) }
+        audioFocusRequest?.let { request -> audioManager.abandonAudioFocusRequest(request) }
 //        audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, previousAudioVolume, 0)
         try {
             if (wasBackgroundPlaying) {
