@@ -3,7 +3,6 @@ package com.example.trying_native.components_for_ui_compose
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.content.Context
-import android.graphics.drawable.Icon
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -23,7 +22,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -34,8 +32,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.sharp.ArrowForward
-import androidx.compose.material.icons.automirrored.twotone.ArrowForward
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -89,7 +85,6 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
@@ -126,38 +121,25 @@ fun NumberField(placeHolderText: String, onFrequencyChanged: (String) -> Unit) {
 @SuppressLint("FlowOperatorInvokedInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: ComponentActivity, askUserForPermissionToScheduleAlarm:()->Unit) {
-
-
+fun AlarmContainer(alarmDao: AlarmDao, alarmManager: AlarmManager, activityContext: ComponentActivity, askUserForPermissionToScheduleAlarm:()->Unit) {
     val alarmsController = AlarmsController()
-
-
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val fontSize = (screenHeight * 0.05f).value.sp
-
-//    val coroutineScope = remember {CoroutineScope(SupervisorJob() + Dispatchers.Default)  }
-    val coroutineScope = context_of_activity.lifecycleScope
+    val coroutineScope = activityContext.lifecycleScope
     val uncancellableScope = remember {
         CoroutineScope(coroutineScope.coroutineContext + NonCancellable)
     }
-
-
-    val askUserForPermission by remember { mutableStateOf(Settings.canDrawOverlays(context_of_activity)) }
-
-    // Collect the Flow as State
+    val askUserForPermission by remember { mutableStateOf(Settings.canDrawOverlays(activityContext)) }
     val alarms1 by produceState<List<AlarmData>>(initialValue = emptyList()) {
         withContext(Dispatchers.IO){
-            AlarmDao.getAllAlarmsFlow().collect{
+            alarmDao.getAllAlarmsFlow().collect{
                 value = it
             }
         }
     }
 //    val alarms by AlarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO).collectAsStateWithLifecycle(initialValue = emptyList())
     var showTheDialogToTheUserToAskForPermission by remember { mutableStateOf(false) }
-    // Setup clipboard manager
     val clipboardManager = LocalClipboardManager.current
-
-
     val snackbarHostState = remember { SnackbarHostState() }
     Box(
         modifier = Modifier
@@ -246,22 +228,14 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                     )
                                 }
 
-                                // Middle text
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-//                                    Text(
-//                                        text = "-->",
-//                                        fontSize = (fontSize / 1.5),
-//                                        fontWeight = FontWeight.Bold
-//                                    )
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                        contentDescription = "to", // Good for accessibility
+                                        contentDescription = "to",
                                         modifier = Modifier.size(38.dp) ,
 
                                     )
                                 }
-
-                                // End time
                                 Row(verticalAlignment = Alignment.Bottom) {
                                     Text(
                                         text = individualAlarm.getTimeFormatted(individualAlarm.endTime),
@@ -296,11 +270,11 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                         logD("++==${individualAlarm.id} ---- $indexOfIndividualAlarmInAlarm ")
                                         coroutineScope.launch(Dispatchers.IO) {
                                             alarmsController.cancelAlarmByCancelingPendingIntent(
-                                                context_of_activity = context_of_activity,
+                                                context_of_activity = activityContext,
                                                 startTime = individualAlarm.startTime,
                                                 endTime = individualAlarm.endTime,
                                                 frequency_in_min = individualAlarm.getFreqInMillisecond(),
-                                                alarmDao = AlarmDao,
+                                                alarmDao = alarmDao,
                                                 alarmManager = alarmManager,
                                                 delete_the_alarm_from_db = true,
                                                 alarmData = individualAlarm
@@ -323,11 +297,11 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                         if (individualAlarm.isReadyToUse){
                                             coroutineScope.launch(Dispatchers.IO) {
                                                 alarmsController.cancelAlarmByCancelingPendingIntent(
-                                                    context_of_activity = context_of_activity,
+                                                    context_of_activity = activityContext,
                                                     startTime = individualAlarm.startTime,
                                                     endTime = individualAlarm.endTime,
                                                     frequency_in_min = individualAlarm.getFreqInMillisecond(),
-                                                    alarmDao = AlarmDao,
+                                                    alarmDao = alarmDao,
                                                     alarmManager = alarmManager,
                                                     delete_the_alarm_from_db = false,
                                                     alarmData = individualAlarm
@@ -340,11 +314,11 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                                             uncancellableScope.launch {
                                                 logD("about to reset the alarm-+")
                                               val exception=  alarmsController.resetAlarms(alarmData = individualAlarm, alarmManager = alarmManager,
-                                                    activityContext = context_of_activity, alarmDao = AlarmDao,
+                                                    activityContext = activityContext, alarmDao = alarmDao,
                                                 )
                                               logD("the exception form the resetAlarm is ->$exception")
                                                 exception.fold(onSuccess = {}, onFailure = {
-                                                    NotificationBuilder(context_of_activity, title = "error returned in creating multiple alarm ", notificationText = "execution returned exception in schedule multiple alarm  -->${exception}").showNotification()
+                                                    NotificationBuilder(activityContext, title = "error returned in creating multiple alarm ", notificationText = "execution returned exception in schedule multiple alarm  -->${exception}").showNotification()
                                                     logD("error in the schedule multiple -->${exception}")
                                                 })
                                             }
@@ -371,17 +345,17 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
                         val endTimeCal = Calendar.getInstance().apply { timeInMillis = endDateInMilliSec; set(Calendar.HOUR_OF_DAY, endTimeHour); set(Calendar.MINUTE, endTimeMinute);set(Calendar.SECOND, 0)   }
                         // date_in_long is safe to pass as any as it is redundant and no one is using it
                         uncancellableScope.launch {
-                            val exception =alarmsController.scheduleMultipleAlarms(alarmManager,  startDateInMilliSec, alarmDao = AlarmDao, messageForDB = alarmMessage,
-                                calendarForStartTime = startTimeCal, calendarForEndTime = endTimeCal, freqAfterTheCallback = frequency, activityContext = context_of_activity
+                            val exception =alarmsController.scheduleMultipleAlarms(alarmManager,  startDateInMilliSec, alarmDao = alarmDao, messageForDB = alarmMessage,
+                                calendarForStartTime = startTimeCal, calendarForEndTime = endTimeCal, freqAfterTheCallback = frequency, activityContext = activityContext
                             )
                             exception.fold(onSuccess = { return@launch}, onFailure = { excp ->
-                                NotificationBuilder(context = context_of_activity, title = "there is a error/Exception  in making new alarm", notificationText = excp.toString()).showNotification()
+                                NotificationBuilder(context = activityContext, title = "there is a error/Exception  in making new alarm", notificationText = excp.toString()).showNotification()
                                 logD("there is a error/Exception  in making new alarm-->${excp}")
 
                             })
                         }
                     }catch (e: Exception){
-                        NotificationBuilder(context = context_of_activity, title = "there is a error/Exception  in making new alarm", notificationText = e.toString()).showNotification()
+                        NotificationBuilder(context = activityContext, title = "there is a error/Exception  in making new alarm", notificationText = e.toString()).showNotification()
                         logD(" there is a error/Exception  in making new alarm and was cought by the try catch-->${e} ")
                     }
                     showTheDialogToTheUserToAskForPermission= false
@@ -398,7 +372,7 @@ fun AlarmContainer(AlarmDao: AlarmDao, alarmManager: AlarmManager, context_of_ac
             if(askUserForPermission == true){
                 askUserForPermissionToScheduleAlarm()
             }
-        }, context = context_of_activity)
+        }, context = activityContext)
         }
     }
 }
