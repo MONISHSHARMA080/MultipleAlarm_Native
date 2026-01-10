@@ -40,6 +40,7 @@ d) Publishing
     * maybe a initial signup screen, like ask user what are they using the app for , and how can we help them, productivity, distracton, Alarm
         or all, explain them how can we help, maybe a/b test this
     * ask users for review on play store helps to boost app
+    * analytics -- try post-hog or google ad mob
 
 e) after mvp --
     * maybe like slice like reward points and  spend points for using the app, watch ads or pay to get more pionts, full 8 months version also
