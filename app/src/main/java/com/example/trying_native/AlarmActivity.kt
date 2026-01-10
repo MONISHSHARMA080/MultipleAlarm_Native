@@ -68,7 +68,6 @@ class AlarmActivity : ComponentActivity() {
                             }
             )
     private lateinit var intentReceived: Intent
-
     // Add AudioFocus callback
     private val audioFocusChangeListener =
             AudioManager.OnAudioFocusChangeListener { focusChange ->
@@ -82,7 +81,6 @@ class AlarmActivity : ComponentActivity() {
                     }
                 }
             }
-
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -144,15 +142,11 @@ class AlarmActivity : ComponentActivity() {
             val alarmSeriesStartTime = intent.getLongExtra( "startTimeForDb", 0)
             val alarmStartTime = intent.getLongExtra( "startTime", 0)
             val alarmEndTime = intent.getLongExtra( "endTime", 0)
-
             val logEntry = " \n ------- \n alarm series start time:${getTimeInHumanReadableFormat(alarmSeriesStartTime)}  \n alarm expected fire time:${getTimeInHumanReadableFormat(alarmStartTime)}  \n alarm end time:${getTimeInHumanReadableFormat(alarmEndTime)} \n soundName:$soundName played at $now \n ------- \n\n\n"
-
             // Get the app's external files directory
             val file = File(getExternalFilesDir(null), "sound_log.txt")
-
             // Append the log entry to the file
             FileWriter(file, true).use { writer -> writer.append(logEntry) }
-
             logD(logEntry)
         } catch (e: Exception) {
             logD("Failed to log sound play: ${e.message}")
@@ -167,20 +161,11 @@ class AlarmActivity : ComponentActivity() {
     }
 
     private fun pauseBackgroundAudio() {
-        //        if (mediaPlayer?.isPlaying() == true){
-        //            mediaPlayer.pause()
-        //            wasBackgroundPlaying = true
-        //        }
         try {
-            // Initialize MediaSessionManager
-            // Get a list of active media controllers
             mediaControllerList = mediaSessionManager.getActiveSessions(null)
-
-            // Pause all active media controllers
             mediaControllerList?.forEach { controller -> controller.transportControls.pause() }
         } catch (e: SecurityException) {
             e.printStackTrace()
-            // Handle the exception if required permissions are not granted
         }
     }
 
@@ -235,12 +220,10 @@ class AlarmActivity : ComponentActivity() {
                 mediaPlayer =
                         MediaPlayer().apply {
                             setAudioAttributes(
-                                    AudioAttributes.Builder()
-                                            .setContentType(
-                                                    AudioAttributes.CONTENT_TYPE_SONIFICATION
-                                            )
-                                            .setUsage(AudioAttributes.USAGE_ALARM)
-                                            .build()
+                                AudioAttributes.Builder()
+                                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                                .setUsage(AudioAttributes.USAGE_ALARM)
+                                .build()
                             )
                             setDataSource(resources.openRawResourceFd(R.raw.renaissancemp))
                             prepare()
@@ -277,6 +260,7 @@ class AlarmActivity : ComponentActivity() {
         startActivity(intent) // Optionally, restart the activity with the new intent
     }
 
+    @SuppressLint("Wakelock")
     override fun onDestroy() {
         super.onDestroy()
         try {
@@ -289,9 +273,7 @@ class AlarmActivity : ComponentActivity() {
             logD("Error releasing WakeLock in onDestroy: ${e.message}")
         }
         resumeBackgroundAudio()
-        // Release MediaPlayer resources when the activity is destroyed
         audioFocusRequest?.let { request -> audioManager.abandonAudioFocusRequest(request) }
-//        audioManager?.setStreamVolume(AudioManager.STREAM_ALARM, previousAudioVolume, 0)
         try {
             if (wasBackgroundPlaying) {
                 mediaPlayer?.start()
@@ -306,28 +288,11 @@ class AlarmActivity : ComponentActivity() {
     }
 
     private fun keepScreenON() {
-        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        val isScreenOn = powerManager.isInteractive
-        logD("Screen state - isScreenOn: $isScreenOn")
         window.addFlags(
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
         )
-
         setShowWhenLocked(true)
         setTurnScreenOn(true)
-
-//        if (!isScreenOn){
-//            wakeLock = powerManager.newWakeLock(
-//                        PowerManager.PARTIAL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
-//                "AlarmActivity::WakeLock",
-//
-//
-//            ).apply {
-//                setReferenceCounted(false)
-//                acquire(4 * 60 * 1000L)
-//            }
-//        }
-//        wakeLock?.acquire(2 * 60_000 /*10 minutes*/)
     }
 
     private  fun getTimeInHumanReadableFormat(t:Long): String{
