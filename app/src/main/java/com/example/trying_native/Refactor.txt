@@ -22,8 +22,8 @@ b) Code Refactor :--
     [X] use results in all the alarms and not the ?Exception
     * write test, for system and alarms using robolectric
     * see and check that the app works for the minimum android version to latest (search for people using android version, go for 50% or > , android 11 or up hopefully)
-    * replace the start activity with live notificaton or foreground activity, ask user [LATER after mvp]
-    *
+    * replace the start activity with live notification or foreground activity, ask user [LATER after mvp]
+    * also add force update the app , or ask user to update the app
 
 
 
