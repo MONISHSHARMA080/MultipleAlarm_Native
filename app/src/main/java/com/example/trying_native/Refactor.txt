@@ -21,6 +21,9 @@ b) Code Refactor :--
     [X] assert that the alarm is set just to be sure, after setting the alarm via Intent matching
     [X] use results in all the alarms and not the ?Exception
     * write test, for system and alarms using robolectric
+    * see and check that the app works for the minimum android version to latest (search for people using android version, go for 50% or > , android 11 or up hopefully)
+    * replace the start activity with live notificaton or foreground activity, ask user [LATER after mvp]
+    *
 
 
 
@@ -30,7 +33,16 @@ c)  later :--
        -- can't use my alarms as they are copyrighted, would need to use the alarms present in the system
 
 d) Publishing
-
     * check for the restriction,
         -- app should launch a notification with the full screen intent and can't just start a full screen activity [check, got from gemini]
     * have to change the alarm sound, should be using the system's alarm clock sound
+    * Initial screen when fetching the alarms
+    * maybe a initial signup screen, like ask user what are they using the app for , and how can we help them, productivity, distracton, Alarm
+        or all, explain them how can we help, maybe a/b test this
+
+e) after mvp --
+    * maybe like slice like reward points and  spend points for using the app, watch ads or pay to get more pionts, full 8 months version also
+    * a/b test the intrusive ads, and clutter free ads version, (like ads after every click , and point based one), if have more than 1000 users,
+        -- see the retention etc, and see what type of users are willing to watch the ads
+        there should be a way to a/b test this on some users based on their profiles etc
+    * launch adds or play store and try to put it on top of search result
