@@ -41,6 +41,9 @@ d) Publishing
         or all, explain them how can we help, maybe a/b test this
     * ask users for review on play store helps to boost app
     * analytics -- try post-hog or google ad mob
+    * app permissions and justification screen, like I would need to tell the user to give me the notification and bg autostart permission
+      and explain why I need it, and also check the actual permission in the app and not just some db field, like notification etc in seperate coro
+      as if user or system revoked it we would no be able to display the alarm
 
 e) after mvp --
     * maybe like slice like reward points and  spend points for using the app, watch ads or pay to get more pionts, full 8 months version also
