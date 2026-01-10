@@ -16,13 +16,19 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -204,10 +210,7 @@ class AlarmActivity : ComponentActivity() {
 
     private fun playAlarmWithRandomSound(rawResources: List<Pair<String, Int>>) {
         val randomSound = rawResources.random()
-        var randomSoundName = randomSound.first
-        if (randomSoundName == null) {
-            randomSoundName = " <--string is null--> "
-        }
+        val randomSoundName = randomSound.first
         val randomSoundResId = randomSound.second
         try {
             mediaPlayer =
@@ -337,10 +340,12 @@ class AlarmActivity : ComponentActivity() {
 fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean) {
     var currentTime by remember { mutableStateOf(getCurrentTime()) }
     // Updates the time every second
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+
     LaunchedEffect(Unit) {
         while (true) {
             currentTime = getCurrentTime()
-            delay(999)
+            delay(600)
         }
     }
     // Display time in red on black background with a button to finish the activity
@@ -350,8 +355,10 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean
     ) {
         Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).fillMaxSize()
         ) {
+            Spacer(modifier = Modifier.height(20.dp)) // Space between the time and the top
             Text(
                     text = currentTime,
                     color = Color.Red,
@@ -359,30 +366,38 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean
                     fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(44.dp)) // Space between the time and the button
-
-            // Button to finish the activity
-            Button(
-                    onClick = { onFinish() },
-                    modifier = Modifier.height(56.dp).padding(horizontal = 16.dp)
-            ) { Text(text = "Cancel alarm") }
-
-            Spacer(modifier = Modifier.height(34.dp)) // Space between the time and the button
-
             if (isMessagePresent) {
                 Text(
-                        text = message,
+//                        text = "loremiecbeiucbewiucbiuebciueciuebwciuweiucnewiucnewicberwiucnewiucinewuciuewcnewicewiucniuewnciuewnciuewnciuewloremiecbeiucbewiucbiuebciueciuebwciuweiucnewiucnewicberwiucnewiucinewuciuewcnewicewiucniuewnciuewnciuewnciuewnn",
+                        text =message,
                         color = Color.Cyan,
-                        fontSize = 46.sp,
+                        fontSize = 43.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center, // Center align the text
                         lineHeight = 60.sp,
                         modifier =
-                                Modifier.fillMaxWidth() // Take full width
-                                        .padding(horizontal = 8.dp), // Add padding
+                                Modifier.fillMaxWidth().padding(horizontal = 8.dp), // Add padding
                         softWrap = true // Enable text wrapping
                 )
             }
         }
+        //
+        Button(
+            onClick = { onFinish() },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xffab0c00), // Cyan/Teal color
+                contentColor = Color.White
+            ),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+
+                .padding(bottom = (screenHeight/12))
+                .height(56.dp)
+                .shadow(8.dp, shape = RoundedCornerShape(28.dp))
+        ) {
+            Text(text = "Cancel alarm")
+        }
+
     }
 }
 
