@@ -356,7 +356,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean
             modifier = Modifier
                 .align(Alignment.BottomCenter)
 
-                .padding(bottom = (screenHeight/12))
+                .padding(bottom = (screenHeight/9))
                 .height(56.dp)
                 .shadow(8.dp, shape = RoundedCornerShape(28.dp))
         ) {
