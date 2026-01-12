@@ -45,6 +45,7 @@ d) Publishing
       and explain why I need it, and also check the actual permission in the app and not just some db field, like notification etc in seperate coro
       as if user or system revoked it we would no be able to display the alarm
     * hey we can also like shake it alarm display ads on top of the alarmActivity
+    * Error handling in prod, make a enum or tagged using class that we'll use with result , it will have a exception(state etc for us, to store), and error enum , and a message to display to the user
 
 e) after mvp --
     * maybe like slice like reward points and  spend points for using the app, watch ads or pay to get more pionts, full 8 months version also
