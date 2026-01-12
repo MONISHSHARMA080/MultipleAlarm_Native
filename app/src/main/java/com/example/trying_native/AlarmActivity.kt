@@ -9,6 +9,7 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
+import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.view.WindowManager
@@ -86,6 +87,8 @@ class AlarmActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         logD("about to create a new alarm")
         this.intentReceived = intent
+
+        window.isNavigationBarContrastEnforced = false
 
         super.onCreate(savedInstanceState)
         setContent {
@@ -315,7 +318,9 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean
     }
     // Display time in red on black background with a button to finish the activity
     Box(
-            modifier = Modifier.fillMaxSize().background(Color.Black),
+            modifier = Modifier.fillMaxSize()
+                .background(Color.Black)
+                .systemBarsPadding(),
             contentAlignment = Alignment.Center
     ) {
         Column(

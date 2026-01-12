@@ -24,7 +24,7 @@ b) Code Refactor :--
     * see and check that the app works for the minimum android version to latest (search for people using android version, go for 50% or > , android 11 or up hopefully)
     * replace the start activity with live notification or foreground activity, ask user [LATER after mvp]
     * also add force update the app , or ask user to update the app
-
+    * make sure that the app is full screen ie the bottom white bar i
 
 
 c)  later :--
@@ -46,6 +46,7 @@ d) Publishing
       as if user or system revoked it we would no be able to display the alarm
     * hey we can also like shake it alarm display ads on top of the alarmActivity
     * Error handling in prod, make a enum or tagged using class that we'll use with result , it will have a exception(state etc for us, to store), and error enum , and a message to display to the user
+        -- https://claude.ai/chat/54703a9e-442a-4029-85e1-f5df7ca61c72
 
 e) after mvp --
     * maybe like slice like reward points and  spend points for using the app, watch ads or pay to get more pionts, full 8 months version also
