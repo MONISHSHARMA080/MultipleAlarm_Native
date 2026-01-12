@@ -17,6 +17,7 @@ import com.example.trying_native.incrementTheStartCalenderTimeUntilItIsInFuture
 import com.example.trying_native.logD
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
@@ -231,6 +232,7 @@ class AlarmsController {
 
 
     /** takes the prev alarm and reschedules it to future date, also update the db with that alarm */
+    @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun rescheduleAlarm(alarmManager: AlarmManager, calendarForStartTime:Calendar, calendarForEndTimer:Calendar,
                                 freqAfterCallback:Long, activityContext:ComponentActivity, alarmDao:AlarmDao, alarmData:AlarmData,
                                 receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, nextAlarmInfo: NextAlarmInfo ) : Result<Unit> {
@@ -278,9 +280,8 @@ class AlarmsController {
                 if (result.isFailure){
                     val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(originalSeriesStartTime, activityContext, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillis, LastAlarmUpdateDBReceiver())}
                     b.await()
-                    throw Exception("Error in scheduling the alarm")
+                    throw Exception(res.getCompletionExceptionOrNull()?.message)
                 }
-
             } catch (e: Exception) {
                 // if we have gotten a error then we will need to cancel the alarm and return the exception and also delete the alarm
                 try {
