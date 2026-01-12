@@ -226,7 +226,6 @@ class AlarmsController {
             }catch (e: Exception){} // lord help us!
             throw  e
         }
-        // no error in the try catch of the async block
     }
     }
 
@@ -271,7 +270,9 @@ class AlarmsController {
                 val newAlarm = res.await()
                 alarmDataForDeleting = newAlarm
                 val alarmSchedule = scope.async {
-                    scheduleAlarm(nextAlarmInfo.nextAlarmTriggerTime, nextAlarmInfo.newSeriesEndTime, alarmManager, activityContext, receiverClass = receiverClass, startTimeForAlarmSeries = nextAlarmInfo.newSeriesStartTime , alarmMessage = alarmData.message, alarmData = newAlarm)
+                    scheduleAlarm(nextAlarmInfo.nextAlarmTriggerTime, nextAlarmInfo.newSeriesEndTime, alarmManager, activityContext, receiverClass = receiverClass, startTimeForAlarmSeries = nextAlarmInfo.newSeriesStartTime , alarmMessage = alarmData.message, alarmData = newAlarm.copy(
+                        startTime = nextAlarmInfo.newSeriesStartTime, endTime = nextAlarmInfo.newSeriesEndTime
+                    ))
                 }
                 val result = alarmSchedule.await()
                 if (result.isFailure){
@@ -457,6 +458,7 @@ class AlarmsController {
                 // -- here what I need to do is to provide the scheduleAlarm2 with the new series start/end time and the nextAlarmFireTime for
                 // -- each if block in the reset alarm function
                 val res = this.calculateNextAlarmInfo(alarmData)
+                print("\n\n----- the res from calculating the next alarm info is $res -----\n\n")
                 val nextAlarmInfo = res.getOrThrow()
                 val exception = this.rescheduleAlarm(
                     alarmManager,
@@ -469,6 +471,7 @@ class AlarmsController {
                     nextAlarmInfo =  nextAlarmInfo,
                 )
                 exception.fold(onFailure = { throwable->
+                    print("\n\n[EXCEPTION] got a exception in scheduling future alarms and that is -> $throwable \n\n")
                     throw throwable}, onSuccess = {})
             }
             else if (currentTime <= startTime && currentTime <= endTime){
@@ -504,9 +507,9 @@ class AlarmsController {
                 logD("the  alarm Data is $alarmData \n }")
                 while (startTimeOfTheAlarm <= currentTimeOfTheAlarm){
                     startTimeOfTheAlarm+=alarmData.getFreqInMillisecond()
-                    logD("start time changed to ${startTimeOfTheAlarm}")
+                    logD("start time changed to $startTimeOfTheAlarm")
                 }
-                logD("start time changed to ${startTimeOfTheAlarm} -- outside the while loop")
+                logD("start time changed to $startTimeOfTheAlarm -- outside the while loop")
                 logD("is the startTime >= endTime ${ startTimeOfTheAlarm >= endTime}  -- startTime >= secondValue ${startTimeOfTheAlarm >= alarmData.endTime}-- stratTime - $startTimeOfTheAlarm, endTime: $endTime, secondTime:${alarmData.endTime} ")
                 val endCalendar = Calendar.getInstance().apply { timeInMillis = alarmData.endTime }
                 // as we have changed the alarm time to be the latest time
@@ -554,24 +557,6 @@ class AlarmsController {
         return SimpleDateFormat("yyyy-MM-dd h:mm:ss a", Locale.getDefault()).format(Date(t))
     }
 
-    /** this func returns the time that is in human readable format  and for display, eg 10:50 ***WITHOUT*** am or pm*/
-    private  fun getDisplayTimeWithoutAMPM(cal: Calendar ): String{
-       return SimpleDateFormat("hh:mm", Locale.getDefault()).format(cal.time)
-    }
-    /** this func returns the time that is in human readable format  and for display, eg 10:50 ***WITHOUT*** am or pm
-     *  where [cal] is the Long that will be converted into Calender of [cal] time in millis..  internally
-     */
-    public  fun getDisplayTimeWithoutAMPM(cal: Long ): String{
-        val cal = Calendar.getInstance().apply { timeInMillis = cal }
-        return SimpleDateFormat("hh:mm", Locale.getDefault()).format(cal.time)
-    }
-
-    private fun getDateForDisplay(calendar: Calendar):String{
-        return  calendar.time.toInstant()
-            .atZone(ZoneId.systemDefault())
-            .toLocalDate()
-            .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-    }
     fun getDateForDisplay(a: Long):String{
         val calendar = Calendar.getInstance().apply { timeInMillis = a }
         return  calendar.time.toInstant()
