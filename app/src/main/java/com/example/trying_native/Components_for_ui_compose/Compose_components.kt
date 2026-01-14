@@ -1,5 +1,6 @@
 package com.example.trying_native.components_for_ui_compose
 
+import android.R.attr.top
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.content.Context
@@ -17,13 +18,17 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -78,7 +83,6 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -98,25 +102,6 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import java.time.LocalTime
 import java.util.Date
-
-@Composable
-fun NumberField(placeHolderText: String, onFrequencyChanged: (String) -> Unit) {
-    // State to hold the current text input
-    var text by remember { mutableStateOf("") }
-    OutlinedTextField(
-        value = text,
-        onValueChange = { newText ->
-            text = newText
-            onFrequencyChanged(newText) // Callback to handle the input change
-        },
-        modifier = Modifier.fillMaxWidth(),
-        keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-        placeholder = {
-            Text(text = placeHolderText)
-        },
-    )
-}
-
 
 @SuppressLint("FlowOperatorInvokedInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -140,7 +125,8 @@ fun AlarmContainer(alarmDao: AlarmDao, alarmManager: AlarmManager, activityConte
 //    val alarms by AlarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO).collectAsStateWithLifecycle(initialValue = emptyList())
     var showTheDialogToTheUserToAskForPermission by remember { mutableStateOf(false) }
     val clipboardManager = LocalClipboardManager.current
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
+
     Box(
         modifier = Modifier
             .testTag("AlarmContainer")
@@ -149,7 +135,7 @@ fun AlarmContainer(alarmDao: AlarmDao, alarmManager: AlarmManager, activityConte
     ) {
                                                                                                                                                                                                                                                                                                                                                     
         SnackbarHost(
-            hostState = snackbarHostState,
+            hostState = snackBarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 106.dp)
@@ -161,14 +147,18 @@ fun AlarmContainer(alarmDao: AlarmDao, alarmManager: AlarmManager, activityConte
                 containerColor = Color.Blue, // Set background color
                 contentColor = Color.White, // Set text color for contrast
                 modifier = Modifier
-//                    .padding(horizontal = 16.dp, vertical = 8.dp)
                     .fillMaxWidth()
             )
         }
 
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding() ,
+                bottom = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
+            )
+
         ) {
             itemsIndexed(alarms1){indexOfIndividualAlarmInAlarm, individualAlarm ->
                     ElevatedCard(
@@ -186,7 +176,7 @@ fun AlarmContainer(alarmDao: AlarmDao, alarmManager: AlarmManager, activityConte
                                         )
                                         clipboardManager.setText(AnnotatedString((individualAlarm.message)))
                                         coroutineScope.launch {
-                                            snackbarHostState.showSnackbar(
+                                            snackBarHostState.showSnackbar(
                                                 message = "Copied the alarm message",
                                                 duration = SnackbarDuration.Short
                                             )
@@ -800,95 +790,6 @@ fun MessageInput(
 }
 
 
-
-@SuppressLint("DefaultLocale")
-@Composable
-fun freq_without_dialog(
-    onDismiss: () -> Unit,
-    nextButton: String,
-    onConfirm: (text_entered_by_user: Int) -> Unit,
-    calender_instance_at_start_time: Calendar,
-    calender_instance_at_end_time: Calendar
-) {
-    var text_entered_by_user by remember { mutableStateOf(0) }
-    var numberToDisplay by remember { mutableStateOf(Array(5) { "" }) }
-
-    val screenHeight = LocalConfiguration.current.screenHeightDp
-    val screenWidth = LocalConfiguration.current.screenWidthDp
-
-    // Update numberToDisplay whenever text_entered_by_user changes
-    LaunchedEffect(text_entered_by_user) {
-        if (text_entered_by_user > 0) {
-            val updatedTimes = Array(5) { "" }
-            val tempStartTime = calender_instance_at_start_time.clone() as Calendar
-
-            for (i in 1..4) {
-                if (tempStartTime.timeInMillis >= calender_instance_at_end_time.timeInMillis) {
-                    updatedTimes[i - 1] = String.format(
-                        "%02d:%02d",
-                        calender_instance_at_end_time.get(Calendar.HOUR_OF_DAY),
-                        calender_instance_at_end_time.get(Calendar.MINUTE)
-                    )
-                    break
-                }
-                updatedTimes[i - 1] = String.format(
-                    "%02d:%02d",
-                    tempStartTime.get(Calendar.HOUR_OF_DAY),
-                    tempStartTime.get(Calendar.MINUTE)
-                )
-                tempStartTime.add(Calendar.MINUTE, text_entered_by_user)
-            }
-            numberToDisplay = updatedTimes
-        } else {
-            numberToDisplay = Array(5) { "" }
-        }
-    }
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.Start
-    ) {
-        Text(
-            "Enter frequency -->",
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(
-                vertical = (screenHeight / 99).dp,
-                horizontal = (screenWidth / 93).dp
-            )
-        )
-
-        NumberField("Enter the frequency(in min)")  { changed_freq_string ->
-            text_entered_by_user = changed_freq_string.toIntOrNull() ?: -0
-        }
-
-        if (text_entered_by_user > 0) {
-            Text(
-                "Alarms will go on --> ${numberToDisplay.joinToString(", ")}....",
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(
-                    vertical = (screenHeight / 99).dp,
-                    horizontal = (screenWidth / 83).dp
-                )
-            )
-        }
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 7.dp, start = 8.dp, end = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Button(onClick = onDismiss) {
-            Text("Dismiss")
-        }
-        Button(
-            onClick = { if (text_entered_by_user > 0) onConfirm(text_entered_by_user) }
-        ) {
-            Text(nextButton)
-        }
-    }
-}
 
 /** this fun will get you the date once you give it the time */
 private  fun getDateInHumanReadableFormat(t:Long): String{

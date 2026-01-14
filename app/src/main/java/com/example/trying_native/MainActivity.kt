@@ -9,13 +9,18 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.unit.dp
 import com.example.trying_native.ui.theme.Trying_nativeTheme
 import androidx.room.Room
 import com.example.trying_native.components_for_ui_compose.AlarmContainer
@@ -37,70 +42,18 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    var startHour_after_the_callback: Int? = null
-    var startMin_after_the_callback: Int? = null
-    var endHour_after_the_callback: Int? = null
-    var endMin_after_the_callback: Int? = null
-    var date_after_the_callback: Long? = null
-    var freq_after_the_callback: Long? = null
-
     @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
         setContent {
             Trying_nativeTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
-                    Column(modifier = Modifier.padding(paddingValues)) {
-
                       AlarmContainer(getAlarmDao(), alarmManager, this@MainActivity, askUserForPermissionToScheduleAlarm = { permissionToScheduleAlarm() } )
                     }
-                }
-            }
         }
     }
 
-    private fun areAllFieldsNotFilled(): Boolean {
-        var freq= freq_after_the_callback
-        logD("changing freq to null->$freq_after_the_callback")
-
-        if (freq?.toInt() == 0){
-            logD("changing freq to null->$freq")
-            freq = null
-        }else{
-            freq = null
-        }
-        return startHour_after_the_callback == null && startMin_after_the_callback == null &&
-                endHour_after_the_callback == null && endMin_after_the_callback == null &&
-                date_after_the_callback == null && freq == null
-    }
-    private fun areSomeFieldNotFilled(): Boolean {
-        return startHour_after_the_callback == null || startMin_after_the_callback == null ||
-                endHour_after_the_callback == null || endMin_after_the_callback == null ||
-                date_after_the_callback == null || freq_after_the_callback == null
-    }
-
-    private fun emptyFieldAndTheirName():( String){
-        // this func is used when all the field are not null, so maybe we should return which field is null
-       if(startHour_after_the_callback == null){
-           return "Start time"
-       }
-        else if(startMin_after_the_callback == null){
-            return "Start time"
-        }
-        else if(endHour_after_the_callback == null){
-          return "End time"
-       }
-        else if (endMin_after_the_callback == null){
-            return "End time"
-       }
-        else if (date_after_the_callback == null){
-            return  "Date"
-       }
-        else{
-            return "Frequency"
-        }
-    }
 
     private  fun getAlarmDao(): AlarmDao {
     val db = Room.databaseBuilder(
@@ -110,17 +63,6 @@ class MainActivity : ComponentActivity() {
     return db.alarmDao()
 }
 
-    private fun scheduleAlarm(triggerTime: Long, alarmManager:AlarmManager) {
-        logD( "Clicked on the schedule alarm func")
-        var triggerTime_1 = triggerTime
-        val intent = Intent(this, AlarmReceiver::class.java)
-        intent.putExtra("last_alarm_info1","from the schedule alarm function")
-        logD("Trigger time in the scheduleAlarm func is --> $triggerTime_1 ")
-        intent.putExtra("triggerTime", triggerTime_1)
-        val pendingIntent = PendingIntent.getBroadcast(this, triggerTime.toInt(), intent, PendingIntent.FLAG_MUTABLE)
-        alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime_1, pendingIntent)
-    }
-    // this should fix it as I changed FLAG_IMUTABLE to FLAG_MUTABLE
 
     private fun permissionToScheduleAlarm() {
         // Check for SYSTEM_ALERT_WINDOW permission

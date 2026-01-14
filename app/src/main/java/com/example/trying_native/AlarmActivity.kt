@@ -15,6 +15,7 @@ import android.os.PowerManager
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -87,6 +88,7 @@ class AlarmActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         logD("about to create a new alarm")
         this.intentReceived = intent
+        enableEdgeToEdge()
 
         window.isNavigationBarContrastEnforced = false
 
@@ -129,7 +131,7 @@ class AlarmActivity : ComponentActivity() {
         audioFocusRequest = audioFocusRequestBuilder()
         val rawFields =R.raw::class.java.fields
         val rawResources = rawFields.map { field -> Pair(field.name, field.getInt(null)) }
-        val result = audioManager?.requestAudioFocus(audioFocusRequest!!)
+        val result = audioManager.requestAudioFocus(audioFocusRequest!!)
         // call it no matter what, but would prefer to pause the resource
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             activityScope.launch { playAlarmWithRandomSound(rawResources) }
@@ -319,8 +321,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean
     // Display time in red on black background with a button to finish the activity
     Box(
             modifier = Modifier.fillMaxSize()
-                .background(Color.Black)
-                .systemBarsPadding(),
+                .background(Color.Black),
             contentAlignment = Alignment.Center
     ) {
         Column(
@@ -338,20 +339,18 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean
             Spacer(modifier = Modifier.height(44.dp)) // Space between the time and the button
             if (isMessagePresent) {
                 Text(
-//                        text = "loremiecbeiucbewiucbiuebciueciuebwciuweiucnewiucnewicberwiucnewiucinewuciuewcnewicewiucniuewnciuewnciuewnciuewloremiecbeiucbewiucbiuebciueciuebwciuweiucnewiucnewicberwiucnewiucinewuciuewcnewicewiucniuewnciuewnciuewnciuewnn",
                         text =message,
                         color = Color.Cyan,
                         fontSize = 43.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center, // Center align the text
                         lineHeight = 60.sp,
-                        modifier =
-                                Modifier.fillMaxWidth().padding(horizontal = 8.dp), // Add padding
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), // Add padding
                         softWrap = true // Enable text wrapping
                 )
             }
         }
-        //
+
         Button(
             onClick = { onFinish() },
             colors = ButtonDefaults.buttonColors(
@@ -360,14 +359,12 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean
             ),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-
                 .padding(bottom = (screenHeight/9))
                 .height(56.dp)
                 .shadow(8.dp, shape = RoundedCornerShape(28.dp))
         ) {
             Text(text = "Cancel alarm")
         }
-
     }
 }
 
