@@ -92,6 +92,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.example.trying_native.AlarmLogic.AlarmsController
 import com.example.trying_native.FirstLaunchAskForPermission.FirstLaunchAskForPermission
@@ -99,6 +100,7 @@ import com.example.trying_native.notification.NotificationBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import java.time.LocalTime
 import java.util.Date
@@ -115,14 +117,8 @@ fun AlarmContainer(alarmDao: AlarmDao, alarmManager: AlarmManager, activityConte
         CoroutineScope(coroutineScope.coroutineContext + NonCancellable)
     }
     val askUserForPermission by remember { mutableStateOf(Settings.canDrawOverlays(activityContext)) }
-    val alarms1 by produceState<List<AlarmData>>(initialValue = emptyList()) {
-        withContext(Dispatchers.IO){
-            alarmDao.getAllAlarmsFlow().collect{
-                value = it
-            }
-        }
-    }
-//    val alarms by AlarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO).collectAsStateWithLifecycle(initialValue = emptyList())
+    val alarms1 by alarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO).collectAsStateWithLifecycle(initialValue = emptyList())
+
     var showTheDialogToTheUserToAskForPermission by remember { mutableStateOf(false) }
     val clipboardManager = LocalClipboardManager.current
     val snackBarHostState = remember { SnackbarHostState() }
@@ -144,10 +140,9 @@ fun AlarmContainer(alarmDao: AlarmDao, alarmManager: AlarmManager, activityConte
             Snackbar(
                 snackbarData = snackbarData,
                 shape = RoundedCornerShape(45.dp), // Apply the same rounding as your alarm card
-                containerColor = Color.Blue, // Set background color
-                contentColor = Color.White, // Set text color for contrast
-                modifier = Modifier
-                    .fillMaxWidth()
+                containerColor = Color.Blue,
+                contentColor = Color.White,
+                modifier = Modifier.fillMaxWidth()
             )
         }
 
@@ -156,11 +151,10 @@ fun AlarmContainer(alarmDao: AlarmDao, alarmManager: AlarmManager, activityConte
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding() ,
-                bottom = WindowInsets.systemBars.asPaddingValues().calculateTopPadding(),
+                bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding() + 10.dp,
             )
-
         ) {
-            itemsIndexed(alarms1){indexOfIndividualAlarmInAlarm, individualAlarm ->
+            itemsIndexed(alarms1, key = {_ , alarm -> alarm.id}){indexOfIndividualAlarmInAlarm, individualAlarm ->
                     ElevatedCard(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -359,7 +353,7 @@ fun AlarmContainer(alarmDao: AlarmDao, alarmManager: AlarmManager, activityConte
                 .testTag("RoundPlusIcon")
         ) {
             RoundPlusIcon(size = screenHeight/10, onClick = {showTheDialogToTheUserToAskForPermission = !showTheDialogToTheUserToAskForPermission;
-            if(askUserForPermission == true){
+            if(askUserForPermission){
                 askUserForPermissionToScheduleAlarm()
             }
         }, context = activityContext)

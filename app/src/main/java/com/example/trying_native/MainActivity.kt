@@ -1,32 +1,36 @@
 package com.example.trying_native
 
-import android.annotation.SuppressLint
 import android.app.AlarmManager
-import android.app.PendingIntent
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.ui.Modifier
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.ui.unit.dp
-import com.example.trying_native.ui.theme.Trying_nativeTheme
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.room.Room
 import com.example.trying_native.components_for_ui_compose.AlarmContainer
-import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmDatabase
 import androidx.core.net.toUri
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
 
@@ -43,24 +47,24 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private  val alarmDB by lazy {
+         Room.databaseBuilder(
+            applicationContext,
+            AlarmDatabase::class.java, "alarm-database"
+        ).build()
+    }
+    private  val alarmDao by lazy { alarmDB.alarmDao() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
-//        enableEdgeToEdge()
+        splashScreen
+        enableEdgeToEdge()
         setContent {
-            Trying_nativeTheme {
-                      AlarmContainer(getAlarmDao(), alarmManager, this@MainActivity, askUserForPermissionToScheduleAlarm = { permissionToScheduleAlarm() } )
-                    }
+            MaterialTheme(colorScheme = dynamicDarkColorScheme(this)){
+                AlarmContainer(alarmDao, alarmManager, this@MainActivity, askUserForPermissionToScheduleAlarm = { permissionToScheduleAlarm() } )
+            }
         }
     }
-
-
-    private  fun getAlarmDao(): AlarmDao {
-    val db = Room.databaseBuilder(
-        applicationContext,
-        AlarmDatabase::class.java, "alarm-database"
-    ).build()
-    return db.alarmDao()
-}
 
 
     private fun permissionToScheduleAlarm() {
@@ -76,6 +80,8 @@ class MainActivity : ComponentActivity() {
         // scheduleAlarmInternal()
     }
 }
+
+
 
 fun logD(message:String):Unit{
     Log.d("AAAAA",message)
