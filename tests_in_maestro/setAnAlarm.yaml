@@ -1,6 +1,0 @@
-appId: com.example.trying_native
----
-- launchApp
-- tapOn: "Add"
-- tapOn: "2"
-- tapOn: "Next"
