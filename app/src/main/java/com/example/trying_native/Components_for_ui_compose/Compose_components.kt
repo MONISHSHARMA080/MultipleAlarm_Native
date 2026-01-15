@@ -120,7 +120,7 @@ fun AlarmContainer(alarmDao: AlarmDao, alarmManager: AlarmManager, activityConte
     var showTheDialogToTheUserToAskForPermission by remember { mutableStateOf(false) }
     val clipboardManager = LocalClipboardManager.current
     val snackBarHostState = remember { SnackbarHostState() }
-                Scaffold(contentWindowInsets = WindowInsets.systemBars) { innerPadding ->
+                Scaffold(contentWindowInsets = WindowInsets.systemBars) { edgeToEdgePadding ->
                     Box(
                         modifier = Modifier
                             .testTag("AlarmContainer")
@@ -134,19 +134,18 @@ fun AlarmContainer(alarmDao: AlarmDao, alarmManager: AlarmManager, activityConte
                                 .align(Alignment.BottomCenter)
                                 .padding(bottom = 106.dp)
                                 .zIndex(10f)
-                        ) { snackbarData ->
+                        ) { snackBarData ->
                             Snackbar(
-                                snackbarData = snackbarData,
+                                snackbarData = snackBarData,
                                 shape = RoundedCornerShape(45.dp),
                                 containerColor = Color.Blue,
                                 contentColor = Color.White,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
-
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = innerPadding
+                            contentPadding = edgeToEdgePadding
                         ) {
                             itemsIndexed(alarms1, key = {_ , alarm -> alarm.id}){indexOfIndividualAlarmInAlarm, individualAlarm ->
                                 ElevatedCard(
@@ -156,12 +155,6 @@ fun AlarmContainer(alarmDao: AlarmDao, alarmManager: AlarmManager, activityConte
                                         .pointerInput(Unit) {
                                             detectTapGestures(
                                                 onLongPress = {
-                                                    // Copy the alarm message to clipboard
-                                                    logD(
-                                                        "the snack bar message is ->" + AnnotatedString(
-                                                            individualAlarm.message
-                                                        ).toString()
-                                                    )
                                                     clipboardManager.setText(AnnotatedString((individualAlarm.message)))
                                                     coroutineScope.launch {
                                                         snackBarHostState.showSnackbar(

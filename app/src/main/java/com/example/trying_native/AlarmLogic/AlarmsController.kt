@@ -102,6 +102,7 @@ class AlarmsController {
             logD("\n\n\n [INFO] the pending Intent for the alarm is $PIForAlarm ")
             logD("\n\n\n [INFO] the pending Intent for setting the next alarm is $PIForSettingNextAlarm ")
 
+
             val alarmClockInfoObject = AlarmManager.AlarmClockInfo(startTime, PIForAlarm.pendingIntentForAlarmNotificationInfo)
             alarmManager.setAlarmClock(alarmClockInfoObject, PIForAlarm.pendingIntentForAlarm)
             logD("Alarm successfully scheduled.")
