@@ -76,6 +76,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -119,244 +120,249 @@ fun AlarmContainer(alarmDao: AlarmDao, alarmManager: AlarmManager, activityConte
     var showTheDialogToTheUserToAskForPermission by remember { mutableStateOf(false) }
     val clipboardManager = LocalClipboardManager.current
     val snackBarHostState = remember { SnackbarHostState() }
-
-    Box(
-        modifier = Modifier
-            .testTag("AlarmContainer")
-            .fillMaxSize()
-            .background(color = Color.Black)
-    ) {
-                                                                                                                                                                                                                                                                                                                                                    
-        SnackbarHost(
-            hostState = snackBarHostState,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 106.dp)
-                .zIndex(10f)
-        ) { snackbarData ->
-            Snackbar(
-                snackbarData = snackbarData,
-                shape = RoundedCornerShape(45.dp), // Apply the same rounding as your alarm card
-                containerColor = Color.Blue,
-                contentColor = Color.White,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding() ,
-                bottom = WindowInsets.systemBars.asPaddingValues().calculateBottomPadding() + 10.dp,
-            )
-        ) {
-            itemsIndexed(alarms1, key = {_ , alarm -> alarm.id}){indexOfIndividualAlarmInAlarm, individualAlarm ->
-                    ElevatedCard(
+                Scaffold(contentWindowInsets = WindowInsets.systemBars) { innerPadding ->
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(screenHeight / 4)
-                            .pointerInput(Unit) {
-                                detectTapGestures(
-                                    onLongPress = {
-                                        // Copy the alarm message to clipboard
-                                        logD(
-                                            "the snack bar message is ->" + AnnotatedString(
-                                                individualAlarm.message
-                                            ).toString()
-                                        )
-                                        clipboardManager.setText(AnnotatedString((individualAlarm.message)))
-                                        coroutineScope.launch {
-                                            snackBarHostState.showSnackbar(
-                                                message = "Copied the alarm message",
-                                                duration = SnackbarDuration.Short
+                            .testTag("AlarmContainer")
+                            .fillMaxSize()
+                            .background(color = Color.Black)
+                    ) {
+
+                        SnackbarHost(
+                            hostState = snackBarHostState,
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = 106.dp)
+                                .zIndex(10f)
+                        ) { snackbarData ->
+                            Snackbar(
+                                snackbarData = snackbarData,
+                                shape = RoundedCornerShape(45.dp),
+                                containerColor = Color.Blue,
+                                contentColor = Color.White,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = innerPadding
+                        ) {
+                            itemsIndexed(alarms1, key = {_ , alarm -> alarm.id}){indexOfIndividualAlarmInAlarm, individualAlarm ->
+                                ElevatedCard(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(screenHeight / 4)
+                                        .pointerInput(Unit) {
+                                            detectTapGestures(
+                                                onLongPress = {
+                                                    // Copy the alarm message to clipboard
+                                                    logD(
+                                                        "the snack bar message is ->" + AnnotatedString(
+                                                            individualAlarm.message
+                                                        ).toString()
+                                                    )
+                                                    clipboardManager.setText(AnnotatedString((individualAlarm.message)))
+                                                    coroutineScope.launch {
+                                                        snackBarHostState.showSnackbar(
+                                                            message = "Copied the alarm message",
+                                                            duration = SnackbarDuration.Short
+                                                        )
+                                                    }
+                                                }
                                             )
+                                        }
+                                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                                    shape = RoundedCornerShape(45.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(
+                                                color = if (!individualAlarm.isReadyToUse) Color(0xFF666b75) else Color(
+                                                    0xFF0D388C
+                                                )
+                                            )
+                                            .padding(16.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            // Start time
+                                            Row(verticalAlignment = Alignment.Bottom) {
+                                                Text(
+                                                    text = individualAlarm.getTimeFormatted(individualAlarm.startTime),
+                                                    fontSize = (fontSize / 1.2),
+                                                    fontWeight = FontWeight.Black,
+                                                    modifier = Modifier.padding(end = 4.dp)
+                                                )
+                                                Text(
+                                                    text = individualAlarm.getFormattedAmPm(individualAlarm.startTime),
+                                                    fontSize = (fontSize / 2.2),
+                                                    modifier = Modifier.padding(bottom = 2.dp)
+                                                )
+                                            }
+
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Icon(
+                                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                                    contentDescription = "to",
+                                                    modifier = Modifier.size(38.dp),
+
+                                                    )
+                                            }
+                                            Row(verticalAlignment = Alignment.Bottom) {
+                                                Text(
+                                                    text = individualAlarm.getTimeFormatted(individualAlarm.endTime),
+                                                    fontSize = (fontSize / 1.2),
+                                                    fontWeight = FontWeight.Black,
+                                                    modifier = Modifier.padding(end = 4.dp)
+                                                )
+                                                Text(
+                                                    text = individualAlarm.getFormattedAmPm(individualAlarm.endTime),
+                                                    fontSize = (fontSize / 2.3),
+                                                    modifier = Modifier.padding(bottom = 2.dp)
+                                                )
+                                            }
+                                        }
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(
+                                                text = "after every ${individualAlarm.freqGottenAfterCallback} min",
+                                                fontSize = (fontSize / 2.7),
+                                                fontWeight = FontWeight.W600,
+                                                textAlign = TextAlign.Center
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.weight(1f))
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.Bottom
+                                        ) {
+                                            Button(
+                                                onClick = {
+                                                    logD("++==${individualAlarm.id} ---- $indexOfIndividualAlarmInAlarm ")
+                                                    coroutineScope.launch(Dispatchers.IO) {
+                                                        alarmsController.cancelAlarmByCancelingPendingIntent(
+                                                            context_of_activity = activityContext,
+                                                            startTime = individualAlarm.startTime,
+                                                            endTime = individualAlarm.endTime,
+                                                            frequencyInMin = individualAlarm.getFreqInMillisecond(),
+                                                            alarmDao = alarmDao,
+                                                            alarmManager = alarmManager,
+                                                            delete_the_alarm_from_db = true,
+                                                            alarmData = individualAlarm
+                                                        )
+                                                    }
+                                                },
+                                                colors = ButtonDefaults.buttonColors(Color(0xFF0eaae3))
+                                            ) {
+                                                Text("delete")
+                                            }
+                                            Text(
+                                                text = "On: ${individualAlarm.getDateFormatted(individualAlarm.startTime)}",
+                                                textAlign = TextAlign.Right,
+                                                fontSize = (fontSize / 2.43),
+                                                fontWeight = FontWeight.W600,
+                                                modifier = Modifier.padding(vertical = screenHeight / 74),
+                                            )
+                                            Button(
+                                                onClick = {
+                                                    if (individualAlarm.isReadyToUse) {
+                                                        coroutineScope.launch(Dispatchers.IO) {
+                                                            alarmsController.cancelAlarmByCancelingPendingIntent(
+                                                                context_of_activity = activityContext,
+                                                                startTime = individualAlarm.startTime,
+                                                                endTime = individualAlarm.endTime,
+                                                                frequencyInMin = individualAlarm.getFreqInMillisecond(),
+                                                                alarmDao = alarmDao,
+                                                                alarmManager = alarmManager,
+                                                                delete_the_alarm_from_db = false,
+                                                                alarmData = individualAlarm
+                                                            )
+                                                        }
+                                                    }
+                                                    else {
+                                                        // -- reset function abstract it away and change it --
+                                                        uncancellableScope.launch {
+                                                            logD("about to reset the alarm-+")
+                                                            val exception = alarmsController.resetAlarms(
+                                                                alarmData = individualAlarm,
+                                                                alarmManager = alarmManager,
+                                                                activityContext = activityContext,
+                                                                alarmDao = alarmDao,
+                                                            )
+                                                            logD("the exception form the resetAlarm is ->$exception")
+                                                            exception.fold(onSuccess = {}, onFailure = {
+                                                                NotificationBuilder(
+                                                                    activityContext,
+                                                                    title = "error returned in creating multiple alarm ",
+                                                                    notificationText = "execution returned exception in schedule multiple alarm  -->${exception}"
+                                                                ).showNotification()
+                                                                logD("error in the schedule multiple -->${exception}")
+                                                            })
+                                                        }
+//
+                                                    }
+                                                },
+                                                colors = ButtonDefaults.buttonColors(Color(0xFF0eaae3))
+                                            ) {
+                                                Text(if (individualAlarm.isReadyToUse) "remove" else "reset")
+                                            }
                                         }
                                     }
-                                )
-                            }
-                            .padding(horizontal = 8.dp, vertical = 6.dp),
-                        shape = RoundedCornerShape(45.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    color = if (!individualAlarm.isReadyToUse) Color(0xFF666b75) else Color(
-                                        0xFF0D388C
-                                    )
-                                )
-                                .padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                // Start time
-                                Row(verticalAlignment = Alignment.Bottom) {
-                                    Text(
-                                        text = individualAlarm.getTimeFormatted(individualAlarm.startTime),
-                                        fontSize = (fontSize / 1.2),
-                                        fontWeight = FontWeight.Black,
-                                        modifier = Modifier.padding(end = 4.dp)
-                                    )
-                                    Text(
-                                        text = individualAlarm.getFormattedAmPm(individualAlarm.startTime),
-                                        fontSize = (fontSize / 2.2),
-                                        modifier = Modifier.padding(bottom = 2.dp)
-                                    )
                                 }
-
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                        contentDescription = "to",
-                                        modifier = Modifier.size(38.dp) ,
-
-                                    )
-                                }
-                                Row(verticalAlignment = Alignment.Bottom) {
-                                    Text(
-                                        text = individualAlarm.getTimeFormatted(individualAlarm.endTime),
-                                        fontSize = (fontSize / 1.2),
-                                        fontWeight = FontWeight.Black,
-                                        modifier = Modifier.padding(end = 4.dp)
-                                    )
-                                    Text(
-                                        text = individualAlarm.getFormattedAmPm(individualAlarm.endTime),
-                                        fontSize = (fontSize / 2.3),
-                                        modifier = Modifier.padding(bottom = 2.dp)
-                                    )
-                                }
-                            }
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = "after every ${individualAlarm.freqGottenAfterCallback} min",
-                                    fontSize = (fontSize / 2.7),
-                                    fontWeight = FontWeight.W600,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-                            Spacer(modifier = Modifier.weight(1f))
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Bottom
-                            ) {
-                                Button(
-                                    onClick = {
-                                        logD("++==${individualAlarm.id} ---- $indexOfIndividualAlarmInAlarm ")
-                                        coroutineScope.launch(Dispatchers.IO) {
-                                            alarmsController.cancelAlarmByCancelingPendingIntent(
-                                                context_of_activity = activityContext,
-                                                startTime = individualAlarm.startTime,
-                                                endTime = individualAlarm.endTime,
-                                                frequencyInMin = individualAlarm.getFreqInMillisecond(),
-                                                alarmDao = alarmDao,
-                                                alarmManager = alarmManager,
-                                                delete_the_alarm_from_db = true,
-                                                alarmData = individualAlarm
-                                            )
-                                        }
-                                    },
-                                    colors = ButtonDefaults.buttonColors(Color(0xFF0eaae3))
-                                ) {
-                                    Text("delete")
-                                }
-                                Text(
-                                    text = "On: ${individualAlarm.getDateFormatted(individualAlarm.startTime)}",
-                                    textAlign = TextAlign.Right,
-                                    fontSize = (fontSize / 2.43),
-                                    fontWeight = FontWeight.W600,
-                                    modifier = Modifier.padding(vertical = screenHeight / 74),
-                                )
-                                Button(
-                                    onClick = {
-                                        if (individualAlarm.isReadyToUse){
-                                            coroutineScope.launch(Dispatchers.IO) {
-                                                alarmsController.cancelAlarmByCancelingPendingIntent(
-                                                    context_of_activity = activityContext,
-                                                    startTime = individualAlarm.startTime,
-                                                    endTime = individualAlarm.endTime,
-                                                    frequencyInMin = individualAlarm.getFreqInMillisecond(),
-                                                    alarmDao = alarmDao,
-                                                    alarmManager = alarmManager,
-                                                    delete_the_alarm_from_db = false,
-                                                    alarmData = individualAlarm
-                                                )
-                                            }
-                                        }
-                                       // -------------------------
-                                        else {
-                                            // -- reset function abstract it away and change it --
-                                            uncancellableScope.launch {
-                                                logD("about to reset the alarm-+")
-                                              val exception=  alarmsController.resetAlarms(alarmData = individualAlarm, alarmManager = alarmManager,
-                                                    activityContext = activityContext, alarmDao = alarmDao,
-                                                )
-                                              logD("the exception form the resetAlarm is ->$exception")
-                                                exception.fold(onSuccess = {}, onFailure = {
-                                                    NotificationBuilder(activityContext, title = "error returned in creating multiple alarm ", notificationText = "execution returned exception in schedule multiple alarm  -->${exception}").showNotification()
-                                                    logD("error in the schedule multiple -->${exception}")
-                                                })
-                                            }
-//
-                                        }
-                                    },
-                                    colors = ButtonDefaults.buttonColors(Color(0xFF0eaae3))
-                                ) {
-                                    Text(if (individualAlarm.isReadyToUse) "remove" else "reset")
-                                }
+//                }
                             }
                         }
-                    }
-            }
-        }
-        if (showTheDialogToTheUserToAskForPermission){
-            logD("displaying the dialog to ask user about the alarm")
-            DialogToAskUserAboutAlarmUnified(onDismissRequest = {logD("Dismissed by new one");showTheDialogToTheUserToAskForPermission= false },
-                onConfirmation = {startTimeHour, startTimeMinute, endTimeHour, endTimeMinute, startDateInMilliSec, endDateInMilliSec, frequency, alarmMessage ->
-                    logD("got the value in the dialogToAskUserAboutAlarmUnified and it is startTimeHour:$startTimeHour StartMin:$startTimeMinute, endHour:$endTimeHour, endMin:$endTimeMinute, startDateMilliSecond:$startDateInMilliSec, endDateMilliSecond:$endDateInMilliSec, freq:$frequency, Message:$alarmMessage --- and now closing it")
-                    try {
+                        if (showTheDialogToTheUserToAskForPermission){
+                            logD("displaying the dialog to ask user about the alarm")
+                            DialogToAskUserAboutAlarmUnified(onDismissRequest = {logD("Dismissed by new one");showTheDialogToTheUserToAskForPermission= false },
+                                onConfirmation = {startTimeHour, startTimeMinute, endTimeHour, endTimeMinute, startDateInMilliSec, endDateInMilliSec, frequency, alarmMessage ->
+                                    logD("got the value in the dialogToAskUserAboutAlarmUnified and it is startTimeHour:$startTimeHour StartMin:$startTimeMinute, endHour:$endTimeHour, endMin:$endTimeMinute, startDateMilliSecond:$startDateInMilliSec, endDateMilliSecond:$endDateInMilliSec, freq:$frequency, Message:$alarmMessage --- and now closing it")
+                                    try {
 //                        val dateForDisplay = if (getDateInHumanReadableFormat(startDateInMilliSec) == getDateInHumanReadableFormat(endDateInMilliSec)) getDateInHumanReadableFormat(startDateInMilliSec) else getDateInHumanReadableFormat(startDateInMilliSec)+"-->"+getDateInHumanReadableFormat(endDateInMilliSec)
-                        val startTimeCal = Calendar.getInstance().apply { timeInMillis = startDateInMilliSec; set(Calendar.HOUR_OF_DAY, startTimeHour); set(Calendar.MINUTE, startTimeMinute); set(Calendar.SECOND, 0)   }
-                        val endTimeCal = Calendar.getInstance().apply { timeInMillis = endDateInMilliSec; set(Calendar.HOUR_OF_DAY, endTimeHour); set(Calendar.MINUTE, endTimeMinute);set(Calendar.SECOND, 0)   }
-                        // date_in_long is safe to pass as any as it is redundant and no one is using it
-                        uncancellableScope.launch {
-                            val exception =alarmsController.scheduleMultipleAlarms(alarmManager,  startDateInMilliSec, alarmDao = alarmDao, messageForDB = alarmMessage,
-                                calendarForStartTime = startTimeCal, calendarForEndTime = endTimeCal, freqAfterTheCallback = frequency, activityContext = activityContext
-                            )
-                            exception.fold(onSuccess = { return@launch}, onFailure = { excp ->
-                                NotificationBuilder(context = activityContext, title = "there is a error/Exception  in making new alarm", notificationText = excp.toString()).showNotification()
-                                logD("there is a error/Exception  in making new alarm-->${excp}")
+                                        val startTimeCal = Calendar.getInstance().apply { timeInMillis = startDateInMilliSec; set(Calendar.HOUR_OF_DAY, startTimeHour); set(Calendar.MINUTE, startTimeMinute); set(Calendar.SECOND, 0)   }
+                                        val endTimeCal = Calendar.getInstance().apply { timeInMillis = endDateInMilliSec; set(Calendar.HOUR_OF_DAY, endTimeHour); set(Calendar.MINUTE, endTimeMinute);set(Calendar.SECOND, 0)   }
+                                        // date_in_long is safe to pass as any as it is redundant and no one is using it
+                                        uncancellableScope.launch {
+                                            val exception =alarmsController.scheduleMultipleAlarms(alarmManager,  startDateInMilliSec, alarmDao = alarmDao, messageForDB = alarmMessage,
+                                                calendarForStartTime = startTimeCal, calendarForEndTime = endTimeCal, freqAfterTheCallback = frequency, activityContext = activityContext
+                                            )
+                                            exception.fold(onSuccess = { return@launch}, onFailure = { excp ->
+                                                NotificationBuilder(context = activityContext, title = "there is a error/Exception  in making new alarm", notificationText = excp.toString()).showNotification()
+                                                logD("there is a error/Exception  in making new alarm-->${excp}")
 
-                            })
+                                            })
+                                        }
+                                    }catch (e: Exception){
+                                        NotificationBuilder(context = activityContext, title = "there is a error/Exception  in making new alarm", notificationText = e.toString()).showNotification()
+                                        logD(" there is a error/Exception  in making new alarm and was cought by the try catch-->${e} ")
+                                    }
+                                    showTheDialogToTheUserToAskForPermission= false
+                                },
+                            )
                         }
-                    }catch (e: Exception){
-                        NotificationBuilder(context = activityContext, title = "there is a error/Exception  in making new alarm", notificationText = e.toString()).showNotification()
-                        logD(" there is a error/Exception  in making new alarm and was cought by the try catch-->${e} ")
-                    }
-                    showTheDialogToTheUserToAskForPermission= false
-                },
-            )
-        }
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = screenHeight / 15)
-                .testTag("RoundPlusIcon")
-        ) {
-            RoundPlusIcon(size = screenHeight/10, onClick = {showTheDialogToTheUserToAskForPermission = !showTheDialogToTheUserToAskForPermission;
-            if(!askUserForPermission){
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = screenHeight / 15)
+                                .testTag("RoundPlusIcon")
+                        ) {
+                            RoundPlusIcon(size = screenHeight/10, onClick = {showTheDialogToTheUserToAskForPermission = !showTheDialogToTheUserToAskForPermission;
+                                if(!askUserForPermission){
 //                logD("\n\n[ OVERLAY PERMISSION] -> is not there ..$askUserForPermission \n\n")
-                askUserForPermissionToScheduleAlarm()
-            }
-        }, context = activityContext)
-        }
-    }
+                                    askUserForPermissionToScheduleAlarm()
+                                }
+                            }, context = activityContext)
+                        }
+                    }
+
+                }
 }
 
 
