@@ -26,6 +26,7 @@ import androidx.room.Room
 import com.example.trying_native.components_for_ui_compose.AlarmContainer
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmDatabase
+import androidx.core.net.toUri
 
 class MainActivity : ComponentActivity() {
 
@@ -42,11 +43,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @SuppressLint("SuspiciousIndentation")
     override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-
+//        enableEdgeToEdge()
         setContent {
             Trying_nativeTheme {
                       AlarmContainer(getAlarmDao(), alarmManager, this@MainActivity, askUserForPermissionToScheduleAlarm = { permissionToScheduleAlarm() } )
@@ -67,7 +66,8 @@ class MainActivity : ComponentActivity() {
     private fun permissionToScheduleAlarm() {
         // Check for SYSTEM_ALERT_WINDOW permission
         if (!Settings.canDrawOverlays(this)) {
-            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                "package:$packageName".toUri())
             overlayPermissionLauncher.launch(intent)
             return
         }

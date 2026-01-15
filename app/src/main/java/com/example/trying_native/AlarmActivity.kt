@@ -88,7 +88,7 @@ class AlarmActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         logD("about to create a new alarm")
         this.intentReceived = intent
-        enableEdgeToEdge()
+//        enableEdgeToEdge()
 
         window.isNavigationBarContrastEnforced = false
 

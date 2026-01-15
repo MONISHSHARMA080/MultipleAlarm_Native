@@ -16,18 +16,6 @@ fun assertWithException(condition:Boolean, message:String){
         throw  IllegalStateException(message)
     }
 }
-/**
- * Verifies that the given [condition] is true, otherwise throws an exception.
- *
- * @param condition the boolean expression that must hold
- * @param message   optional detail message to include in the exception
- * @throws IllegalStateException if [condition] evaluates to false
- */
-//fun assertAndReturnException(condition:Boolean, message:String): Exception{
-//    if (!condition) {
-//        return IllegalStateException(message)
-//    }
-//}
 
 fun incrementTheStartCalenderTimeUntilItIsInFuture(startCalendar: Calendar, currentCalendar:Calendar):Calendar{
     // cause we will start the comparison from the date today else the hard limit will not work
@@ -42,11 +30,4 @@ fun incrementTheStartCalenderTimeUntilItIsInFuture(startCalendar: Calendar, curr
         }
     }
     return startCalendar
-}
-
-fun getDateForDisplay(calendar: Calendar):String{
-    return  calendar.time.toInstant()
-        .atZone(ZoneId.systemDefault())
-        .toLocalDate()
-        .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
 }
