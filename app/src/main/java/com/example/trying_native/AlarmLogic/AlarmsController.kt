@@ -13,7 +13,6 @@ import com.example.trying_native.LastAlarmUpdateDBReceiver
 import com.example.trying_native.assertWithException
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
-import com.example.trying_native.incrementTheStartCalenderTimeUntilItIsInFuture
 import com.example.trying_native.logD
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -171,7 +170,7 @@ class AlarmsController {
     return runCatching {
         // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
         val startTimeInMillis = calendarForStartTime.timeInMillis
-        val startTimeInMillisendForDb= startTimeInMillis
+        val startTimeInMilliSendForDb= startTimeInMillis
         val endTimeInMillis = calendarForEndTime.timeInMillis
         val endTimeInMillisecondForDb= endTimeInMillis
         val freq = freqAfterTheCallback.toLong() * 60000
@@ -184,10 +183,10 @@ class AlarmsController {
         try {
             // since this is our first time the startTimeForReceiverToGetTheAlarmIs->
             logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
-            val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMillisendForDb, activityContext, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisecondForDb, LastAlarmUpdateDBReceiver())  }
+            val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMilliSendForDb, activityContext, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisecondForDb, LastAlarmUpdateDBReceiver())  }
             val c = scope.async {
                 val newAlarm = AlarmData(
-                    startTime = startTimeInMillisendForDb,
+                    startTime = startTimeInMilliSendForDb,
                     endTime = endTimeInMillisecondForDb,
                     isReadyToUse = true,
                     date = dateInLong,
@@ -203,7 +202,7 @@ class AlarmsController {
             b.await()
             val alarm = c.await()
             alarmDataForDeleting= alarm
-            val a  =   scope.async {scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activityContext,  receiverClass = receiverClass, startTimeForAlarmSeries = startTimeInMillisendForDb, alarmMessage = messageForDB, alarmData = alarm )  }
+            val a  =   scope.async {scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activityContext,  receiverClass = receiverClass, startTimeForAlarmSeries = startTimeInMilliSendForDb, alarmMessage = messageForDB, alarmData = alarm )  }
             val exception = a.await()
             exception.fold(onFailure = { excp ->
                 this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq, alarmDao, alarmManager, activityContext, false, alarmData = alarm)
@@ -227,8 +226,7 @@ class AlarmsController {
 
     /** takes the prev alarm and reschedules it to future date, also update the db with that alarm */
     @OptIn(ExperimentalCoroutinesApi::class)
-    suspend fun rescheduleAlarm(alarmManager: AlarmManager, calendarForStartTime:Calendar, calendarForEndTimer:Calendar,
-                                freqAfterCallback:Long, activityContext:ComponentActivity, alarmDao:AlarmDao, alarmData:AlarmData,
+    suspend fun rescheduleAlarm(alarmManager: AlarmManager, calendarForStartTime:Calendar, calendarForEndTimer:Calendar, freqAfterCallback:Long, activityContext:ComponentActivity, alarmDao:AlarmDao, alarmData:AlarmData,
                                 receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, nextAlarmInfo: NextAlarmInfo ) : Result<Unit> {
         return runCatching {
 
@@ -298,7 +296,7 @@ class AlarmsController {
      * @param startTime -  is the alarm original start time
      * @param alarmData - is required for the providing the ID of the alarm in the DB
      */
-    suspend fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequency_in_min:Long, alarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: Context, delete_the_alarm_from_db:Boolean, alarmData: AlarmData) {
+    suspend fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequencyInMin:Long, alarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: Context, delete_the_alarm_from_db:Boolean, alarmData: AlarmData) {
 
         val calendar = Calendar.getInstance()
         var currentTime = calendar.timeInMillis
@@ -317,11 +315,11 @@ class AlarmsController {
             }
         }
 
-        logD("StartTime ->$currentStartTime --- currentTime ->$currentTime -- freq -> $frequency_in_min ")
+        logD("StartTime ->$currentStartTime --- currentTime ->$currentTime -- freq -> $frequencyInMin ")
 
         // Advance startTime to the next pending alarm (skip already fired alarms)
         while (currentTime >= currentStartTime ){
-            currentStartTime = currentStartTime + frequency_in_min
+            currentStartTime = currentStartTime + frequencyInMin
             currentTime = calendar.timeInMillis
         }
 
@@ -354,7 +352,7 @@ class AlarmsController {
                 logD("Cancelled AlarmReceiver alarm at $tempStartTime")
             }
 
-            tempStartTime += frequency_in_min
+            tempStartTime += frequencyInMin
         }
 
         // Cancel all remaining NextAlarmReceiver PendingIntents
@@ -384,7 +382,7 @@ class AlarmsController {
                 logD("Cancelled NextAlarmReceiver alarm at $tempStartTime")
             }
 
-            tempStartTime += frequency_in_min
+            tempStartTime += frequencyInMin
         }
 
         // Also cancel the AlarmClockInfo notification PendingIntents
@@ -413,137 +411,32 @@ class AlarmsController {
                 logD("Cancelled AlarmInfo notification at $tempStartTime")
             }
 
-            tempStartTime += frequency_in_min
+            tempStartTime += frequencyInMin
         }
 
         logD("Finished cancelling all alarm PendingIntents")
     }
 
     suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activityContext: ComponentActivity, alarmDao: AlarmDao): Result<Unit>{
-        // -----------  fix ----------
-        //      now use only the calculateNextAlarmInfo() to calculate the next time
-        //      and this fn to just update the db , just put them in one for even more cleanliness ( less prefer, as first one will improve the debug-ability)
-        //      also both the alarm should have same date with them
-        // -----------  fix ----------
         return runCatching {
-
             logD("in the reset alarm func-+")
             val startTime = alarmData.startTime
             val endTime = alarmData.endTime
-            val calendarInstance =Calendar.getInstance()
-            val currentTime =  calendarInstance.timeInMillis
             // get the date time form the start time as I set the date in the calender instance when setting it for the startTime
             val res = this.calculateNextAlarmInfo(alarmData)
             print("\n\n----- the res from calculating the next alarm info is $res -----\n\n")
             val nextAlarmInfo = res.getOrThrow()
-            logD("\n\n[UPDATED]-- the nextAlarm time cal (for checking only) is ${nextAlarmInfo}")
-
-            if ( currentTime >= endTime && currentTime >= startTime ) {
-                logD("in the current time  greater than the start time and the end time")
-
-                // here the user is asking us to reset the alarm for the next day on the same time of the day
-                // also the date_in_Long on the alarmData is right, do I need to set the date to be on the
-                // also imagine alarm was on tuesday form 12:00 --> 14:00 and now the time is 18:00 of the same day, here I
-                // can set the date to be the next day
-                // or the time is 10:00 of the next day, here I can't set the date to be next day
-                // or the time is 13:00 of the next day, here I can set the alarm o
-                // how are we telling the diff b/w them ->
-
-                // get the date of the alarm, and the start and the end time; now see if
-                // see if the current date is more or less than the date of the alarm,
-                // the start time of the day is behind
-
-                // -- or -- get the current time form incrementing the date of the calender, if the prev_time >= currentTime set
-                // the alarm if <= current time then increment the date to be plus one and if still not then exit
-                var endCalendar = Calendar.getInstance().apply { timeInMillis = endTime }
-                var startCalendar = Calendar.getInstance().apply { timeInMillis = startTime }
-
-                logD("(-before incrementing-)the start time  is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startCalendar.timeInMillis)} and the end time is ${this.getTimeInHumanReadableFormatProtectFrom0Included(endCalendar.timeInMillis)} ")
-
-                endCalendar = incrementTheStartCalenderTimeUntilItIsInFuture(endCalendar, calendarInstance)
-                startCalendar = incrementTheStartCalenderTimeUntilItIsInFuture(startCalendar = startCalendar, currentCalendar = calendarInstance)
-
-                logD("(-after incrementing-)the start time  is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startCalendar.timeInMillis)} and the end time is ${this.getTimeInHumanReadableFormatProtectFrom0Included(endCalendar.timeInMillis)} ")
-
-
-                // -- here what I need to do is to provide the scheduleAlarm2 with the new series start/end time and the nextAlarmFireTime for
-                // -- each if block in the reset alarm function
-                val res = this.calculateNextAlarmInfo(alarmData)
-                print("\n\n----- the res from calculating the next alarm info is $res -----\n\n")
-                val nextAlarmInfo = res.getOrThrow()
-                val exception = this.rescheduleAlarm(
-                    alarmManager,
-                    activityContext = activityContext,
-                    alarmDao = alarmDao,
-                    calendarForStartTime = startCalendar,
-                    calendarForEndTimer = endCalendar,
-                    freqAfterCallback = alarmData.freqGottenAfterCallback,
-                    alarmData = alarmData,
-                    nextAlarmInfo =  nextAlarmInfo,
-                )
-                exception.fold(onFailure = { throwable->
-                    print("\n\n[EXCEPTION] got a exception in scheduling future alarms and that is -> $throwable \n\n")
-                    throw throwable}, onSuccess = {})
-            }
-            else if (currentTime <= startTime && currentTime <= endTime){
-                //  alarm is in future still:-> here we will set the alarm as it was cause the user is asking us to reset the alarm
-                //  that had not gone before, eg if I set the alarm 5 hour form now and hit remove it, and want to reset it again
-                // do not increment as the time is not arrived
-                logD("the freq is in current time <= start time and end time ${alarmData.freqGottenAfterCallback.toInt()} ")
-                val endCalendar = Calendar.getInstance().apply { timeInMillis = alarmData.endTime }
-                val startCalendar = Calendar.getInstance().apply { timeInMillis = startTime }
-
-                val res = this.calculateNextAlarmInfo(alarmData)
-                val nextAlarmInfo = res.getOrThrow()
-
-                val exception = this.rescheduleAlarm(
-                    alarmManager,
-                    activityContext = activityContext,
-                    alarmDao = alarmDao,
-                    calendarForStartTime = startCalendar,
-                    calendarForEndTimer = endCalendar,
-                    freqAfterCallback = alarmData.freqGottenAfterCallback,
-                    alarmData = alarmData,
-                    nextAlarmInfo =  nextAlarmInfo,
-                )
-                exception.fold(onFailure = { throwable->
-                    throw throwable}, onSuccess = {})
-            }
-            else if (currentTime in startTime..endTime){
-                // here set the alarm after the start alarm till the end time
-                logD("in the 3nd one")
-                var startTimeOfTheAlarm  = startTime
-                val currentTimeOfTheAlarm = Calendar.getInstance().timeInMillis
-                // going to increment the start time until we get it to be greater or equal than the current time
-                logD("the  alarm Data is $alarmData \n }")
-                while (startTimeOfTheAlarm <= currentTimeOfTheAlarm){
-                    startTimeOfTheAlarm+=alarmData.getFreqInMillisecond()
-                    logD("start time changed to $startTimeOfTheAlarm")
-                }
-                logD("start time changed to $startTimeOfTheAlarm -- outside the while loop")
-                logD("is the startTime >= endTime ${ startTimeOfTheAlarm >= endTime}  -- startTime >= secondValue ${startTimeOfTheAlarm >= alarmData.endTime}-- stratTime - $startTimeOfTheAlarm, endTime: $endTime, secondTime:${alarmData.endTime} ")
-                val endCalendar = Calendar.getInstance().apply { timeInMillis = alarmData.endTime }
-                // as we have changed the alarm time to be the latest time
-                val startCalendar = Calendar.getInstance().apply { timeInMillis = startTimeOfTheAlarm }
-
-                val res = this.calculateNextAlarmInfo(alarmData)
-                val nextAlarmInfo = res.getOrThrow()
-
-                val exception = this.rescheduleAlarm(
-                        alarmManager,
-                        activityContext = activityContext,
-                        alarmDao = alarmDao,
-                        calendarForStartTime = startCalendar,
-                        calendarForEndTimer = endCalendar,
-                        freqAfterCallback = alarmData.freqGottenAfterCallback, alarmData = alarmData,
-                        nextAlarmInfo =  nextAlarmInfo
-                    )
-                exception.fold(onFailure = { throwable->
-                    throw throwable}, onSuccess = {})
-            }else{
-                throw Exception(" did not hit any of the if condition ")
-            }
-
+            check(this.getDateOnly(nextAlarmInfo.newSeriesStartTime) == this.getDateOnly(nextAlarmInfo.newSeriesEndTime)) { "startDate: ${this.getDateOnly(nextAlarmInfo.newSeriesStartTime) }   and EndTime: ${ this.getDateOnly(nextAlarmInfo.newSeriesEndTime) } of alarmSeries are not equal"}
+            val endCalendar = Calendar.getInstance().apply { timeInMillis = endTime }
+            val startCalendar = Calendar.getInstance().apply { timeInMillis = startTime }
+            val exception = this.rescheduleAlarm(
+                alarmManager, activityContext = activityContext, alarmDao = alarmDao, calendarForStartTime = startCalendar,
+                freqAfterCallback = alarmData.freqGottenAfterCallback,
+                alarmData = alarmData, nextAlarmInfo =  nextAlarmInfo,calendarForEndTimer = endCalendar,
+            )
+            exception.fold(onFailure = { throwable->
+                print("\n\n[EXCEPTION] got a exception in scheduling future alarms and that is -> $throwable \n\n")
+                throw throwable}, onSuccess = {})
         }
     }
 
@@ -613,7 +506,7 @@ class AlarmsController {
                     // --- Scenario 3: Series is entirely in the past (or no slots were left in Scenario 2) ---
                     var nextTrigger = originalSeriesStart
 
-                    while (nextTrigger >= now) {
+                    while (nextTrigger <= now) {
                         nextTrigger += frequencyMillis
                     }
                     val nextAlarm = NextAlarmInfo(
@@ -652,6 +545,11 @@ class AlarmsController {
     private  fun getTimeInHumanReadableFormat(t:Long): String{
         return SimpleDateFormat("yyyy-MM-dd h:mm:ss a", Locale.getDefault()).format(Date(t))
     }
+
+    private  fun getDateOnly(t:Long): String{
+        return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(t))
+    }
+
     private  fun getTimeInHumanReadableFormatProtectFrom0Included(t:Long): String{
         if (t == 0L) return "--the time here(probablyFromTheIntent) is 0--"
         return SimpleDateFormat("yyyy-MM-dd h:mm:ss a", Locale.getDefault()).format(Date(t))

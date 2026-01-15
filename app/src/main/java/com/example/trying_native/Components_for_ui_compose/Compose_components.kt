@@ -1,6 +1,5 @@
 package com.example.trying_native.components_for_ui_compose
 
-import android.R.attr.top
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.content.Context
@@ -71,7 +70,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.trying_native.dataBase.AlarmDao
-import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.logD
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -86,7 +84,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -101,7 +98,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.withContext
 import java.time.LocalTime
 import java.util.Date
 
@@ -258,7 +254,7 @@ fun AlarmContainer(alarmDao: AlarmDao, alarmManager: AlarmManager, activityConte
                                                 context_of_activity = activityContext,
                                                 startTime = individualAlarm.startTime,
                                                 endTime = individualAlarm.endTime,
-                                                frequency_in_min = individualAlarm.getFreqInMillisecond(),
+                                                frequencyInMin = individualAlarm.getFreqInMillisecond(),
                                                 alarmDao = alarmDao,
                                                 alarmManager = alarmManager,
                                                 delete_the_alarm_from_db = true,
@@ -285,7 +281,7 @@ fun AlarmContainer(alarmDao: AlarmDao, alarmManager: AlarmManager, activityConte
                                                     context_of_activity = activityContext,
                                                     startTime = individualAlarm.startTime,
                                                     endTime = individualAlarm.endTime,
-                                                    frequency_in_min = individualAlarm.getFreqInMillisecond(),
+                                                    frequencyInMin = individualAlarm.getFreqInMillisecond(),
                                                     alarmDao = alarmDao,
                                                     alarmManager = alarmManager,
                                                     delete_the_alarm_from_db = false,
