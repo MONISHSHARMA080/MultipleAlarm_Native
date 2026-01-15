@@ -423,6 +423,7 @@ class AlarmsController {
         // -----------  fix ----------
         //      now use only the calculateNextAlarmInfo() to calculate the next time
         //      and this fn to just update the db , just put them in one for even more cleanliness ( less prefer, as first one will improve the debug-ability)
+        //      also both the alarm should have same date with them
         // -----------  fix ----------
         return runCatching {
 
@@ -432,6 +433,11 @@ class AlarmsController {
             val calendarInstance =Calendar.getInstance()
             val currentTime =  calendarInstance.timeInMillis
             // get the date time form the start time as I set the date in the calender instance when setting it for the startTime
+            val res = this.calculateNextAlarmInfo(alarmData)
+            print("\n\n----- the res from calculating the next alarm info is $res -----\n\n")
+            val nextAlarmInfo = res.getOrThrow()
+            logD("\n\n[UPDATED]-- the nextAlarm time cal (for checking only) is ${nextAlarmInfo}")
+
             if ( currentTime >= endTime && currentTime >= startTime ) {
                 logD("in the current time  greater than the start time and the end time")
 
@@ -555,53 +561,69 @@ class AlarmsController {
             val originalSeriesEnd = alarmData.endTime
             val frequencyMillis = alarmData.getFreqInMillisecond()
             val now = Calendar.getInstance().timeInMillis
+            check(originalSeriesStart < originalSeriesEnd) { "The startTime: ${this@AlarmsController.getTimeInHumanReadableFormatProtectFrom0Included(originalSeriesStart)} is not less than endTime: ${this.getTimeInHumanReadableFormatProtectFrom0Included(originalSeriesEnd)} " }
 
             when {
+                now > originalSeriesStart && now > originalSeriesEnd -> {
+                    val alarmSeriesDuration = originalSeriesEnd - originalSeriesStart
+                    val originalCal = Calendar.getInstance().apply { timeInMillis = originalSeriesStart }
+                    val hour = originalCal.get(Calendar.HOUR_OF_DAY)
+                    val minute = originalCal.get(Calendar.MINUTE)
+                    val second = originalCal.get(Calendar.SECOND)
+                    val millisecond = originalCal.get(Calendar.MILLISECOND)
+
+                    // Create new series start with today's date but original time
+                    val todayCal = Calendar.getInstance().apply {
+                        set(Calendar.HOUR_OF_DAY, hour)
+                        set(Calendar.MINUTE, minute)
+                        set(Calendar.SECOND, second)
+                        set(Calendar.MILLISECOND, millisecond)
+                    }
+
+                    var nextTrigger = todayCal.timeInMillis
+
+
+                    // now get the time
+                    // now here we will need to increment both the start time and the end time (series) as we are ahead of the alarm
+                    while (nextTrigger <= now) {
+                        nextTrigger += frequencyMillis
+                    }
+                    val nextAlarm = NextAlarmInfo(
+                        nextAlarmTriggerTime = nextTrigger,
+                        newSeriesStartTime = todayCal.timeInMillis,
+                        newSeriesEndTime = todayCal.timeInMillis + alarmSeriesDuration, // adding the original duration
+                        this@AlarmsController
+                    )
+                    logD("in now > seriesStart && now > seriesEnd and the updated value is $nextAlarm")
+                    return@runCatching nextAlarm
+                }
+
                 now < originalSeriesStart && now < originalSeriesEnd -> {
                     // the alarm is still in the future
-                    logD("Calculator: Series is in the future. First trigger will be the original start time. and the NextAlarmInfo is ${NextAlarmInfo(nextAlarmTriggerTime = originalSeriesStart, newSeriesStartTime = originalSeriesStart, newSeriesEndTime = originalSeriesEnd, this@AlarmsController)}")
-                    return@runCatching NextAlarmInfo(
+                    val nextAlarm = NextAlarmInfo(
                         nextAlarmTriggerTime = originalSeriesStart,
                         newSeriesStartTime = originalSeriesStart,
                         newSeriesEndTime = originalSeriesEnd,
                         this@AlarmsController
                     )
+                    logD("in the now < originalSeriesStart && now < originalSeriesEnd  and the value of upcoming alarm is same -> $nextAlarm ")
+                    return@runCatching nextAlarm
                 }
-                now >= originalSeriesStart && now > originalSeriesEnd -> {
+                now  in originalSeriesStart..originalSeriesEnd -> {
+                    // --- Scenario 3: Series is entirely in the past (or no slots were left in Scenario 2) ---
                     var nextTrigger = originalSeriesStart
-                    while (nextTrigger <= now) {
+
+                    while (nextTrigger >= now) {
                         nextTrigger += frequencyMillis
                     }
-                    logD("now>= originalSeriesStart && now < originalSeriesEnd : Found next trigger at ${getTimeInHumanReadableFormat(nextTrigger)}")
-                    logD("the NextAlarmInfo is ${NextAlarmInfo(nextAlarmTriggerTime = nextTrigger, newSeriesStartTime = originalSeriesStart, newSeriesEndTime = originalSeriesEnd, this@AlarmsController)}")
-                    return@runCatching NextAlarmInfo(
+                    val nextAlarm = NextAlarmInfo(
                         nextAlarmTriggerTime = nextTrigger,
                         newSeriesStartTime = originalSeriesStart, // The series bounds DO NOT change
                         newSeriesEndTime = originalSeriesEnd,
                         this@AlarmsController
                     )
-                }
-//                now > originalSeriesEnd -> {
-                now  in originalSeriesStart..originalSeriesEnd -> {
-                    // --- Scenario 3: Series is entirely in the past (or no slots were left in Scenario 2) ---
-                    logD("Calculator: Series is in the past. Projecting to the next valid day.")
-                    val startCalendar = Calendar.getInstance().apply { timeInMillis = originalSeriesStart }
-
-                    // Keep adding one day until the start time is in the future
-                    while (startCalendar.timeInMillis <= now) {
-                        startCalendar.add(Calendar.DAY_OF_YEAR, 1)
-                    }
-                    val newStartTime = startCalendar.timeInMillis
-                    val duration = originalSeriesEnd - originalSeriesStart
-                    val newEndTime = newStartTime + duration
-                    logD("the NextAlarmInfo is ${NextAlarmInfo(nextAlarmTriggerTime = newStartTime, newSeriesStartTime = newStartTime, newSeriesEndTime = newEndTime, this@AlarmsController)}")
-
-                    return@runCatching NextAlarmInfo(
-                        nextAlarmTriggerTime = newStartTime,
-                        newSeriesStartTime = newStartTime, // The series bounds DO NOT change
-                        newSeriesEndTime = newEndTime,
-                        this@AlarmsController
-                    )
+                    logD("in the now in startTime...endTime and the upcoming alarm is $nextAlarm")
+                    return@runCatching nextAlarm
                 }
                 else ->{
                     throw IllegalStateException(" in the Calculate Next alarm in the reset and reached the state where the alarm does not" +
