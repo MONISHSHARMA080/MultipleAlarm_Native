@@ -116,7 +116,8 @@ fun AlarmContainer(alarmDao: AlarmDao, alarmManager: AlarmManager, activityConte
     val uncancellableScope = remember {
         CoroutineScope(coroutineScope.coroutineContext + NonCancellable)
     }
-    val askUserForPermission by remember { mutableStateOf(Settings.canDrawOverlays(activityContext)) }
+    val askUserForPermission by lazy  {Settings.canDrawOverlays(activityContext) }
+
     val alarms1 by alarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO).collectAsStateWithLifecycle(initialValue = emptyList())
 
     var showTheDialogToTheUserToAskForPermission by remember { mutableStateOf(false) }
@@ -353,7 +354,8 @@ fun AlarmContainer(alarmDao: AlarmDao, alarmManager: AlarmManager, activityConte
                 .testTag("RoundPlusIcon")
         ) {
             RoundPlusIcon(size = screenHeight/10, onClick = {showTheDialogToTheUserToAskForPermission = !showTheDialogToTheUserToAskForPermission;
-            if(askUserForPermission){
+            if(!askUserForPermission){
+//                logD("\n\n[ OVERLAY PERMISSION] -> is not there ..$askUserForPermission \n\n")
                 askUserForPermissionToScheduleAlarm()
             }
         }, context = activityContext)

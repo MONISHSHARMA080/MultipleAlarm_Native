@@ -57,12 +57,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
-        splashScreen
-        enableEdgeToEdge()
-        setContent {
-            MaterialTheme(colorScheme = dynamicDarkColorScheme(this)){
-                AlarmContainer(alarmDao, alarmManager, this@MainActivity, askUserForPermissionToScheduleAlarm = { permissionToScheduleAlarm() } )
+        try {
+            enableEdgeToEdge()
+            setContent {
+                MaterialTheme(colorScheme = dynamicDarkColorScheme(this)){
+                    AlarmContainer(alarmDao, alarmManager, this@MainActivity, askUserForPermissionToScheduleAlarm = { permissionToScheduleAlarm() } )
+                }
             }
+        }catch (e: Exception){
+            logD(" \n\n\n\n\n\n [FATAL] --> error occurred in the onCreate, and it is ${e}\n}")
         }
     }
 
