@@ -1,5 +1,7 @@
 package com.example.trying_native
 
+import android.R.attr.fontWeight
+import android.R.attr.lineHeight
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -21,10 +23,19 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,7 +46,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.test.core.app.ActivityScenario.launch
 import com.example.trying_native.ui.theme.Trying_nativeTheme
 import java.io.File
 import java.io.FileWriter
@@ -61,14 +74,7 @@ class AlarmActivity : ComponentActivity() {
     private var wasBackgroundPlaying = false
     private val mediaSessionManager by lazy {getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager }
     private var mediaControllerList: List<MediaController>? = null
-    private val activityScope =
-            CoroutineScope(
-                    SupervisorJob() +
-                            Dispatchers.Main +
-                            CoroutineExceptionHandler { _, throwable ->
-                                logD("Coroutine exception: ${throwable.message}")
-                            }
-            )
+    private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var intentReceived: Intent
     // Add AudioFocus callback
     private val audioFocusChangeListener =
@@ -94,32 +100,33 @@ class AlarmActivity : ComponentActivity() {
 
         super.onCreate(savedInstanceState)
         setContent {
-            // state vals
-            var messageVarToSet by remember { mutableStateOf("") }
+            MaterialTheme(colorScheme = dynamicDarkColorScheme(this)) {
+                // state vals
+                var messageVarToSet by remember { mutableStateOf("") }
 
-            LaunchedEffect(Unit) {
-                messageVarToSet = this@AlarmActivity.parseTheIntentAndGetMessage()
-            }
-           LaunchedEffect(Unit) {
-                this@AlarmActivity.playRandomSound()
-            }
+                LaunchedEffect(Unit) {
+                    messageVarToSet = this@AlarmActivity.parseTheIntentAndGetMessage()
+                }
+                LaunchedEffect(Unit) {
+                    this@AlarmActivity.playRandomSound()
+                }
 
 
-            Trying_nativeTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) {
-                    TimeDisplay(
+                    Scaffold(modifier = Modifier.fillMaxSize()) {
+                        TimeDisplay(
                             onFinish = {
                                 mediaPlayer
-                                        ?.release() // I can remove it as it is unnecessary and is
-                                // there in the onDestroy()
+                                    ?.release() // I can remove it as it is unnecessary and is
                                 mediaPlayer = null
                                 finishAndRemoveTask()
                             },
                             message = messageVarToSet,
                             isMessagePresent = true,
-                    )
+                        )
                 }
+
             }
+
         }
         lifecycleScope.launch(Dispatchers.Default) {
             launch { pauseBackgroundAudio() }
@@ -128,6 +135,7 @@ class AlarmActivity : ComponentActivity() {
 
     }
     private  fun playRandomSound(){
+    runCatching {
         audioFocusRequest = audioFocusRequestBuilder()
         val rawFields =R.raw::class.java.fields
         val rawResources = rawFields.map { field -> Pair(field.name, field.getInt(null)) }
@@ -138,25 +146,11 @@ class AlarmActivity : ComponentActivity() {
         } else {
             activityScope.launch { playAlarmWithRandomSound(rawResources) }
         }
-
+    }.fold(onSuccess = {}, onFailure = {exception ->
+        logD("[Fatal AlarmActivity] exception occurred while playing random sound ->$exception ")
+    })
     }
 
-    private fun logSoundPlay(soundName: String, intent: Intent) {
-        try {
-            val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-            val alarmSeriesStartTime = intent.getLongExtra( "startTimeForDb", 0)
-            val alarmStartTime = intent.getLongExtra( "startTime", 0)
-            val alarmEndTime = intent.getLongExtra( "endTime", 0)
-            val logEntry = " \n ------- \n alarm series start time:${getTimeInHumanReadableFormat(alarmSeriesStartTime)}  \n alarm expected fire time:${getTimeInHumanReadableFormat(alarmStartTime)}  \n alarm end time:${getTimeInHumanReadableFormat(alarmEndTime)} \n soundName:$soundName played at $now \n ------- \n\n\n"
-            // Get the app's external files directory
-            val file = File(getExternalFilesDir(null), "sound_log.txt")
-            // Append the log entry to the file
-            FileWriter(file, true).use { writer -> writer.append(logEntry) }
-            logD(logEntry)
-        } catch (e: Exception) {
-            logD("Failed to log sound play: ${e.message}")
-        }
-    }
 
     /** this  function will get the message form the intent and will set it on the mutable State  that is  passed in */
     private fun parseTheIntentAndGetMessage():String{
@@ -218,7 +212,6 @@ class AlarmActivity : ComponentActivity() {
                         Timer().schedule(timerTask { finish() }, AUTO_FINISH_DELAY)
                     }
             logD("Playing alarm sound: $randomSoundResId")
-            logSoundPlay(randomSoundName, this.intentReceived)
         } catch (e: Exception) {
             try {
                 // Fallback sound with alarm stream
@@ -235,7 +228,6 @@ class AlarmActivity : ComponentActivity() {
                             isLooping = true
                             start()
                         }
-                logSoundPlay("renaissance", this.intentReceived)
             } catch (e: Exception) {
                 logD("Exception occurred in starting the fallback alarm \n--> $e <-- \n ")
                 finish()
@@ -337,9 +329,10 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean
                     fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(44.dp)) // Space between the time and the button
+
             if (isMessagePresent) {
                 Text(
-                        text =message,
+                        text =message + "\n",
                         color = Color.Cyan,
                         fontSize = 43.sp,
                         fontWeight = FontWeight.Bold,

@@ -6,7 +6,7 @@ a) UI Refactor : --
     * stop for 10(prefer)/20 min button that can be used 3 times,
     * a restart for 30 min button, here we can create a temp value or alarm where (alarm was from 2:00--6:00) from now(7:00) to now + 30 min (7:30) , create a new
         alarm instead of making db changes as that will be easier
-    * a click on alarm value and edit feature, eg endtime and a time picker appears etc
+    * design it better with this tool ->https://stitch.withgoogle.com/projects/3646385657259615705?pli=1
 
 
 
@@ -24,13 +24,16 @@ b) Code Refactor :--
     * see and check that the app works for the minimum android version to latest (search for people using android version, go for 50% or > , android 11 or up hopefully)
     * replace the start activity with live notification or foreground activity, ask user [LATER after mvp]
     * also add force update the app , or ask user to update the app
-    * make sure that the app is full screen ie the bottom white bar i
+    * in alarmActivity store the new intents in a list and when clicking destroy ensure that the app does not have more
+        intent if we do then start them/ use an animation to start them in current instance
 
 
 c)  later :--
        [X] abandon or work on multiple dates alarm, eg start form  today 9:00Pm to tomorrow 4:00 Am -- decided not to
        -- try adding the set same alarm on multiple week days form click like stock clock
        -- can't use my alarms as they are copyrighted, would need to use the alarms present in the system
+        * a click on alarm value and edit feature, eg endtime and a time picker appears etc
+
 
 d) Publishing
     * check for the restriction,
