@@ -63,6 +63,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.jvm.java
+import kotlin.random.Random
 
 class AlarmActivity : ComponentActivity() {
     private var mediaPlayer: MediaPlayer? = null
@@ -193,8 +194,7 @@ class AlarmActivity : ComponentActivity() {
     }
 
     private fun playAlarmWithRandomSound(rawResources: List<Pair<String, Int>>) {
-        val randomSound = rawResources.random()
-        val randomSoundName = randomSound.first
+        val randomSound = rawResources.random(Random(System.currentTimeMillis()))
         val randomSoundResId = randomSound.second
         try {
             mediaPlayer =
@@ -211,7 +211,7 @@ class AlarmActivity : ComponentActivity() {
                         start()
                         Timer().schedule(timerTask { finish() }, AUTO_FINISH_DELAY)
                     }
-            logD("Playing alarm sound: $randomSoundResId")
+            logD("Playing alarm sound: $randomSound")
         } catch (e: Exception) {
             try {
                 // Fallback sound with alarm stream
