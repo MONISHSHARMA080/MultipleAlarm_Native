@@ -20,12 +20,20 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 # Keep raw resources
+
 -keep class **.R$raw { *; }
-
--keep class **.R$raw {
-    *;
-}
-
 -keepclassmembers class **.R$* {
     public static <fields>;
 }
+
+# Keep all R classes and their inner classes
+-keepclasseswithmembers class **.R$* {
+    public static final int *;
+}
+
+# Prevent obfuscation of resource IDs
+-keep class **.R
+-keep class **.R$* {
+    <fields>;
+}
+

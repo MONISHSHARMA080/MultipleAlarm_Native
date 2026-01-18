@@ -25,6 +25,7 @@ b) Code Refactor :--
         intent if we do then start them/ use an animation to start them in current instance
     * make a data class for the alarm and use that in the intent, now use it to tell if we have alarm with random sound or
        what, etc
+    * use system alarm sounds as my approach will collide with the copyright law from play store -- now you will need to clean up your proguard file
 
 
 c)  later :--
@@ -41,7 +42,7 @@ c)  later :--
 d) Publishing
     * check for the restriction,
         -- app should launch a notification with the full screen intent and can't just start a full screen activity [check, got from gemini]
-    * have to change the alarm sound, should be using the system's alarm clock sound
+    * have to change the alarm sound, should be using the system's alarm clock sound, -- now you will need to clean up your proguard file
     * Initial screen when fetching the alarms
     * maybe a initial signup screen, like ask user what are they using the app for , and how can we help them, productivity, distracton, Alarm
         or all, explain them how can we help, maybe a/b test this
