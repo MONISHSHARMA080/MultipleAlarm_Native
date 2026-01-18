@@ -1,6 +1,7 @@
 package com.example.trying_native
 
 import android.app.AlarmManager
+import android.content.Context.ALARM_SERVICE
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
@@ -11,15 +12,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.core.net.toUri
-import androidx.room.Room
 import com.example.trying_native.components_for_ui_compose.AlarmContainer
-import com.example.trying_native.dataBase.AlarmDao
-import com.example.trying_native.dataBase.AlarmDatabase
-import kotlin.math.log
-import kotlin.system.measureNanoTime
 
 class MainActivity : ComponentActivity() {
 

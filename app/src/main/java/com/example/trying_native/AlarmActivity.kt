@@ -139,7 +139,7 @@ class AlarmActivity : ComponentActivity() {
     runCatching {
         audioFocusRequest = audioFocusRequestBuilder()
         val rawFields =R.raw::class.java.fields
-        val rawResources = rawFields.map { field -> Pair(field.name, field.getInt(null)) }
+        val rawResources = rawFields.mapNotNull { field -> Pair(field.name, field.getInt(0)) }
         val result = audioManager.requestAudioFocus(audioFocusRequest!!)
         // call it no matter what, but would prefer to pause the resource
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
@@ -194,7 +194,7 @@ class AlarmActivity : ComponentActivity() {
     }
 
     private fun playAlarmWithRandomSound(rawResources: List<Pair<String, Int>>) {
-        val randomSound = rawResources.random(Random(System.currentTimeMillis()))
+        val randomSound = rawResources.random(Random.Default)
         val randomSoundResId = randomSound.second
         try {
             mediaPlayer =
@@ -204,7 +204,7 @@ class AlarmActivity : ComponentActivity() {
                                         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                                         .setUsage(AudioAttributes.USAGE_ALARM)
                                         .build()
-                        )
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                )
                         setDataSource(resources.openRawResourceFd(randomSoundResId))
                         prepare()
                         isLooping = true // Make the alarm loop until dismissed
@@ -232,7 +232,7 @@ class AlarmActivity : ComponentActivity() {
                 logD("Exception occurred in starting the fallback alarm \n--> $e <-- \n ")
                 finish()
             }
-            logD("Exception occurred in starting the alarm sound \n-->  $e  <-- \n")
+            logD("Exception occurred in starting the alarm sound \n-->  $e  -- and message:${e.message} <-- \n")
         }
     }
 

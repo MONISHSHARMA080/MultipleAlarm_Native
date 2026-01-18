@@ -21,3 +21,11 @@
 #-renamesourcefileattribute SourceFile
 # Keep raw resources
 -keep class **.R$raw { *; }
+
+-keep class **.R$raw {
+    *;
+}
+
+-keepclassmembers class **.R$* {
+    public static <fields>;
+}

@@ -1,11 +1,8 @@
 a) UI Refactor : --
-    * haptic feedback
+    * (Later after design and impl is done)haptic feedback
     * weekly repeating alarms (like in alarm clock with circles, s,m,t,w,t,f,s
-    * when we click on alarms they should expand and also give me the message and alarm information
+    * when we click on alarms they should expand and also give me the message and alarm information (? to edit ?)
     * make the frequency one better, like I can type 0 and it should not have an autistic meltdown
-    * stop for 10(prefer)/20 min button that can be used 3 times,
-    * a restart for 30 min button, here we can create a temp value or alarm where (alarm was from 2:00--6:00) from now(7:00) to now + 30 min (7:30) , create a new
-        alarm instead of making db changes as that will be easier
     * design it better with this tool ->https://stitch.withgoogle.com/projects/3646385657259615705?pli=1
 
 
@@ -26,6 +23,8 @@ b) Code Refactor :--
     * also add force update the app , or ask user to update the app
     * in alarmActivity store the new intents in a list and when clicking destroy ensure that the app does not have more
         intent if we do then start them/ use an animation to start them in current instance
+    * make a data class for the alarm and use that in the intent, now use it to tell if we have alarm with random sound or
+       what, etc
 
 
 c)  later :--
@@ -33,6 +32,10 @@ c)  later :--
        -- try adding the set same alarm on multiple week days form click like stock clock
        -- can't use my alarms as they are copyrighted, would need to use the alarms present in the system
         * a click on alarm value and edit feature, eg endtime and a time picker appears etc
+        *[UI] stop for 10(prefer)/20 min button that can be used 3 times,
+        * a restart for 30 min button, here we can create a temp value or alarm where (alarm was from 2:00--6:00) from now(7:00) to now + 30 min (7:30) , create a new
+            alarm instead of making db changes as that will be easier
+
 
 
 d) Publishing
