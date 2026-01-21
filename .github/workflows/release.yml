@@ -140,7 +140,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          unzip alarm_sound.zip
+          # unzip alarm_sound.zip
           ls app/src/main/res/raw/ -1 | wc -l
           ls app/src/main/res/raw/
           ./gradlew assembleRelease \
