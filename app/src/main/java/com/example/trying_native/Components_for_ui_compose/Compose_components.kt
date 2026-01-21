@@ -1,6 +1,5 @@
 package com.example.trying_native.components_for_ui_compose
 
-import android.R
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.content.Context
@@ -55,7 +54,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ElevatedCard
@@ -82,11 +80,9 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -97,15 +93,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.example.trying_native.AlarmLogic.AlarmsController
 import com.example.trying_native.FirstLaunchAskForPermission.FirstLaunchAskForPermission
-import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmDatabase
 import com.example.trying_native.notification.NotificationBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
 import java.time.LocalTime
 import java.util.Date
 
@@ -123,17 +116,14 @@ fun AlarmContainer(
 ) {
     // Initialize database and DAO asynchronously
     var alarmDao by remember { mutableStateOf<AlarmDao>(Room.databaseBuilder(activityContext.applicationContext, AlarmDatabase::class.java, "alarm-database").build().alarmDao()) }
-
-
-
     val alarmsController = AlarmsController()
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val fontSize = (screenHeight * 0.05f).value.sp
     val coroutineScope = activityContext.lifecycleScope
-    val uncancellableScope = remember { CoroutineScope(coroutineScope.coroutineContext + NonCancellable) }
+    val uncancellableScope = CoroutineScope(coroutineScope.coroutineContext + NonCancellable)
     val askUserForPermission by lazy { Settings.canDrawOverlays(activityContext) }
 
-    val alarms1 by alarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO).collectAsStateWithLifecycle(initialValue = emptyList())
+    val alarms by alarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO).collectAsStateWithLifecycle(initialValue = emptyList())
 
     var showTheDialogToTheUserToAskForPermission by remember { mutableStateOf(false) }
     val clipboardManager = LocalClipboardManager.current
@@ -161,21 +151,13 @@ fun AlarmContainer(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
-
-            // Show loading indicator while initializing
-//                    CircularProgressIndicator(
-//                        modifier = Modifier
-//                            .align(Alignment.Center)
-//                            .size(89.dp),
-//                        color = Color.Blue
-//                    )
                 // Main content - DAO is ready
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = edgeToEdgePadding
                 ) {
                     itemsIndexed(
-                        alarms1,
+                        alarms,
                         key = { _, alarm -> alarm.id }
                     ) { indexOfIndividualAlarmInAlarm, individualAlarm ->
                         ElevatedCard(

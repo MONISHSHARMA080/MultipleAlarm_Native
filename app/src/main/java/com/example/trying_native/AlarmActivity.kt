@@ -1,7 +1,5 @@
 package com.example.trying_native
 
-import android.R.attr.fontWeight
-import android.R.attr.lineHeight
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -9,9 +7,10 @@ import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaPlayer
+import android.media.Ringtone
+import android.media.RingtoneManager
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
-import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.view.WindowManager
@@ -23,17 +22,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.runtime.*
@@ -46,16 +38,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.lifecycleScope
-import androidx.test.core.app.ActivityScenario.launch
-import com.example.trying_native.ui.theme.Trying_nativeTheme
-import java.io.File
-import java.io.FileWriter
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.concurrent.timerTask
-import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -69,28 +55,16 @@ class AlarmActivity : ComponentActivity() {
     private var mediaPlayer: MediaPlayer? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private val audioManager by lazy { getSystemService(Context.AUDIO_SERVICE) as AudioManager }
-    private val AUTO_FINISH_DELAY = 120000L
-//    private var previousAudioVolume = 1
     private var audioFocusRequest: AudioFocusRequest? = null
     private var wasBackgroundPlaying = false
-    private val mediaSessionManager by lazy {getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager }
+//    private val mediaSessionManager by lazy {getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager }
     private var mediaControllerList: List<MediaController>? = null
     private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var intentReceived: Intent
-    // Add AudioFocus callback
-    private val audioFocusChangeListener =
-            AudioManager.OnAudioFocusChangeListener { focusChange ->
-                when (focusChange) {
-                    AudioManager.AUDIOFOCUS_LOSS, AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                        // We don't want to handle audio focus loss since we're an alarm
-                        // The alarm should continue playing
-                    }
-                    AudioManager.AUDIOFOCUS_GAIN -> {
-                        // We already have focus, no need to handle this
-                    }
-                }
-            }
+    private var ringtone: Ringtone? = null
+    private  val AUTO_FINISH_DELAY = 120000L // 2 sec is 120000
 
+//
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         logD("about to create a new alarm")
@@ -109,7 +83,8 @@ class AlarmActivity : ComponentActivity() {
                     messageVarToSet = this@AlarmActivity.parseTheIntentAndGetMessage()
                 }
                 LaunchedEffect(Unit) {
-                    this@AlarmActivity.playRandomSound()
+//                    this@AlarmActivity.playRandomSound()
+                    this@AlarmActivity.playRandomSystemAlarm()
                 }
 
 
@@ -129,29 +104,38 @@ class AlarmActivity : ComponentActivity() {
             }
 
         }
-        lifecycleScope.launch(Dispatchers.Default) {
-            launch { pauseBackgroundAudio() }
-            launch { keepScreenON() }
-        }
+//        lifecycleScope.launch(Dispatchers.Default) { launch { pauseBackgroundAudio() } }
+        lifecycleScope.launch { delay(AUTO_FINISH_DELAY); this@AlarmActivity.finish() }
+        lifecycleScope.launch(Dispatchers.IO) {keepScreenON()  }
 
     }
-    private  fun playRandomSound(){
-    runCatching {
-        audioFocusRequest = audioFocusRequestBuilder()
-        val rawFields =R.raw::class.java.fields
-        val rawResources = rawFields.mapNotNull { field -> Pair(field.name, field.getInt(0)) }
-        val result = audioManager.requestAudioFocus(audioFocusRequest!!)
-        // call it no matter what, but would prefer to pause the resource
-        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            activityScope.launch { playAlarmWithRandomSound(rawResources) }
-        } else {
-            activityScope.launch { playAlarmWithRandomSound(rawResources) }
-        }
-    }.fold(onSuccess = {}, onFailure = {exception ->
-        logD("[Fatal AlarmActivity] exception occurred while playing random sound ->$exception ")
-    })
-    }
 
+
+    private fun playRandomSystemAlarm(){
+        runCatching {
+            audioFocusRequest = audioFocusRequestBuilder()
+            audioManager.requestAudioFocus(audioFocusRequest!!)
+            val ringtoneManager =RingtoneManager(this)
+            ringtoneManager.setType(RingtoneManager.TYPE_ALARM)
+            val ringtoneCursor =ringtoneManager.cursor
+            val len =ringtoneCursor.count
+            logD("the len is $len")
+            val randomIndex =Random.nextInt(len )
+            logD("the random index is $randomIndex")
+            val ringtone =ringtoneManager.getRingtone(randomIndex)
+            if (ringtone == null){
+                logD("the ringtone is null")
+            }
+            logD("the ringtone randomly chosen  is $ringtone")
+            this@AlarmActivity.ringtone = ringtone
+            ringtone.isLooping = true
+            ringtone.play()
+
+
+        }.fold(onSuccess = {}, onFailure = {exception ->
+            logD("there is a exception while launching random system alarm and it is ${exception.message}\n-->$exception")
+        })
+    }
 
     /** this  function will get the message form the intent and will set it on the mutable State  that is  passed in */
     private fun parseTheIntentAndGetMessage():String{
@@ -160,24 +144,24 @@ class AlarmActivity : ComponentActivity() {
         return if (messageTemp.isNullOrEmpty()) "" else messageTemp
     }
 
-    private fun pauseBackgroundAudio() {
-        try {
-            mediaControllerList = mediaSessionManager.getActiveSessions(null)
-            mediaControllerList?.forEach { controller -> controller.transportControls.pause() }
-        } catch (e: SecurityException) {
-            e.printStackTrace()
-        }
-    }
+//    private fun pauseBackgroundAudio() {
+//        try {
+//            mediaControllerList = mediaSessionManager.getActiveSessions(null)
+//            mediaControllerList?.forEach { controller -> controller.transportControls.pause() }
+//        } catch (e: SecurityException) {
+//            e.printStackTrace()
+//        }
+//    }
 
-    private fun resumeBackgroundAudio() {
-        try {
-            // Resume all active media controllers
-            mediaControllerList?.forEach { controller -> controller.transportControls.play() }
-        } catch (e: SecurityException) {
-            e.printStackTrace()
-            // Handle the exception if required permissions are not granted
-        }
-    }
+//    private fun resumeBackgroundAudio() {
+//        try {
+//            // Resume all active media controllers
+//            mediaControllerList?.forEach { controller -> controller.transportControls.play() }
+//        } catch (e: SecurityException) {
+//            e.printStackTrace()
+//            // Handle the exception if required permissions are not granted
+//        }
+//    }
 
     private fun audioFocusRequestBuilder(): AudioFocusRequest {
         // Create AudioFocusRequest
@@ -188,55 +172,10 @@ class AlarmActivity : ComponentActivity() {
                                 .setUsage(AudioAttributes.USAGE_ALARM)
                                 .build()
                 )
-                .setOnAudioFocusChangeListener(audioFocusChangeListener)
                 .build()
-        // Request audio focus before playing alarm
     }
 
-    private fun playAlarmWithRandomSound(rawResources: List<Pair<String, Int>>) {
-        val randomSound = rawResources.random(Random.Default)
-        val randomSoundResId = randomSound.second
-        try {
-            mediaPlayer =
-                    MediaPlayer().apply {
-                        setAudioAttributes(
-                                AudioAttributes.Builder()
-                                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                                        .setUsage(AudioAttributes.USAGE_ALARM)
-                                        .build()
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                )
-                        setDataSource(resources.openRawResourceFd(randomSoundResId))
-                        prepare()
-                        isLooping = true // Make the alarm loop until dismissed
-                        start()
-                        Timer().schedule(timerTask { finish() }, AUTO_FINISH_DELAY)
-                    }
-            logD("Playing alarm sound: $randomSound")
-        } catch (e: Exception) {
-            try {
-                // Fallback sound with alarm stream
-                mediaPlayer =
-                        MediaPlayer().apply {
-                            setAudioAttributes(
-                                AudioAttributes.Builder()
-                                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                                .setUsage(AudioAttributes.USAGE_ALARM)
-                                .build()
-                            )
-                            setDataSource(resources.openRawResourceFd(R.raw.renaissancemp))
-                            prepare()
-                            isLooping = true
-                            start()
-                        }
-            } catch (e: Exception) {
-                logD("Exception occurred in starting the fallback alarm \n--> $e <-- \n ")
-                finish()
-            }
-            logD("Exception occurred in starting the alarm sound \n-->  $e  -- and message:${e.message} <-- \n")
-        }
-    }
 
-    @SuppressLint("UnsafeIntentLaunch")
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         logD("New Intent received in AlarmActivity")
@@ -269,7 +208,7 @@ class AlarmActivity : ComponentActivity() {
         } catch (e: Exception) {
             logD("Error releasing WakeLock in onDestroy: ${e.message}")
         }
-        resumeBackgroundAudio()
+//        resumeBackgroundAudio()
         audioFocusRequest?.let { request -> audioManager.abandonAudioFocusRequest(request) }
         try {
             if (wasBackgroundPlaying) {
@@ -278,6 +217,7 @@ class AlarmActivity : ComponentActivity() {
         } catch (e: Exception) {
             logD("Failed to resume background audio: ${e.message}")
         }
+        this.ringtone?.stop()
         mediaPlayer?.release()
         mediaPlayer = null
         finishAndRemoveTask()
@@ -292,10 +232,6 @@ class AlarmActivity : ComponentActivity() {
         setTurnScreenOn(true)
     }
 
-    private  fun getTimeInHumanReadableFormat(t:Long): String{
-        if (t == 0L) return "--the time here(probablyFromTheIntent) is 0--"
-        return SimpleDateFormat("yyyy-MM-dd h:mm:ss a", Locale.getDefault()).format(Date(t))
-    }
 }
 
 @Composable
