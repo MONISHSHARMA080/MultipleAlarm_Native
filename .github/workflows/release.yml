@@ -88,9 +88,6 @@ jobs:
           VERSION_CODE: ${{ steps.version.outputs.VERSION_CODE }}
           VERSION_NAME: ${{ steps.version.outputs.VERSION_NAME }}
         run: |
-          unzip alarm_sound.zip
-          ls app/src/main/res/raw/ -1 | wc -l
-          ls app/src/main/res/raw/
           ./gradlew assembleRelease \
             -Pandroid.injected.signing.store.file=$PWD/app/release.keystore \
             -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
