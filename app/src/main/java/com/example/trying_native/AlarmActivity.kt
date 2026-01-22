@@ -151,8 +151,7 @@ class AlarmActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         logD("New Intent received in AlarmActivity")
-        // Finish the previous activity when a new intent is received
-        // finish()
+        this.stopRingtoneAndRemoveAudioFocus()
         try {
             wakeLock?.let {
                 if (it.isHeld) {
