@@ -52,12 +52,9 @@ import kotlin.jvm.java
 import kotlin.random.Random
 
 class AlarmActivity : ComponentActivity() {
-    private var mediaPlayer: MediaPlayer? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private val audioManager by lazy { getSystemService(Context.AUDIO_SERVICE) as AudioManager }
     private var audioFocusRequest: AudioFocusRequest? = null
-    private var wasBackgroundPlaying = false
-//    private val mediaSessionManager by lazy {getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager }
     private var mediaControllerList: List<MediaController>? = null
     private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var intentReceived: Intent
@@ -83,7 +80,6 @@ class AlarmActivity : ComponentActivity() {
                     messageVarToSet = this@AlarmActivity.parseTheIntentAndGetMessage()
                 }
                 LaunchedEffect(Unit) {
-//                    this@AlarmActivity.playRandomSound()
                     this@AlarmActivity.playRandomSystemAlarm()
                 }
 
@@ -91,9 +87,10 @@ class AlarmActivity : ComponentActivity() {
                     Scaffold(modifier = Modifier.fillMaxSize()) {
                         TimeDisplay(
                             onFinish = {
-                                mediaPlayer
-                                    ?.release() // I can remove it as it is unnecessary and is
-                                mediaPlayer = null
+                                // we are stopping the ringtone here as doing so in the onDestroy() will
+                                // take time
+//                                this.ringtone?.stop()
+//                                audioFocusRequest?.let { request -> audioManager.abandonAudioFocusRequest(request) }
                                 finishAndRemoveTask()
                             },
                             message = messageVarToSet,
@@ -123,15 +120,10 @@ class AlarmActivity : ComponentActivity() {
             val randomIndex =Random.nextInt(len )
             logD("the random index is $randomIndex")
             val ringtone =ringtoneManager.getRingtone(randomIndex)
-            if (ringtone == null){
-                logD("the ringtone is null")
-            }
             logD("the ringtone randomly chosen  is $ringtone")
             this@AlarmActivity.ringtone = ringtone
             ringtone.isLooping = true
             ringtone.play()
-
-
         }.fold(onSuccess = {}, onFailure = {exception ->
             logD("there is a exception while launching random system alarm and it is ${exception.message}\n-->$exception")
         })
@@ -144,24 +136,6 @@ class AlarmActivity : ComponentActivity() {
         return if (messageTemp.isNullOrEmpty()) "" else messageTemp
     }
 
-//    private fun pauseBackgroundAudio() {
-//        try {
-//            mediaControllerList = mediaSessionManager.getActiveSessions(null)
-//            mediaControllerList?.forEach { controller -> controller.transportControls.pause() }
-//        } catch (e: SecurityException) {
-//            e.printStackTrace()
-//        }
-//    }
-
-//    private fun resumeBackgroundAudio() {
-//        try {
-//            // Resume all active media controllers
-//            mediaControllerList?.forEach { controller -> controller.transportControls.play() }
-//        } catch (e: SecurityException) {
-//            e.printStackTrace()
-//            // Handle the exception if required permissions are not granted
-//        }
-//    }
 
     private fun audioFocusRequestBuilder(): AudioFocusRequest {
         // Create AudioFocusRequest
@@ -198,30 +172,25 @@ class AlarmActivity : ComponentActivity() {
 
     @SuppressLint("Wakelock")
     override fun onDestroy() {
-        super.onDestroy()
-        try {
-            wakeLock?.let {
-                if (it.isHeld) {
-                    it.release()
+        runCatching {
+            super.onDestroy()
+            this.ringtone?.stop()
+            audioFocusRequest?.let { request -> audioManager.abandonAudioFocusRequest(request) }
+
+            try {
+                wakeLock?.let {
+                    if (it.isHeld) {
+                        it.release()
+                    }
                 }
+            } catch (e: Exception) {
+                logD("Error releasing WakeLock in onDestroy: ${e.message}")
             }
-        } catch (e: Exception) {
-            logD("Error releasing WakeLock in onDestroy: ${e.message}")
-        }
-//        resumeBackgroundAudio()
-        audioFocusRequest?.let { request -> audioManager.abandonAudioFocusRequest(request) }
-        try {
-            if (wasBackgroundPlaying) {
-                mediaPlayer?.start()
-            }
-        } catch (e: Exception) {
-            logD("Failed to resume background audio: ${e.message}")
-        }
-        this.ringtone?.stop()
-        mediaPlayer?.release()
-        mediaPlayer = null
-        finishAndRemoveTask()
-        activityScope.cancel()
+            finishAndRemoveTask()
+            activityScope.cancel()
+        }.fold(onSuccess = {}, onFailure = {exception ->
+            logD("there is a exception while destroying the AlarmActivity ->  ${exception.message}\n-->$exception")
+        })
     }
 
     private fun keepScreenON() {
