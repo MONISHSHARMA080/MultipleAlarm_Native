@@ -33,7 +33,6 @@ jobs:
           restore-keys: |
             build-
 
-      # Get the last version code from git tags or start at 1
       - name: Calculate Version Code
         id: version
         run: |
