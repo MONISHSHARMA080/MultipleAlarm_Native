@@ -84,7 +84,6 @@ class AlarmActivity : ComponentActivity() {
                     Scaffold(modifier = Modifier.fillMaxSize()) {
                         TimeDisplay(
                             onFinish = {
-                                this.stopRingtoneAndRemoveAudioFocus()
                                 finishAndRemoveTask()
                             },
                             message = messageVarToSet,
@@ -169,6 +168,7 @@ class AlarmActivity : ComponentActivity() {
 
     override fun onDestroy() {
         runCatching {
+            this@AlarmActivity.stopRingtoneAndRemoveAudioFocus()
             super.onDestroy()
             try {
                 wakeLock?.let {
@@ -250,8 +250,9 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean
             ),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = (screenHeight/9))
-                .height(56.dp)
+                .padding(bottom = (screenHeight/8))
+                .height(75.dp)
+                .width(250.dp)
                 .shadow(8.dp, shape = RoundedCornerShape(28.dp))
         ) {
             Text(text = "Cancel alarm")
