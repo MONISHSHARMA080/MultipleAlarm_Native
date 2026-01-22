@@ -2,12 +2,11 @@ name: Android CI
 on:
   push:
     branches:
-      - "**"
+      - "[main, codeRefactor_Result_AlarmData]"
 permissions:
   contents: write
 jobs:
   build:
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
