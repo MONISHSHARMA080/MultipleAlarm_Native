@@ -15,8 +15,9 @@ android {
         applicationId = "com.example.trying_native"
         minSdk = 33
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
+        versionName = project.findProperty("versionName") as String? ?: "1.0.0"
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -78,9 +79,7 @@ android {
             all {
                 it.systemProperty("robolectric.logging", "stdout")
                 it.systemProperty("robolectric.graphicsMode", "NATIVE")
-
                 // Increase memory for tests
-
                 // Important for avoiding bytecode verification errors
                 it.jvmArgs("-noverify")
             }
