@@ -2,7 +2,8 @@ name: Android CI
 on:
   push:
     branches:
-      - "[main, codeRefactor_Result_AlarmData]"
+      - main
+      - codeRefactor_Result_AlarmData
 permissions:
   contents: write
 jobs:
