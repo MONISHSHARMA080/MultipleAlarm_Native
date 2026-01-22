@@ -55,7 +55,6 @@ class AlarmActivity : ComponentActivity() {
     private var wakeLock: PowerManager.WakeLock? = null
     private val audioManager by lazy { getSystemService(Context.AUDIO_SERVICE) as AudioManager }
     private var audioFocusRequest: AudioFocusRequest? = null
-    private var mediaControllerList: List<MediaController>? = null
     private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var intentReceived: Intent
     private var ringtone: Ringtone? = null
@@ -82,15 +81,10 @@ class AlarmActivity : ComponentActivity() {
                 LaunchedEffect(Unit) {
                     this@AlarmActivity.playRandomSystemAlarm()
                 }
-
-
                     Scaffold(modifier = Modifier.fillMaxSize()) {
                         TimeDisplay(
                             onFinish = {
-                                // we are stopping the ringtone here as doing so in the onDestroy() will
-                                // take time
-//                                this.ringtone?.stop()
-//                                audioFocusRequest?.let { request -> audioManager.abandonAudioFocusRequest(request) }
+                                this.stopRingtoneAndRemoveAudioFocus()
                                 finishAndRemoveTask()
                             },
                             message = messageVarToSet,
@@ -101,12 +95,17 @@ class AlarmActivity : ComponentActivity() {
             }
 
         }
-//        lifecycleScope.launch(Dispatchers.Default) { launch { pauseBackgroundAudio() } }
         lifecycleScope.launch { delay(AUTO_FINISH_DELAY); this@AlarmActivity.finish() }
         lifecycleScope.launch(Dispatchers.IO) {keepScreenON()  }
 
     }
 
+    private  fun stopRingtoneAndRemoveAudioFocus(): Result<Unit>{
+        return runCatching {
+            this.ringtone?.stop()
+            audioFocusRequest?.let { request -> audioManager.abandonAudioFocusRequest(request) }
+        }
+    }
 
     private fun playRandomSystemAlarm(){
         runCatching {
@@ -140,12 +139,11 @@ class AlarmActivity : ComponentActivity() {
     private fun audioFocusRequestBuilder(): AudioFocusRequest {
         // Create AudioFocusRequest
         return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
-                .setAudioAttributes(
-                        AudioAttributes.Builder()
+                .setAudioAttributes(AudioAttributes.Builder()
                                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                                 .setUsage(AudioAttributes.USAGE_ALARM)
                                 .build()
-                )
+                                )
                 .build()
     }
 
@@ -170,13 +168,9 @@ class AlarmActivity : ComponentActivity() {
         startActivity(intent) // Optionally, restart the activity with the new intent
     }
 
-    @SuppressLint("Wakelock")
     override fun onDestroy() {
         runCatching {
             super.onDestroy()
-            this.ringtone?.stop()
-            audioFocusRequest?.let { request -> audioManager.abandonAudioFocusRequest(request) }
-
             try {
                 wakeLock?.let {
                     if (it.isHeld) {
