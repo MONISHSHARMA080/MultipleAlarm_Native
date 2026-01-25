@@ -69,12 +69,9 @@ class NextAlarmReceiver: BroadcastReceiver() {
                alarmsController.scheduleAlarm (
                startTime = nextAlarmTime, // This is the time the next alarm will trigger
                endTime = alarmData.endTime, // The series end time
-               alarmManager = alarmManager,
-               componentActivity = activityContext,
-               receiverClass = receiverClass,
-               startTimeForAlarmSeries = startTimeForAlarmSeries,
-               alarmData = alarmData,
-               alarmMessage = alarmData.message
+               alarmManager = alarmManager,componentActivity = activityContext,
+               receiverClass = receiverClass,startTimeForAlarmSeries = startTimeForAlarmSeries,
+               alarmData = alarmData, alarmMessage = alarmData.message
                )
            }.await()
 

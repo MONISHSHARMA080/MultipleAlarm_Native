@@ -34,13 +34,7 @@ class AlarmsController {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val alarmInfoNotificationClass:Class<out BroadcastReceiver> = AlarmInfoNotification::class.java
     private val alarmReceiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java
-    private val nextAlarmReceiver:Class<out BroadcastReceiver> = NextAlarmReceiver::class.java
-    /**
-     * A simple data class to hold the result of calculating the next alarm trigger.
-     * @param nextAlarmTriggerTime The exact epoch milliseconds for the next alarm.
-     * @param newSeriesStartTime The calculated start time for the next series instance (e.g., tomorrow at 9 AM).
-     * @param newSeriesEndTime The calculated end time for the next series instance (e.g., tomorrow at 5 PM).
-     */
+     val nextAlarmReceiver:Class<out BroadcastReceiver> = NextAlarmReceiver::class.java
     data class NextAlarmInfo(
         val nextAlarmTriggerTime: Long,
         val newSeriesStartTime: Long,
@@ -51,11 +45,6 @@ class AlarmsController {
             return "nextAlarmTriggerTime: ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTriggerTime)}, newSeriesStartTime: ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(newSeriesStartTime)}, newSeriesEndTime: ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(newSeriesEndTime)}"
         }
     }
-    /**
-     * data class for the return value of the pending intent
-     * [pendingIntentForAlarmNotificationInfo] - this will be there(not null) when the pending intent is for the alarm and not for the
-     * [pendingIntentForAlarm] - pending intent for the upcoming alarm
-     */
     data class PendingIntentCreated(
         val pendingIntentForAlarmNotificationInfo: PendingIntent?,
         val pendingIntentForAlarm: PendingIntent
@@ -71,11 +60,12 @@ class AlarmsController {
         return runCatching {
             logD("the message in the startTime is $alarmMessage")
             logD(" startTime:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
-            val removeSecForAccuracy = 222 * 60 * 1000L // min in millisec
+//            val removeSecForAccuracy = 222 * 60 * 1000L // min in millisec
             val currentCalTime = Calendar.getInstance().timeInMillis
             // removing milliseconds cause when we try to schedule the next alarm it will get a bit behind
             // also convert this to a switch statement
-            val currentTimeViaCalender = currentCalTime - removeSecForAccuracy
+//            val currentTimeViaCalender = currentCalTime - removeSecForAccuracy
+            val currentTimeViaCalender = currentCalTime
             logD("the current time via calender is: ${this.getTimeInHumanReadableFormatProtectFrom0Included(currentCalTime)} \n and Current time(adjusted for some min diff) is: ${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalender)}  " +
                     "\n startTime of alarm is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)}")
             require(startTime <  endTime) { "the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not > endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} " }
@@ -110,12 +100,6 @@ class AlarmsController {
             logD("set the next alarm successfully")
         }
     }
-    /**
-     * returns the Pending Intent that will be delivered to a receiver. The PendingIntent has the same properties(key-value)
-     * @param receiverClass class that will get the pending intent
-     * @param newSeriesStartTime The calculated start time for the next series instance (e.g., tomorrow at 9 AM).
-     * @param newSeriesEndTime The calculated end time for the next series instance (e.g., tomorrow at 5 PM).
-     */
     fun getPendingIntentForAlarm(receiverClass:Class<out BroadcastReceiver>, context: Context,
                                  startTimeForAlarmSeries:Long,startTime:Long, endTime:Long, alarmMessage: String, alarmId:Int, createIntentForAlarmMetaData:Boolean = true ): Result<PendingIntentCreated> {
         return runCatching {
@@ -170,9 +154,7 @@ class AlarmsController {
     return runCatching {
         // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
         val startTimeInMillis = calendarForStartTime.timeInMillis
-        val startTimeInMilliSendForDb= startTimeInMillis
         val endTimeInMillis = calendarForEndTime.timeInMillis
-        val endTimeInMillisecondForDb= endTimeInMillis
         val freq = freqAfterTheCallback.toLong() * 60000
         logD("checking if the start time is < end time ")
 
@@ -183,11 +165,13 @@ class AlarmsController {
         try {
             // since this is our first time the startTimeForReceiverToGetTheAlarmIs->
             logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
-            val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(startTimeInMilliSendForDb, activityContext, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillisecondForDb, LastAlarmUpdateDBReceiver())  }
+            val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(
+                startTimeInMillis, activityContext, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db",
+                endTimeInMillis, LastAlarmUpdateDBReceiver())  }
             val c = scope.async {
                 val newAlarm = AlarmData(
-                    startTime = startTimeInMilliSendForDb,
-                    endTime = endTimeInMillisecondForDb,
+                    startTime = startTimeInMillis,
+                    endTime = endTimeInMillis,
                     isReadyToUse = true,
                     date = dateInLong,
                     message = messageForDB,
@@ -202,7 +186,8 @@ class AlarmsController {
             b.await()
             val alarm = c.await()
             alarmDataForDeleting= alarm
-            val a  =   scope.async {scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activityContext,  receiverClass = receiverClass, startTimeForAlarmSeries = startTimeInMilliSendForDb, alarmMessage = messageForDB, alarmData = alarm )  }
+            val a  =   scope.async {scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activityContext,  receiverClass = receiverClass,
+                startTimeForAlarmSeries = startTimeInMillis, alarmMessage = messageForDB, alarmData = alarm )  }
             val exception = a.await()
             exception.fold(onFailure = { excp ->
                 this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq, alarmDao, alarmManager, activityContext, false, alarmData = alarm)
@@ -224,7 +209,6 @@ class AlarmsController {
     }
 
 
-    /** takes the prev alarm and reschedules it to future date, also update the db with that alarm */
     @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun rescheduleAlarm(alarmManager: AlarmManager, calendarForStartTime:Calendar, calendarForEndTimer:Calendar, freqAfterCallback:Long, activityContext:ComponentActivity, alarmDao:AlarmDao, alarmData:AlarmData,
                                 receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, nextAlarmInfo: NextAlarmInfo ) : Result<Unit> {
@@ -292,10 +276,6 @@ class AlarmsController {
         }
     }
 
-    /**
-     * @param startTime -  is the alarm original start time
-     * @param alarmData - is required for the providing the ID of the alarm in the DB
-     */
     suspend fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequencyInMin:Long, alarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: Context, delete_the_alarm_from_db:Boolean, alarmData: AlarmData) {
 
         val calendar = Calendar.getInstance()
@@ -440,14 +420,6 @@ class AlarmsController {
         }
     }
 
-    /**
-     * Calculates the next valid trigger time and series bounds for a given alarm definition.
-     * This is a pure function; it does not modify any state or database.
-     *
-     * @param alarmData The alarm's immutable definition from the database.
-     * @return A [NextAlarmInfo] object containing the next trigger time and the bounds for that
-     * series instance, or null if no future alarms can be scheduled.
-     */
     private fun calculateNextAlarmInfo(alarmData: AlarmData): Result<NextAlarmInfo> {
         return runCatching {
             val originalSeriesStart = alarmData.startTime
@@ -527,7 +499,6 @@ class AlarmsController {
         }
     }
 
-
     fun lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarm_start_time_to_search_db: Long, context_of_activity:Context, alarmManager:AlarmManager, message_name_for_start_time:String, message_name_for_end_time: String, alarm_end_time_to_search_db:Long, broadcastReceiverClass:BroadcastReceiver){
 
         var intent = Intent(context_of_activity, LastAlarmUpdateDBReceiver::class.java)
@@ -550,7 +521,7 @@ class AlarmsController {
         return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(t))
     }
 
-    private  fun getTimeInHumanReadableFormatProtectFrom0Included(t:Long): String{
+      fun getTimeInHumanReadableFormatProtectFrom0Included(t:Long): String{
         if (t == 0L) return "--the time here(probablyFromTheIntent) is 0--"
         return SimpleDateFormat("yyyy-MM-dd h:mm:ss a", Locale.getDefault()).format(Date(t))
     }

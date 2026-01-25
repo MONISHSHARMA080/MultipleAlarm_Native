@@ -17,6 +17,7 @@ b) Code Refactor :--
     [X] there might be a need to reduce the data stored in the db as we can make fn to get the frequencies, instead of doing 60000* everytime
     [X] assert that the alarm is set just to be sure, after setting the alarm via Intent matching
     [X] use results in all the alarms and not the ?Exception
+    [X] use system alarm sounds as my approach will collide with the copyright law from play store -- now you will need to clean up your proguard file
     * write test, for system and alarms using robolectric
     * see and check that the app works for the minimum android version to latest (search for people using android version, go for 50% or > , android 11 or up hopefully)
     * replace the start activity with live notification or foreground activity, ask user [LATER after mvp]
@@ -25,7 +26,6 @@ b) Code Refactor :--
         intent if we do then start them/ use an animation to start them in current instance
     * make a data class for the alarm and use that in the intent, now use it to tell if we have alarm with random sound or
        what, etc
-    * use system alarm sounds as my approach will collide with the copyright law from play store -- now you will need to clean up your proguard file
 
 
 c)  later :--
