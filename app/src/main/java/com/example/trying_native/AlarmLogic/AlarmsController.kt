@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.time.ZoneId
@@ -30,8 +31,32 @@ import kotlin.jvm.java
 
 const val ALARM_ACTION = "com.example.trying_native.ALARM_TRIGGERED"
 
-class AlarmsController {
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+interface  TimeProvider{
+    fun getCurrentTime(): Long
+}
+class TimeProviderImpl : TimeProvider {
+    override fun getCurrentTime() = System.currentTimeMillis()
+}
+
+
+// ----------------------------------------------
+//      ok; now the thing is that, I need to design a test strategy
+//      a) either stick with this strategy or scheduling next alarm when one fires or
+//      b) pre schedule all the upcoming alarms
+//
+//      the b) ons is easy to test , but the first one is easy to perform, now we can either do fake testing
+//              where we can schedule the all the upcoming alarms in test and in real life do it one at a time or a)
+
+//      c) take the alarms form the shadow alarm manager and send them yourself , call it the OS sending or time skipping and then check it
+//          this is the better of 2 approach
+// ----------------------------------------------
+
+
+
+class AlarmsController (
+    private val timeProvider: TimeProvider = TimeProviderImpl()
+){
+     var scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val alarmInfoNotificationClass:Class<out BroadcastReceiver> = AlarmInfoNotification::class.java
     private val alarmReceiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java
      val nextAlarmReceiver:Class<out BroadcastReceiver> = NextAlarmReceiver::class.java
@@ -61,7 +86,7 @@ class AlarmsController {
             logD("the message in the startTime is $alarmMessage")
             logD(" startTime:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
 //            val removeSecForAccuracy = 222 * 60 * 1000L // min in millisec
-            val currentCalTime = Calendar.getInstance().timeInMillis
+            val currentCalTime = timeProvider.getCurrentTime()
             // removing milliseconds cause when we try to schedule the next alarm it will get a bit behind
             // also convert this to a switch statement
 //            val currentTimeViaCalender = currentCalTime - removeSecForAccuracy
@@ -299,7 +324,7 @@ class AlarmsController {
 
         // Advance startTime to the next pending alarm (skip already fired alarms)
         while (currentTime >= currentStartTime ){
-            currentStartTime = currentStartTime + frequencyInMin
+            currentStartTime += frequencyInMin
             currentTime = calendar.timeInMillis
         }
 

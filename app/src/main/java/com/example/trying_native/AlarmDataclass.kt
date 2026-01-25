@@ -27,6 +27,9 @@ data class AlarmData(
     @ColumnInfo(name = "freq_used_to_skip_start_alarm") val freqGottenAfterCallback: Long,
     @ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean
 ){
+    override fun toString(): String {
+        return "{id:$id, startTime:${getDateTimeFormatted(startTime)}, endTime:${getDateTimeFormatted(endTime)}, date:$date, message:$message, freqGottenAfterCallback:$freqGottenAfterCallback, isReadyToUse:$isReadyToUse}"
+    }
     /** converts the freq that we got in min to millisecond for same time, eg 6 min to 6 min in millisecond*/
      fun getFreqInMillisecond(): Long {
         return this.freqGottenAfterCallback * 60000
@@ -37,6 +40,9 @@ data class AlarmData(
     }
     fun getTimeFormatted(time:Long):String{
         return SimpleDateFormat("hh:mm", Locale.getDefault()).format(time)
+    }
+    fun getDateTimeFormatted(time:Long):String{
+        return SimpleDateFormat("hh:mm a dd/MM/yyyy ", Locale.getDefault()).format(time)
     }
     fun getFormattedAmPm(time:Long):String{
         return SimpleDateFormat("a", Locale.getDefault()).format(time).trim()

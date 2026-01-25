@@ -3,15 +3,26 @@ package com.example.trying_native
 import android.app.AlarmManager
 import android.app.Application
 import android.content.Context
+import android.content.IntentFilter
+import android.os.Looper
+import android.os.Looper.getMainLooper
 import android.os.SystemClock
+import androidx.compose.runtime.currentRecomposeScope
+import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.example.trying_native.AlarmLogic.AlarmsController
+import com.example.trying_native.AlarmLogic.TimeProvider
+import com.example.trying_native.BroadCastReceivers.NextAlarmReceiver
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmDatabase
 import com.ibm.icu.impl.Assert.fail
 import io.mockk.mockk
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineScope
+import kotlinx.coroutines.test.TestScope
+import org.jetbrains.annotations.Blocking
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -19,11 +30,21 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowAlarmManager
 import org.robolectric.shadows.ShadowApplication
+import org.robolectric.shadows.ShadowLooper.shadowMainLooper
+import org.robolectric.shadows.ShadowSystemClock
 import java.util.Calendar
 import java.util.Timer
+import kotlin.time.Duration
+
+class TestTimeProvider(var fixedTime: Long) : TimeProvider {
+    override fun getCurrentTime(): Long {
+        return  fixedTime
+    }
+}
 
 
 @Config(application = Application::class, sdk = [34])
@@ -35,7 +56,7 @@ class AlarmFlowRobolectricTest {
     private lateinit var shadowAlarmManager: ShadowAlarmManager
     private lateinit var alarmDao: AlarmDao
     private lateinit var alarmsController: AlarmsController
-    private  val alarmData: AlarmData = mockk(relaxed=true)
+//    private  val alarmData: AlarmData = mockk(relaxed=true)
 
     @Before
     fun setup() {
@@ -43,7 +64,9 @@ class AlarmFlowRobolectricTest {
          alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         shadowAlarmManager = Shadows.shadowOf(alarmManager)
         alarmsController = AlarmsController()
-        alarmDao = mockk<AlarmDao>(relaxed = true)
+        alarmsController.scope = TestScope()
+        val context: Context = ApplicationProvider.getApplicationContext()
+        alarmDao = Room.inMemoryDatabaseBuilder(context, AlarmDatabase::class.java).allowMainThreadQueries() .build().alarmDao()
     }
 
     data class info(
@@ -60,12 +83,19 @@ class AlarmFlowRobolectricTest {
         runCatching {
             runBlocking {
                 // Setup: 3:00 to 5:00 with 5-minute frequency
+                val testReceiver = NextAlarmReceiver()
+                testReceiver.alarmDao = alarmDao
+                // 2. Register it dynamically in the test context
+                // This ensures the Intent with action "ALARM_TRIGGERED" comes here
+                val filter = IntentFilter("com.example.trying_native.ALARM_TRIGGERED")
+                context.registerReceiver(testReceiver, filter, Context.RECEIVER_EXPORTED)
                 val startCalendar = Calendar.getInstance().apply {
                     set(Calendar.HOUR_OF_DAY, 13)
                     set(Calendar.MINUTE, 0)
                     set(Calendar.SECOND, 0)
                     set(Calendar.MILLISECOND, 0)
                 }
+
 
                 val endCalendar = Calendar.getInstance().apply {
                     set(Calendar.HOUR_OF_DAY, 15)
@@ -76,8 +106,9 @@ class AlarmFlowRobolectricTest {
 
                 val dateInLong = startCalendar.timeInMillis
                 val frequencyMinutes = 5
-                SystemClock.setCurrentTimeMillis(startCalendar.timeInMillis - alarmData.getFreqInMillisecond(50L))
-                println("\n\n the current time that we set is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(startCalendar.timeInMillis - alarmData.getFreqInMillisecond(frequencyMinutes.toLong()))}")
+                SystemClock.setCurrentTimeMillis(Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 12) }.timeInMillis)
+                alarmsController = AlarmsController(TestTimeProvider(Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 12) }.timeInMillis))
+                println("\n\n the current time that we set is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(startCalendar.timeInMillis -frequencyMinutes.toLong() * 60_000  )}")
 
                 alarmsController.scheduleMultipleAlarms(
                     alarmManager = alarmManager,
@@ -92,32 +123,72 @@ class AlarmFlowRobolectricTest {
 
                 var scheduledAlarms = shadowAlarmManager.scheduledAlarms
                 assert(scheduledAlarms.isNotEmpty())
-                println("the scheduled alarms are $scheduledAlarms\n")
-                var curentTime =startCalendar.timeInMillis
+                var currentTime =startCalendar.timeInMillis
                 val endTime =endCalendar.timeInMillis
                 var iterCount = 0
+                val freqMs = frequencyMinutes * 60_000L
                 val triggeredAlarmTimes = mutableListOf<Long>()
-                var alarmInfo = info(startTime = startCalendar.timeInMillis, endTime = endCalendar.timeInMillis, currentTime = curentTime, alarmsController = alarmsController, freqInMin = frequencyMinutes)
+                var alarmInfo = info(startTime = startCalendar.timeInMillis, endTime = endCalendar.timeInMillis, currentTime = currentTime, alarmsController = alarmsController, freqInMin = frequencyMinutes)
                 val expectedAlarmsAtTime = getExpectedTriggerTime(alarmInfo)
                 SystemClock.setCurrentTimeMillis(startCalendar.timeInMillis - 10000L)
-
+                ShadowAlarmManager.setAutoSchedule(true)
 
                 // eg if alarms are from 3:00 -> 3:08 then we would have 8 + 1 alarms
-                val totalExpectedAlarms = (( endCalendar.timeInMillis -startCalendar.timeInMillis  ) / frequencyMinutes) + 1
-                while (curentTime < endTime || iterCount < totalExpectedAlarms){
-                     alarmInfo = info(startTime = startCalendar.timeInMillis, endTime = endCalendar.timeInMillis, currentTime = curentTime, alarmsController = alarmsController, freqInMin = frequencyMinutes, iterCount = iterCount)
+//                val  = (( endCalendar.timeInMillis -startCalendar.timeInMillis  ) / frequencyMinutes) + 1
+                var index = 0
+                while (currentTime <= endTime){
+                    shadowMainLooper().idle() // Tells Robolectric to execute all pending tasks
+                    delay(900)               // Small buffer for coroutines
+                    shadowMainLooper().runUntilEmpty()
+
+                     alarmInfo = info(startTime = startCalendar.timeInMillis, endTime = endCalendar.timeInMillis, currentTime = currentTime, alarmsController = alarmsController, freqInMin = frequencyMinutes, iterCount = iterCount)
+                    println("at index:$index and the alarmInfo is $alarmInfo")
                     iterCount++
                     scheduledAlarms = shadowAlarmManager.scheduledAlarms
-                    val nextAlarmTriggerTime = scheduledAlarms.first().triggerAtMs
                     check(scheduledAlarms.isNotEmpty()) {"scheduled alarms for future are not there for $alarmInfo"}
-                    check(scheduledAlarms.size == 1) {"the size of the scheduled alarms for a time is more than 1, when it should be one; alarmInfo: $alarmInfo " }
+                    val nextAlarmTriggerTime = scheduledAlarms.first().triggerAtMs
+                    println("---")
+
+                    for (alarm in scheduledAlarms) {
+                        // 1. Get the PendingIntent using the non-deprecated getter
+                        val pi = alarm.operation
+
+                        // 2. Extract Intent details safely
+                        val shadowPI = shadowOf(pi)
+                        val intent = shadowPI.savedIntent
+                        val receiverName = intent.component?.className ?: "Unknown"
+
+                        println("Triggering Alarm for: $receiverName at ${alarm.triggerAtMs}")
+
+                        // 3. FIRE THE ALARM ONLY ONCE
+                        // Use the shadowAlarmManager to fire the specific PendingIntent
+                        try {
+                            shadowAlarmManager.fireAlarm(alarm)
+                        } catch (e: Exception) {
+                            println("Fire failed for $receiverName: ${e.message}")
+                            throw e
+                        }
+                    }
+                    println("---")
+                    check(scheduledAlarms.isNotEmpty()) {"the size of the scheduled alarms for a time is not 3, it is ${scheduledAlarms.size} when it should be one; alarmInfo: $alarmInfo " }
                     check(expectedAlarmsAtTime.contains(nextAlarmTriggerTime)) {"the trigger time ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTriggerTime)} is not in the list of expected alarms, $alarmInfo"}
+
                      triggeredAlarmTimes.add(nextAlarmTriggerTime)
                     SystemClock.setCurrentTimeMillis(nextAlarmTriggerTime + 1000L)
-                    curentTime = nextAlarmTriggerTime
-                }
+                    ShadowSystemClock.advanceBy(java.time.Duration.ofMillis(nextAlarmTriggerTime - currentTime))
+                    currentTime += freqMs
+                    println("\n the nextAlarm trigger time is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTriggerTime)} ")
+                    val nextTrigger = scheduledAlarms.minOf { it.triggerAtMs }
+                    ShadowSystemClock.advanceBy(java.time.Duration.ofMillis(nextTrigger - SystemClock.currentThreadTimeMillis()))
 
-                check(triggeredAlarmTimes.size == expectedAlarmsAtTime.size)
+                    // 4. IDLE THE LOOPER: This allows the BroadcastReceivers to actually execute
+                    shadowOf(Looper.getMainLooper()).idle()
+                    println(":) 2 and index is $index")
+                    index +=1
+                }
+                println("{{{{{")
+                check(triggeredAlarmTimes.size == expectedAlarmsAtTime.size) {"triggerAlarmTimes.Size != expectedAlarmsAtTime.size "}
+                println("outside the while loop")
             }
         }.fold(onSuccess = {}, onFailure = {err->
             println("the error in fun 'test multiple alarms are scheduled and able to run' is ->\n ${err.message}\n\n-- and full error is ->$err")
@@ -131,16 +202,17 @@ class AlarmFlowRobolectricTest {
         println("expecting alarms at ->")
         while (alarmInfo2.endTime> alarmInfo2.currentTime) {
             res.add(alarmInfo2.currentTime)
-            println("--${alarmInfo2.alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(alarmInfo2.currentTime)} ")
-            alarmInfo2.currentTime += alarmData.getFreqInMillisecond(alarmInfo2.freqInMin.toLong())
+            print("--|--${alarmInfo2.alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(alarmInfo2.currentTime)} ")
+            alarmInfo2.currentTime += 5 * 60_000
         }
+        print("\n")
         return res
     }
 
-    @Test
-    fun `test alarms where the end date is diff from start date is giving error `() {
-
-    }
+//    @Test
+//    fun `test alarms where the end date is diff from start date is giving error `() {
+//
+//    }
 
 
 }

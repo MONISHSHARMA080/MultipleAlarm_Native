@@ -22,7 +22,7 @@ import java.io.FileWriter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.system.exitProcess
+import kotlin.math.log
 
 class NextAlarmReceiver: BroadcastReceiver() {
     private lateinit var context: Context
@@ -34,15 +34,28 @@ class NextAlarmReceiver: BroadcastReceiver() {
         File(context.getExternalFilesDir(null), "Next_Alarm_Receiver_logs.txt")
     }
     private  val receiverClass: Class<out BroadcastReceiver> = AlarmReceiver::class.java
+    var alarmDao: AlarmDao? = null
+    val doWeWantToGoAsync =true
 
 
      override  fun onReceive(context: Context, intent: Intent) {
         logD("in the NextAlarmReceiver class and here is the intent --> $intent")
          this.context = context
-        val pendingResult = goAsync() // Extends execution time
-         runBlocking {
-             scheduleFutureAlarm(context, alarmManager, intent)
-             pendingResult.finish()
+         when (this.doWeWantToGoAsync) {
+             true -> {
+                 val pendingResult = goAsync() // Extends execution time
+                 runBlocking {
+                     scheduleFutureAlarm(context, alarmManager, intent)
+                     pendingResult.finish()
+                 }
+             }
+             false ->{
+                 // we are in the Test
+                 runBlocking {
+                     scheduleFutureAlarm(context, alarmManager, intent)
+                 }
+
+             }
          }
         }
 
@@ -53,16 +66,19 @@ class NextAlarmReceiver: BroadcastReceiver() {
 
         if ((currentTimeAlarmFired <= 0L) || (startTimeForAlarmSeries <= 0L) || (originalDbEndTime <= 0L)) { // Added check for originalDbStartTime/EndTime too
             logSoundPlay(alarmData = null, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "---- Invalid time values received in AlarmReceiver. currentAlarmTime: $currentTimeAlarmFired, originalDbStartTime: $startTimeForAlarmSeries, originalDbEndTime: $originalDbEndTime. Crashing. ----- ")
-            exitProcess(69)
         }
-        val alarmDao = getAlarmDao(activityContext )
+        val alarmDaoImpl = this.alarmDao?:getAlarmDao(activityContext )
         // Lookup using the original start and end times
-        val alarmData = alarmDao.getAlarmByValues(startTimeForAlarmSeries, originalDbEndTime)
+        val alarmData: AlarmData? = alarmDaoImpl.getAlarmByValues(startTimeForAlarmSeries, originalDbEndTime)
+//        val alarmData = alarmDao.getAlarmByValues(startTimeForAlarmSeries, originalDbEndTime)
         if (alarmData == null) {
             logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "we were not able to find the alarmData in the DB")
-            exitProcess(69)
+            return
         }
         val nextAlarmTime = currentTimeAlarmFired + alarmData.getFreqInMillisecond()
+        val a : AlarmData = alarmData
+        logD(" the nextAlarmTime is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTime)} currentTimeAlarmFired is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeAlarmFired)} and the alarmData.getFreqInMillisecond -->  ${alarmData.getFreqInMillisecond()} \n and alarmData is --> ${alarmData.toString()} and the freq is ${alarmData.freqGottenAfterCallback} ")
+        logD("${a}")
 
         if (nextAlarmTime < alarmData.endTime){
            val res = coroutineScope.async{
@@ -79,7 +95,7 @@ class NextAlarmReceiver: BroadcastReceiver() {
                 logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "there was no exception in scheduling the future alarm ")
             }, onFailure = {exception->
                 NotificationBuilder(context, title = "error returned in scheduling upcoming alarm ", notificationText = "error returned in scheduling upcoming alarm -->${exception}").showNotification()
-                alarmDao.updateAlarmForReset(alarmData.copy(isReadyToUse = false))
+                alarmDaoImpl.updateAlarmForReset(alarmData.copy(isReadyToUse = false))
                 logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "the alarm Exception is not null and it is ${exception.message}-----and it is ${exception} ")
             })
         }
