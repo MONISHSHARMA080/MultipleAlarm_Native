@@ -29,7 +29,7 @@ class NextAlarmReceiver: BroadcastReceiver() {
     private val coroutineScopeThatDoesNotCancel = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val coroutineScope = CoroutineScope( Dispatchers.Default)
     private val alarmManager by lazy { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
-    private val alarmsController = AlarmsController()
+     var alarmsController = AlarmsController()
     private val logFile : File by lazy {
         File(context.getExternalFilesDir(null), "Next_Alarm_Receiver_logs.txt")
     }
