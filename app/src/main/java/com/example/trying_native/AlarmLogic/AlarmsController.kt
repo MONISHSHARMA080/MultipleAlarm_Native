@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.activity.ComponentActivity
 import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.BroadCastReceivers.AlarmInfoNotification
@@ -181,29 +182,18 @@ class AlarmsController (
         val startTimeInMillis = calendarForStartTime.timeInMillis
         val endTimeInMillis = calendarForEndTime.timeInMillis
         val freq = freqAfterTheCallback.toLong() * 60000
-        logD("checking if the start time is < end time ")
 
         assertWithException(startTimeInMillis < endTimeInMillis," the value of the start time should be < end time , you made a mistake" )
-        logD("the start time is < endtime ")
-        logD("setting the alarm and the startTime is $startTimeInMillis and the endTime is $endTimeInMillis")
         var alarmDataForDeleting: AlarmData? = null
         try {
             // since this is our first time the startTimeForReceiverToGetTheAlarmIs->
-            logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
             val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(
-                startTimeInMillis, activityContext, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db",
-                endTimeInMillis, LastAlarmUpdateDBReceiver())  }
+                startTimeInMillis, activityContext, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillis, LastAlarmUpdateDBReceiver())  }
             val c = scope.async {
                 val newAlarm = AlarmData(
-                    startTime = startTimeInMillis,
-                    endTime = endTimeInMillis,
-                    isReadyToUse = true,
-                    date = dateInLong,
-                    message = messageForDB,
-                    freqGottenAfterCallback = freqAfterTheCallback.toLong()
-                )
+                    startTime = startTimeInMillis, endTime = endTimeInMillis, isReadyToUse = true, date = dateInLong,
+                    message = messageForDB, freqGottenAfterCallback = freqAfterTheCallback.toLong())
                 check(newAlarm.getDateFormatted(calendarForStartTime.timeInMillis) == newAlarm.getDateFormatted(calendarForEndTime.timeInMillis)){ "expected the date produced by startTime and endTime to be same, we got startDate -> ${newAlarm.getDateFormatted(newAlarm.startTime)} , endDate -> ${newAlarm.getDateFormatted(newAlarm.endTime) }"}
-
                 val insertedId = alarmDao.insert(newAlarm)
                 logD("Inserted alarm with ID: $insertedId")
                 return@async newAlarm
@@ -559,6 +549,9 @@ class AlarmsController (
             .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
     }
 
+    private  fun  logD(msg: String): Unit{
+        Log.d("AAAAAA", "[AlarmController] $msg")
+    }
 
 }
 

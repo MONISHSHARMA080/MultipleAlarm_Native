@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.room.Room
 import com.example.trying_native.AlarmLogic.AlarmsController
 import com.example.trying_native.AlarmReceiver
@@ -121,4 +122,8 @@ class NextAlarmReceiver: BroadcastReceiver() {
         if (t == 0L) return "--the time here(probablyFromTheIntent) is 0--"
         return SimpleDateFormat("yyyy-MM-dd h:mm:ss a", Locale.getDefault()).format(Date(t))
     }
+    private  fun logD(msg:String):Unit{
+        Log.d("AAAAA", "[NextAlarmReceiver] $msg")
+    }
+
 }
