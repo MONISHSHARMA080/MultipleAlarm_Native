@@ -138,14 +138,14 @@ class AlarmFlowRobolectricTest {
                 var index = 0
                 while (currentTime <= endTime){
                     shadowMainLooper().idle() // Tells Robolectric to execute all pending tasks
-                    delay(900)               // Small buffer for coroutines
-                    shadowMainLooper().runUntilEmpty()
+                    delay(100)               // Small buffer for coroutines
+//                    shadowMainLooper().runUntilEmpty()
 
                      alarmInfo = info(startTime = startCalendar.timeInMillis, endTime = endCalendar.timeInMillis, currentTime = currentTime, alarmsController = alarmsController, freqInMin = frequencyMinutes, iterCount = iterCount)
-                    println("at index:$index and the alarmInfo is $alarmInfo")
+                    println("-------at index:$index and the alarmInfo is $alarmInfo")
                     iterCount++
                     scheduledAlarms = shadowAlarmManager.scheduledAlarms
-                    check(scheduledAlarms.isNotEmpty()) {"scheduled alarms for future are not there for $alarmInfo"}
+                    check(scheduledAlarms.isNotEmpty()) {"scheduled alarms for future are not there -> $alarmInfo\n and index is $index and triggeredAlarmsTimes is ${triggeredAlarmTimes.size} "}
                     val nextAlarmTriggerTime = scheduledAlarms.first().triggerAtMs
                     println("---")
 
@@ -186,9 +186,7 @@ class AlarmFlowRobolectricTest {
                     println(":) 2 and index is $index")
                     index +=1
                 }
-                println("{{{{{")
                 check(triggeredAlarmTimes.size == expectedAlarmsAtTime.size) {"triggerAlarmTimes.Size != expectedAlarmsAtTime.size "}
-                println("outside the while loop")
             }
         }.fold(onSuccess = {}, onFailure = {err->
             println("the error in fun 'test multiple alarms are scheduled and able to run' is ->\n ${err.message}\n\n-- and full error is ->$err")
