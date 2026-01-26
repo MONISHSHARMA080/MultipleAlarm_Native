@@ -139,7 +139,7 @@ class AlarmFlowRobolectricTest {
                 while (currentTime <= endTime){
                     shadowMainLooper().idle() // Tells Robolectric to execute all pending tasks
                     delay(100)               // Small buffer for coroutines
-//                    shadowMainLooper().runUntilEmpty()
+                    shadowMainLooper().runUntilEmpty()
 
                      alarmInfo = info(startTime = startCalendar.timeInMillis, endTime = endCalendar.timeInMillis, currentTime = currentTime, alarmsController = alarmsController, freqInMin = frequencyMinutes, iterCount = iterCount)
                     println("-------at index:$index and the alarmInfo is $alarmInfo")
@@ -148,6 +148,12 @@ class AlarmFlowRobolectricTest {
                     check(scheduledAlarms.isNotEmpty()) {"scheduled alarms for future are not there -> $alarmInfo\n and index is $index and triggeredAlarmsTimes is ${triggeredAlarmTimes.size} "}
                     val nextAlarmTriggerTime = scheduledAlarms.first().triggerAtMs
                     println("---")
+                    // ------------------------UPDATE STRATEGY :2 -------------
+                    //  a) move all the vars into a single data class so we can
+                    //     print the whole class to see what changed etc and print
+                    //     what we think did;
+                    //  b)
+                    // --------------------------------------------------------
 
                     for (alarm in scheduledAlarms) {
                         // 1. Get the PendingIntent using the non-deprecated getter
