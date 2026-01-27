@@ -143,14 +143,21 @@ class AlarmFlowRobolectricTest {
                     println("---")
                     for (alarm in scheduledAlarms) {
                         // 1. Get the PendingIntent using the non-deprecated getter
-                        val pi = alarm.operation
-                        val shadowPI = shadowOf(pi)
-                        val intent = shadowPI.savedIntent
-                        val receiverName = intent.component?.className ?: "Unknown"
-                        println("trigger Alarm for: ${receiverName} at ${alarm.triggerAtMs}")
+                        val operation = alarm.operation
+                        val intent = shadowOf(operation).savedIntent
+
+                        if (intent.component?.className == NextAlarmReceiver::class.java.name) {
+                            println("We got the intent with the classname $intent")
+                            shadowAlarmManager.fireAlarm(alarm)
+
+                        }
+//                        val pi = alarm.operation
+//                        val shadowPI = shadowOf(pi)
+//                        val intent = shadowPI.savedIntent
+//                        val receiverName = intent.component?.className ?: "Unknown"
+//                        println("trigger Alarm for: $receiverName at ${alarm.triggerAtMs}")
                         // 3. FIRE THE ALARM ONLY ONCE
                         // Use the shadowAlarmManager to fire the specific PendingIntent
-                        shadowAlarmManager.fireAlarm(alarm)
                     }
                     check(scheduledAlarms.isNotEmpty()) { "the size of the scheduled alarms for a time is not 3, it is ${scheduledAlarms.size} when it should be one; alarmInfo: $alarmInfo " }
                     check(expectedAlarmsAtTime.contains(nextAlarmTriggerTime)) { "the trigger time ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTriggerTime)  } is not in the list of expected alarms, $alarmInfo"
@@ -160,14 +167,16 @@ class AlarmFlowRobolectricTest {
                     SystemClock.setCurrentTimeMillis(nextAlarmTriggerTime + 1000L)
                     ShadowSystemClock.advanceBy(java.time.Duration.ofMillis(nextAlarmTriggerTime - currentTime))
                     currentTime += freqMs
-                    println("\n the nextAlarm trigger time is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTriggerTime)} ")
                     val nextTrigger = scheduledAlarms.minOf { it.triggerAtMs }
+                    println("\n  the currentTime after update is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(currentTime)} ")
+                    println("\n the nextAlarm trigger time is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTriggerTime)} ")
                     ShadowSystemClock.advanceBy(java.time.Duration.ofMillis(nextTrigger - SystemClock.currentThreadTimeMillis()))
                     shadowOf(Looper.getMainLooper()).idle()
                     println(":) 2 and index is $index")
                     index += 1
                 }
-                check(triggeredAlarmTimes.size == expectedAlarmsAtTime.size) { "triggerAlarmTimes.Size != expectedAlarmsAtTime.size " }
+                check(triggeredAlarmTimes.size == expectedAlarmsAtTime.size) { "triggerAlarmTimes.Size:${triggeredAlarmTimes.size} != expectedAlarmsAtTime.size:${expectedAlarmsAtTime.size} " }
+                check(triggeredAlarmTimes == expectedAlarmsAtTime) { "triggerAlarmTimes:${triggeredAlarmTimes.size} != expectedAlarmsAtTime:${expectedAlarmsAtTime.size} " }
             }
         }.fold(onSuccess = {}, onFailure = { err ->
             println("the error in fun 'test multiple alarms are scheduled and able to run' is ->\n ${err.message}\n\n-- and full error is ->$err")
