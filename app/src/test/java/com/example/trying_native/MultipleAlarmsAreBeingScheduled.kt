@@ -200,6 +200,7 @@ class AlarmFlowRobolectricTest {
             println("triggeredAlarmTime ->")
             fail(err.message)
         })
+
     }
     private fun getRandomInt(min:Int = 1, max:Int):Int {
         return Random.nextInt(min, max)
@@ -220,102 +221,101 @@ class AlarmFlowRobolectricTest {
 
 //    @Test
     fun test_IfAlarmsAreAbleToGetCancelled(){
-        runCatching {
-            runBlocking {
-                // Setup: 3:00 to 5:00 with 5-minute frequency
-                val startCalendar = Calendar.getInstance().apply {
-                    set(Calendar.HOUR_OF_DAY, 13) ; set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0)
-                }
+    runCatching {
+        runBlocking {
+            // Setup: 3:00 to 5:00 with 5-minute frequency
+            val calPairs =getRandomStartAndEndCal()
+            val startCalendar = calPairs.first
+            val endCalendar = calPairs.second
+            val dateInLong = startCalendar.timeInMillis
+            val frequencyMinutes = getRandomInt(max=30)
+            val freqMs = frequencyMinutes * 60_000L
+            println("\n\nthe randomly selected startTime is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(startCalendar.timeInMillis)} and endTime is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(endCalendar.timeInMillis)} and (Randomly selected) freq is $frequencyMinutes")
+            SystemClock.setCurrentTimeMillis(startCalendar.timeInMillis - freqMs)
+            alarmsController = AlarmsController(TestTimeProvider(startCalendar.timeInMillis -freqMs))
+            testReceiver.alarmsController = alarmsController
+            println(" the current time that we set is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(startCalendar.timeInMillis - frequencyMinutes.toLong() * 60_000)}")
+            alarmsController.scheduleMultipleAlarms(
+                alarmManager = alarmManager, dateInLong = dateInLong, calendarForStartTime = startCalendar, calendarForEndTime = endCalendar,
+                freqAfterTheCallback = frequencyMinutes, activityContext = context, alarmDao = alarmDao, messageForDB = "Test alarm"
+            ).getOrThrow()
+            var scheduledAlarms = shadowAlarmManager.scheduledAlarms
+            assert(scheduledAlarms.isNotEmpty())
+            var currentTime = startCalendar.timeInMillis
+            val endTime = endCalendar.timeInMillis
+            var iterCount = 0
+            val triggeredAlarmTimes = mutableListOf<Long>()
+            var alarmInfo = info(
+                startTime = startCalendar.timeInMillis,
+                endTime = endCalendar.timeInMillis,
+                currentTime = currentTime,
+                alarmsController = alarmsController,
+                freqInMin = frequencyMinutes
+            )
+            val expectedAlarmsAtTime: List<Long> = getExpectedTriggerTime(alarmInfo)
+            SystemClock.setCurrentTimeMillis(startCalendar.timeInMillis - 10000L)
+            // now the thing is that if this is true then when we fire the first NextAlarmReceiver then it will set the future alarm and then it
+            // will recursively call till the end, idk why and without it we are able to control
+            ShadowAlarmManager.setAutoSchedule(false)
 
-                val endCalendar = Calendar.getInstance().apply {
-                    set(Calendar.HOUR_OF_DAY, 19)
-                    set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0)
-                }
-                val dateInLong = startCalendar.timeInMillis
-                val frequencyMinutes = getRandomInt(max=30)
-                SystemClock.setCurrentTimeMillis(
-                    Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 12) }.timeInMillis
-                )
-                alarmsController = AlarmsController(TestTimeProvider(Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 12) }.timeInMillis))
-                testReceiver.alarmsController = alarmsController
-                println("\n\n the current time that we set is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(startCalendar.timeInMillis - frequencyMinutes.toLong() * 60_000)}")
-                alarmsController.scheduleMultipleAlarms(
-                    alarmManager = alarmManager, dateInLong = dateInLong, calendarForStartTime = startCalendar, calendarForEndTime = endCalendar,
-                    freqAfterTheCallback = frequencyMinutes, activityContext = context, alarmDao = alarmDao, messageForDB = "Test alarm"
-                ).getOrThrow()
-                var scheduledAlarms = shadowAlarmManager.scheduledAlarms
-                assert(scheduledAlarms.isNotEmpty())
-                var currentTime = startCalendar.timeInMillis
-                val endTime = endCalendar.timeInMillis
-                var iterCount = 0
-                val freqMs = frequencyMinutes * 60_000L
-                val triggeredAlarmTimes = mutableListOf<Long>()
-                var alarmInfo = info(
-                    startTime = startCalendar.timeInMillis,
-                    endTime = endCalendar.timeInMillis,
-                    currentTime = currentTime,
-                    alarmsController = alarmsController,
-                    freqInMin = frequencyMinutes
-                )
-                val expectedAlarmsAtTime: List<Long> = getExpectedTriggerTime(alarmInfo)
-                SystemClock.setCurrentTimeMillis(startCalendar.timeInMillis - 10000L)
-                // now the thing is that if this is true then when we fire the first NextAlarmReceiver then it will set the future alarm and then it
-                // will recursively call till the end, idk why and without it we are able to control
-                ShadowAlarmManager.setAutoSchedule(false)
-                var index = 0
-                while (currentTime <= endTime) {
-                    shadowMainLooper().idle() // Tells Robolectric to execute all pending tasks
-                    shadowMainLooper().runUntilEmpty()
-                    alarmInfo = info(startTime = startCalendar.timeInMillis, endTime = endCalendar.timeInMillis, currentTime = currentTime, alarmsController = alarmsController, freqInMin = frequencyMinutes, iterCount = iterCount)
-                    println("-------at index:$index and the alarmInfo is $alarmInfo")
-                    iterCount++
-                    scheduledAlarms = shadowAlarmManager.scheduledAlarms
-                    check(scheduledAlarms.isNotEmpty()) { "scheduled alarms for future are not there -> $alarmInfo\n and index is $index and triggeredAlarmsTimes is ${triggeredAlarmTimes.size} " }
-                    val nextAlarmTriggerTime = scheduledAlarms.first().triggerAtMs
-                    for (alarm in scheduledAlarms) {
-                        val operation = alarm.operation
-                        val intent = shadowOf(operation).savedIntent
-                        if (intent.component?.className == NextAlarmReceiver::class.java.name) {
-                            println("We got the intent with the classname $intent")
-                            shadowAlarmManager.fireAlarm(alarm)
-                        }
+            // eg if alarms are from 3:00 -> 3:08 then we would have 8 + 1 alarms
+            var index = 0
+            while (currentTime <= endTime) {
+                shadowMainLooper().idle() // Tells Robolectric to execute all pending tasks
+                shadowMainLooper().runUntilEmpty()
+                alarmInfo = info(startTime = startCalendar.timeInMillis, endTime = endCalendar.timeInMillis, currentTime = currentTime, alarmsController = alarmsController, freqInMin = frequencyMinutes, iterCount = iterCount)
+                println("-------at index:$index and the alarmInfo is $alarmInfo")
+                iterCount++
+                scheduledAlarms = shadowAlarmManager.scheduledAlarms
+                check(scheduledAlarms.isNotEmpty()) { "scheduled alarms for future are not there -> $alarmInfo\n and index is $index and triggeredAlarmsTimes is ${triggeredAlarmTimes.size} " }
+                val nextAlarmTriggerTime = scheduledAlarms.first().triggerAtMs
+                println("---")
+                for (alarm in scheduledAlarms) {
+                    // 1. Get the PendingIntent using the non-deprecated getter
+                    val operation = alarm.operation
+                    val intent = shadowOf(operation).savedIntent
+
+                    if (intent.component?.className == NextAlarmReceiver::class.java.name) {
+                        println("We got the intent with the classname $intent")
+                        shadowAlarmManager.fireAlarm(alarm)
+
                     }
-                    check(scheduledAlarms.isNotEmpty()) { "the size of the scheduled alarms for a time is not 3, it is ${scheduledAlarms.size} when it should be one; alarmInfo: $alarmInfo " }
-                    check(expectedAlarmsAtTime.contains(nextAlarmTriggerTime)) { "the trigger time ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTriggerTime)  } is not in the list of expected alarms, $alarmInfo"
-                    }
-
-                    triggeredAlarmTimes.add(currentTime)
-                    SystemClock.setCurrentTimeMillis(nextAlarmTriggerTime + 1000L)
-                    ShadowSystemClock.advanceBy(java.time.Duration.ofMillis(nextAlarmTriggerTime - currentTime))
-                    currentTime += freqMs
-                    val nextTrigger = scheduledAlarms.minOf { it.triggerAtMs }
-                    println("\n  the currentTime after update is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(currentTime)} ")
-                    println(" the nextAlarm trigger time is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTriggerTime)} ")
-                    ShadowSystemClock.advanceBy(java.time.Duration.ofMillis(nextTrigger - SystemClock.currentThreadTimeMillis()))
-                    shadowOf(Looper.getMainLooper()).idle()
-                    println("loop complete and at the index: $index")
-                    index += 1
-
                 }
-                for (alarm in triggeredAlarmTimes) {
-                    println(alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(alarm))
+                check(scheduledAlarms.isNotEmpty()) { "the size of the scheduled alarms for a time is not 3, it is ${scheduledAlarms.size} when it should be one; alarmInfo: $alarmInfo " }
+                check(expectedAlarmsAtTime.contains(nextAlarmTriggerTime)) { "the trigger time ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTriggerTime)  } is not in the list of expected alarms, $alarmInfo"
                 }
-                println("\n\n\t\t------ expectedAlarmsAtTime ->")
-                for (alarm in expectedAlarmsAtTime) {
-                    println(alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(alarm))
-                }
-                println("")
 
-                check(triggeredAlarmTimes.size == expectedAlarmsAtTime.size) { "triggerAlarmTimes.Size:${triggeredAlarmTimes.size} != expectedAlarmsAtTime.size:${expectedAlarmsAtTime.size} " }
-                check(triggeredAlarmTimes == expectedAlarmsAtTime) { "triggerAlarmTimes:${triggeredAlarmTimes.size} != expectedAlarmsAtTime:${expectedAlarmsAtTime.size} " }
+                triggeredAlarmTimes.add(currentTime)
+                SystemClock.setCurrentTimeMillis(nextAlarmTriggerTime + 1000L)
+                ShadowSystemClock.advanceBy(java.time.Duration.ofMillis(nextAlarmTriggerTime - currentTime))
+                currentTime += freqMs
+                val nextTrigger = scheduledAlarms.minOf { it.triggerAtMs }
+                println("\n  the currentTime after update is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(currentTime)} ")
+                println(" the nextAlarm trigger time is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTriggerTime)} ")
+                ShadowSystemClock.advanceBy(java.time.Duration.ofMillis(nextTrigger - SystemClock.currentThreadTimeMillis()))
+                shadowOf(Looper.getMainLooper()).idle()
+                println(":) 2 and index is $index")
+                index += 1
+
             }
-        }.fold(onSuccess = {}, onFailure = { err ->
-            println("the error in fun 'test multiple alarms are scheduled and able to run' is ->\n ${err.message}\n\n-- and full error is ->$err")
-            println("triggeredAlarmTime ->")
-            fail(err.message)
-        })
+            for (alarm in triggeredAlarmTimes) {
+                println(alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(alarm))
+            }
+            println("\n\n\t\t------ expectedAlarmsAtTime ->")
+            for (alarm in expectedAlarmsAtTime) {
+                println(alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(alarm))
+            }
+            println("")
 
-    }
+            check(triggeredAlarmTimes.size == expectedAlarmsAtTime.size) { "triggerAlarmTimes.Size:${triggeredAlarmTimes.size} != expectedAlarmsAtTime.size:${expectedAlarmsAtTime.size} " }
+            check(triggeredAlarmTimes == expectedAlarmsAtTime) { "triggerAlarmTimes:${triggeredAlarmTimes.size} != expectedAlarmsAtTime:${expectedAlarmsAtTime.size} " }
+        }
+    }.fold(onSuccess = {}, onFailure = { err ->
+        println("the error in fun 'test multiple alarms are scheduled and able to run' is ->\n ${err.message}\n\n-- and full error is ->$err")
+        println("triggeredAlarmTime ->")
+        fail(err.message)
+    })
+
+
+}
 }
