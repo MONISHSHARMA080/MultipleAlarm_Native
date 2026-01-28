@@ -77,7 +77,7 @@ class NextAlarmReceiver: BroadcastReceiver() {
             return
         }
         val nextAlarmTime = currentTimeAlarmFired + alarmData.getFreqInMillisecond()
-        logD(" the nextAlarmTime is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTime)} currentTimeAlarmFired is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeAlarmFired)} and the alarmData.getFreqInMillisecond -->  ${alarmData.getFreqInMillisecond()} \n and alarmData is --> ${alarmData.toString()} and the freq is ${alarmData.freqGottenAfterCallback} ")
+        logD(" currentTimeAlarmFired is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeAlarmFired)}      the nextAlarmTime is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTime)}  and the alarmData.getFreqInMillisecond -->  ${alarmData.getFreqInMillisecond()} \n and alarmData is --> ${alarmData.toString()} and the freq is ${alarmData.freqGottenAfterCallback} ")
 
         if (nextAlarmTime < alarmData.endTime){
            val res = coroutineScope.async{
