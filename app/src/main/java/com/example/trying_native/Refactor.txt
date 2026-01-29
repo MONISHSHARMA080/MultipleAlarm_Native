@@ -26,6 +26,7 @@ b) Code Refactor :--
         intent if we do then start them/ use an animation to start them in current instance
     * make a data class for the alarm and use that in the intent, now use it to tell if we have alarm with random sound or
        what, etc
+    * redo the cancelAlarmByCancelingPendingIntent()
 
 
 c)  later :--

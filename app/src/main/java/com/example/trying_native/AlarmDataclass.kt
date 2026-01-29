@@ -3,6 +3,7 @@ package com.example.trying_native.dataBase
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
+import androidx.room.Delete
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.Insert
@@ -82,23 +83,19 @@ interface AlarmDao {
 
     // New function to update the is_ready_to_use field of an alarm
     @Query("UPDATE AlarmData SET is_ready_to_use = :isReadyToUse WHERE first_value = :firstValue AND second_value = :second_value")
-    suspend fun updateReadyToUseInAlarm(firstValue: Long, second_value:Long, isReadyToUse: Boolean)
+    suspend fun updateReadyToUseInAlarm(firstValue: Long, second_value: Long, isReadyToUse: Boolean)
 
     @Query("SELECT * FROM AlarmData WHERE id = :id")
-    suspend fun getAlarmById(id:Int): AlarmData?
+    suspend fun getAlarmById(id: Int): AlarmData?
 
     @Query(" UPDATE AlarmData SET is_ready_to_use = :isReadyToUse ,first_value = :firstValue, second_value = :second_value  WHERE id = :id")
-    suspend fun updateAlarmForReset(id: Int, firstValue: Long, second_value: Long,  isReadyToUse: Boolean)
+    suspend fun updateAlarmForReset(id: Int, firstValue: Long, second_value: Long, isReadyToUse: Boolean)
 
     @Update
     suspend fun updateAlarmForReset(alarmData: AlarmData)
 
-//    @Update
-//    suspend fun updateAlarmAndGetUpdatedValue(alarmData: AlarmData)
+    @Query("DELETE  FROM AlarmData")
+    suspend fun deleteAllAlarmsFromDb()
 
-//    @Query("""
-//        UPDATE AlarmData  SET is_ready_to_use = :isReadyToUse  WHERE first_value = :firstValue
-//        AND second_value = :secondValue  AND freq_in_min = :freqInMin AND date_in_long = :dateInLong
-//    """)
-//    suspend fun updateReadyToUse(firstValue: Long, secondValue: Long, freqInMin: Long, dateInLong: Long, isReadyToUse: Boolean)
+
 }

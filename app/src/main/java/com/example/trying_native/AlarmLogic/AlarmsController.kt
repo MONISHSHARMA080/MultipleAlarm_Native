@@ -14,13 +14,11 @@ import com.example.trying_native.LastAlarmUpdateDBReceiver
 import com.example.trying_native.assertWithException
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
-import com.example.trying_native.logD
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
-import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.time.ZoneId
@@ -72,11 +70,12 @@ class AlarmsController (
         }
     }
     data class PendingIntentCreated(
-        val pendingIntentForAlarmNotificationInfo: PendingIntent?,
+        /** [pendingIntentToGiveUserUpcommingAlarmInfoWhenAsked] is for what happens when the user clicks on the upcoming alarm notification in the notification shade, we have to give info about alarm */
+        val pendingIntentToGiveUserUpcommingAlarmInfoWhenAsked: PendingIntent?,
         val pendingIntentForAlarm: PendingIntent
     ){
         override fun toString(): String {
-            return "pendingIntentForAlarmNotificationInfo--$pendingIntentForAlarmNotificationInfo --  pendingIntentForAlarm--$pendingIntentForAlarm"
+            return "pendingIntentForAlarmNotificationInfo--$pendingIntentToGiveUserUpcommingAlarmInfoWhenAsked --  pendingIntentForAlarm--$pendingIntentForAlarm"
         }
     }
 
@@ -88,9 +87,6 @@ class AlarmsController (
             logD(" startTime:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
 //            val removeSecForAccuracy = 222 * 60 * 1000L // min in millisec
             val currentCalTime = timeProvider.getCurrentTime()
-            // removing milliseconds cause when we try to schedule the next alarm it will get a bit behind
-            // also convert this to a switch statement
-//            val currentTimeViaCalender = currentCalTime - removeSecForAccuracy
             val currentTimeViaCalender = currentCalTime
             logD("\n fireTime of (upcoming) alarm is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)}")
             require(startTime <  endTime) { "the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not > endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} " }
@@ -111,13 +107,14 @@ class AlarmsController (
                 onSuccess = {PI -> PI},
                 onFailure = {failureRes-> throw Exception(failureRes) }
             )
-            check(PIForAlarm.pendingIntentForAlarmNotificationInfo != null  , {" the pending intent for alarm's info. notification is null "}  )
-            check(PIForSettingNextAlarm.pendingIntentForAlarmNotificationInfo == null ,{" the pending intent for setting next alarm's notification info. notification is not null "} )
+            check(PIForAlarm.pendingIntentToGiveUserUpcommingAlarmInfoWhenAsked != null  , {" the pending intent for alarm's info. notification is null "}  )
+            check(PIForSettingNextAlarm.pendingIntentToGiveUserUpcommingAlarmInfoWhenAsked == null ,{" the pending intent for setting next alarm's notification info. notification is not null "} )
             logD("\n\n\n [INFO] the pending Intent for the alarm is $PIForAlarm ")
             logD("\n\n\n [INFO] the pending Intent for setting the next alarm is $PIForSettingNextAlarm ")
 
 
-            val alarmClockInfoObject = AlarmManager.AlarmClockInfo(startTime, PIForAlarm.pendingIntentForAlarmNotificationInfo)
+            // here the PI for the alarm notification
+            val alarmClockInfoObject = AlarmManager.AlarmClockInfo(startTime, PIForAlarm.pendingIntentToGiveUserUpcommingAlarmInfoWhenAsked)
             alarmManager.setAlarmClock(alarmClockInfoObject, PIForAlarm.pendingIntentForAlarm)
             logD("Alarm successfully scheduled.")
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, startTime, PIForSettingNextAlarm.pendingIntentForAlarm)
@@ -308,7 +305,7 @@ class AlarmsController (
             }
         }
 
-        logD("StartTime ->$currentStartTime --- currentTime ->$currentTime -- freq -> $frequencyInMin ")
+        logD("StartTime ->${getTimeInHumanReadableFormat(currentStartTime)} --- currentTime ->${getTimeInHumanReadableFormatProtectFrom0Included(currentTime)} -- freq -> $frequencyInMin ")
 
         // Advance startTime to the next pending alarm (skip already fired alarms)
         while (currentTime >= currentStartTime ){
@@ -316,7 +313,7 @@ class AlarmsController (
             currentTime = calendar.timeInMillis
         }
 
-        logD("After adjustment - StartTime ->$currentStartTime --- currentTime ->$currentTime")
+        logD("After adjustment - StartTime ->${getTimeInHumanReadableFormat(currentStartTime)} --- currentTime ->${getTimeInHumanReadableFormatProtectFrom0Included(currentTime)}")
 
         // Cancel all remaining AlarmReceiver PendingIntents
         val alarmReceiverIntent = Intent(ALARM_ACTION)
@@ -362,17 +359,12 @@ class AlarmsController (
             nextAlarmReceiverIntent.putExtra("alarmIdInDb", alarmData.id)
 
             // Use alarmData.id as request code for NextAlarmReceiver (as seen in your code)
-            val nextAlarmPI = PendingIntent.getBroadcast(
-                context_of_activity,
-                alarmData.id,
-                nextAlarmReceiverIntent,
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE
-            )
+            val nextAlarmPI = PendingIntent.getBroadcast(context_of_activity, alarmData.id, nextAlarmReceiverIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE)
 
             if (nextAlarmPI != null) {
                 alarmManager.cancel(nextAlarmPI)
                 nextAlarmPI.cancel()
-                logD("Cancelled NextAlarmReceiver alarm at $tempStartTime")
+                logD("Cancelled NextAlarmReceiver alarm at ${getTimeInHumanReadableFormat(tempStartTime)}")
             }
 
             tempStartTime += frequencyInMin
@@ -401,7 +393,7 @@ class AlarmsController (
             if (alarmInfoPI != null) {
                 alarmManager.cancel(alarmInfoPI)
                 alarmInfoPI.cancel()
-                logD("Cancelled AlarmInfo notification at $tempStartTime")
+                logD("Cancelled AlarmInfo notification at ${this.getTimeInHumanReadableFormatProtectFrom0Included(tempStartTime)}")
             }
 
             tempStartTime += frequencyInMin
