@@ -14,8 +14,8 @@ android {
     compileSdk = 36
 
     defaultConfig {
-//        applicationId = "com.coolApps.trying_native"
-        applicationId = "com.example.trying_native"
+        applicationId = "com.coolApps.trying_native"
+//        applicationId = "com.example.trying_native"
         minSdk = 33
         targetSdk = 36
         versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1

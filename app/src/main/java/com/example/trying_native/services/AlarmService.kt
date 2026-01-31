@@ -35,13 +35,6 @@ class AlarmService: Service() {
         const val ACTION_DISMISS_ALARM = "ACTION_DISMISS_ALARM"
         const val CHANNEL_ID = "alarm_channel"
     }
-    //---------------------------------------
-    // issue : if multiple alarms then they wont turn off the prev one
-    //
-    //      we can check weather the queueForNextIntent is null or not ; if null then we are first and if not then we need to put one in and during the dismiss time try to
-    //      take one out and start it
-    //---------------------------------------
-
     // if we receiver more intents then we will use this; if the intent is from same alarm(see id) then we will replace it /not put it in / dismiss it as
     // it is same and no need to display same message again; if it is diff then we will put it in and when dismissed then we might need to display it
     val intentHashMap: LinkedHashMap<Int,Intent> = LinkedHashMap(50)
@@ -91,8 +84,7 @@ class AlarmService: Service() {
             //      log the error
             // ----------------------
             logD(" Error building notification: ${exception.message} ")
-            stopSelf()
-            return START_NOT_STICKY
+            return problemSoStopTheService()
         }
         val notification: Notification = res.first
         val alarmIntentData: AlarmActivityIntentData = res.second
@@ -114,8 +106,7 @@ class AlarmService: Service() {
                     // reason being that we have an assumption about the world where we will receive intents from our
                     // app only and we will include intentData field if not then we have fundamentally f'ed up
                     logD("[ERROR FATAl] intent data is not present in the intent , $intent ")
-                    stopSelf()
-                    return  START_NOT_STICKY
+                    return problemSoStopTheService()
                 }
                 val intentInHashMap =intentHashMap.get(intentData.alarmIdInDb)
                 if (intentInHashMap == null){
@@ -130,17 +121,35 @@ class AlarmService: Service() {
     private fun handleDismissAlarm(intent:Intent):Int{
         // remove this intent from the hashmap, and then if we have other in the hashMap then start playing those
         // assert that this intent is in the hashMap if not then we have a problem
+
+        // 1. Remove the dismissed alarm from the queue
         when(intentHashMap.isEmpty()){
             true ->{
                 // nothing in the hashMap so we can stop this activity
                 stopRingtoneAndRemoveAudioFocus()
+                stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
                 return START_REDELIVER_INTENT
             }
             false ->{
+                val intentData = intent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java)
+                if (intentData == null) {
+                    logD("[ERROR FATAl] intent data is not present in the intent , $intent ")
+                    return problemSoStopTheService()
+                }
+                val isIntentInHashMap = intentHashMap.remove(intentData.alarmIdInDb) != null
+                if (!isIntentInHashMap){
+                    logD("[ERROR FATAl] expected the intent to delete the alarm to be in the hashMap, $intent ")
+                    return problemSoStopTheService()
+                }
              return   startPlayingAlarm(intent)
             }
         }
+    }
+
+    private  fun problemSoStopTheService():Int{
+        stopSelf()
+        return  START_NOT_STICKY
     }
 
     override fun onDestroy() {
