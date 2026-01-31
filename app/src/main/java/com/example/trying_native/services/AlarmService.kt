@@ -187,7 +187,7 @@ class AlarmService: Service() {
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                 enableVibration(true)
                 setSound(null,null)
-                setBypassDnd(true)
+               setBypassDnd(true)
             }
             notificationManager.createNotificationChannel(channel)
 
