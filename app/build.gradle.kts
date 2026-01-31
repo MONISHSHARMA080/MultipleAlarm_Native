@@ -5,14 +5,16 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
     id("com.google.devtools.ksp") version "1.9.0-1.0.13"
+    id ("kotlin-parcelize")
 }
 
 android {
     namespace = "com.example.trying_native"
+//    namespace = "com.example.trying_native"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.trying_native"
+        applicationId = "com.coolApps.trying_native"
         minSdk = 33
         targetSdk = 36
         versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
@@ -111,8 +113,7 @@ dependencies {
 //    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
 
 
-
-
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation(libs.androidx.media3.common)
     implementation(libs.androidx.ui.test.android)
     val room_version = "2.6.1"

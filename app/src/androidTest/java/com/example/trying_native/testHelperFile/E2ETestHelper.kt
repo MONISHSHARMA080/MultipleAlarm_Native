@@ -1,19 +1,14 @@
 package com.example.trying_native.testHelperFile
 
-import android.app.Activity
 import android.app.AlarmManager
 import android.app.Instrumentation
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import androidx.compose.ui.test.TestContext
 import androidx.room.Room
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
-import com.example.trying_native.AlarmActivity
+import com.example.trying_native.Activities.AlarmActivity
 import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.MainActivity
 import com.example.trying_native.components_for_ui_compose.ALARM_ACTION
@@ -28,7 +23,6 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
-import java.util.Objects
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 

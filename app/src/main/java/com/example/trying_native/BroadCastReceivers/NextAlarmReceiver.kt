@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.room.Room
+import com.example.trying_native.Activities.AlarmActivityIntentData
 import com.example.trying_native.AlarmLogic.AlarmsController
 import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.dataBase.AlarmDao
@@ -61,9 +62,10 @@ class NextAlarmReceiver: BroadcastReceiver() {
         }
 
     private suspend fun scheduleFutureAlarm(activityContext: Context, alarmManager: AlarmManager, oldIntent: Intent) {
-        val currentTimeAlarmFired = oldIntent.getLongExtra("startTime", 0)
-        val startTimeForAlarmSeries = oldIntent.getLongExtra("startTimeForDb", 0)
-        val originalDbEndTime = oldIntent.getLongExtra("endTime", 0)
+        val parsedIntentData = oldIntent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java) ?: return
+        val currentTimeAlarmFired = parsedIntentData.startTime
+        val startTimeForAlarmSeries = parsedIntentData.startTimeForDb
+        val originalDbEndTime = parsedIntentData.endTime
 
         if ((currentTimeAlarmFired <= 0L) || (startTimeForAlarmSeries <= 0L) || (originalDbEndTime <= 0L)) { // Added check for originalDbStartTime/EndTime too
             logSoundPlay(alarmData = null, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "---- Invalid time values received in AlarmReceiver. currentAlarmTime: $currentTimeAlarmFired, originalDbStartTime: $startTimeForAlarmSeries, originalDbEndTime: $originalDbEndTime. Crashing. ----- ")

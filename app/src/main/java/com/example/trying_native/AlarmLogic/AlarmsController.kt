@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.activity.ComponentActivity
+import com.example.trying_native.Activities.AlarmActivityIntentData
 import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.BroadCastReceivers.AlarmInfoNotification
 import com.example.trying_native.BroadCastReceivers.NextAlarmReceiver
@@ -37,24 +38,7 @@ class TimeProviderImpl : TimeProvider {
     override fun getCurrentTime() = System.currentTimeMillis()
 }
 
-
-// ----------------------------------------------
-//      ok; now the thing is that, I need to design a test strategy
-//      a) either stick with this strategy or scheduling next alarm when one fires or
-//      b) pre schedule all the upcoming alarms
-//
-//      the b) ons is easy to test , but the first one is easy to perform, now we can either do fake testing
-//              where we can schedule the all the upcoming alarms in test and in real life do it one at a time or a)
-
-//      c) take the alarms form the shadow alarm manager and send them yourself , call it the OS sending or time skipping and then check it
-//          this is the better of 2 approach
-// ----------------------------------------------
-
-
-
-class AlarmsController (
-    private val timeProvider: TimeProvider = TimeProviderImpl()
-){
+class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImpl()){
      var scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val alarmInfoNotificationClass:Class<out BroadcastReceiver> = AlarmInfoNotification::class.java
     private val alarmReceiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java
@@ -124,12 +108,16 @@ class AlarmsController (
     fun getPendingIntentForAlarm(receiverClass:Class<out BroadcastReceiver>, context: Context,
                                  startTimeForAlarmSeries:Long,startTime:Long, endTime:Long, alarmMessage: String, alarmId:Int, createIntentForAlarmMetaData:Boolean = true ): Result<PendingIntentCreated> {
         return runCatching {
-            val intent = Intent(ALARM_ACTION) // Use the action string
+            val intent = Intent(ALARM_ACTION)
+            val intentData = AlarmActivityIntentData(
+                startTimeForDb = startTimeForAlarmSeries,
+                startTime = startTime,
+                endTime = endTime,
+                message = alarmMessage,
+                alarmIdInDb = alarmId
+            )
             intent.setClass(context, receiverClass)
-            intent.putExtra("startTimeForDb", startTimeForAlarmSeries)
-            intent.putExtra("startTime", startTime)
-            intent.putExtra("endTime", endTime)
-            intent.putExtra("message", alarmMessage)
+            intent.putExtra("intentData", intentData)
             // this is for the alarm receiver
             var pendingIntentForAlarm = PendingIntent.getBroadcast(context,
                 startTime.toInt(), intent,
@@ -169,8 +157,7 @@ class AlarmsController (
     }
 
     // this func is called only at the first time to schedule multiple alarms
-    suspend fun scheduleMultipleAlarms(alarmManager: AlarmManager,  dateInLong: Long,
-                                       calendarForStartTime:Calendar, calendarForEndTime:Calendar, freqAfterTheCallback:Int, activityContext: Context, alarmDao:AlarmDao,
+    suspend fun scheduleMultipleAlarms(alarmManager: AlarmManager,  dateInLong: Long, calendarForStartTime:Calendar, calendarForEndTime:Calendar, freqAfterTheCallback:Int, activityContext: Context, alarmDao:AlarmDao,
                                        receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, messageForDB:String   ) : Result<Unit>{
     return runCatching {
         // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
@@ -506,7 +493,7 @@ class AlarmsController (
 
     fun lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarm_start_time_to_search_db: Long, context_of_activity:Context, alarmManager:AlarmManager, message_name_for_start_time:String, message_name_for_end_time: String, alarm_end_time_to_search_db:Long, broadcastReceiverClass:BroadcastReceiver){
 
-        var intent = Intent(context_of_activity, LastAlarmUpdateDBReceiver::class.java)
+        val intent = Intent(context_of_activity, broadcastReceiverClass::class.java)
 
         // probably should hardcode message_name_for_start_time to be alarm_end_time_to_search_db and same for message_name_for_end_time
 

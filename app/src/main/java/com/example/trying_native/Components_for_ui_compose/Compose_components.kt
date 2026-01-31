@@ -442,7 +442,6 @@ fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Col
         // No need to handle permission result since we want onClick to run anyway
     }
     val coroutineScope = rememberCoroutineScope()
-
     Box(
         modifier = modifier
             .size(size)
