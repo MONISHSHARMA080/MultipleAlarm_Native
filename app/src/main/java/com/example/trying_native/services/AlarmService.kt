@@ -20,6 +20,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.example.trying_native.Activities.AlarmActivity
 import com.example.trying_native.Activities.AlarmActivityIntentData
+import com.example.trying_native.logD
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
@@ -77,33 +78,34 @@ class AlarmService: Service() {
         }
     }
 
-    private fun startPlayingAlarm(intent: Intent){
+    /** launches the notification with full screen intent, plays the alarm sound , and puts intent in the hashMap if required*/
+    private fun startPlayingAlarm(intent: Intent):Int{
+        coroutineScope.launch {
+            // if there is an alarm then stop it and start playing the next
+            stopRingtoneAndRemoveAudioFocus()
+            playRandomSystemAlarm()
+        }
+        val res = buildNotification(this, intent).getOrElse { exception ->
+            // log the error and then stop the service
+            // ----------------------
+            //      log the error
+            // ----------------------
+            logD(" Error building notification: ${exception.message} ")
+            stopSelf()
+            return START_NOT_STICKY
+        }
+        val notification: Notification = res.first
+        val alarmIntentData: AlarmActivityIntentData = res.second
+        ServiceCompat.startForeground(this, intent.hashCode(), notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+        intentHashMap.putIfAbsent(alarmIntentData.alarmIdInDb, intent)
+        return START_REDELIVER_INTENT
 
     }
 
     private  fun handleStartAlarm(intent:Intent):Int{
         when(intentHashMap.isEmpty()){
             true ->{
-                // we are the first so start the alarm activity
-                coroutineScope.launch {
-                    // if there is an alarm then stop it and start playing the next
-                    stopRingtoneAndRemoveAudioFocus()
-                    playRandomSystemAlarm()
-                }
-                val res = buildNotification(this, intent).getOrElse { exception ->
-                    // log the error and then stop the service
-                    // ----------------------
-                    //      log the error
-                    // ----------------------
-                    logD(" Error building notification: ${exception.message} ")
-                    stopSelf()
-                    return START_NOT_STICKY
-                }
-                val notification: Notification = res.first
-                val alarmIntentData: AlarmActivityIntentData = res.second
-                ServiceCompat.startForeground(this, intent.hashCode(), notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
-                intentHashMap.putIfAbsent(alarmIntentData.alarmIdInDb, intent)
-                return START_REDELIVER_INTENT
+                return  startPlayingAlarm(intent)
             }
             false -> {
                 // check if the alarm is in the hashMap and if not the do the normal start and if it is then do nothing and return
@@ -134,40 +136,11 @@ class AlarmService: Service() {
                 stopRingtoneAndRemoveAudioFocus()
                 stopSelf()
                 return START_REDELIVER_INTENT
-
             }
             false ->{
-                val intentData = intent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java)
-                if (intentData == null) {
-                    // reason being that we have an assumption about the world where we will receive intents from our
-                    // app only and we will include intentData field if not then we have fundamentally f'ed up
-                    logD("[ERROR FATAl] intent data is not present in the intent , $intent ")
-                    stopSelf()
-                    return  START_NOT_STICKY
-                }
-                intentHashMap.remove(intentData.alarmIdInDb)
-                val nextIntent = intentHashMap.entries.first()
-                coroutineScope.launch {
-                    // if there is an alarm then stop it and start playing the next
-                    stopRingtoneAndRemoveAudioFocus()
-                    playRandomSystemAlarm()
-                }
-                val res = buildNotification(this, nextIntent.value).getOrElse { exception ->
-                    // log the error and then stop the service
-                    // ----------------------
-                    //      log the error
-                    // ----------------------
-                    logD(" Error building notification: ${exception.message} ")
-                    stopSelf()
-                    return START_NOT_STICKY
-                }
-                val notification: Notification = res.first
-                val alarmIntentData: AlarmActivityIntentData = res.second
-                ServiceCompat.startForeground(this, nextIntent.value.hashCode(), notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
-                return START_REDELIVER_INTENT
+             return   startPlayingAlarm(intent)
             }
         }
-
     }
 
     override fun onDestroy() {
