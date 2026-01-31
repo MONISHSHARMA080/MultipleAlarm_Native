@@ -64,12 +64,10 @@ class AlarmService: Service() {
         logD("the alarm action in the service is ${intent.action}")
         when (intent.action) {
             ACTION_START_ALARM -> {
-                return startAlarm(intent)
+                return handleStartAlarm(intent)
             }
             ACTION_DISMISS_ALARM -> {
-                stopRingtoneAndRemoveAudioFocus()
-                stopSelf()
-                return START_REDELIVER_INTENT
+                return handleDismissAlarm(intent)
             }
             else -> {
                 logD("\n\n [ERROR] Unknown action: ${intent.action}")
@@ -79,7 +77,11 @@ class AlarmService: Service() {
         }
     }
 
-    private  fun startAlarm(intent:Intent):Int{
+    private fun startPlayingAlarm(intent: Intent){
+
+    }
+
+    private  fun handleStartAlarm(intent:Intent):Int{
         when(intentHashMap.isEmpty()){
             true ->{
                 // we are the first so start the alarm activity
@@ -121,6 +123,51 @@ class AlarmService: Service() {
                 return  START_REDELIVER_INTENT
             }
         }
+    }
+
+    private fun handleDismissAlarm(intent:Intent):Int{
+        // remove this intent from the hashmap, and then if we have other in the hashMap then start playing those
+        // assert that this intent is in the hashMap if not then we have a problem
+        when(intentHashMap.isEmpty()){
+            true ->{
+                // nothing in the hashMap so we can stop this activity
+                stopRingtoneAndRemoveAudioFocus()
+                stopSelf()
+                return START_REDELIVER_INTENT
+
+            }
+            false ->{
+                val intentData = intent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java)
+                if (intentData == null) {
+                    // reason being that we have an assumption about the world where we will receive intents from our
+                    // app only and we will include intentData field if not then we have fundamentally f'ed up
+                    logD("[ERROR FATAl] intent data is not present in the intent , $intent ")
+                    stopSelf()
+                    return  START_NOT_STICKY
+                }
+                intentHashMap.remove(intentData.alarmIdInDb)
+                val nextIntent = intentHashMap.entries.first()
+                coroutineScope.launch {
+                    // if there is an alarm then stop it and start playing the next
+                    stopRingtoneAndRemoveAudioFocus()
+                    playRandomSystemAlarm()
+                }
+                val res = buildNotification(this, nextIntent.value).getOrElse { exception ->
+                    // log the error and then stop the service
+                    // ----------------------
+                    //      log the error
+                    // ----------------------
+                    logD(" Error building notification: ${exception.message} ")
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
+                val notification: Notification = res.first
+                val alarmIntentData: AlarmActivityIntentData = res.second
+                ServiceCompat.startForeground(this, nextIntent.value.hashCode(), notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+                return START_REDELIVER_INTENT
+            }
+        }
+
     }
 
     override fun onDestroy() {
