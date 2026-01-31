@@ -490,7 +490,7 @@ fun DialogToAskUserAboutAlarmUnified(
     }
 
 
-    var frequency by remember { mutableIntStateOf(2) }
+    var frequency by remember { mutableIntStateOf(1) }
     var alarmMessage by remember { mutableStateOf("") }
     var startDateToView by remember { mutableStateOf(getDateInHumanReadableFormat(calInstance.timeInMillis)) }
     var endDateToView by remember { mutableStateOf(getDateInHumanReadableFormat(endCalendar.timeInMillis)) }

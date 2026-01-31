@@ -48,14 +48,15 @@ class AlarmService: Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // play the audio here
         super.onStartCommand(intent, flags, startId)
-        println("in the AlarmService --: and the intent is $intent")
+        logD("in the AlarmService --: and the intent is $intent")
         if (intent == null) {
             // The service was killed and restarted by the system without the original intent.
             // Since we don't have the alarm data, we should just stop.
             stopSelf()
             return START_NOT_STICKY
         }
-        logD("the alarm action in the service is ${intent.action}")
+        logD("the alarm action in the service is ${intent.action} and he hashMap size is ${intentHashMap.size}")
+
         when (intent.action) {
             ACTION_START_ALARM -> {
                 return handleStartAlarm(intent)
@@ -121,8 +122,13 @@ class AlarmService: Service() {
     private fun handleDismissAlarm(intent:Intent):Int{
         // remove this intent from the hashmap, and then if we have other in the hashMap then start playing those
         // assert that this intent is in the hashMap if not then we have a problem
-
         // 1. Remove the dismissed alarm from the queue
+        val intentData = intent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java)
+        if (intentData == null) {
+            logD("[ERROR FATAl] intent data is not present in the intent , $intent ")
+            return problemSoStopTheService()
+        }
+        val isIntentInHashMap = intentHashMap.remove(intentData.alarmIdInDb) != null
         when(intentHashMap.isEmpty()){
             true ->{
                 // nothing in the hashMap so we can stop this activity
@@ -132,17 +138,12 @@ class AlarmService: Service() {
                 return START_REDELIVER_INTENT
             }
             false ->{
-                val intentData = intent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java)
-                if (intentData == null) {
-                    logD("[ERROR FATAl] intent data is not present in the intent , $intent ")
-                    return problemSoStopTheService()
-                }
-                val isIntentInHashMap = intentHashMap.remove(intentData.alarmIdInDb) != null
                 if (!isIntentInHashMap){
-                    logD("[ERROR FATAl] expected the intent to delete the alarm to be in the hashMap, $intent ")
+                    logD("[ERROR FATAl] expected the intent to delete the alarm to be in the hashMap, $intent but didn't found it there ")
                     return problemSoStopTheService()
                 }
-             return   startPlayingAlarm(intent)
+//             return   startPlayingAlarm(intent)
+             return   startPlayingAlarm(intentHashMap.entries.first().value)
             }
         }
     }
@@ -174,6 +175,8 @@ class AlarmService: Service() {
         return runCatching {
             val notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val channelId = "alarm_channel_id"
+            val intentData = originalIntent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java)
+                ?: return Result.failure(Exception("Expected to intent data to be in the intent but got it as null"))
 
             val channel = NotificationChannel(
                 channelId,
@@ -188,14 +191,13 @@ class AlarmService: Service() {
             }
             notificationManager.createNotificationChannel(channel)
 
-            logD("\n\n\n ------- +++ in the alarm receiver func and about to launch Full screen activity intent here is the intent --> $originalIntent")
             // 2. Create the Intent for your AlarmActivity
             val fullScreenIntent = Intent(context, AlarmActivity::class.java).apply {
                 putExtras(originalIntent) // Carry over your alarm data
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION
             }
-
             val fullScreenPendingIntent = PendingIntent.getActivity(
+
                 context,
                 0,
                 fullScreenIntent,
@@ -203,14 +205,13 @@ class AlarmService: Service() {
             )
             val dismissIntent = Intent(this, AlarmService::class.java).apply {
                 action = ACTION_DISMISS_ALARM
+                putExtras(originalIntent) // Carry over your alarm data
             }
             val dismissPendingIntent = PendingIntent.getService(
                 this, 0, dismissIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            val intentData = originalIntent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java)
-                    ?: return Result.failure(Exception("Expected to intent data to be in the intent but got it as null"))
 
             // 3. Build the Notification
             val builder = NotificationCompat.Builder(context, channelId)
@@ -220,8 +221,9 @@ class AlarmService: Service() {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setFullScreenIntent(fullScreenPendingIntent, true) // THE KEY STEP
-                .setOngoing(true) // User can't swipe it away
+//                .setOngoing(true) // User can't swipe it away
                 .addAction(android.R.drawable.ic_delete, "Dismiss", dismissPendingIntent)
+                .setDeleteIntent(dismissPendingIntent)
                 .setAutoCancel(false)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
@@ -237,11 +239,8 @@ class AlarmService: Service() {
             ringtoneManager.setType(RingtoneManager.TYPE_ALARM)
             val ringtoneCursor =ringtoneManager.cursor
             val len =ringtoneCursor.count
-            logD("the len is $len")
             val randomIndex =Random.nextInt(len )
-            logD("the random index is $randomIndex")
             val ringtone =ringtoneManager.getRingtone(randomIndex)
-            logD("the ringtone randomly chosen  is $ringtone")
             this.ringtone = ringtone
             ringtone.isLooping = true
             ringtone.play()
