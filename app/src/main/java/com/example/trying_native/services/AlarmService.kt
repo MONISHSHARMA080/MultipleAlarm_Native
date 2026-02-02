@@ -251,7 +251,7 @@ class AlarmService: Service() {
 
     private fun audioFocusRequestBuilder(): AudioFocusRequest {
         // Create AudioFocusRequest
-        return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+        return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
             .setAudioAttributes(
                 AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)

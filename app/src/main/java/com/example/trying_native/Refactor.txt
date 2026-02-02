@@ -22,8 +22,7 @@ b) Code Refactor :--
     * see and check that the app works for the minimum android version to latest (search for people using android version, go for 50% or > , android 11 or up hopefully)
     [X] replace the start activity with live notification or foreground activity, ask user [LATER after mvp]
     * also add force update the app , or ask user to update the app
-    * make a data class for the alarm and use that in the intent, now use it to tell if we have alarm with random sound or
-       what, etc
+    [X] make a data class for the alarm and use that in the intent
     * redo the cancelAlarmByCancelingPendingIntent()
     * put a ask user for review after 5 days popup
     * redo the ask for alarm sheet(alarm detail enter sheet); like that popup is ugly
@@ -41,6 +40,9 @@ c)  later :--
         intent if we do then start them/ use an animation to start them in current instance
           here we will do this in the service
         * in the alarm Service add a after 1 min or so cancel the current playing alarm
+        * re-design app using material 3 expressive
+        * now use the alarm Intent data class to tell if we have alarm with random sound or what
+        * ability to add repeating alarms (like MONDAY, WED, SAT etc)
 
 
 

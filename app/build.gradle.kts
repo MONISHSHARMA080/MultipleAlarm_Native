@@ -10,7 +10,6 @@ plugins {
 
 android {
     namespace = "com.example.trying_native"
-//    namespace = "com.example.trying_native"
     compileSdk = 36
 
     defaultConfig {
