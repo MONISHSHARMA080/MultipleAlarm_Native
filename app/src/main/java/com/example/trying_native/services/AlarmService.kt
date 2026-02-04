@@ -251,12 +251,23 @@ class AlarmService: Service() {
 
     private fun audioFocusRequestBuilder(): AudioFocusRequest {
         // Create AudioFocusRequest
-        return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+        return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
             .setAudioAttributes(
                 AudioAttributes.Builder()
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .setUsage(AudioAttributes.USAGE_ALARM)
                 .build()
-            ).build()
+            )
+            .setAcceptsDelayedFocusGain(true)
+            .setWillPauseWhenDucked(true) // Hints to other apps to pause instead of lowering volume
+            .setOnAudioFocusChangeListener { focusChange ->
+                // If your alarm loses focus to another alarm or phone call
+                if (focusChange == AudioManager.AUDIOFOCUS_LOSS ||
+                    focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT
+                ) {
+                    stopRingtoneAndRemoveAudioFocus()
+                }
+            }
+            .build()
     }
 }

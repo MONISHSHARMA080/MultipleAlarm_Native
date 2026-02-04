@@ -387,7 +387,7 @@ fun AlarmContainer(
                                             NotificationBuilder(
                                                 context = activityContext,
                                                 title = "there is a error/Exception in making new alarm",
-                                                notificationText = excp.toString()
+                                                notificationText = excp.message ?:"Can't set you alarm please retry"
                                             ).showNotification()
                                             logD("there is a error/Exception in making new alarm-->${excp}")
                                         }
@@ -397,7 +397,7 @@ fun AlarmContainer(
                                 NotificationBuilder(
                                     context = activityContext,
                                     title = "there is a error/Exception in making new alarm",
-                                    notificationText = e.toString()
+                                    notificationText = e.message ?:"Can't set you alarm please retry"
                                 ).showNotification()
                                 logD("there is a error/Exception in making new alarm-->${e}")
                             }
