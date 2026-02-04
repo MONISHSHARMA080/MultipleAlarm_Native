@@ -233,19 +233,20 @@ class AlarmService: Service() {
 
     private fun playRandomSystemAlarm(){
         runCatching {
-
             val audioFocus = audioFocusRequestBuilder()
             audioFocusRequest = audioFocus
             val audioFocusReq =audioManager.requestAudioFocus(audioFocus)
             val ringtoneManager = RingtoneManager(this)
-            ringtoneManager.setType(RingtoneManager.TYPE_ALARM)
+           ringtoneManager.setType(RingtoneManager.TYPE_ALARM)
             val ringtoneCursor =ringtoneManager.cursor
             val len =ringtoneCursor.count
             val randomIndex =Random.nextInt(len )
             val ringtone =ringtoneManager.getRingtone(randomIndex)
             this.ringtone = ringtone
             ringtone.isLooping = true
-            ringtone.play()
+            if (audioFocusReq == AudioManager.AUDIOFOCUS_GAIN || audioFocusReq == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT){
+                ringtone.play()
+            }
         }.fold(onSuccess = {}, onFailure = {exception ->
             logD("there is a exception while launching random system alarm and it is ${exception.message}\n-->$exception")
         })
