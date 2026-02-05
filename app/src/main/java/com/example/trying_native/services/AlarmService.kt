@@ -20,10 +20,9 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.example.trying_native.Activities.AlarmActivity
 import com.example.trying_native.Activities.AlarmActivityIntentData
-import com.example.trying_native.logD
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.getOrElse
 import kotlin.math.log
@@ -41,7 +40,7 @@ class AlarmService: Service() {
     private var ringtone: Ringtone? = null
     private var audioFocusRequest: AudioFocusRequest? = null
     private val audioManager by lazy { getSystemService(AUDIO_SERVICE) as AudioManager }
-    val coroutineScope = CoroutineScope(Dispatchers.IO)
+    var coroutineScope = CoroutineScope(Dispatchers.IO)
 
 
     override fun onBind(intent: Intent?) = null
@@ -59,7 +58,9 @@ class AlarmService: Service() {
 
         when (intent.action) {
             ACTION_START_ALARM -> {
-                return handleStartAlarm(intent)
+                val returnCode = handleStartAlarm(intent)
+                return returnCode
+
             }
             ACTION_DISMISS_ALARM -> {
                 return handleDismissAlarm(intent)
@@ -74,11 +75,6 @@ class AlarmService: Service() {
 
     /** launches the notification with full screen intent, plays the alarm sound , and puts intent in the hashMap if required*/
     private fun startPlayingAlarm(intent: Intent):Int{
-        coroutineScope.launch {
-            // if there is an alarm then stop it and start playing the next
-            stopRingtoneAndRemoveAudioFocus()
-            playRandomSystemAlarm()
-        }
         val res = buildNotification(this, intent).getOrElse { exception ->
             // log the error and then stop the service
             // ----------------------
@@ -89,8 +85,10 @@ class AlarmService: Service() {
         }
         val notification: Notification = res.first
         val alarmIntentData: AlarmActivityIntentData = res.second
-        ServiceCompat.startForeground(this, intent.hashCode(), notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+         ServiceCompat.startForeground(this, intent.hashCode(), notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
         intentHashMap.putIfAbsent(alarmIntentData.alarmIdInDb, intent)
+        playRandomSystemAlarm()
+
         return START_REDELIVER_INTENT
 
     }
@@ -109,7 +107,7 @@ class AlarmService: Service() {
                     logD("[ERROR FATAl] intent data is not present in the intent , $intent ")
                     return problemSoStopTheService()
                 }
-                val intentInHashMap =intentHashMap.get(intentData.alarmIdInDb)
+                val intentInHashMap = intentHashMap[intentData.alarmIdInDb]
                 if (intentInHashMap == null){
                     intentHashMap.putIfAbsent(intentData.alarmIdInDb, intent)
                 }
@@ -233,21 +231,27 @@ class AlarmService: Service() {
 
     private fun playRandomSystemAlarm(){
         runCatching {
+            logD("in playRandomSystemAlarm it is ${audioFocusRequest == null} audioFocusRequest null  and it is $audioFocusRequest")
             val audioFocus = audioFocusRequestBuilder()
             audioFocusRequest = audioFocus
             val audioFocusReq =audioManager.requestAudioFocus(audioFocus)
             if (audioFocusReq == AudioManager.AUDIOFOCUS_REQUEST_GRANTED){
+                logD("Android audio focus req was granted and it is $audioFocusReq")
                 val ringtoneManager = RingtoneManager(this)
                 ringtoneManager.setType(RingtoneManager.TYPE_ALARM)
                 val ringtoneCursor =ringtoneManager.cursor
                 val len =ringtoneCursor.count
                 val randomIndex =Random.nextInt(len )
                 val ringtone =ringtoneManager.getRingtone(randomIndex)
+                ringtone.audioAttributes = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
                 this.ringtone = ringtone
                 ringtone.isLooping = true
                 ringtone.play()
             }else {
-                logD("Audio Focus req was not granted and we are not playing !!")
+                logD("Audio Focus req was not granted and we are not playing, we got $audioFocusReq did it failed ->${audioFocusReq == AudioManager.AUDIOFOCUS_REQUEST_FAILED} !!")
             }
         }.fold(onSuccess = {}, onFailure = {exception ->
             logD("there is a exception while launching random system alarm and it is ${exception.message}\n-->$exception")
@@ -255,22 +259,34 @@ class AlarmService: Service() {
     }
 
     private fun audioFocusRequestBuilder(): AudioFocusRequest {
-        // Create AudioFocusRequest
         return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT )
             .setAudioAttributes(
                 AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION) // Add this
                 .build()
             )
-            .setAcceptsDelayedFocusGain(false)
-            .setWillPauseWhenDucked(true) // Hints to other apps to pause instead of lowering volume
+            .setAcceptsDelayedFocusGain(true) // Good practice for alarms
+            .setAcceptsDelayedFocusGain(true)
+            .setWillPauseWhenDucked(false)
             .setOnAudioFocusChangeListener { change ->audioFocusChangeListener(change) }
             .build()
     }
 
-    private  fun audioFocusChangeListener(focusChange: Int){
-        when(focusChange){
-            AudioManager.AUDIOFOCUS_LOSS -> stopRingtoneAndRemoveAudioFocus()
+    private fun audioFocusChangeListener(focusChange: Int) {
+        when(focusChange) {
+            AudioManager.AUDIOFOCUS_LOSS -> {
+                // Another app took permanent focus
+                stopRingtoneAndRemoveAudioFocus()
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                // Temporary loss (like phone call) - stop but keep resources
+                ringtone?.stop()
+            }
+            AudioManager.AUDIOFOCUS_GAIN -> {
+                // Regained focus - resume if needed
+                ringtone?.play()
+            }
         }
     }
 }

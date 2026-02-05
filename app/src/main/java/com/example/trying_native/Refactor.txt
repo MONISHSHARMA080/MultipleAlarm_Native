@@ -26,6 +26,7 @@ b) Code Refactor :--
     * redo the cancelAlarmByCancelingPendingIntent()
     * put a ask user for review after 5 days popup
     * redo the ask for alarm sheet(alarm detail enter sheet); like that popup is ugly
+    * only abandon the audioFocus if the audio focus req is not there in the play random alarm
 
 
 c)  later :--

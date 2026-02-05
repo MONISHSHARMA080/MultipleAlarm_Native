@@ -110,7 +110,6 @@ class AlarmFlowRobolectricTest {
     fun `test multiple alarms are scheduled and able to run`() {
         runCatching {
             runBlocking {
-                // Setup: 3:00 to 5:00 with 5-minute frequency
                 val calPairs =getRandomStartAndEndCal()
                 val startCalendar = calPairs.first
                 val endCalendar = calPairs.second
