@@ -266,7 +266,6 @@ class AlarmService: Service() {
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION) // Add this
                 .build()
             )
-            .setAcceptsDelayedFocusGain(true) // Good practice for alarms
             .setAcceptsDelayedFocusGain(true)
             .setWillPauseWhenDucked(false)
             .setOnAudioFocusChangeListener { change ->audioFocusChangeListener(change) }
