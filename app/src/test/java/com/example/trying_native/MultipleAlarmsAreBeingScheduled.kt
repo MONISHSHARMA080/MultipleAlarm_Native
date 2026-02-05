@@ -190,8 +190,6 @@ class AlarmFlowRobolectricTest {
                 for (alarm in expectedAlarmsAtTime) {
                     println(alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(alarm))
                 }
-                println("")
-
                 check(triggeredAlarmTimes.size == expectedAlarmsAtTime.size) { "triggerAlarmTimes.Size:${triggeredAlarmTimes.size} != expectedAlarmsAtTime.size:${expectedAlarmsAtTime.size} " }
                 check(triggeredAlarmTimes == expectedAlarmsAtTime) { "triggerAlarmTimes:${triggeredAlarmTimes.size} != expectedAlarmsAtTime:${expectedAlarmsAtTime.size} " }
             }
@@ -220,92 +218,90 @@ class AlarmFlowRobolectricTest {
     private fun getAllAlarmsInDb(): Result<List<AlarmData>> {
         return runCatching {runBlocking { alarmDao.getAllAlarms() } }
     }
-    private inline fun waitTillTaskFinishWithLooper(){
+    private  fun waitTillTaskFinishWithLooper(){
         shadowMainLooper().idle()
         shadowMainLooper().runUntilEmpty()
     }
 
 
 //    @Test
-//    fun `test cancel alarm removes all pending intents and updates database`() {
-//        runCatching {
-//            runBlocking {
-//                // Setup: Schedule alarms first
-//                val calPairs = getRandomStartAndEndCal()
-//                val startCalendar = calPairs.first
-//                val endCalendar = calPairs.second
-//                val dateInLong = startCalendar.timeInMillis
-//                val frequencyMinutes = getRandomInt(max = 30)
-//                val freqMs = frequencyMinutes * 60_000L
-//
-//                println("\n\nScheduling alarms - startTime: ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(startCalendar.timeInMillis)}, endTime: ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(endCalendar.timeInMillis)}, freq: $frequencyMinutes min")
-//
-//                SystemClock.setCurrentTimeMillis(startCalendar.timeInMillis - freqMs)
-//                alarmsController = AlarmsController(TestTimeProvider(startCalendar.timeInMillis - freqMs))
-//                testReceiver.alarmsController = alarmsController
-//
-//                // Schedule the alarms
-//                alarmsController.scheduleMultipleAlarms(
-//                    alarmManager = alarmManager,
-//                    dateInLong = dateInLong,
-//                    calendarForStartTime = startCalendar,
-//                    calendarForEndTime = endCalendar,
-//                    freqAfterTheCallback = frequencyMinutes,
-//                    activityContext = context,
-//                    alarmDao = alarmDao,
-//                    messageForDB = "Test alarm for cancellation"
-//                ).getOrThrow()
-//                waitTillTaskFinishWithLooper()
-//                val scheduledAlarmsAfterScheduling = shadowAlarmManager.scheduledAlarms
-//                println("Scheduled alarms count: ${scheduledAlarmsAfterScheduling.size}")
-//                assert(scheduledAlarmsAfterScheduling.isNotEmpty()){"expected the scheduler alarms to be not empty but got size of ${scheduledAlarmsAfterScheduling.size} "}
-//
-//                // Get the alarm data from DB
-//                val alarmsInDb = alarmDao.getAllAlarms()
-//                assert(alarmsInDb.isNotEmpty()) { "No alarms in database" }
-//                assert(alarmsInDb.size ==1){"expected the size of the alarms in db to be 1 but got ${alarmsInDb.size}"}
-//                val alarmData = alarmsInDb.first()
-//                println("AlarmData from DB: startTime=${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.startTime)}, endTime=${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.endTime)}, isReadyToUse=${alarmData.isReadyToUse}")
-//
-//                // Cancel the alarms (delete_the_alarm_from_db = true)
-//                println("\n--- Cancelling alarms (with DB deletion) ---")
-//                alarmsController.cancelAlarmByCancelingPendingIntent(
-//                    startTime = startCalendar.timeInMillis,
-//                    endTime = endCalendar.timeInMillis,
-//                    frequencyInMin = freqMs,
-//                    alarmDao = alarmDao,
-//                    alarmManager = alarmManager,
-//                    context_of_activity = context,
-//                    delete_the_alarm_from_db = true,
-//                    alarmData = alarmData
-//                )
-//                waitTillTaskFinishWithLooper()
-//                // Verify all alarms are cancelled
-//                val scheduledAlarms = shadowAlarmManager.scheduledAlarms
-//                println("Scheduled alarms count after cancellation: ${scheduledAlarms.size}")
-//                for (alarm in scheduledAlarms) {
-//                    // 1. Get the PendingIntent using the non-deprecated getter
-//                    val operation = alarm.operation
-//                    val intent = shadowOf(operation).savedIntent
-//                    println("the alarm intent in the scheduledAlarms after cancelling is is $intent")
-//                }
-//                assert(scheduledAlarms.isEmpty()) { "Alarms were not cancelled. Remaining: ${scheduledAlarms.size}" }
-//                val alarmsInDbAfterCancel = alarmDao.getAllAlarms()
-//                println("Alarms in DB after cancellation: ${alarmsInDbAfterCancel.size}")
-//                val alarminDb1 = alarmDao.getAllAlarms()
-//                println("the alarmDao is $alarmsInDbAfterCancel :${alarmsInDbAfterCancel.size} and after DB delete is ${alarminDb1} :${alarminDb1.size}")
-//                assert(alarmsInDbAfterCancel.isEmpty()) { "alarmDataInDb is not empty and it is $alarmData" }
-//
-//                println("\n✓ Test passed: All alarms cancelled and removed from DB")
-//            }
-//        }.fold(
-//            onSuccess = {},
-//            onFailure = { err ->
-//                println("Test failed with error: ${err.message}\n${err.stackTraceToString()}")
-//                fail(err.message)
-//            }
-//        )
-//    }
+    fun `test cancel alarm removes all pending intents and updates database`() {
+        runCatching {
+            runBlocking {
+                // Setup: Schedule alarms first
+                val calPairs = getRandomStartAndEndCal()
+                val startCalendar = calPairs.first
+                val endCalendar = calPairs.second
+                val dateInLong = startCalendar.timeInMillis
+                val frequencyMinutes = getRandomInt(max = 30)
+                val freqMs = frequencyMinutes * 60_000L
 
+                println("\n\nScheduling alarms - startTime: ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(startCalendar.timeInMillis)}, endTime: ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(endCalendar.timeInMillis)}, freq: $frequencyMinutes min")
 
+                SystemClock.setCurrentTimeMillis(startCalendar.timeInMillis - freqMs)
+                alarmsController = AlarmsController(TestTimeProvider(startCalendar.timeInMillis - freqMs))
+                testReceiver.alarmsController = alarmsController
+
+                // Schedule the alarms
+                alarmsController.scheduleMultipleAlarms(
+                    alarmManager = alarmManager,
+                    dateInLong = dateInLong,
+                    calendarForStartTime = startCalendar,
+                    calendarForEndTime = endCalendar,
+                    freqAfterTheCallback = frequencyMinutes,
+                    activityContext = context,
+                    alarmDao = alarmDao,
+                    messageForDB = "Test alarm for cancellation"
+                ).getOrThrow()
+                waitTillTaskFinishWithLooper()
+                val scheduledAlarmsAfterScheduling = shadowAlarmManager.scheduledAlarms
+                println("Scheduled alarms count: ${scheduledAlarmsAfterScheduling.size}")
+                assert(scheduledAlarmsAfterScheduling.isNotEmpty()){"expected the scheduler alarms to be not empty but got size of ${scheduledAlarmsAfterScheduling.size} "}
+
+                // Get the alarm data from DB
+                val alarmsInDb = alarmDao.getAllAlarms()
+                assert(alarmsInDb.isNotEmpty()) { "No alarms in database" }
+                assert(alarmsInDb.size ==1){"expected the size of the alarms in db to be 1 but got ${alarmsInDb.size}"}
+                val alarmData = alarmsInDb.first()
+                println("AlarmData from DB: startTime=${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.startTime)}, endTime=${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.endTime)}, isReadyToUse=${alarmData.isReadyToUse}")
+
+                // Cancel the alarms (delete_the_alarm_from_db = true)
+                println("\n--- Cancelling alarms (with DB deletion) ---")
+                alarmsController.cancelAlarmByCancelingPendingIntent(
+                    startTime = startCalendar.timeInMillis,
+                    endTime = endCalendar.timeInMillis,
+                    frequencyInMin = freqMs,
+                    alarmDao = alarmDao,
+                    alarmManager = alarmManager,
+                    context_of_activity = context,
+                    delete_the_alarm_from_db = true,
+                    alarmData = alarmData
+                )
+                waitTillTaskFinishWithLooper()
+                // Verify all alarms are cancelled
+                val scheduledAlarms = shadowAlarmManager.scheduledAlarms
+                println("Scheduled alarms count after cancellation: ${scheduledAlarms.size}")
+                for (alarm in scheduledAlarms) {
+                    // 1. Get the PendingIntent using the non-deprecated getter
+                    val operation = alarm.operation
+                    val intent = shadowOf(operation).savedIntent
+                    println("the alarm intent in the scheduledAlarms after cancelling is is $intent")
+                }
+                assert(scheduledAlarms.isEmpty()) { "Alarms were not cancelled. Remaining: ${scheduledAlarms.size}" }
+                val alarmsInDbAfterCancel = alarmDao.getAllAlarms()
+                println("Alarms in DB after cancellation: ${alarmsInDbAfterCancel.size}")
+                val alarminDb1 = alarmDao.getAllAlarms()
+                println("the alarmDao is $alarmsInDbAfterCancel :${alarmsInDbAfterCancel.size} and after DB delete is ${alarminDb1} :${alarminDb1.size}")
+                assert(alarmsInDbAfterCancel.isEmpty()) { "alarmDataInDb is not empty and it is $alarmData" }
+
+                println("\n✓ Test passed: All alarms cancelled and removed from DB")
+            }
+        }.fold(
+            onSuccess = {},
+            onFailure = { err ->
+                println("Test failed with error: ${err.message}\n${err.stackTraceToString()}")
+                fail(err.message)
+            }
+        )
+    }
 }
