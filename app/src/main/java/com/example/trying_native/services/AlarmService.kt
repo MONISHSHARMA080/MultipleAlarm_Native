@@ -259,7 +259,7 @@ class AlarmService: Service() {
     }
 
     private fun audioFocusRequestBuilder(): AudioFocusRequest {
-        return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN )
+        return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE )
             .setAudioAttributes(
                 AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_ALARM)
