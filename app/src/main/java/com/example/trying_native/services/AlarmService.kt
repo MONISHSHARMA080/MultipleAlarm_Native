@@ -235,11 +235,14 @@ class AlarmService: Service() {
             val audioFocus = audioFocusRequestBuilder()
             audioFocusRequest = audioFocus
             val audioFocusReq =audioManager.requestAudioFocus(audioFocus)
+            logD(if (audioFocusReq == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) "Audio focus Req is granted $audioFocusReq" else "Audio Focus req was not granted $audioFocusReq")
             if (audioFocusReq == AudioManager.AUDIOFOCUS_REQUEST_GRANTED){
                 logD("Android audio focus req was granted and it is $audioFocusReq")
                 startRandomRingtonePlaying()
             }else {
                 logD("Audio Focus req was not granted and we are not playing, we got $audioFocusReq did it failed ->${audioFocusReq == AudioManager.AUDIOFOCUS_REQUEST_FAILED} !!")
+                startRandomRingtonePlaying()
+
             }
         }.fold(onSuccess = {}, onFailure = {exception ->
             logD("there is a exception while launching random system alarm and it is ${exception.message}\n-->$exception")
@@ -266,7 +269,6 @@ class AlarmService: Service() {
             .setAudioAttributes(
                 AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION) // Add this
                 .build()
             )
