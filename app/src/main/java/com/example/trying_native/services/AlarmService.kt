@@ -219,12 +219,12 @@ class AlarmService: Service() {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
                 .setFullScreenIntent(fullScreenPendingIntent, true) // THE KEY STEP
-//                .setOngoing(true) // User can't swipe it away
                 .addAction(android.R.drawable.ic_delete, "Dismiss", dismissPendingIntent)
                 .setDeleteIntent(dismissPendingIntent)
                 .setAutoCancel(false)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setDefaults(0)
+                .setSound(null)
             return@runCatching Pair(builder.build(), intentData)
         }
     }
@@ -237,25 +237,28 @@ class AlarmService: Service() {
             val audioFocusReq =audioManager.requestAudioFocus(audioFocus)
             if (audioFocusReq == AudioManager.AUDIOFOCUS_REQUEST_GRANTED){
                 logD("Android audio focus req was granted and it is $audioFocusReq")
-                val ringtoneManager = RingtoneManager(this)
-                ringtoneManager.setType(RingtoneManager.TYPE_ALARM)
-                val ringtoneCursor =ringtoneManager.cursor
-                val len =ringtoneCursor.count
-                val randomIndex =Random.nextInt(len )
-                val ringtone =ringtoneManager.getRingtone(randomIndex)
-                ringtone.audioAttributes = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build()
-                this.ringtone = ringtone
-                ringtone.isLooping = true
-                ringtone.play()
+                startRandomRingtonePlaying()
             }else {
                 logD("Audio Focus req was not granted and we are not playing, we got $audioFocusReq did it failed ->${audioFocusReq == AudioManager.AUDIOFOCUS_REQUEST_FAILED} !!")
             }
         }.fold(onSuccess = {}, onFailure = {exception ->
             logD("there is a exception while launching random system alarm and it is ${exception.message}\n-->$exception")
         })
+    }
+    private fun startRandomRingtonePlaying(){
+        val ringtoneManager = RingtoneManager(this)
+        ringtoneManager.setType(RingtoneManager.TYPE_ALARM)
+        val ringtoneCursor =ringtoneManager.cursor
+        val len =ringtoneCursor.count
+        val randomIndex =Random.nextInt(len )
+        val ringtone =ringtoneManager.getRingtone(randomIndex)
+        ringtone.audioAttributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_ALARM)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        this.ringtone = ringtone
+        ringtone.isLooping = true
+        ringtone.play()
     }
 
     private fun audioFocusRequestBuilder(): AudioFocusRequest {
@@ -274,22 +277,27 @@ class AlarmService: Service() {
     }
 
     private fun audioFocusChangeListener(focusChange: Int) {
+        logD("Audio focus change: $focusChange")
         when(focusChange) {
             AudioManager.AUDIOFOCUS_LOSS -> {
-                // Another app took permanent focus
+                logD("Lost audio focus permanently")
                 stopRingtoneAndRemoveAudioFocus()
             }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                // Temporary loss (like phone call) - stop but keep resources
-                ringtone?.stop()
+                logD("Lost audio focus temporarily")
+                ringtone?.stop()  // Use pause() instead of stop()
             }
             AudioManager.AUDIOFOCUS_GAIN -> {
-                // Regained focus - resume if needed
-                if (ringtone?.isPlaying == false) {
+                logD("Gained audio focus")
+                // If we don't have a ringtone yet, this is a delayed grant
+                if (ringtone == null) {
+                    startRandomRingtonePlaying()
+                } else if (ringtone?.isPlaying == false) {
                     ringtone?.play()
                 }
-
             }
         }
     }
+
+
 }
