@@ -259,7 +259,7 @@ class AlarmService: Service() {
     }
 
     private fun audioFocusRequestBuilder(): AudioFocusRequest {
-        return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT )
+        return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN )
             .setAudioAttributes(
                 AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_ALARM)
@@ -285,7 +285,10 @@ class AlarmService: Service() {
             }
             AudioManager.AUDIOFOCUS_GAIN -> {
                 // Regained focus - resume if needed
-                ringtone?.play()
+                if (ringtone?.isPlaying == false) {
+                    ringtone?.play()
+                }
+
             }
         }
     }

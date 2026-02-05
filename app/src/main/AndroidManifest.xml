@@ -44,6 +44,7 @@
             android:launchMode="singleInstance"
             android:showOnLockScreen="true"
             android:turnScreenOn="true"
+            android:excludeFromRecents="true"
             android:exported="false" />
         <receiver android:name=".LastAlarmUpdateDBReceiver"
             android:exported="false" />
