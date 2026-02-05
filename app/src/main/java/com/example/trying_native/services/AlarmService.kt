@@ -262,7 +262,8 @@ class AlarmService: Service() {
         return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE )
             .setAudioAttributes(
                 AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION) // Add this
                 .build()
             )
