@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
-import com.example.trying_native.BackGroundAutoStartHelper.BackGroundAutostartPermissionHelper
 import android.Manifest
 import android.app.NotificationManager
 import android.content.Intent
@@ -28,8 +27,6 @@ class FirstLaunchAskForPermission(private val context: Context) {
         logD("here in the check andRequest func")
         if (isFirstLaunch()) {
             askForNotificationPermission()
-//            BackGroundAutostartPermissionHelper.getAutoStartPermission(context)
-//            BackGroundAutostartPermissionHelper.requestDisableBatteryOptimization(context)
             setFirstLaunchComplete()
             logD("about to get out ")
         }
@@ -65,7 +62,7 @@ class FirstLaunchAskForPermission(private val context: Context) {
         }
     }
 
-    private fun isFirstLaunch(): Boolean {
+     fun isFirstLaunch(): Boolean {
         return prefs.getBoolean(isFirstLaunchKey, true)
     }
 

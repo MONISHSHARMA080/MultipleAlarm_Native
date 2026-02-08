@@ -41,7 +41,6 @@ class MainActivity : ComponentActivity() {
           AlarmContainer(
                   alarmManager,
                   this@MainActivity,
-                  askUserForPermissionToScheduleAlarm = { permissionToScheduleAlarm() }
           )
         }
       }
@@ -50,17 +49,6 @@ class MainActivity : ComponentActivity() {
     }
   }
 
-  private fun permissionToScheduleAlarm() {
-    // Check for SYSTEM_ALERT_WINDOW permission
-    if (!Settings.canDrawOverlays(this)) {
-      val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, "package:$packageName".toUri())
-      overlayPermissionLauncher.launch(intent)
-      return
-    }
-    // Check for SCHEDULE_EXACT_ALARM permission (only required for Android 12+)
-    // If both permissions are granted, proceed with scheduling the alarm
-    // scheduleAlarmInternal()
-  }
 }
 
 fun logD(message: String): Unit {

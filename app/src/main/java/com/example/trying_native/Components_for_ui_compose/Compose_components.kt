@@ -112,7 +112,6 @@ import java.util.Date
 fun AlarmContainer(
     alarmManager: AlarmManager,
     activityContext: ComponentActivity,
-    askUserForPermissionToScheduleAlarm: () -> Unit
 ) {
     // Initialize database and DAO asynchronously
     var alarmDao by remember { mutableStateOf<AlarmDao>(Room.databaseBuilder(activityContext.applicationContext, AlarmDatabase::class.java, "alarm-database").build().alarmDao()) }
@@ -121,8 +120,6 @@ fun AlarmContainer(
     val fontSize = (screenHeight * 0.05f).value.sp
     val coroutineScope = activityContext.lifecycleScope
     val uncancellableScope = CoroutineScope(coroutineScope.coroutineContext + NonCancellable)
-    val askUserForPermission by lazy { Settings.canDrawOverlays(activityContext) }
-
     val alarms by alarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO).collectAsStateWithLifecycle(initialValue = emptyList())
 
     var showTheDialogToTheUserToAskForPermission by remember { mutableStateOf(false) }
@@ -419,9 +416,6 @@ fun AlarmContainer(
                         onClick = {
                             showTheDialogToTheUserToAskForPermission =
                                 !showTheDialogToTheUserToAskForPermission
-                            if (!askUserForPermission) {
-                                askUserForPermissionToScheduleAlarm()
-                            }
                         },
                         context = activityContext
                     )
