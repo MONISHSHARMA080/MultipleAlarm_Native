@@ -19,19 +19,6 @@ class MainActivity : ComponentActivity() {
 
   private val alarmManager by lazy { getSystemService(ALARM_SERVICE) as AlarmManager }
 
-  private val overlayPermissionLauncher =
-          registerForActivityResult(StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-              if (Settings.canDrawOverlays(this)) {
-                // Permission granted, schedule the alarm
-                permissionToScheduleAlarm()
-              } else {
-                logD("Overlay permission denied")
-              }
-            }
-          }
-
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     try {
