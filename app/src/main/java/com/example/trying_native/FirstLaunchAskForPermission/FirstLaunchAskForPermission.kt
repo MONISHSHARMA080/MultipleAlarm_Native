@@ -14,9 +14,8 @@ import android.os.Build
 import android.provider.Settings
 
 import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
 import com.example.trying_native.logD
-import io.reactivex.Notification
+import androidx.core.content.edit
 
 class FirstLaunchAskForPermission(private val context: Context) {
     private val prefsName = "AppPreferences"
@@ -29,8 +28,8 @@ class FirstLaunchAskForPermission(private val context: Context) {
         logD("here in the check andRequest func")
         if (isFirstLaunch()) {
             askForNotificationPermission()
-            BackGroundAutostartPermissionHelper.getAutoStartPermission(context)
-            BackGroundAutostartPermissionHelper.requestDisableBatteryOptimization(context)
+//            BackGroundAutostartPermissionHelper.getAutoStartPermission(context)
+//            BackGroundAutostartPermissionHelper.requestDisableBatteryOptimization(context)
             setFirstLaunchComplete()
             logD("about to get out ")
         }
@@ -54,7 +53,6 @@ class FirstLaunchAskForPermission(private val context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             if (!notificationManager.canUseFullScreenIntent()) {
                 logD("FSI Permission denied. Redirecting user to settings.")
-
                 // Intent to take the user directly to the "Manage Full Screen Intents" settings page
                 val intent = Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT).apply {
                     data = Uri.fromParts("package", context.packageName, null)
@@ -72,6 +70,6 @@ class FirstLaunchAskForPermission(private val context: Context) {
     }
 
     private fun setFirstLaunchComplete() {
-        prefs.edit().putBoolean(isFirstLaunchKey, false).apply()
+        prefs.edit { putBoolean(isFirstLaunchKey, false) }
     }
 }
