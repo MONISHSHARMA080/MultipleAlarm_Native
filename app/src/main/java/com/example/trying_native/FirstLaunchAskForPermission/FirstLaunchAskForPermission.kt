@@ -7,11 +7,11 @@ import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import android.Manifest
 import android.app.NotificationManager
+import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-
 import androidx.core.app.ActivityCompat
 import com.example.trying_native.logD
 import androidx.core.content.edit
@@ -27,10 +27,28 @@ class FirstLaunchAskForPermission(private val context: Context) {
         logD("here in the check andRequest func")
         if (isFirstLaunch()) {
             askForNotificationPermission()
+            ifMiuiGetBgAutoStartPermission().onFailure { exception -> logD("Error in checking if device is XIAOMI and it is $exception") }
             setFirstLaunchComplete()
-            logD("about to get out ")
         }
     }
+    private fun ifMiuiGetBgAutoStartPermission(): Result<Unit>{
+        return runCatching {
+            val brand = Build.BRAND ?: return Result.failure(Exception("Can't find brand of the device "))
+            val brandLowercase = brand.lowercase()
+            logD("brand we have is $brandLowercase ($brand)")
+            if (brandLowercase == "xiaomi" || brandLowercase == "redmi" || brandLowercase == "poco") {
+                logD(" we have a miui device($brand) and we need to ask for bg autostart")
+                val intent =Intent().apply {
+                    component = ComponentName(
+                        "com.miui.securitycenter",
+                        "com.miui.permcenter.autostart.AutoStartManagementActivity"
+                    )
+                }
+                context.startActivity(intent)
+            }
+        }
+    }
+
 
     private fun askForNotificationPermission() {
         logD("here in the notification func and the post notification permission is -->${
@@ -53,9 +71,10 @@ class FirstLaunchAskForPermission(private val context: Context) {
                 // Intent to take the user directly to the "Manage Full Screen Intents" settings page
                 val intent = Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT).apply {
                     data = Uri.fromParts("package", context.packageName, null)
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+//                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
                 context.startActivity(intent)
+                logD("asked and launched the FSI intent ")
             }else{
                 logD("WE can use full screen intent")
             }
