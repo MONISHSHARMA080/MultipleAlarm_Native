@@ -5,9 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.app.Service.START_NOT_STICKY
 import android.content.Context
-import android.content.Context.NOTIFICATION_SERVICE
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.media.AudioAttributes
@@ -22,10 +20,7 @@ import com.example.trying_native.Activities.AlarmActivity
 import com.example.trying_native.Activities.AlarmActivityIntentData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlin.getOrElse
-import kotlin.math.log
 import kotlin.random.Random
 
 class AlarmService: Service() {
@@ -231,32 +226,34 @@ class AlarmService: Service() {
 
     private fun playRandomSystemAlarm(){
         runCatching {
-            logD("in playRandomSystemAlarm it is ${audioFocusRequest == null} audioFocusRequest null  and it is $audioFocusRequest")
+            logD("in playRandomSystemAlarm")
+            setRandomRingtone()
             val audioFocus = audioFocusRequestBuilder()
             audioFocusRequest = audioFocus
-            val audioFocusReq =audioManager.requestAudioFocus(audioFocus)
-            logD(if (audioFocusReq == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) "Audio focus Req is granted $audioFocusReq" else "Audio Focus req was not granted $audioFocusReq")
-            // it's an alarm we have to play it as the user might not wake up etc(I need it)
-            startRandomRingtonePlaying()
-
+            val audioFocusReq = audioManager.requestAudioFocus(audioFocus)
+            logD(if (audioFocusReq == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) "Audio focus granted" else "Audio focus NOT granted: $audioFocusReq")
+            ringtone?.play()
         }.fold(onSuccess = {}, onFailure = {exception ->
-            logD("there is a exception while launching random system alarm and it is ${exception.message}\n-->$exception")
+            logD("Exception in playRandomSystemAlarm: ${exception.message}")
         })
     }
-    private fun startRandomRingtonePlaying(){
+
+    private fun setRandomRingtone(){
         val ringtoneManager = RingtoneManager(this)
         ringtoneManager.setType(RingtoneManager.TYPE_ALARM)
-        val ringtoneCursor =ringtoneManager.cursor
-        val len =ringtoneCursor.count
-        val randomIndex =Random.nextInt(len )
-        val ringtone =ringtoneManager.getRingtone(randomIndex)
+        val ringtoneCursor = ringtoneManager.cursor
+        val len = ringtoneCursor.count
+        val randomIndex = Random.nextInt(len)
+        val ringtone = ringtoneManager.getRingtone(randomIndex)
+
         ringtone.audioAttributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_ALARM)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build()
-        this.ringtone = ringtone
+
         ringtone.isLooping = true
-        ringtone.play()
+        this.ringtone = ringtone
+        // DON'T play here - let playRandomSystemAlarm() call play() after getting focus
     }
 
     private fun audioFocusRequestBuilder(): AudioFocusRequest {
@@ -288,7 +285,7 @@ class AlarmService: Service() {
                 logD("Gained audio focus")
                 // If we don't have a ringtone yet, this is a delayed grant
                 if (ringtone == null) {
-                    startRandomRingtonePlaying()
+                    setRandomRingtone()
                 } else if (ringtone?.isPlaying == false) {
                     ringtone?.play()
                 }
