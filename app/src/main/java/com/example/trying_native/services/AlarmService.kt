@@ -11,6 +11,7 @@ import android.content.pm.ServiceInfo
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
+import android.media.MediaPlayer
 import android.media.Ringtone
 import android.media.RingtoneManager
 import android.util.Log
@@ -32,9 +33,9 @@ class AlarmService: Service() {
     // if we receiver more intents then we will use this; if the intent is from same alarm(see id) then we will replace it /not put it in / dismiss it as
     // it is same and no need to display same message again; if it is diff then we will put it in and when dismissed then we might need to display it
     val intentHashMap: LinkedHashMap<Int,Intent> = LinkedHashMap(50)
-    private var ringtone: Ringtone? = null
     private var audioFocusRequest: AudioFocusRequest? = null
     private val audioManager by lazy { getSystemService(AUDIO_SERVICE) as AudioManager }
+    var mediaPlayer: MediaPlayer? =  null
     var coroutineScope = CoroutineScope(Dispatchers.IO)
 
 
@@ -159,8 +160,11 @@ class AlarmService: Service() {
 
     private  fun stopRingtoneAndRemoveAudioFocus(): Result<Unit>{
         return runCatching {
-            this.ringtone?.stop()
+            mediaPlayer?.stop()      // Changed from ringtone?.stop()
+            mediaPlayer?.release()   // Added - important for MediaPlayer!
+            mediaPlayer = null       // Added
             audioFocusRequest?.let { request -> audioManager.abandonAudioFocusRequest(request) }
+
         }
     }
 
@@ -232,7 +236,14 @@ class AlarmService: Service() {
             audioFocusRequest = audioFocus
             val audioFocusReq = audioManager.requestAudioFocus(audioFocus)
             logD(if (audioFocusReq == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) "Audio focus granted" else "Audio focus NOT granted: $audioFocusReq")
-            ringtone?.play()
+            check(mediaPlayer != null ){"expected the mediaPlayer to not be null but got $mediaPlayer"}
+            val audioMode = audioManager.mode
+            logD("Current audio mode: $audioMode") // Log this!
+//            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+//            val dndFilter = notificationManager.currentInterruptionFilter
+//            logD("DND filter: $dndFilter (3=PRIORITY_ONLY, 4=ALARMS_ONLY, 2=ALL, 1=NONE)")
+
+            mediaPlayer?.start()
         }.fold(onSuccess = {}, onFailure = {exception ->
             logD("Exception in playRandomSystemAlarm: ${exception.message}")
         })
@@ -252,12 +263,27 @@ class AlarmService: Service() {
             .build()
 
         ringtone.isLooping = true
-        this.ringtone = ringtone
-        // DON'T play here - let playRandomSystemAlarm() call play() after getting focus
+        val uri = if (len > 0) {
+            val randomIndex = Random.nextInt(len)
+            ringtoneManager.getRingtoneUri(randomIndex)
+        } else {
+            RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+        }
+
+        mediaPlayer = MediaPlayer().apply {
+            setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .build()
+            )
+            setDataSource(applicationContext, uri)
+            prepare()
+        }
     }
 
     private fun audioFocusRequestBuilder(): AudioFocusRequest {
-        return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE )
+        return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
             .setAudioAttributes(
                 AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_ALARM)
@@ -279,15 +305,16 @@ class AlarmService: Service() {
             }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
                 logD("Lost audio focus temporarily")
-                ringtone?.stop()  // Use pause() instead of stop()
+                mediaPlayer?.pause()
             }
             AudioManager.AUDIOFOCUS_GAIN -> {
                 logD("Gained audio focus")
                 // If we don't have a ringtone yet, this is a delayed grant
-                if (ringtone == null) {
+                if (mediaPlayer == null) {
                     setRandomRingtone()
-                } else if (ringtone?.isPlaying == false) {
-                    ringtone?.play()
+                } else if (mediaPlayer?.isPlaying == false) {
+                    logD("audio Focus is granted and we are playing , audioFocus is $focusChange")
+                    mediaPlayer?.start()
                 }
             }
         }
