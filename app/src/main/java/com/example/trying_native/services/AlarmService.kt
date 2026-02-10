@@ -57,7 +57,7 @@ class AlarmService: Service() {
                 val returnCode = handleStartAlarm(intent)
                 coroutineScope.launch {
                     // helps in our chances to make sure we are a foreground service and audioFocus will not be denied
-                    delay(900);
+                    delay(600);
                     playAlarm.play()    }
                 return returnCode
             }
