@@ -148,7 +148,6 @@ fun AlarmContainer(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
-                // Main content - DAO is ready
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = edgeToEdgePadding
@@ -562,22 +561,12 @@ fun DialogToAskUserAboutAlarmUnified(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column {
-                        Text(text = "Start date")
-                        InputPickerField(startDateToView, onClick = {
-                            showDatePickerFor = InputPickerType.START
-                            logD(" the start date for the date picker is $showDatePickerFor")
-                        }
-                        )
+                    Text(text = "date")
+                    InputPickerField(startDateToView, onClick = {
+                        showDatePickerFor = InputPickerType.START
+                        logD(" the start date for the date picker is $showDatePickerFor")
                     }
-                    Column {
-                        Text(text = "End date", modifier = Modifier.padding(start = 20.dp))
-                        InputPickerField(endDateToView, onClick = {
-                            showDatePickerFor = InputPickerType.END
-                            logD(" the end date for the date picker is $showDatePickerFor")
-                        }
-                        )
-                    }
+                    )
                 }
                 // Frequency
                 Row(
@@ -598,7 +587,7 @@ fun DialogToAskUserAboutAlarmUnified(
                             }
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.width(120.dp).background(Color.White).border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline))
+                        modifier = Modifier.width(120.dp).background(Color.Black).border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline))
                     )
                 }
                 // Alarm message/name
@@ -611,7 +600,7 @@ fun DialogToAskUserAboutAlarmUnified(
                     OutlinedTextField(
                         value = alarmMessage,
                         onValueChange = { alarmMessage = it },
-                        modifier = Modifier.weight(1f).background(Color.White).border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline))   // Takes remaining space
+                        modifier = Modifier.weight(1f).background(Color.Black).border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline))   // Takes remaining space
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp)) // Spacer before buttons

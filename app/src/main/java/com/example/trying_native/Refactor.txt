@@ -26,7 +26,7 @@ b) Code Refactor :--
     * redo the cancelAlarmByCancelingPendingIntent()
     * put a ask user for review after 5 days popup
     * redo the ask for alarm sheet(alarm detail enter sheet); like that popup is ugly
-    * use media player to make sure the audio focus mistake is not with rugtone maanger
+    [*] use media player to make sure the audio focus mistake is not with rugtone maanger
 
 
 c)  later :--
