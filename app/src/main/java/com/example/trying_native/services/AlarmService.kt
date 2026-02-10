@@ -21,6 +21,8 @@ import com.example.trying_native.Activities.AlarmActivity
 import com.example.trying_native.Activities.AlarmActivityIntentData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.getOrElse
 import kotlin.random.Random
@@ -34,8 +36,8 @@ class AlarmService: Service() {
     // if we receiver more intents then we will use this; if the intent is from same alarm(see id) then we will replace it /not put it in / dismiss it as
     // it is same and no need to display same message again; if it is diff then we will put it in and when dismissed then we might need to display it
     val intentHashMap: LinkedHashMap<Int,Intent> = LinkedHashMap(50)
-    var coroutineScope = CoroutineScope(Dispatchers.IO)
     val playAlarm by lazy { PlayAlarm(this) }
+    val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun onBind(intent: Intent?) = null
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -53,10 +55,10 @@ class AlarmService: Service() {
         when (intent.action) {
             ACTION_START_ALARM -> {
                 val returnCode = handleStartAlarm(intent)
-//                coroutineScope.launch {
-//                }
-                playAlarm.play()
-
+                coroutineScope.launch {
+                    // helps in our chances to make sure we are a foreground service and audioFocus will not be denied
+                    delay(900);
+                    playAlarm.play()    }
                 return returnCode
             }
             ACTION_DISMISS_ALARM -> {
