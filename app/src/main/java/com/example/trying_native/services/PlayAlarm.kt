@@ -9,13 +9,19 @@ import android.media.RingtoneManager
 import android.net.Uri
 import android.util.Log
 import com.example.trying_native.logD
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.seconds
 
 
-class PlayAlarm (private val context: Context, private val playTheAlarmEvenIfAudioFocusIsDenied: Boolean = true){
+class PlayAlarm (private val context: Context,  var playTheAlarmEvenIfAudioFocusIsDenied: Boolean = true){
     var mediaPlayer: MediaPlayer? =  null
     var audioFocusRequest: AudioFocusRequest? = null
     private val audioManager: AudioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    val coroutineScope = CoroutineScope(Dispatchers.IO)
 
 
 
@@ -32,30 +38,41 @@ class PlayAlarm (private val context: Context, private val playTheAlarmEvenIfAud
 
 
     /** play a new random alarm*/
-    fun play(){
+    fun play( ){
         runCatching {
             val audioFocusReqTemp = audioFocusRequest ?: buildAudioFocusRequest()
             audioFocusRequest = audioFocusReqTemp
-            val randomAlarmToPlay = getRandomAlarm()
             if (mediaPlayer == null ) mediaPlayer = buildMediaPLayer()
             val result = audioManager.requestAudioFocus(audioFocusReqTemp)
             logD("Requested for audio focus and got it to be $result granted:${AudioManager.AUDIOFOCUS_REQUEST_GRANTED} , delayed:${AudioManager.AUDIOFOCUS_REQUEST_DELAYED} and failed:${AudioManager.AUDIOFOCUS_REQUEST_FAILED}")
             when(result){
-                AudioManager.AUDIOFOCUS_REQUEST_GRANTED or AudioManager.AUDIOFOCUS_REQUEST_DELAYED ->{
+                AudioManager.AUDIOFOCUS_REQUEST_GRANTED , AudioManager.AUDIOFOCUS_REQUEST_DELAYED ->{
                     mediaPlayer?.start()
                 }
                 AudioManager.AUDIOFOCUS_REQUEST_FAILED ->{
                     logD("the audio Focus request failed we got $result and playTheAlarmEvenIfAudioFocusIsDenied:$playTheAlarmEvenIfAudioFocusIsDenied ")
-                    if (playTheAlarmEvenIfAudioFocusIsDenied == true ) {
+                    if (playTheAlarmEvenIfAudioFocusIsDenied) {
                         mediaPlayer?.start()
                     }else {
-                        mediaPlayer?.stop()
+                        mediaPlayer?.pause()
+                        coroutineScope.launch {
+                            delay(2.49.seconds)
+                            if (mediaPlayer?.isPlaying == false){
+                                mediaPlayer?.start()
+                                logD("after 2.49 sec and the playTheAlarmEvenIfAudioFocusIsDenied:$playTheAlarmEvenIfAudioFocusIsDenied and the media player was not playing so we are playing the sound as this is an alarm")
+                            }
+
+                        }
                     }
                 }
 
                 else -> {}
             }
         }
+    }
+    /**this will set the */
+    fun playOnWhenFocusGranted(){
+
     }
 
     fun pause(){

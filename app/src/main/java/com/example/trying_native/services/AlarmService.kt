@@ -32,10 +32,10 @@ class AlarmService: Service() {
         const val ACTION_START_ALARM = "ACTION_START_ALARM"
         const val ACTION_DISMISS_ALARM = "ACTION_DISMISS_ALARM"
     }
-    // if we receiver more intents then we will use this; if the intent is from same alarm(see id) then we will replace it /not put it in / dismiss it as
+    // if we receive more intents than we will use this; if the intent is from same alarm(see id) then we will replace it /not put it in / dismiss it as
     // it is same and no need to display same message again; if it is diff then we will put it in and when dismissed then we might need to display it
     val intentHashMap: LinkedHashMap<Int,Intent> = LinkedHashMap(50)
-    val playAlarm by lazy { PlayAlarm(this) }
+    val playAlarm by lazy { PlayAlarm(this, playTheAlarmEvenIfAudioFocusIsDenied = false) }
     val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun onBind(intent: Intent?) = null
@@ -81,7 +81,6 @@ class AlarmService: Service() {
         ServiceCompat.startForeground(this, intent.hashCode(), notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
         intentHashMap.putIfAbsent(alarmIntentData.alarmIdInDb, intent)
         return START_REDELIVER_INTENT
-
     }
 
     private  fun handleStartAlarm(intent:Intent):Int{

@@ -237,8 +237,8 @@ fun TimeDisplay(onFinish: () -> Unit, message: String,  modifier: Modifier = Mod
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = (screenHeight / 8))
-                    .height(75.dp)
-                    .width(250.dp)
+                    .height(80.dp)
+                    .width(270.dp)
                     .shadow(8.dp, shape = RoundedCornerShape(28.dp))
             ) {
                 Text(text = "Cancel alarm")

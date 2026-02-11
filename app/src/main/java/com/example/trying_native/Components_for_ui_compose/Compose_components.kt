@@ -102,10 +102,6 @@ import kotlinx.coroutines.flow.flowOn
 import java.time.LocalTime
 import java.util.Date
 
-
-
-
-
 @SuppressLint("FlowOperatorInvokedInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -127,6 +123,7 @@ fun AlarmContainer(
     val snackBarHostState = remember { SnackbarHostState() }
 
     Scaffold(contentWindowInsets = WindowInsets.systemBars) { edgeToEdgePadding ->
+
         Box(
             modifier = Modifier
                 .testTag("AlarmContainer")
