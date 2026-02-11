@@ -99,6 +99,7 @@ class PlayAlarm (private val context: Context, private val playTheAlarmEvenIfAud
                     .build()
             )
             setDataSource(context, randomAlarmToPlay)
+            isLooping = true
             prepare()
         }
         mediaPlayer = mediaPLayerNew
