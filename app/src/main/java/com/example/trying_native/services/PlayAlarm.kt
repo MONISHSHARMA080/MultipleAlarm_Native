@@ -76,7 +76,7 @@ class PlayAlarm (private val context: Context){
     }
 
     private fun buildAudioFocusRequest(): AudioFocusRequest {
-        val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).run {
+        val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE).run {
             setAudioAttributes(AudioAttributes.Builder().run {
                 setUsage(AudioAttributes.USAGE_ALARM)
                 setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
