@@ -63,7 +63,7 @@ class AlarmActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme(colorScheme = dynamicDarkColorScheme(this)) {
-                var messageVarToSet by remember { mutableStateOf("") }
+                var messageVarToSet by remember { mutableStateOf("-------------11111111111111+++++++++++++++++0000000000") }
                 var intentData by remember { mutableStateOf<AlarmActivityIntentData?>(null)  }
 
                 LaunchedEffect(Unit) {
@@ -71,14 +71,14 @@ class AlarmActivity : ComponentActivity() {
                     val intentDataAccessed = intentData
                     logD("the intent data we got from parsing is $intentData")
                     if (intentDataAccessed !=  null ) {
-                        messageVarToSet = intentDataAccessed.message
+                        messageVarToSet = "-------------11111111111111+++++++++++++++++0000000000"
+//                        messageVarToSet = intentDataAccessed.message
                     }
                     logD("the message from intent we got is $messageVarToSet ")
                 }
                 TimeDisplay(
                     onFinish = { finishAndRemoveTask()},
-                    message = messageVarToSet,
-                    isMessagePresent = messageVarToSet.isNotEmpty(),
+                    "-------------11111111111111+++++++++++++++++0000000000",
                 )
             }
         }
@@ -146,16 +146,19 @@ class AlarmActivity : ComponentActivity() {
 }
 
 @Composable
-fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean, modifier: Modifier = Modifier) {
+fun TimeDisplay(onFinish: () -> Unit, message: String,  modifier: Modifier = Modifier) {
     var currentTime by remember { mutableStateOf(getCurrentTime()) }
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    logD("in the timeDisplay() and the message is $message")
 
     LaunchedEffect(Unit) {
         while (true) {
             currentTime = getCurrentTime()
-            delay(600)
+            delay(500)
         }
     }
+    logD("in message is empty ${message.isEmpty()}")
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize().background(color = Color.Black),
@@ -167,7 +170,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean
                 .padding(edgeToEdgePadding),
             contentAlignment = Alignment.Center
         ) {
-            if (isMessagePresent) {
+            if (message.isNotEmpty()) {
                 // Layout when message is present
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -225,9 +228,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, isMessagePresent: Boolean
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(25.dp))
-
-            // Button fixed at bottom (always shown)
+            Spacer(modifier = Modifier.height(65.dp))
             Button(
                 onClick = { onFinish() },
                 colors = ButtonDefaults.buttonColors(

@@ -31,7 +31,6 @@ class AlarmService: Service() {
     companion object {
         const val ACTION_START_ALARM = "ACTION_START_ALARM"
         const val ACTION_DISMISS_ALARM = "ACTION_DISMISS_ALARM"
-        const val CHANNEL_ID = "alarm_channel"
     }
     // if we receiver more intents then we will use this; if the intent is from same alarm(see id) then we will replace it /not put it in / dismiss it as
     // it is same and no need to display same message again; if it is diff then we will put it in and when dismissed then we might need to display it
@@ -54,12 +53,7 @@ class AlarmService: Service() {
 
         when (intent.action) {
             ACTION_START_ALARM -> {
-                val returnCode = handleStartAlarm(intent)
-                coroutineScope.launch {
-                    // helps in our chances to make sure we are a foreground service and audioFocus will not be denied
-                    delay(600);
-                    playAlarm.play()    }
-                return returnCode
+                return handleStartAlarm(intent)
             }
             ACTION_DISMISS_ALARM -> {
                 return handleDismissAlarm(intent)
@@ -93,7 +87,9 @@ class AlarmService: Service() {
     private  fun handleStartAlarm(intent:Intent):Int{
         when(intentHashMap.isEmpty()){
             true ->{
-                return  startPlayingAlarm(intent)
+                val resturnVal =  startPlayingAlarm(intent)
+                playAlarm.play()
+                return  resturnVal
             }
             false -> {
                 // check if the alarm is in the hashMap and if not the do the normal start and if it is then do nothing and return
@@ -107,6 +103,8 @@ class AlarmService: Service() {
                 val intentInHashMap = intentHashMap[intentData.alarmIdInDb]
                 if (intentInHashMap == null){
                     intentHashMap.putIfAbsent(intentData.alarmIdInDb, intent)
+                    return startPlayingAlarm(intent)  // ✅ Build notification + start foreground
+
                 }
                 return  START_REDELIVER_INTENT
             }

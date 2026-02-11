@@ -24,7 +24,7 @@ class PlayAlarm (private val context: Context, private val playTheAlarmEvenIfAud
         when (focusChange) {
             AudioManager.AUDIOFOCUS_LOSS -> mediaPlayer?.stop()
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> pause()
-            AudioManager.AUDIOFOCUS_GAIN  or  AudioManager.AUDIOFOCUS_GAIN_TRANSIENT  or AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE or AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK -> {
+            AudioManager.AUDIOFOCUS_GAIN,  AudioManager.AUDIOFOCUS_GAIN_TRANSIENT, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK -> {
                 mediaPlayer?.start()
             }
         }
@@ -82,7 +82,7 @@ class PlayAlarm (private val context: Context, private val playTheAlarmEvenIfAud
                 setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 build()
             })
-            setAcceptsDelayedFocusGain(false)  // Alarms shouldn't accept delay
+            setAcceptsDelayedFocusGain(false)
             setOnAudioFocusChangeListener(audioFocusChangeListener)
             build()
         }
