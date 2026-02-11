@@ -63,7 +63,7 @@ class AlarmActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MaterialTheme(colorScheme = dynamicDarkColorScheme(this)) {
-                var messageVarToSet by remember { mutableStateOf("-------------11111111111111+++++++++++++++++0000000000") }
+                var messageVarToSet by remember { mutableStateOf("") }
                 var intentData by remember { mutableStateOf<AlarmActivityIntentData?>(null)  }
 
                 LaunchedEffect(Unit) {
@@ -71,14 +71,13 @@ class AlarmActivity : ComponentActivity() {
                     val intentDataAccessed = intentData
                     logD("the intent data we got from parsing is $intentData")
                     if (intentDataAccessed !=  null ) {
-                        messageVarToSet = "-------------11111111111111+++++++++++++++++0000000000"
-//                        messageVarToSet = intentDataAccessed.message
+                        messageVarToSet = intentDataAccessed.message
                     }
                     logD("the message from intent we got is $messageVarToSet ")
                 }
                 TimeDisplay(
                     onFinish = { finishAndRemoveTask()},
-                    "-------------11111111111111+++++++++++++++++0000000000",
+                    message = messageVarToSet
                 )
             }
         }
