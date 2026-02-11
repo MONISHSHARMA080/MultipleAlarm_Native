@@ -17,7 +17,7 @@ import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
 
-class PlayAlarm (private val context: Context,  var playTheAlarmEvenIfAudioFocusIsDenied: Boolean = true){
+class PlayAlarm (private val context: Context){
     var mediaPlayer: MediaPlayer? =  null
     var audioFocusRequest: AudioFocusRequest? = null
     private val audioManager: AudioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -50,29 +50,12 @@ class PlayAlarm (private val context: Context,  var playTheAlarmEvenIfAudioFocus
                     mediaPlayer?.start()
                 }
                 AudioManager.AUDIOFOCUS_REQUEST_FAILED ->{
-                    logD("the audio Focus request failed we got $result and playTheAlarmEvenIfAudioFocusIsDenied:$playTheAlarmEvenIfAudioFocusIsDenied ")
-                    if (playTheAlarmEvenIfAudioFocusIsDenied) {
                         mediaPlayer?.start()
-                    }else {
-                        mediaPlayer?.pause()
-                        coroutineScope.launch {
-                            delay(2.49.seconds)
-                            if (mediaPlayer?.isPlaying == false){
-                                mediaPlayer?.start()
-                                logD("after 2.49 sec and the playTheAlarmEvenIfAudioFocusIsDenied:$playTheAlarmEvenIfAudioFocusIsDenied and the media player was not playing so we are playing the sound as this is an alarm")
-                            }
-
-                        }
-                    }
                 }
 
                 else -> {}
             }
         }
-    }
-    /**this will set the */
-    fun playOnWhenFocusGranted(){
-
     }
 
     fun pause(){
@@ -84,16 +67,16 @@ class PlayAlarm (private val context: Context,  var playTheAlarmEvenIfAudioFocus
         runCatching {
             mediaPlayer?.stop()
             mediaPlayer = null
-            val audioFocusReq = audioFocusRequest
-            if (audioFocusReq != null ){
-                audioManager.abandonAudioFocusRequest(audioFocusReq)
+            audioFocusRequest?.let { req ->
+                val result = audioManager.abandonAudioFocusRequest(req)
+                logD("Abandoned audio focus. Result: $result")
             }
             audioFocusRequest = null
         }
     }
 
     private fun buildAudioFocusRequest(): AudioFocusRequest {
-        val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT).run {
+        val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).run {
             setAudioAttributes(AudioAttributes.Builder().run {
                 setUsage(AudioAttributes.USAGE_ALARM)
                 setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -106,6 +89,7 @@ class PlayAlarm (private val context: Context,  var playTheAlarmEvenIfAudioFocus
         this.audioFocusRequest = focusRequest
         return focusRequest
     }
+
     private fun buildMediaPLayer(): MediaPlayer{
         val randomAlarmToPlay = getRandomAlarm()
         val mediaPLayerNew = MediaPlayer().apply {
