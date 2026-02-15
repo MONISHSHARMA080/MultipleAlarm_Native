@@ -1,6 +1,7 @@
 package com.example.trying_native.Components_for_ui_compose
 
-import android.icu.util.Calendar
+import android.os.VibrationEffect
+import java.util.Calendar
 import android.text.format.DateFormat
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -45,6 +46,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -63,24 +66,39 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.trying_native.dataBase.AlarmData
+import com.example.trying_native.dataBase.AlarmObject
+import com.example.trying_native.logD
 import kotlinx.coroutines.launch
 
+enum class AccentColor(val value:Color) {
+     Ok(Color(0xFF1A73E8)),
+    Problem(Color(0xFFde0707))
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-@Composable fun AlarmPickerScreen(alarm: AlarmData?, onDismissRequestFun: () -> Unit){
+@Composable fun AlarmPickerScreen(alarm: AlarmData?, onAlarmSet: (AlarmObject) -> Unit){
     //if the alarm is null then it's for a new alarm else we are editing an alarm
     val coroutineScope = rememberCoroutineScope()
-    var startTime by remember { mutableStateOf(Calendar.getInstance() ) }
-    var endTime by remember { mutableStateOf(
-        // time is +45 min current if more than the day then leave it unchanged
-        Calendar.getInstance().apply {
-            add(Calendar.MINUTE ,45)
-            if (get(Calendar.DAY_OF_YEAR) != startTime.get(Calendar.DAY_OF_YEAR)) { timeInMillis = startTime.timeInMillis }
-        }
+    var alarmObject by remember { mutableStateOf<AlarmObject>(
+        alarm?.toAlarmObject() ?: AlarmObject(
+            startTime = Calendar.getInstance(),
+            endTime =Calendar.getInstance().apply {
+                add(Calendar.MINUTE ,45)
+                if (get(Calendar.DAY_OF_YEAR) != Calendar.getInstance().get(Calendar.DAY_OF_YEAR)) { timeInMillis = Calendar.getInstance().timeInMillis }
+            },
+            date = Calendar.getInstance().timeInMillis,
+            message = "",
+            freqGottenAfterCallback = 1
+        )
     ) }
-    var frequency by remember { mutableStateOf<Int?>(1) }
-    var message by remember { mutableStateOf<String>("") }
+    LaunchedEffect(alarmObject) {
+        logD("the new alarmObject is $alarmObject")
+    }
+
+    val weGood by remember { derivedStateOf { alarmObject.isOk()  } }
+    val accentColor by remember { derivedStateOf { logD("weGood: $weGood"); if (weGood) AccentColor.Ok.value else AccentColor.Problem.value  } }
+
     val listOfDays = remember { mutableStateListOf('M', 'T', 'W', 'T', 'F', 'S', 'S') }
-    var accentColor by remember {mutableStateOf(Color(0xFF1A73E8)) }
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
 
     Scaffold(
@@ -123,14 +141,9 @@ import kotlinx.coroutines.launch
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TimeBox("START TIME", startTime, isSelected = true, onNewTimeSelected = {newSelectedTime-> startTime = newSelectedTime})
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        tint = Color.Gray,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    TimeBox("END TIME", endTime, isSelected = true, onNewTimeSelected = {newSelectedTime-> endTime = newSelectedTime})
+                    TimeBox("START TIME", alarmObject.startTime, isSelected = true, accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(startTime = newSelectedTime) })
+                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
+                    TimeBox("END TIME", alarmObject.endTime, isSelected = true, accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(endTime = newSelectedTime) })
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -164,7 +177,7 @@ import kotlinx.coroutines.launch
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(26.dp))
                 // --- frequency Section ---
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -193,20 +206,18 @@ import kotlinx.coroutines.launch
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    IconButton(onClick = { frequency?.let { if (it > 1) frequency = it - 1  } }) {
+                                    IconButton(onClick = { alarmObject = alarmObject.copy(freqGottenAfterCallback = alarmObject.freqGottenAfterCallback - 1) }) {
                                         Icon(Icons.Default.Remove, contentDescription = null, tint = Color.White)
                                     }
                                     BasicTextField(
-                                        value = frequency?.toString() ?: "",
+                                        value = alarmObject.freqGottenAfterCallback.toString() ?: "",
                                         onValueChange = { newValue ->
                                             val filteredValue = newValue.filter { it.isDigit() }
                                             if (filteredValue.isNotEmpty()) {
-                                                val intValue = filteredValue.toIntOrNull()
-                                                if (intValue != null && intValue > 0 && intValue < 700) {
-                                                    frequency = intValue
+                                                val intValue = filteredValue.toLongOrNull()
+                                                if (intValue != null && intValue > 0 && intValue < 710) {
+                                                    alarmObject= alarmObject.copy(freqGottenAfterCallback = intValue )
                                                 }
-                                            } else if (newValue.isEmpty()) {
-                                                frequency = null
                                             }
                                         },
                                         modifier = Modifier.width(226.dp),
@@ -220,31 +231,28 @@ import kotlinx.coroutines.launch
                                         singleLine = true
                                     )
                                     IconButton(onClick = {
-                                        val freqTmp = frequency
-                                        frequency = if (freqTmp != null) freqTmp + 1 else 1
+                                        val freqTmp = alarmObject.freqGottenAfterCallback
+                                        val finalFreq= if (freqTmp >= 1) freqTmp + 1 else 1
+                                        alarmObject = alarmObject.copy( freqGottenAfterCallback = finalFreq)
                                     }) {
                                         Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
                                     }
                                 }
                             }
                         }
-
                         Spacer(modifier = Modifier.height(12.dp))
-                        if (frequency == null){
+                        if ( alarmObject.freqGottenAfterCallback < 1){
                             Text("Please enter the frequency value", color = Color.Gray, fontSize = 12.sp)
                         } else{
                             Text(
-                                "Alarm will ring every $frequency minutes between ${getTimeFormatted(startTime)} AM and ${getTimeFormatted(endTime)} AM.",
+                                "Alarm will ring every ${alarmObject.freqGottenAfterCallback} minutes between ${getTimeFormatted(alarmObject.startTime)}  and ${getTimeFormatted(alarmObject.endTime)} AM.",
                                 color = Color.Gray,
                                 fontSize = 12.sp
                             )
-
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
+                Spacer(modifier = Modifier.height(26.dp))
                 // --- Message Section ---
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -259,8 +267,8 @@ import kotlinx.coroutines.launch
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         BasicTextField(
-                            value = message,
-                            onValueChange = { message = it },
+                            value = alarmObject.message,
+                            onValueChange = { alarmObject= alarmObject.copy(message = it) },
                             modifier = Modifier
                                 .bringIntoViewRequester(bringIntoViewRequester)
                                 .onFocusEvent {
@@ -281,7 +289,7 @@ import kotlinx.coroutines.launch
                             ),
                             decorationBox = { innerTextField ->
                                 Box {
-                                    if (message.isEmpty()) {
+                                    if (alarmObject.message.isEmpty()) {
                                         Text(
                                             "Alarm message ....",
                                             color = Color.DarkGray,
@@ -294,31 +302,31 @@ import kotlinx.coroutines.launch
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(54.dp))
                 Button(
-                    onClick = { /* Set Alarms Logic */ },
+                    onClick = {
+                        if (alarmObject.isOk()) onAlarmSet(alarmObject)
+                    },
                     modifier = Modifier.fillMaxWidth().height(64.dp),
                     shape = RoundedCornerShape(33.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = accentColor)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.AlarmAdd, contentDescription = null)
+                        Icon(Icons.Default.AlarmAdd, contentDescription = null, tint = Color.White)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Set Alarms", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
+                        Text("Set Alarm", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }
-
         }
-
-
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimeBox(label: String, time: Calendar, isSelected: Boolean, onNewTimeSelected: (Calendar) -> Unit) {
-    val borderColor = if (isSelected) Color(0xFF1A73E8) else Color(0xFF1C222B)
+fun TimeBox(label: String, time: Calendar, isSelected: Boolean, accentColor: Color, onNewTimeSelected: (Calendar) -> Unit) {
+//    val borderColor = if (isSelected) Color(0xFF1A73E8) else Color(0xFF1C222B)
+    val borderColor = accentColor
     val timePickerState = rememberTimePickerState(
         initialHour = time.get(Calendar.HOUR_OF_DAY),
         initialMinute = time.get(Calendar.MINUTE),
@@ -348,8 +356,8 @@ fun TimeBox(label: String, time: Calendar, isSelected: Boolean, onNewTimeSelecte
                         confirmButton = {
                             Button(onClick = {
                                 showTimePicker = false
-                               calendar = calendar.apply {set(Calendar.HOUR_OF_DAY, timePickerState.hour); set(Calendar.MINUTE, timePickerState.minute) }
-                                onNewTimeSelected(time)
+                               calendar = Calendar.getInstance().apply {set(Calendar.HOUR_OF_DAY, timePickerState.hour); set(Calendar.MINUTE, timePickerState.minute) }
+                                onNewTimeSelected(calendar)
                             }) {
                                 Text("OK")
                             }
@@ -359,8 +367,8 @@ fun TimeBox(label: String, time: Calendar, isSelected: Boolean, onNewTimeSelecte
                         }
                     )
                 }
-
-                Text(label, color = if (isSelected) Color(0xFF3F8CFF) else Color.Gray, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+//                Text(label, color = accentColor, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(label,  color = Color.Gray, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 Text(getTimeFormatted(time), color = Color.White, fontSize = 35.sp, fontWeight = FontWeight.Bold)
                 Text(getTimeFormatted(calendar, "a"), color = Color.Gray, fontSize = 12.sp)
             }
@@ -371,3 +379,4 @@ fun TimeBox(label: String, time: Calendar, isSelected: Boolean, onNewTimeSelecte
 fun getTimeFormatted(cal: Calendar, formatter:String = "hh:mm"): String{
     return DateFormat.format(formatter, cal.timeInMillis).toString()
 }
+

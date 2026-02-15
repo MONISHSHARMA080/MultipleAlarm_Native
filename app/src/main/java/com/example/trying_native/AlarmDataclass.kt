@@ -13,6 +13,7 @@ import androidx.room.RoomDatabase
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 
 @Entity(indices = [Index(value = ["first_value", "second_value"])])
@@ -50,6 +51,9 @@ data class AlarmData(
     }
     fun getDateFormatted(time:Long):String{
         return SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(time).trim()
+    }
+    fun  toAlarmObject():AlarmObject{
+        return AlarmObject(startTime = Calendar.getInstance().apply { timeInMillis = startTime }, endTime=Calendar.getInstance().apply { timeInMillis = endTime }, date=date, message=message, freqGottenAfterCallback=freqGottenAfterCallback)
     }
 
 }
@@ -98,4 +102,25 @@ interface AlarmDao {
     suspend fun deleteAllAlarmsFromDb()
 
 
+}
+/** simple alarm object, this is not the DB one  */
+data class AlarmObject(
+    val startTime: Calendar,
+    val endTime: Calendar,
+    val date: Long,
+    val message:String,
+    /** this is same as the oen used to skip the time just provide it and will just skip it */
+    val freqGottenAfterCallback: Long
+){
+    fun isOk(): Boolean{
+        // check is the date is on the same day as start time and end time
+        return startTime.timeInMillis < endTime.timeInMillis && freqGottenAfterCallback >= 1 && freqGottenAfterCallback < 700
+    }
+    private fun getDateTimeFormatted(time:Long):String{
+        return SimpleDateFormat("hh:mm a dd/MM/yyyy ", Locale.getDefault()).format(time)
+    }
+
+    override fun toString(): String {
+        return "startTime:${getDateTimeFormatted(startTime.timeInMillis)}, endTime:${getDateTimeFormatted(endTime.timeInMillis)}, date:$date, message:$message freqGottenAfterCallback:$freqGottenAfterCallback"
+    }
 }

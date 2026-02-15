@@ -63,8 +63,8 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
         }
     }
 
-     suspend fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, startTimeForAlarmSeries: Long, alarmMessage: String= "",
-                                      alarmData: AlarmData
+      suspend fun scheduleAlarm(startTime: Long, endTime:Long, alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, startTimeForAlarmSeries: Long, alarmMessage: String= "",
+                                       alarmData: AlarmData
     ): Result<Unit> {
         return runCatching {
             logD("the message in the startTime is $alarmMessage")
