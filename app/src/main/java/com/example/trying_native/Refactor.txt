@@ -22,11 +22,16 @@ b) Code Refactor :--
     [X] make a data class for the alarm and use that in the intent
     [X] replace the start activity with live notification or foreground activity, ask user [LATER after mvp]
     [*] use media player to make sure the audio focus mistake is not with ringtone manger
-    * see and check that the app works for the minimum android version to latest (search for people using android version, go for 50% or > , android 11 or up hopefully)
+    [*] see and check that the app works for the minimum android version to latest (search for people using android version, go for 50% or > , android 11 or up hopefully)
     * also add force update the app , or ask user to update the app
     * redo the cancelAlarmByCancelingPendingIntent()
     * put a ask user for review after 5 days popup
-    * redo the ask for alarm sheet(alarm detail enter sheet); like that popup is ugly
+    * redo the ask for alarm sheet(alarm detail enter sheet); like that popup is ugly --
+         now we can either use the the sat sun mon day etc remainder for the weekly repeating alarm or we can give the user a custom
+         functionality displaying where they are in the week(scroll in the list so it displays date from m,t,w,f,s,s eg if we at
+         Friday then scroll to the end and show the Friday), horizontal list and ask them to select dates they want to schedule
+         the alarms at, can do only 20 at max, and when the user selects the past date then tell them they can't;
+         and give them a option to go see the cal and select multiple dates
 
 
 c)  later :--

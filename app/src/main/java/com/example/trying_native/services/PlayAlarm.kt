@@ -40,6 +40,10 @@ class PlayAlarm (private val context: Context){
     /** play a new random alarm*/
     fun play( ){
         runCatching {
+            if (mediaPlayer?.isPlaying == true) {
+                logD(" the mediaPlayer playing is ${mediaPlayer?.isPlaying} so we are returning ")
+                return
+            }
             val audioFocusReqTemp = audioFocusRequest ?: buildAudioFocusRequest()
             audioFocusRequest = audioFocusReqTemp
             if (mediaPlayer == null ) mediaPlayer = buildMediaPLayer()

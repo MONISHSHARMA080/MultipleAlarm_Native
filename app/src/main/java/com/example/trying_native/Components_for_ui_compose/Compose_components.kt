@@ -3,7 +3,6 @@ package com.example.trying_native.components_for_ui_compose
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.content.Context
-import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -110,7 +109,7 @@ fun AlarmContainer(
     activityContext: ComponentActivity,
 ) {
     // Initialize database and DAO asynchronously
-    var alarmDao by remember { mutableStateOf<AlarmDao>(Room.databaseBuilder(activityContext.applicationContext, AlarmDatabase::class.java, "alarm-database").build().alarmDao()) }
+    var alarmDao by remember { mutableStateOf(Room.databaseBuilder(activityContext.applicationContext, AlarmDatabase::class.java, "alarm-database").build().alarmDao()) }
     val alarmsController = AlarmsController()
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val fontSize = (screenHeight * 0.05f).value.sp
@@ -123,7 +122,6 @@ fun AlarmContainer(
     val snackBarHostState = remember { SnackbarHostState() }
 
     Scaffold(contentWindowInsets = WindowInsets.systemBars) { edgeToEdgePadding ->
-
         Box(
             modifier = Modifier
                 .testTag("AlarmContainer")

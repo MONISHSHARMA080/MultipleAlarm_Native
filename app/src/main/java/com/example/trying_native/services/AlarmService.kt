@@ -36,7 +36,6 @@ class AlarmService: Service() {
     // it is same and no need to display same message again; if it is diff then we will put it in and when dismissed then we might need to display it
     val intentHashMap: LinkedHashMap<Int,Intent> = LinkedHashMap(50)
     val playAlarm by lazy { PlayAlarm(this) }
-    val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun onBind(intent: Intent?) = null
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -86,9 +85,9 @@ class AlarmService: Service() {
     private  fun handleStartAlarm(intent:Intent):Int{
         when(intentHashMap.isEmpty()){
             true ->{
-                val resturnVal =  startPlayingAlarm(intent)
+                val returnVal =  startPlayingAlarm(intent)
                 playAlarm.play()
-                return  resturnVal
+                return  returnVal
             }
             false -> {
                 // check if the alarm is in the hashMap and if not the do the normal start and if it is then do nothing and return
@@ -103,8 +102,8 @@ class AlarmService: Service() {
                 if (intentInHashMap == null){
                     intentHashMap.putIfAbsent(intentData.alarmIdInDb, intent)
                     return startPlayingAlarm(intent)  // ✅ Build notification + start foreground
-
                 }
+                playAlarm.play()
                 return  START_REDELIVER_INTENT
             }
         }

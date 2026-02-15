@@ -14,7 +14,6 @@ android {
 
     defaultConfig {
         applicationId = "com.coolApps.trying_native"
-//        applicationId = "com.example.trying_native"
         minSdk = 33
         targetSdk = 36
         versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
@@ -43,10 +42,15 @@ android {
 
     buildTypes {
         release {
+            resValue("string", "app_name", "MyApp")
             isShrinkResources = true
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.getByName("release")
+        }
+        debug {
+            applicationIdSuffix = ".debug"  // Makes it com.example.trying_native.debug
+            resValue("string", "app_name", "MyApp Debug")
         }
     }
 
@@ -94,6 +98,9 @@ dependencies {
 //    implementation("com.posthog:posthog-android:3.+")
     implementation(libs.androidx.espresso.contrib)
     implementation(libs.androidx.ui.test.junit4.android)
+    implementation(libs.androidx.compose.ui.text)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.foundation.layout)
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation("androidx.test:runner:1.6.1")
     androidTestImplementation("androidx.test:rules:1.6.1")
