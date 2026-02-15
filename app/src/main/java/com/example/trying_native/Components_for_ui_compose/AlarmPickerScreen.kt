@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -93,6 +95,7 @@ import com.example.trying_native.dataBase.AlarmData
                     .background(Color(0xFF0F131A)) // Deep dark background
                     .verticalScroll(rememberScrollState())
                     .fillMaxSize()
+                    .navigationBarsPadding()
                     .imePadding()
                      .padding(horizontal = 20.dp)
                     .padding(bottom = contentPadding.calculateBottomPadding() + 10.dp)
