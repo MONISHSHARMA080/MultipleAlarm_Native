@@ -3,6 +3,7 @@ package com.example.trying_native.components_for_ui_compose
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.content.Context
+import android.content.Context.ALARM_SERVICE
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -85,8 +86,10 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
@@ -105,12 +108,16 @@ import java.util.Date
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmContainer(
-    alarmManager: AlarmManager,
     activityContext: ComponentActivity,
 ) {
     // Initialize database and DAO asynchronously
     var alarmDao by remember { mutableStateOf(Room.databaseBuilder(activityContext.applicationContext, AlarmDatabase::class.java, "alarm-database").build().alarmDao()) }
     val alarmsController = AlarmsController()
+    val context = LocalContext.current
+    val alarmManager = remember {
+        context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+    }
+
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val fontSize = (screenHeight * 0.05f).value.sp
     val coroutineScope = activityContext.lifecycleScope

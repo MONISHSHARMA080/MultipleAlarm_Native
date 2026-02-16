@@ -1,6 +1,5 @@
 package com.example.trying_native.Components_for_ui_compose
 
-import android.os.VibrationEffect
 import java.util.Calendar
 import android.text.format.DateFormat
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -46,7 +45,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -84,27 +82,23 @@ enum class AccentColor(val value:Color) {
             startTime = Calendar.getInstance(),
             endTime =Calendar.getInstance().apply {
                 add(Calendar.MINUTE ,45)
-                if (get(Calendar.DAY_OF_YEAR) != Calendar.getInstance().get(Calendar.DAY_OF_YEAR)) { timeInMillis = Calendar.getInstance().timeInMillis }
+                if (get(Calendar.DAY_OF_YEAR) != Calendar.getInstance().get(Calendar.DAY_OF_YEAR)) {
+//                    timeInMillis = Calendar.getInstance().timeInMillis
+                    // go to the end of the day
+                    set(Calendar.HOUR_OF_DAY, 23)
+                    set(Calendar.MINUTE, 59)
+                }
             },
             date = Calendar.getInstance().timeInMillis,
             message = "",
             freqGottenAfterCallback = 1
         )
     ) }
-    LaunchedEffect(alarmObject) {
-        logD("the new alarmObject is $alarmObject")
-    }
-
     val weGood by remember { derivedStateOf { alarmObject.isOk()  } }
     val accentColor by remember { derivedStateOf { logD("weGood: $weGood"); if (weGood) AccentColor.Ok.value else AccentColor.Problem.value  } }
-
     val listOfDays = remember { mutableStateListOf('M', 'T', 'W', 'T', 'F', 'S', 'S') }
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
-
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-    ) { contentPadding->
+    Scaffold(modifier = Modifier.fillMaxSize()) { contentPadding->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -126,12 +120,10 @@ enum class AccentColor(val value:Color) {
                 // --- Header ---
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp).padding(start = 16.dp, end = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("Cancel", color = Color.Gray, fontSize = 16.sp, )
-                    Text(if (alarm == null)"New Schedule" else "Edit Alarm" , color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    Text("Save", color = Color(0xFF3F8CFF), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(if (alarm == null)"New alarm" else "Edit Alarm" , color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -170,7 +162,7 @@ enum class AccentColor(val value:Color) {
                                 .size(40.dp)
                                 .clip(CircleShape)
                                 .clickable {isSelected = !isSelected}
-                                .background(if (isSelected) Color(0xFF1A73E8) else Color(0xFF1C222B)),
+                                .background(accentColor),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(day.toString(), color = if (isSelected) Color.White else Color.Gray)
@@ -190,9 +182,7 @@ enum class AccentColor(val value:Color) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Frequency", color = Color.White, fontWeight = FontWeight.Bold)
                         }
-
                         Spacer(modifier = Modifier.height(16.dp))
-
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             // Interval Value Stepper
                             Column(modifier = Modifier.weight(1f)) {
@@ -220,7 +210,15 @@ enum class AccentColor(val value:Color) {
                                                 }
                                             }
                                         },
-                                        modifier = Modifier.width(226.dp),
+                                        modifier = Modifier.width(226.dp)
+                                            .bringIntoViewRequester(bringIntoViewRequester)
+                                            .onFocusEvent {
+                                                if (it.isFocused) {
+                                                    coroutineScope.launch {
+                                                        bringIntoViewRequester.bringIntoView()
+                                                    }
+                                                }
+                                            },
                                         textStyle = TextStyle(
                                             color = Color.White,
                                             fontWeight = FontWeight.Bold,
@@ -291,7 +289,7 @@ enum class AccentColor(val value:Color) {
                                 Box {
                                     if (alarmObject.message.isEmpty()) {
                                         Text(
-                                            "Alarm message ....",
+                                            "Alarm message......",
                                             color = Color.DarkGray,
                                             fontSize = 14.sp
                                         )
