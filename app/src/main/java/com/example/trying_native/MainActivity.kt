@@ -22,8 +22,8 @@ class MainActivity : ComponentActivity() {
       enableEdgeToEdge()
       setContent {
         MaterialTheme(colorScheme = dynamicDarkColorScheme(this)) {
-          AlarmPickerScreen(null, {alarmObject -> })
-//          AlarmContainer(  this@MainActivity )
+//          AlarmPickerScreen(null, {alarmObject -> })
+          AlarmContainer(  this@MainActivity )
         }
       }
     } catch (e: Exception) {
