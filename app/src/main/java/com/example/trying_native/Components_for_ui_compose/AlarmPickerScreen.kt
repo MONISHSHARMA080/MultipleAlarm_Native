@@ -2,6 +2,8 @@ package com.example.trying_native.Components_for_ui_compose
 
 import java.util.Calendar
 import android.text.format.DateFormat
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -39,6 +41,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -74,7 +77,9 @@ enum class AccentColor(val value:Color) {
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-@Composable fun AlarmPickerScreen(alarm: AlarmData?, onAlarmSet: (AlarmObject) -> Unit){
+@Composable fun AlarmPickerScreen(
+    alarm: AlarmData?, onAlarmSet: (AlarmObject) -> Unit,
+){
     //if the alarm is null then it's for a new alarm else we are editing an alarm
     val coroutineScope = rememberCoroutineScope()
     var alarmObject by remember { mutableStateOf<AlarmObject>(
@@ -98,6 +103,9 @@ enum class AccentColor(val value:Color) {
     val accentColor by remember { derivedStateOf { logD("weGood: $weGood"); if (weGood) AccentColor.Ok.value else AccentColor.Problem.value  } }
     val listOfDays = remember { mutableStateListOf('M', 'T', 'W', 'T', 'F', 'S', 'S') }
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
+//    ModalBottomSheet(onDismissRequest = {logD("alarmSheet dismissed")}) {
+//
+//    }
     Scaffold(modifier = Modifier.fillMaxSize()) { contentPadding->
         Box(
             modifier = Modifier
@@ -107,11 +115,11 @@ enum class AccentColor(val value:Color) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF0F131A)) // Deep dark background
+                    .background(Color(0xFF0F131A))
                     .verticalScroll(rememberScrollState())
                     .fillMaxSize()
                     .navigationBarsPadding()
-                     .padding(horizontal = 20.dp)
+                    .padding(horizontal = 20.dp)
                     .padding(bottom = contentPadding.calculateBottomPadding() + 10.dp)
                     .padding(top = contentPadding.calculateTopPadding() + 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -318,6 +326,7 @@ enum class AccentColor(val value:Color) {
             }
         }
     }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -1,5 +1,6 @@
 package com.example.trying_native.components_for_ui_compose
 
+import android.R
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.content.Context
@@ -7,6 +8,10 @@ import android.content.Context.ALARM_SERVICE
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -80,6 +85,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -94,40 +100,42 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.example.trying_native.AlarmLogic.AlarmsController
-import com.example.trying_native.Components_for_ui_compose.alarmListScreen
+import com.example.trying_native.Components_for_ui_compose.AlarmListScreen
+import com.example.trying_native.Components_for_ui_compose.AlarmPickerScreen
 import com.example.trying_native.FirstLaunchAskForPermission.FirstLaunchAskForPermission
 import com.example.trying_native.dataBase.AlarmDatabase
 import com.example.trying_native.notification.NotificationBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOn
 import java.time.LocalTime
 import java.util.Date
+import kotlin.time.Duration.Companion.seconds
 
 @SuppressLint("FlowOperatorInvokedInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AlarmContainer(
-    activityContext: ComponentActivity,
-) {
-    var alarmDao by remember { mutableStateOf(Room.databaseBuilder(activityContext.applicationContext, AlarmDatabase::class.java, "alarm-database").build().alarmDao()) }
+fun AlarmContainer(activityContext: ComponentActivity) {
+    val alarmDao = Room.databaseBuilder(activityContext.applicationContext, AlarmDatabase::class.java, "alarm-database").build().alarmDao()
     val context = LocalContext.current
     val alarmManager = remember { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
     val coroutineScope = activityContext.lifecycleScope
     val uncancellableScope = CoroutineScope(coroutineScope.coroutineContext + NonCancellable)
     val alarms by alarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO).collectAsStateWithLifecycle(initialValue = emptyList())
-    alarmListScreen(alarmManager =alarmManager, alarmDao = alarmDao, alarms = alarms, uncancellableScope = uncancellableScope, activityContext =activityContext  )
-
-
+//    AlarmListScreen(
+//        alarmManager =alarmManager, alarmDao = alarmDao,
+//        alarms = alarms, uncancellableScope = uncancellableScope, activityContext =activityContext,
+//    )
+    AlarmPickerScreen(alarms.getOrNull(0), {alarmData ->} )
 
 }
 
 
-
 @Composable
-fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Color = Color.Blue, onClick: () -> Unit, context:Context) {
-//    var plusIconClicked by remember { mutableStateOf(false) }
+fun RoundPlusIcon(
+    modifier: Modifier = Modifier, size: Dp , backgroundColor: Color = Color.Blue, onClick: () -> Unit, context:Context) {
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -137,8 +145,7 @@ fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Col
     val coroutineScope = rememberCoroutineScope()
     Box(
         modifier = modifier
-            .size(size)
-            .zIndex(4f)
+            .size(size).zIndex(4f)
             .background(color = backgroundColor, shape = CircleShape)
             .clickable {
                 coroutineScope.launch {
@@ -156,6 +163,7 @@ fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Col
             modifier = Modifier.size(size / 2)
         )
     }
+
 }
 
 enum class InputPickerType { START, END }

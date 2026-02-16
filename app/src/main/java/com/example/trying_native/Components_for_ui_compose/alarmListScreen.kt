@@ -66,18 +66,14 @@ import kotlinx.coroutines.launch
 import java.util.Calendar
 
 
-@Composable fun alarmListScreen(
+@Composable fun AlarmListScreen(
 	alarms:List<AlarmData>, alarmDao: AlarmDao,
-	alarmsController: AlarmsController = AlarmsController(),
-	alarmManager: AlarmManager,
-	uncancellableScope: CoroutineScope,
-	activityContext: ComponentActivity
+	alarmsController: AlarmsController = AlarmsController(), alarmManager: AlarmManager,
+	uncancellableScope: CoroutineScope, activityContext: ComponentActivity
 ){
-
 	val coroutineScope = rememberCoroutineScope()
 	var showTheDialogToTheUserToAskForPermission by remember { mutableStateOf(false) }
 	val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-//	val screenHeight = LocalWindowInfo.current.containerSize.height.dp
 	val fontSize = (screenHeight * 0.05f).value.sp
 	val clipboardManager = LocalClipboardManager.current
 	val snackBarHostState = remember { SnackbarHostState() }
@@ -170,7 +166,6 @@ import java.util.Calendar
 										modifier = Modifier.padding(bottom = 2.dp)
 									)
 								}
-
 								Column(horizontalAlignment = Alignment.CenterHorizontally) {
 									Icon(
 										imageVector = Icons.AutoMirrored.Filled.ArrowForward,
@@ -239,12 +234,9 @@ import java.util.Calendar
 
 								Text(
 									text = "On: ${individualAlarm.getDateFormatted(individualAlarm.startTime)}",
-									textAlign = TextAlign.Right,
-									fontSize = (fontSize / 2.43),
-									fontWeight = FontWeight.W600,
+									textAlign = TextAlign.Right, fontSize = (fontSize / 2.43), fontWeight = FontWeight.W600,
 									modifier = Modifier.padding(vertical = screenHeight / 74),
 								)
-
 								Button(
 									onClick = {
 										alarmDao.let { dao ->
@@ -358,7 +350,6 @@ import java.util.Calendar
 					},
 				)
 			}
-
 			// Plus button - only show when DAO is ready
 			Box(
 				modifier = Modifier
@@ -369,10 +360,8 @@ import java.util.Calendar
 				RoundPlusIcon(
 					size = screenHeight / 10,
 					onClick = {
-						showTheDialogToTheUserToAskForPermission =
-							!showTheDialogToTheUserToAskForPermission
-					},
-					context = activityContext
+						showTheDialogToTheUserToAskForPermission = !showTheDialogToTheUserToAskForPermission
+					}, context = activityContext,
 				)
 			}
 		}

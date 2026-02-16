@@ -103,6 +103,7 @@ interface AlarmDao {
 
 
 }
+
 /** simple alarm object, this is not the DB one  */
 data class AlarmObject(
     val startTime: Calendar,
