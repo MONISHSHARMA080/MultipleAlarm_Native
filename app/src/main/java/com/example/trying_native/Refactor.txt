@@ -5,7 +5,7 @@ a) UI Refactor : --
     [X] make the frequency one better, like I can type 0 and it should not have an autistic meltdown
     * design it better with this tool ->https://stitch.withgoogle.com/projects/3646385657259615705?pli=1
     * better FSI Ui , --match the color scheme of the app,
-    * a better alarm List ui -- make the alarm more eargonomic
+    * a better alarm List ui -- make the alarm more ergonomic
 
 
 
@@ -35,7 +35,10 @@ b) Code Refactor :--
          the alarms at, can do only 20 at max, and when the user selects the past date then tell them they can't;
          and give them a option to go see the cal and select multiple dates
     * alarmData/Object method to iterate over the alarm, and use it in the searching the activity for closing
-
+    * if received 2 alarms the alarm sound will not play idk why (FSI)
+    * better logging (postHog or other analytic) -- make sure to enable networking
+    * complete the Result object and the error handling with the exception and the display user error
+    * add postHog or other analytic
 
 c)  later :--
        [X] abandon or work on multiple dates alarm, eg start form  today 9:00Pm to tomorrow 4:00 Am -- decided not to

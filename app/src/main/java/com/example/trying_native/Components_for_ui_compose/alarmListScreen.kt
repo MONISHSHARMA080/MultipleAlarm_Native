@@ -3,6 +3,7 @@ package com.example.trying_native.Components_for_ui_compose
 import android.app.AlarmManager
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -110,6 +111,7 @@ import java.util.Calendar
 					ElevatedCard(
 						modifier = Modifier
 							.fillMaxWidth()
+							.clickable{onNavigateToEdit(individualAlarm) }
 							.height(screenHeight / 4)
 							.pointerInput(Unit) {
 								detectTapGestures(
