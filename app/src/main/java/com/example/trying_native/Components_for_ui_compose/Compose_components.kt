@@ -131,8 +131,7 @@ fun AlarmContainer(activityContext: ComponentActivity, alarmDao: AlarmDao, alarm
 
 
 @Composable
-fun RoundPlusIcon(
-    modifier: Modifier = Modifier, size: Dp , backgroundColor: Color = Color.Blue, onClick: () -> Unit, context:Context) {
+fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Color = Color.Blue, onClick: () -> Unit, context:Context) {
     val launcher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -168,7 +167,8 @@ enum class InputPickerType { START, END }
 @Composable
 fun DialogToAskUserAboutAlarmUnified(
     onDismissRequest: () -> Unit,
-    onConfirmation: (startTimeHour: Int, startTimeMinute: Int, endTimeHour: Int, endTimeMinute: Int, startDateInMilliSec: Long, endDateInMilliSec: Long, frequency: Int, alarmMessage: String) -> Unit,
+    onConfirmation: (startTimeHour: Int, startTimeMinute: Int, endTimeHour: Int, endTimeMinute: Int, startDateInMilliSec: Long,
+    endDateInMilliSec: Long, frequency: Int, alarmMessage: String) -> Unit,
 ) {
     // here user will get the time to be current and if they want it to be diff then they can just make
     // it and would have to set the   end time
@@ -177,9 +177,6 @@ fun DialogToAskUserAboutAlarmUnified(
     var endCalendar by remember { mutableStateOf(Calendar.getInstance().apply { timeInMillis = calInstance.timeInMillis + distanceForEndTime } ) }
     var startHour by remember { mutableIntStateOf(calInstance.get(Calendar.HOUR_OF_DAY)) }
     var startMinute by remember { mutableIntStateOf(calInstance.get(Calendar.MINUTE)) }
-//    endCalendar.add(Calendar.MINUTE, distanceForEndTime.toInt() )
-//    var endHour   by remember { mutableIntStateOf(endCalendar.get(Calendar.HOUR_OF_DAY ) ) }
-//    var endMinute by remember { mutableIntStateOf(endCalendar.get(Calendar.MINUTE)) }
     val endHour by remember(endCalendar){
         derivedStateOf { endCalendar.get(Calendar.HOUR_OF_DAY) }
     }

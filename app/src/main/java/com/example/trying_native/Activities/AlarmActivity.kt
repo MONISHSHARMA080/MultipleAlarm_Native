@@ -53,6 +53,7 @@ class AlarmActivity : ComponentActivity() {
     private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var intentReceived: Intent
     private  val AUTO_FINISH_DELAY = 120000L // 2 sec is 120000
+    private var dismissIntent : Intent? = null
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,6 +75,9 @@ class AlarmActivity : ComponentActivity() {
                         messageVarToSet = intentDataAccessed.message
                     }
                     logD("the message from intent we got is $messageVarToSet ")
+                }
+                LaunchedEffect(Unit) {
+                    if (dismissIntent == null) dismissIntent = makeDismissIntent()
                 }
                 TimeDisplay(
                     onFinish = { finishAndRemoveTask()},
@@ -122,16 +126,22 @@ class AlarmActivity : ComponentActivity() {
             } catch (e: Exception) {
                 logD("Error releasing WakeLock in onDestroy: ${e.message}")
             }
-            val dismissIntent = this.intentReceived.apply {
-                action = AlarmService.ACTION_DISMISS_ALARM
-                setClass(this@AlarmActivity,AlarmService::class.java)
-            }
-            startService(dismissIntent)
+            dismissTheAlarm()
             finishAndRemoveTask()
             activityScope.cancel()
         }.fold(onSuccess = {}, onFailure = {exception ->
             logD("there is a exception while destroying the AlarmActivity ->  ${exception.message}\n-->$exception")
         })
+    }
+    private fun makeDismissIntent(): Intent{
+        return this.intentReceived.apply {
+            action = AlarmService.ACTION_DISMISS_ALARM
+            setClass(this@AlarmActivity,AlarmService::class.java)
+        }
+    }
+    private fun dismissTheAlarm(){
+        if (dismissIntent == null) dismissIntent = makeDismissIntent()
+        startService(dismissIntent)
     }
 
     private fun keepScreenON() {

@@ -5,6 +5,8 @@ import android.content.Context
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideIn
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
@@ -62,13 +64,13 @@ fun NavigationStack(activityContext: ComponentActivity) {
 		backStack=backStack,
 		onBack = { backStack.removeLastOrNull()},
 		transitionSpec = {
-			slideInHorizontally (initialOffsetX = { it },) togetherWith slideOutHorizontally (targetOffsetX = { -it })
+			slideInHorizontally (initialOffsetX = { it },) +fadeIn() togetherWith slideOutHorizontally (targetOffsetX = { -it }) + fadeOut()
 		},
 		popTransitionSpec = {
-			slideInHorizontally(initialOffsetX = { -it } ) togetherWith slideOutHorizontally(targetOffsetX = { it }, )
+			slideInHorizontally(initialOffsetX = { -it } ) + fadeIn() togetherWith slideOutHorizontally(targetOffsetX = { it }, ) + fadeOut()
 		},
 		predictivePopTransitionSpec = {
-			slideInHorizontally(initialOffsetX = { -it },  ) togetherWith slideOutHorizontally(targetOffsetX = { it })
+			slideInHorizontally(initialOffsetX = { -it }) + fadeIn() togetherWith slideOutHorizontally(targetOffsetX = { it }) + fadeOut()
 		},
 
 		entryProvider = {key ->

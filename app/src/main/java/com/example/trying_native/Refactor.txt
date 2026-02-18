@@ -1,9 +1,11 @@
 a) UI Refactor : --
     * (Later after design and impl is done)haptic feedback
-    * weekly repeating alarms (like in alarm clock with circles, s,m,t,w,t,f,s
-    * when we click on alarms they should expand and also give me the message and alarm information (? to edit ?)
-    * make the frequency one better, like I can type 0 and it should not have an autistic meltdown
+    [X] weekly repeating alarms (like in alarm clock with circles, s,m,t,w,t,f,s
+    [X] when we click on alarms they should expand and also give me the message and alarm information (? to edit ?)
+    [X] make the frequency one better, like I can type 0 and it should not have an autistic meltdown
     * design it better with this tool ->https://stitch.withgoogle.com/projects/3646385657259615705?pli=1
+    * better FSI Ui , --match the color scheme of the app,
+    * a better alarm List ui -- make the alarm more eargonomic
 
 
 
@@ -32,6 +34,7 @@ b) Code Refactor :--
          Friday then scroll to the end and show the Friday), horizontal list and ask them to select dates they want to schedule
          the alarms at, can do only 20 at max, and when the user selects the past date then tell them they can't;
          and give them a option to go see the cal and select multiple dates
+    * alarmData/Object method to iterate over the alarm, and use it in the searching the activity for closing
 
 
 c)  later :--
