@@ -12,10 +12,12 @@ import androidx.room.Query
 import androidx.room.RoomDatabase
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.Serializable
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+@Serializable
 @Entity(indices = [Index(value = ["first_value", "second_value"])])
 data class AlarmData(
 
@@ -55,7 +57,6 @@ data class AlarmData(
     fun  toAlarmObject():AlarmObject{
         return AlarmObject(startTime = Calendar.getInstance().apply { timeInMillis = startTime }, endTime=Calendar.getInstance().apply { timeInMillis = endTime }, date=date, message=message, freqGottenAfterCallback=freqGottenAfterCallback)
     }
-
 }
 
 @Database(entities = [AlarmData::class], version = 1)
@@ -104,7 +105,6 @@ interface AlarmDao {
 
 }
 
-/** simple alarm object, this is not the DB one  */
 data class AlarmObject(
     val startTime: Calendar,
     val endTime: Calendar,
@@ -113,12 +113,19 @@ data class AlarmObject(
     /** this is same as the oen used to skip the time just provide it and will just skip it */
     val freqGottenAfterCallback: Long
 ){
-    fun isOk(): Boolean{
-        // check is the date is on the same day as start time and end time
-        return startTime.timeInMillis < endTime.timeInMillis && freqGottenAfterCallback >= 1 && freqGottenAfterCallback < 700
-    }
+    fun isOk(alarmData: AlarmData? = null): Boolean{
+        return when(alarmData == null){
+            true -> startTime.timeInMillis < endTime.timeInMillis && freqGottenAfterCallback >= 1 && freqGottenAfterCallback < 700
+            // here ! cause if the alarm is same then we are not ok, we need the new alarm to be diff, than the previous one
+            false -> return  !(alarmData.startTime == startTime.timeInMillis && alarmData.endTime == endTime.timeInMillis  &&alarmData.freqGottenAfterCallback == freqGottenAfterCallback )
+
+        }
+	}
     private fun getDateTimeFormatted(time:Long):String{
-        return SimpleDateFormat("hh:mm a dd/MM/yyyy ", Locale.getDefault()).format(time)
+        return SimpleDateFormat("hh:mm a dd/MM/yyyy", Locale.getDefault()).format(time)
+    }
+    fun toAlarmData(alarmId:Int,isReadyToUse: Boolean = true ): AlarmData{
+       return AlarmData(id = alarmId, startTime = startTime.timeInMillis, endTime= endTime.timeInMillis, date= date, message= message,  freqGottenAfterCallback=freqGottenAfterCallback, isReadyToUse = isReadyToUse)
     }
 
     override fun toString(): String {

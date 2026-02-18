@@ -102,7 +102,9 @@ import androidx.room.Room
 import com.example.trying_native.AlarmLogic.AlarmsController
 import com.example.trying_native.Components_for_ui_compose.AlarmListScreen
 import com.example.trying_native.Components_for_ui_compose.AlarmPickerScreen
+import com.example.trying_native.Components_for_ui_compose.NavigationStack
 import com.example.trying_native.FirstLaunchAskForPermission.FirstLaunchAskForPermission
+import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmDatabase
 import com.example.trying_native.notification.NotificationBuilder
 import kotlinx.coroutines.CoroutineScope
@@ -117,19 +119,14 @@ import kotlin.time.Duration.Companion.seconds
 @SuppressLint("FlowOperatorInvokedInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AlarmContainer(activityContext: ComponentActivity) {
-    val alarmDao = Room.databaseBuilder(activityContext.applicationContext, AlarmDatabase::class.java, "alarm-database").build().alarmDao()
-    val context = LocalContext.current
-    val alarmManager = remember { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
+fun AlarmContainer(activityContext: ComponentActivity, alarmDao: AlarmDao, alarmManager: AlarmManager,  onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit ) {
     val coroutineScope = activityContext.lifecycleScope
     val uncancellableScope = CoroutineScope(coroutineScope.coroutineContext + NonCancellable)
     val alarms by alarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO).collectAsStateWithLifecycle(initialValue = emptyList())
-//    AlarmListScreen(
-//        alarmManager =alarmManager, alarmDao = alarmDao,
-//        alarms = alarms, uncancellableScope = uncancellableScope, activityContext =activityContext,
-//    )
-    AlarmPickerScreen(alarms.getOrNull(0), {alarmData ->} )
-
+    AlarmListScreen(
+        alarmManager =alarmManager, alarmDao = alarmDao, onNavigateToEdit=onNavigateToEdit, onNavigateToCreate=onNavigateToCreate,
+        uncancellableScope = uncancellableScope, activityContext =activityContext,alarms = alarms
+    )
 }
 
 

@@ -1,97 +1,130 @@
+import com.android.build.api.dsl.ApplicationExtension
 import org.gradle.kotlin.dsl.testImplementation
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
-    id("com.google.devtools.ksp") version "1.9.0-1.0.13"
+    id("com.google.devtools.ksp") version "2.3.5"
     id ("kotlin-parcelize")
+    alias(libs.plugins.jetbrains.kotlin.serialization)
+    alias(libs.plugins.kotlin.compose)
+
 }
+val myAppName="Multiple alarms"
+configureAndroid()
+fun Project.configureAndroid() {
+    extensions.configure<ApplicationExtension> {
+        namespace = "com.example.trying_native"
+//        namespace = "com.example.MultipleAlarms"
+        compileSdk = 36
 
-android {
-    namespace = "com.example.trying_native"
-    compileSdk = 36
+        defaultConfig {
+            applicationId = "com.coolApps.trying_native"
+//            applicationId = "com.coolApps.MultipleAlarms"
+            minSdk = 33
+            targetSdk = 36
+            versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
+            versionName = project.findProperty("versionName") as String? ?: "1.0.0"
 
-    defaultConfig {
-        applicationId = "com.coolApps.trying_native"
-        minSdk = 33
-        targetSdk = 36
-        versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
-        versionName = project.findProperty("versionName") as String? ?: "1.0.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary = true
-        }
-    }
- 
-    signingConfigs {
-        create("release") {
-            storeFile = file(System.getenv("ANDROID_KEYSTORE_FILE") ?: 
-                project.findProperty("android.injected.signing.store.file")?.toString() ?: 
-                "release.keystore")
-            storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?:
-                project.findProperty("android.injected.signing.store.password")?.toString()
-            keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?:
-                project.findProperty("android.injected.signing.key.alias")?.toString()
-            keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?:
-                project.findProperty("android.injected.signing.key.password")?.toString()
-        }
-    }
-
-    buildTypes {
-        release {
-            resValue("string", "app_name", "MyApp")
-            isShrinkResources = true
-            isMinifyEnabled = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("release")
-        }
-        debug {
-            applicationIdSuffix = ".debug"  // Makes it com.example.trying_native.debug
-            resValue("string", "app_name", "MyApp Debug")
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
-    }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
-    configurations.all {
-        resolutionStrategy {
-            force("androidx.test.espresso:espresso-core:3.6.1")
-        }
-    }
-    testOptions {
-        unitTests {
-            isIncludeAndroidResources = true
-            // Add these for Robolectric
-            all {
-                it.systemProperty("robolectric.logging", "stdout")
-                it.systemProperty("robolectric.graphicsMode", "NATIVE")
-                // Increase memory for tests
-                // Important for avoiding bytecode verification errors
-                it.jvmArgs("-noverify")
+            testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+            testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+            vectorDrawables {
+                useSupportLibrary = true
             }
+        }
 
+        signingConfigs {
+            create("release") {
+                val keystoreFile = file("release.keystore")
+                if (keystoreFile.exists()) {
+                    // Production signing (CI/CD)
+                    storeFile = keystoreFile
+                    storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                        ?: project.findProperty("android.injected.signing.store.password")?.toString()
+                    keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                        ?: project.findProperty("android.injected.signing.key.alias")?.toString()
+                    keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+                        ?: project.findProperty("android.injected.signing.key.password")?.toString()
+                } else {
+                    // Local development - use debug keystore
+                    storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
+                    storePassword = "android"
+                    keyAlias = "androiddebugkey"
+                    keyPassword = "android"
+                }
+
+//                storeFile = file(System.getenv("ANDROID_KEYSTORE_FILE") ?:
+//                project.findProperty("android.injected.signing.store.file")?.toString() ?:
+//                "release.keystore")
+//                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?:
+//                        project.findProperty("android.injected.signing.store.password")?.toString()
+//                keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?:
+//                        project.findProperty("android.injected.signing.key.alias")?.toString()
+//                keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?:
+//                        project.findProperty("android.injected.signing.key.password")?.toString()
+            }
+        }
+
+        buildTypes {
+            release {
+                val isProductionBuild = file("release.keystore").exists()
+                val appName = if (isProductionBuild) {
+                    myAppName  // "Multiple Alarms" for production
+                } else {
+                    "debug-$myAppName"  // "debug-Multiple Alarms" for local
+                }
+
+                resValue("string", "app_name", appName)
+                isShrinkResources = true
+                isMinifyEnabled = true
+                proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+                signingConfig = signingConfigs.getByName("release")
+            }
+            debug {
+                applicationIdSuffix = ".debug"  // Makes it com.example.trying_native.debug
+                resValue("string", "app_name", "debug-$myAppName")
+            }
+        }
+
+        compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_25
+            targetCompatibility = JavaVersion.VERSION_25
+        }
+
+        buildFeatures {
+            compose = true
+        }
+        packaging {
+            resources {
+                excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            }
+        }
+        configurations.all {
+            resolutionStrategy {
+                force("androidx.test.espresso:espresso-core:3.6.1")
+            }
+        }
+        testOptions {
+            unitTests {
+                isIncludeAndroidResources = true
+                // Add these for Robolectric
+                all {
+                    it.systemProperty("robolectric.logging", "stdout")
+                    it.systemProperty("robolectric.graphicsMode", "NATIVE")
+                    // Increase memory for tests
+                    // Important for avoiding bytecode verification errors
+                    it.jvmArgs("-noverify")
+                }
+
+            }
         }
     }
-
+}
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25)
+    }
 }
 
 dependencies {
@@ -101,14 +134,16 @@ dependencies {
     implementation(libs.androidx.compose.ui.text)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.foundation.layout)
+	implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation("androidx.test:runner:1.6.1")
     androidTestImplementation("androidx.test:rules:1.6.1")
-//    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.1")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation(libs.androidx.junit.ktx)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    implementation("androidx.navigation:navigation-compose:2.9.7")
 
 
     // -- roboelectric tests ---
@@ -118,23 +153,28 @@ dependencies {
     testImplementation("com.google.truth:truth:1.4.5")
 //    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
 
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+    implementation(libs.androidx.material3.adaptive.navigation3)
+    implementation(libs.kotlinx.serialization.core)
 
-    implementation("androidx.compose.material:material-icons-extended:1.7.8")
+    implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.media3.common)
     implementation(libs.androidx.ui.test.android)
-    val room_version = "2.6.1"
+    val roomVersion = "2.8.4"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
-    implementation("androidx.room:room-runtime:$room_version")
-    annotationProcessor("androidx.room:room-compiler:$room_version")
+    implementation("androidx.room:room-runtime:$roomVersion")
+    annotationProcessor("androidx.room:room-compiler:$roomVersion")
 //    kapt("androidx.room:room-compiler:$room_version")
-    ksp("androidx.room:room-compiler:$room_version")
-    implementation("androidx.room:room-ktx:$room_version")
-    implementation("androidx.room:room-rxjava2:$room_version")
-    implementation("androidx.room:room-rxjava3:$room_version")
-    implementation("androidx.room:room-guava:$room_version")
-    testImplementation("androidx.room:room-testing:$room_version")
-    implementation("androidx.room:room-paging:$room_version")
+    ksp("androidx.room:room-compiler:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    implementation("androidx.room:room-rxjava2:$roomVersion")
+    implementation("androidx.room:room-rxjava3:$roomVersion")
+    implementation("androidx.room:room-guava:$roomVersion")
+    testImplementation("androidx.room:room-testing:$roomVersion")
+    implementation("androidx.room:room-paging:$roomVersion")
 
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.material.icons.extended)

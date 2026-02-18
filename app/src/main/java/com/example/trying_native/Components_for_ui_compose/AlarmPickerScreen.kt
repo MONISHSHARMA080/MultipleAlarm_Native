@@ -46,6 +46,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -77,21 +78,17 @@ enum class AccentColor(val value:Color) {
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-@Composable fun AlarmPickerScreen(
-    alarm: AlarmData?, onAlarmSet: (AlarmObject) -> Unit,
-){
+/**[onAlarmSet] - here [AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
+@Composable fun AlarmPickerScreen(alarm: AlarmData?, onAlarmSet: (AlarmObject, AlarmData?) -> Unit, alarmSetGoBack: () -> Unit){
     //if the alarm is null then it's for a new alarm else we are editing an alarm
     val coroutineScope = rememberCoroutineScope()
     var alarmObject by remember { mutableStateOf<AlarmObject>(
         alarm?.toAlarmObject() ?: AlarmObject(
-            startTime = Calendar.getInstance(),
+            startTime = Calendar.getInstance().apply {  },
             endTime =Calendar.getInstance().apply {
                 add(Calendar.MINUTE ,45)
                 if (get(Calendar.DAY_OF_YEAR) != Calendar.getInstance().get(Calendar.DAY_OF_YEAR)) {
-//                    timeInMillis = Calendar.getInstance().timeInMillis
-                    // go to the end of the day
-                    set(Calendar.HOUR_OF_DAY, 23)
-                    set(Calendar.MINUTE, 59)
+                    set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
                 }
             },
             date = Calendar.getInstance().timeInMillis,
@@ -99,13 +96,10 @@ enum class AccentColor(val value:Color) {
             freqGottenAfterCallback = 1
         )
     ) }
-    val weGood by remember { derivedStateOf { alarmObject.isOk()  } }
+    val weGood by remember { derivedStateOf { alarmObject.isOk(alarm)  } }
     val accentColor by remember { derivedStateOf { logD("weGood: $weGood"); if (weGood) AccentColor.Ok.value else AccentColor.Problem.value  } }
     val listOfDays = remember { mutableStateListOf('M', 'T', 'W', 'T', 'F', 'S', 'S') }
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
-//    ModalBottomSheet(onDismissRequest = {logD("alarmSheet dismissed")}) {
-//
-//    }
     Scaffold(modifier = Modifier.fillMaxSize()) { contentPadding->
         Box(
             modifier = Modifier
@@ -133,7 +127,6 @@ enum class AccentColor(val value:Color) {
                 ) {
                     Text(if (alarm == null)"New alarm" else "Edit Alarm" , color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 }
-
                 Spacer(modifier = Modifier.height(16.dp))
                 // --- Time Range Selector ---
                 Row(
@@ -145,9 +138,7 @@ enum class AccentColor(val value:Color) {
                     Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
                     TimeBox("END TIME", alarmObject.endTime, isSelected = true, accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(endTime = newSelectedTime) })
                 }
-
                 Spacer(modifier = Modifier.height(24.dp))
-
                 // --- Repeats / Day Picker ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -156,9 +147,7 @@ enum class AccentColor(val value:Color) {
                     Text("Repeats", color = Color.Gray)
                     Text("Weekdays", color = Color(0xFF3F8CFF))
                 }
-
                 Spacer(modifier = Modifier.height(12.dp))
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -208,13 +197,15 @@ enum class AccentColor(val value:Color) {
                                         Icon(Icons.Default.Remove, contentDescription = null, tint = Color.White)
                                     }
                                     BasicTextField(
-                                        value = alarmObject.freqGottenAfterCallback.toString() ?: "",
+                                        value = if (!(alarmObject.freqGottenAfterCallback in 1..710)) "" else alarmObject.freqGottenAfterCallback.toString() ,
                                         onValueChange = { newValue ->
                                             val filteredValue = newValue.filter { it.isDigit() }
-                                            if (filteredValue.isNotEmpty()) {
+                                            if (filteredValue.isEmpty()) {
+                                                alarmObject = alarmObject.copy(freqGottenAfterCallback = 0)
+                                            } else {
                                                 val intValue = filteredValue.toLongOrNull()
-                                                if (intValue != null && intValue > 0 && intValue < 710) {
-                                                    alarmObject= alarmObject.copy(freqGottenAfterCallback = intValue )
+                                                if (intValue != null && intValue in 1..709) {
+                                                    alarmObject = alarmObject.copy(freqGottenAfterCallback = intValue)
                                                 }
                                             }
                                         },
@@ -279,9 +270,7 @@ enum class AccentColor(val value:Color) {
                                 .bringIntoViewRequester(bringIntoViewRequester)
                                 .onFocusEvent {
                                     if (it.isFocused) {
-                                        coroutineScope.launch {
-                                            bringIntoViewRequester.bringIntoView()
-                                        }
+                                        coroutineScope.launch { bringIntoViewRequester.bringIntoView() }
                                     }
                                 }
                                 .fillMaxWidth()
@@ -311,7 +300,9 @@ enum class AccentColor(val value:Color) {
                 Spacer(modifier = Modifier.height(54.dp))
                 Button(
                     onClick = {
-                        if (alarmObject.isOk()) onAlarmSet(alarmObject)
+                        if (weGood) {
+                            onAlarmSet(alarmObject, alarm);alarmSetGoBack()
+                        }
                     },
                     modifier = Modifier.fillMaxWidth().height(64.dp),
                     shape = RoundedCornerShape(33.dp),
@@ -365,6 +356,7 @@ fun TimeBox(label: String, time: Calendar, isSelected: Boolean, accentColor: Col
                                 showTimePicker = false
                                calendar = Calendar.getInstance().apply {set(Calendar.HOUR_OF_DAY, timePickerState.hour); set(Calendar.MINUTE, timePickerState.minute) }
                                 onNewTimeSelected(calendar)
+
                             }) {
                                 Text("OK")
                             }

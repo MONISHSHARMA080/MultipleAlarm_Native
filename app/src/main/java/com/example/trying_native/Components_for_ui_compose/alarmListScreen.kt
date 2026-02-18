@@ -69,13 +69,12 @@ import java.util.Calendar
 @Composable fun AlarmListScreen(
 	alarms:List<AlarmData>, alarmDao: AlarmDao,
 	alarmsController: AlarmsController = AlarmsController(), alarmManager: AlarmManager,
-	uncancellableScope: CoroutineScope, activityContext: ComponentActivity
+	uncancellableScope: CoroutineScope, activityContext: ComponentActivity,onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit
 ){
 	val coroutineScope = rememberCoroutineScope()
 	var showTheDialogToTheUserToAskForPermission by remember { mutableStateOf(false) }
 	val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 	val fontSize = (screenHeight * 0.05f).value.sp
-	val clipboardManager = LocalClipboardManager.current
 	val snackBarHostState = remember { SnackbarHostState() }
 
 	Scaffold(contentWindowInsets = WindowInsets.systemBars) { edgeToEdgePadding ->
@@ -115,15 +114,7 @@ import java.util.Calendar
 							.pointerInput(Unit) {
 								detectTapGestures(
 									onLongPress = {
-										clipboardManager.setText(
-											AnnotatedString(individualAlarm.message)
-										)
-										coroutineScope.launch {
-											snackBarHostState.showSnackbar(
-												message = "Copied the alarm message",
-												duration = SnackbarDuration.Short
-											)
-										}
+										onNavigateToEdit(individualAlarm)
 									}
 								)
 							}
@@ -313,7 +304,6 @@ import java.util.Calendar
 									set(Calendar.MINUTE, endTimeMinute)
 									set(Calendar.SECOND, 0)
 								}
-
 								uncancellableScope.launch {
 									val exception = alarmsController.scheduleMultipleAlarms(
 										alarmManager,
@@ -350,18 +340,15 @@ import java.util.Calendar
 					},
 				)
 			}
-			// Plus button - only show when DAO is ready
 			Box(
-				modifier = Modifier
-					.align(Alignment.BottomCenter)
-					.padding(bottom = screenHeight / 15)
-					.testTag("RoundPlusIcon")
+				modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = screenHeight / 15)
 			) {
 				RoundPlusIcon(
-					size = screenHeight / 10,
+					size = screenHeight / 10,context = activityContext,
 					onClick = {
-						showTheDialogToTheUserToAskForPermission = !showTheDialogToTheUserToAskForPermission
-					}, context = activityContext,
+//						showTheDialogToTheUserToAskForPermission = !showTheDialogToTheUserToAskForPermission
+						onNavigateToCreate()
+				   },
 				)
 			}
 		}
