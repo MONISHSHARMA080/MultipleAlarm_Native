@@ -3,9 +3,10 @@ a) UI Refactor : --
     [X] weekly repeating alarms (like in alarm clock with circles, s,m,t,w,t,f,s
     [X] when we click on alarms they should expand and also give me the message and alarm information (? to edit ?)
     [X] make the frequency one better, like I can type 0 and it should not have an autistic meltdown
-    * design it better with this tool ->https://stitch.withgoogle.com/projects/3646385657259615705?pli=1
+    [X] design it better with this tool ->https://stitch.withgoogle.com/projects/3646385657259615705?pli=1
     * better FSI Ui , --match the color scheme of the app,
     * a better alarm List ui -- make the alarm more ergonomic
+    * alarmActivity gradient to fade text out so it looks scrollable
 
 
 
@@ -39,6 +40,9 @@ b) Code Refactor :--
     * better logging (postHog or other analytic) -- make sure to enable networking
     * complete the Result object and the error handling with the exception and the display user error
     * add postHog or other analytic
+    * for now allow the user to schedule alarm on a specific date and not multiple
+    * boot receiver
+    * alarm order in Db, like based on time zone( endtime-startTime , time hs date in them) and automatically in the List
 
 c)  later :--
        [X] abandon or work on multiple dates alarm, eg start form  today 9:00Pm to tomorrow 4:00 Am -- decided not to
@@ -55,6 +59,7 @@ c)  later :--
         * re-design app using material 3 expressive
         * now use the alarm Intent data class to tell if we have alarm with random sound or what
         * ability to add repeating alarms (like MONDAY, WED, SAT etc)
+        * add ability to schedule multiple alarms (calender)
 
 
 

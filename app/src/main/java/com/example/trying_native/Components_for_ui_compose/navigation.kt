@@ -3,6 +3,10 @@ package com.example.trying_native.Components_for_ui_compose
 import android.app.AlarmManager
 import android.content.Context
 import androidx.activity.ComponentActivity
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -13,6 +17,9 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -52,77 +59,100 @@ sealed interface Screen : NavKey {
 @Composable
 fun NavigationStack(activityContext: ComponentActivity) {
 	val backStack = rememberNavBackStack(Screen.AlarmContainer)
-	val alarmDao = Room.databaseBuilder(activityContext.applicationContext, AlarmDatabase::class.java, "alarm-database").build().alarmDao()
+	val alarmDao = remember { Room.databaseBuilder(activityContext.applicationContext, AlarmDatabase::class.java, "alarm-database").build().alarmDao() }
 	val context = LocalContext.current
 	val alarmManager = remember { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
 	val alarmsController = AlarmsController()
 
 	val coroutineScope = activityContext.lifecycleScope
 	val uncancellableScope = CoroutineScope(coroutineScope.coroutineContext + NonCancellable)
-
-	NavDisplay(
-		backStack=backStack,
-		onBack = { backStack.removeLastOrNull()},
-		transitionSpec = {
-			slideInHorizontally (initialOffsetX = { it },) +fadeIn() togetherWith slideOutHorizontally (targetOffsetX = { -it }) + fadeOut()
-		},
-		popTransitionSpec = {
-			slideInHorizontally(initialOffsetX = { -it } ) + fadeIn() togetherWith slideOutHorizontally(targetOffsetX = { it }, ) + fadeOut()
-		},
-		predictivePopTransitionSpec = {
-			slideInHorizontally(initialOffsetX = { -it }) + fadeIn() togetherWith slideOutHorizontally(targetOffsetX = { it }) + fadeOut()
-		},
-
-		entryProvider = {key ->
-			when(key){
-				is Screen.AlarmContainer -> NavEntry(key){
-					AlarmContainer(
-						activityContext = activityContext,
-						onNavigateToEdit = { alarm -> backStack.add(Screen.AlarmPicker(alarm))},
-						onNavigateToCreate = { backStack.add(Screen.AlarmPicker( null)) },
-						alarmDao = alarmDao,alarmManager=alarmManager
-					)
-				}
-				is Screen.AlarmPicker -> NavEntry(key){
-					/**[ onAlarmSet] - here [ AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
-					AlarmPickerScreen(key.alarmData, { alarmObject, alarmData->
-						uncancellableScope.launch {
-							logD("the alarm data confirmed is $alarmObject")
-							val exception = alarmsController.scheduleMultipleAlarms(
-								alarmManager,
-								alarmDao = alarmDao,
-								messageForDB = alarmObject.message,
-								calendarForStartTime = alarmObject.startTime,
-								calendarForEndTime = alarmObject.endTime,
-								freqAfterTheCallback = alarmObject.freqGottenAfterCallback.toInt(),
-								activityContext = activityContext,
-								dateInLong = alarmObject.date,
-							)
-							exception.fold(
-								onSuccess = { return@launch },
-								onFailure = { excp ->
-									NotificationBuilder(
-										context = activityContext,
-										title = "there is a error/Exception in making new alarm",
-										notificationText = excp.message ?:"Can't set you alarm please retry"
-									).showNotification()
-									logD("there is a error/Exception in making new alarm-->${excp}")
-								}
-							)
+	Scaffold(contentWindowInsets = WindowInsets.systemBars) { _->
+		NavDisplay(
+			backStack=backStack,
+			onBack = { backStack.removeLastOrNull()},
+			transitionSpec = {
+				slideInHorizontally(
+					animationSpec = tween(200, easing = FastOutSlowInEasing),
+					initialOffsetX = { it }
+				) + fadeIn(tween(150, easing = LinearEasing)) togetherWith
+						slideOutHorizontally(
+							animationSpec = tween(200, easing = FastOutSlowInEasing),
+							targetOffsetX = { -it }
+						) + fadeOut(tween(100, easing = LinearEasing))
+			},
+			popTransitionSpec = {
+				slideInHorizontally(
+					animationSpec = tween(200, easing = FastOutSlowInEasing),
+					initialOffsetX = { -it }
+				) + fadeIn(tween(150, easing = LinearEasing)) togetherWith
+						slideOutHorizontally(
+							animationSpec = tween(200, easing = FastOutSlowInEasing),
+							targetOffsetX = { it }
+						) + fadeOut(tween(100, easing = LinearEasing))
+			},
+			predictivePopTransitionSpec = {
+				slideInHorizontally(
+					animationSpec = tween(180, easing = FastOutSlowInEasing),
+					initialOffsetX = { (-it * 0.3f).toInt() }
+				) + fadeIn(tween(130, easing = LinearEasing)) togetherWith
+						slideOutHorizontally(
+							animationSpec = tween(180, easing = FastOutSlowInEasing),
+							targetOffsetX = { it }
+						) + fadeOut(tween(90, easing = LinearEasing))
+			},
+			entryProvider = {key ->
+				when(key){
+					is Screen.AlarmContainer -> NavEntry(key){
+						AlarmContainer(
+							activityContext = activityContext,
+							onNavigateToEdit = { alarm -> backStack.add(Screen.AlarmPicker(alarm))},
+							onNavigateToCreate = { backStack.add(Screen.AlarmPicker( null)) },
+							alarmDao = alarmDao,alarmManager=alarmManager
+						)
+					}
+					is Screen.AlarmPicker -> NavEntry(key){
+						/**[ onAlarmSet] - here [ AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
+						AlarmPickerScreen(key.alarmData, { alarmObject, alarmData->
+							uncancellableScope.launch {
+								logD("the alarm data confirmed is $alarmObject")
+								val exception = alarmsController.scheduleMultipleAlarms(
+									alarmManager,
+									alarmDao = alarmDao,
+									messageForDB = alarmObject.message,
+									calendarForStartTime = alarmObject.startTime,
+									calendarForEndTime = alarmObject.endTime,
+									freqAfterTheCallback = alarmObject.freqGottenAfterCallback.toInt(),
+									activityContext = activityContext,
+									dateInLong = alarmObject.date,
+								)
+								exception.fold(
+									onSuccess = { return@launch },
+									onFailure = { excp ->
+										NotificationBuilder(
+											context = activityContext,
+											title = "there is a error/Exception in making new alarm",
+											notificationText = excp.message ?:"Can't set you alarm please retry"
+										).showNotification()
+										logD("there is a error/Exception in making new alarm-->${excp}")
+									}
+								)
+							}
 						}
-				}
-					, alarmSetGoBack = {backStack.removeLastOrNull()}
+							, alarmSetGoBack = {backStack.removeLastOrNull()}
 
-				)}
-				else -> { NavEntry(key){
-					AlarmContainer(
-						activityContext,
-						onNavigateToEdit = { alarm -> backStack.add(Screen.AlarmPicker(alarm)) },
-						alarmDao = alarmDao,alarmManager=alarmManager,
-					    onNavigateToCreate = { backStack.add(Screen.AlarmPicker( null)) }
-					) }
+						)}
+					else -> { NavEntry(key){
+						AlarmContainer(
+							activityContext,
+							onNavigateToEdit = { alarm -> backStack.add(Screen.AlarmPicker(alarm)) },
+							alarmDao = alarmDao,alarmManager=alarmManager,
+							onNavigateToCreate = { backStack.add(Screen.AlarmPicker( null)) }
+						) }
+					}
 				}
 			}
-		}
-	)
+		)
+
+	}
+
 }

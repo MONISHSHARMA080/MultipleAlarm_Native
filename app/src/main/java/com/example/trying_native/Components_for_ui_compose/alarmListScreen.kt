@@ -125,6 +125,7 @@ import java.util.Calendar
 					) {
 						Column(
 							modifier = Modifier
+								.clickable{onNavigateToEdit(individualAlarm); logD("Clicked Colum and not Elevated card fix this") }
 								.fillMaxSize()
 								.background(
 									color = if (!individualAlarm.isReadyToUse) {
