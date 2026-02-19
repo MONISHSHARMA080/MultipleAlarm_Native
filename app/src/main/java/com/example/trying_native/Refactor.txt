@@ -42,6 +42,7 @@ b) Code Refactor :--
     * add postHog or other analytic
     * for now allow the user to schedule alarm on a specific date and not multiple
     * boot receiver
+    * something wrong with
     * alarm order in Db, like based on time zone( endtime-startTime , time hs date in them) and automatically in the List
 
 c)  later :--

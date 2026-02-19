@@ -7,6 +7,7 @@ import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -31,6 +32,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 
 import androidx.navigation3.ui.NavDisplay
+import androidx.navigation3.ui.NavDisplay.transitionSpec
 import androidx.room.Room
 import com.example.trying_native.AlarmLogic.AlarmsController
 import com.example.trying_native.components_for_ui_compose.AlarmContainer
@@ -48,14 +50,12 @@ import java.util.Calendar
 
 
 sealed interface Screen : NavKey {
-
 	@Serializable
 	data object AlarmContainer : Screen
-
-
 	@Serializable
 	data class AlarmPicker(val alarmData: AlarmData? = null) : Screen
 }
+
 @Composable
 fun NavigationStack(activityContext: ComponentActivity) {
 	val backStack = rememberNavBackStack(Screen.AlarmContainer)
@@ -72,34 +72,25 @@ fun NavigationStack(activityContext: ComponentActivity) {
 			onBack = { backStack.removeLastOrNull()},
 			transitionSpec = {
 				slideInHorizontally(
-					animationSpec = tween(200, easing = FastOutSlowInEasing),
-					initialOffsetX = { it }
+					animationSpec = tween(200, easing = FastOutSlowInEasing), initialOffsetX = { it }
 				) + fadeIn(tween(150, easing = LinearEasing)) togetherWith
-						slideOutHorizontally(
-							animationSpec = tween(200, easing = FastOutSlowInEasing),
-							targetOffsetX = { -it }
-						) + fadeOut(tween(100, easing = LinearEasing))
+						slideOutHorizontally(animationSpec = tween(200, easing = FastOutSlowInEasing), targetOffsetX = { -it }) +
+						fadeOut(tween(100, easing = LinearEasing))
 			},
 			popTransitionSpec = {
 				slideInHorizontally(
-					animationSpec = tween(200, easing = FastOutSlowInEasing),
-					initialOffsetX = { -it }
-				) + fadeIn(tween(150, easing = LinearEasing)) togetherWith
-						slideOutHorizontally(
-							animationSpec = tween(200, easing = FastOutSlowInEasing),
-							targetOffsetX = { it }
-						) + fadeOut(tween(100, easing = LinearEasing))
+					animationSpec = tween(200, easing = FastOutSlowInEasing), initialOffsetX = { -it }) +
+						fadeIn(tween(150, easing = LinearEasing)) togetherWith
+						slideOutHorizontally(animationSpec = tween(200, easing = FastOutSlowInEasing), targetOffsetX = { it }) +
+						fadeOut(tween(100, easing = LinearEasing))
 			},
 			predictivePopTransitionSpec = {
-				slideInHorizontally(
-					animationSpec = tween(180, easing = FastOutSlowInEasing),
-					initialOffsetX = { (-it * 0.3f).toInt() }
-				) + fadeIn(tween(130, easing = LinearEasing)) togetherWith
-						slideOutHorizontally(
-							animationSpec = tween(180, easing = FastOutSlowInEasing),
-							targetOffsetX = { it }
-						) + fadeOut(tween(90, easing = LinearEasing))
+				slideInHorizontally(animationSpec = tween(180, easing = FastOutSlowInEasing), initialOffsetX = { (-it * 0.3f).toInt() }) +
+						fadeIn(tween(130, easing = LinearEasing)) togetherWith
+						slideOutHorizontally(animationSpec = tween(180, easing = FastOutSlowInEasing), targetOffsetX = { it }) +
+						fadeOut(tween(90, easing = LinearEasing))
 			},
+
 			entryProvider = {key ->
 				when(key){
 					is Screen.AlarmContainer -> NavEntry(key){
@@ -139,7 +130,6 @@ fun NavigationStack(activityContext: ComponentActivity) {
 							}
 						}
 							, alarmSetGoBack = {backStack.removeLastOrNull()}
-
 						)}
 					else -> { NavEntry(key){
 						AlarmContainer(
@@ -152,7 +142,5 @@ fun NavigationStack(activityContext: ComponentActivity) {
 				}
 			}
 		)
-
 	}
-
 }
