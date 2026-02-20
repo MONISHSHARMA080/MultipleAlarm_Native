@@ -49,6 +49,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
+fun getCurrentTime(): String {
+    return SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date())
+}
+
+
 class AlarmActivity : ComponentActivity() {
     private var wakeLock: PowerManager.WakeLock? = null
     private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -152,14 +157,13 @@ class AlarmActivity : ComponentActivity() {
         setShowWhenLocked(true)
         setTurnScreenOn(true)
     }
-
 }
 
+
 @Composable
-fun TimeDisplay(onFinish: () -> Unit, message: String,  modifier: Modifier = Modifier) {
+fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modifier) {
     var currentTime by remember { mutableStateOf(getCurrentTime()) }
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-    logD("in the timeDisplay() and the message is $message")
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -167,112 +171,88 @@ fun TimeDisplay(onFinish: () -> Unit, message: String,  modifier: Modifier = Mod
             delay(500)
         }
     }
-    logD("in message is empty ${message.isEmpty()}")
-
 
     Scaffold(
-        modifier = Modifier.fillMaxSize().background(color = Color.Black),
-        containerColor = Color.Black
-    ) { edgeToEdgePadding ->
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(edgeToEdgePadding),
-            contentAlignment = Alignment.Center
-        ) {
-            if (message.isNotEmpty()) {
-                // Layout when message is present
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    Text(
-                        text = currentTime,
-                        color = Color.Red,
-                        fontSize = 63.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(44.dp))
-
-                    // Scrollable message area
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .padding(bottom = (screenHeight / 8) + 75.dp + 24.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .verticalScroll(rememberScrollState())
-                                .padding(horizontal = 8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = message,
-                                color = Color.Cyan,
-                                fontSize = 43.sp,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                lineHeight = 60.sp,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .fillMaxWidth()
-                                .height(47.dp)
-                                .background(
-                                    brush = Brush.verticalGradient(
-                                        colors = listOf(
-                                            Color.Transparent,
-                                            Color.Black
-                                        ),
-                                    )
-                                )
-                        )
-                    }
-                }
-            } else {
-                // Layout when no message - time centered
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Text(
-                        text = currentTime,
-                        color = Color.Red,
-                        fontSize = 63.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+        modifier = Modifier.fillMaxSize(),
+        containerColor = Color.Black,
+        bottomBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = if (message.isEmpty()) screenHeight / 8 else 40.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Button(
+                    onClick = { onFinish() },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Cyan, contentColor = Color.Black),
+                    shape = RoundedCornerShape(49.dp),
+                    modifier = Modifier.height(94.dp).width(327.dp)) {
+                    Text(text = "Stop", fontSize = 22.sp, fontWeight = FontWeight.Bold)
                 }
             }
-            Spacer(modifier = Modifier.height(65.dp))
-            Button(
-                onClick = { onFinish() },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xffab0c00),
-                    contentColor = Color.White
-                ),
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = (screenHeight / 8))
-                    .height(80.dp)
-                    .width(270.dp)
-                    .shadow(8.dp, shape = RoundedCornerShape(28.dp))
-            ) {
-                Text(text = "Cancel alarm")
+        }
+    ) { edgeToEdgePadding ->
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(edgeToEdgePadding)
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = if (message.isEmpty()) Arrangement.Center else Arrangement.Top
+        ) {
+            if (message.isEmpty()) {
+                // Centered time when no message
+                Text(
+                    text = currentTime,
+                    color = Color.Cyan,
+                    fontSize = 53.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            } else {
+                // Original layout with message
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Text(
+                    text = currentTime,
+                    color = Color.Cyan,
+                    fontSize = 53.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(44.dp))
+                // Scrollable Message Area
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = message,
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Normal,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 28.sp
+                        )
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .height(40.dp)
+                            .background(
+                                brush = Brush.verticalGradient(colors = listOf(Color.Transparent, Color.Black))
+                            )
+                    )
+                }
             }
         }
     }
-}
-
-// Helper function to get current time
-fun getCurrentTime(): String {
-    return SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date())
 }
