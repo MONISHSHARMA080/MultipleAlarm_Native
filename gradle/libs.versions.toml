@@ -8,19 +8,19 @@ junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.10.0"
-activityCompose = "1.9.1"
+activityCompose = "1.12.4"
 composeBom = "2026.02.00"
 materialIconsExtended = "1.7.8"
 protobufJavaliteVersion = "4.33.5"
-protobufKotlin = "3.18.0"
-media3Common = "1.4.1"
+protobufKotlin = "4.33.5"
+media3Common = "1.9.2"
 uiTestAndroid = "1.10.3"
 junitKtx = "1.2.1"
 espressoContrib = "3.6.1"
 uiTestJunit4Android = "1.7.6"
 uiText = "1.10.2"
 material3 = "1.4.0"
-foundationLayout = "1.10.2"
+foundationLayout = "1.10.3"
 navigation3Runtime = "1.0.1"
 navigation3Ui = "1.0.1"
 nav3Core = "1.0.1"
@@ -44,7 +44,7 @@ androidx-datastore-preferences-rxjava2 = { module = "androidx.datastore:datastor
 androidx-datastore-preferences-rxjava3 = { module = "androidx.datastore:datastore-preferences-rxjava3", version.ref = "datastore" }
 androidx-datastore-rxjava2 = { module = "androidx.datastore:datastore-rxjava2", version.ref = "datastore" }
 androidx-datastore-rxjava3 = { module = "androidx.datastore:datastore-rxjava3", version.ref = "datastore" }
-androidx-datastore-v100 = { module = "androidx.datastore:datastore", version.ref = "datastoreVersion" }
+#androidx-datastore-v100 = { module = "androidx.datastore:datastore", version.ref = "datastoreVersion" }
 androidx-material-icons-core = { module = "androidx.compose.material:material-icons-core", version.ref = "materialIconsExtended" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 google-protobuf-javalite = { module = "com.google.protobuf:protobuf-javalite", version.ref = "protobufJavaliteVersion" }

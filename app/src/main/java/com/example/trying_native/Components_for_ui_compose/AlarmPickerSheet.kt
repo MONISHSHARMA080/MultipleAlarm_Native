@@ -130,9 +130,9 @@ import java.util.Calendar
 							horizontalArrangement = Arrangement.SpaceEvenly,
 							verticalAlignment = Alignment.CenterVertically
 						) {
-							TimeBox("START TIME", alarmObject.startTime, isSelected = true, accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(startTime = newSelectedTime) })
+							TimeBox("START TIME", alarmObject.startTime,  accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(startTime = newSelectedTime) })
 							Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
-							TimeBox("END TIME", alarmObject.endTime, isSelected = true, accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(endTime = newSelectedTime) })
+							TimeBox("END TIME", alarmObject.endTime,  accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(endTime = newSelectedTime) })
 						}
 						Spacer(modifier = Modifier.height(24.dp))
 						// --- Repeats / Day Picker ---

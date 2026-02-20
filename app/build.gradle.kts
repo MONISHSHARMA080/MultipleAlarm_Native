@@ -180,7 +180,7 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.datastore.core)
-    implementation(libs.androidx.datastore.v100)
+    implementation(libs.androidx.datastore)
     implementation(libs.androidx.datastore.rxjava3)
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.datastore.preferences)

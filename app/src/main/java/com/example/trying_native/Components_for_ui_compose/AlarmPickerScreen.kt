@@ -2,8 +2,6 @@ package com.example.trying_native.Components_for_ui_compose
 
 import java.util.Calendar
 import android.text.format.DateFormat
-import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -41,14 +39,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -84,7 +81,12 @@ enum class AccentColor(val value:Color) {
     val coroutineScope = rememberCoroutineScope()
     var alarmObject by remember { mutableStateOf<AlarmObject>(
         alarm?.toAlarmObject() ?: AlarmObject(
-            startTime = Calendar.getInstance().apply {  },
+            startTime =Calendar.getInstance().apply {
+                add(Calendar.MINUTE ,1)
+                if (get(Calendar.DAY_OF_YEAR) != Calendar.getInstance().get(Calendar.DAY_OF_YEAR)) {
+                    set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
+                }
+            },
             endTime =Calendar.getInstance().apply {
                 add(Calendar.MINUTE ,45)
                 if (get(Calendar.DAY_OF_YEAR) != Calendar.getInstance().get(Calendar.DAY_OF_YEAR)) {
@@ -134,9 +136,9 @@ enum class AccentColor(val value:Color) {
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TimeBox("START TIME", alarmObject.startTime, isSelected = true, accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(startTime = newSelectedTime) })
+                    TimeBox("START TIME", alarmObject.startTime,  accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(startTime = newSelectedTime) })
                     Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
-                    TimeBox("END TIME", alarmObject.endTime, isSelected = true, accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(endTime = newSelectedTime) })
+                    TimeBox("END TIME", alarmObject.endTime,  accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(endTime = newSelectedTime) })
                 }
                 Spacer(modifier = Modifier.height(24.dp))
                 // --- Repeats / Day Picker ---
@@ -322,53 +324,56 @@ enum class AccentColor(val value:Color) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimeBox(label: String, time: Calendar, isSelected: Boolean, accentColor: Color, onNewTimeSelected: (Calendar) -> Unit) {
-//    val borderColor = if (isSelected) Color(0xFF1A73E8) else Color(0xFF1C222B)
-    val borderColor = accentColor
-    val timePickerState = rememberTimePickerState(
-        initialHour = time.get(Calendar.HOUR_OF_DAY),
-        initialMinute = time.get(Calendar.MINUTE),
-        is24Hour = false,
-    )
+fun TimeBox(label: String, time: Calendar, accentColor: Color, onNewTimeSelected: (Calendar) -> Unit) {
     var calendar by remember { mutableStateOf(time) }
-//    var amPmString by remember {  derivedStateOf {getTimeFormatted(calendar, "a")} }
     var showTimePicker by remember { mutableStateOf(false) }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             modifier = Modifier
                 .size(width = 149.dp, height = 100.dp)
-                .border(2.dp, borderColor, RoundedCornerShape(24.dp))
+                .border(2.dp, accentColor, RoundedCornerShape(24.dp))
                 .background(Color(0xFF0F131A), RoundedCornerShape(24.dp))
                 .clickable { showTimePicker = true },
             contentAlignment = Alignment.Center,
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                if (showTimePicker){
+                if (showTimePicker) {
+                    // MOVE STATE INSIDE THE IF BLOCK
+                    val timePickerState = rememberTimePickerState(
+                        initialHour = calendar.get(Calendar.HOUR_OF_DAY),
+                        initialMinute = calendar.get(Calendar.MINUTE),
+                        is24Hour = false,
+                    )
+
                     AlertDialog(
-                        onDismissRequest = {showTimePicker = false},
+                        onDismissRequest = { showTimePicker = false },
                         title = { Text(text = "Select ${label.lowercase()}") },
                         text = {
                             TimePicker(state = timePickerState)
                         },
                         confirmButton = {
                             Button(onClick = {
-                                showTimePicker = false
-                               calendar = Calendar.getInstance().apply {set(Calendar.HOUR_OF_DAY, timePickerState.hour); set(Calendar.MINUTE, timePickerState.minute) }
+                                calendar = Calendar.getInstance().apply {
+                                    set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+                                    set(Calendar.MINUTE, timePickerState.minute)
+                                }
                                 onNewTimeSelected(calendar)
-
+                                showTimePicker = false
                             }) {
                                 Text("OK")
                             }
                         },
                         dismissButton = {
-                            Button(onClick = {showTimePicker = false}) { Text("Cancel") }
+                            Button(onClick = { showTimePicker = false }) {
+                                Text("Cancel")
+                            }
                         }
                     )
                 }
-//                Text(label, color = accentColor, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                Text(label,  color = Color.Gray, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                Text(getTimeFormatted(time), color = Color.White, fontSize = 35.sp, fontWeight = FontWeight.Bold)
+
+                Text(label, color = Color.Gray, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(getTimeFormatted(calendar), color = Color.White, fontSize = 35.sp, fontWeight = FontWeight.Bold)
                 Text(getTimeFormatted(calendar, "a"), color = Color.Gray, fontSize = 12.sp)
             }
         }

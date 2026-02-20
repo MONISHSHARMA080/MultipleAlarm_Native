@@ -42,6 +42,7 @@ import com.example.trying_native.dataBase.AlarmDatabase
 import com.example.trying_native.logD
 import com.example.trying_native.notification.NotificationBuilder
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -103,30 +104,60 @@ fun NavigationStack(activityContext: ComponentActivity) {
 					}
 					is Screen.AlarmPicker -> NavEntry(key){
 						/**[ onAlarmSet] - here [ AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
-						AlarmPickerScreen(key.alarmData, { alarmObject, alarmData->
-							uncancellableScope.launch {
-								logD("the alarm data confirmed is $alarmObject")
-								val exception = alarmsController.scheduleMultipleAlarms(
-									alarmManager,
-									alarmDao = alarmDao,
-									messageForDB = alarmObject.message,
-									calendarForStartTime = alarmObject.startTime,
-									calendarForEndTime = alarmObject.endTime,
-									freqAfterTheCallback = alarmObject.freqGottenAfterCallback.toInt(),
-									activityContext = activityContext,
-									dateInLong = alarmObject.date,
-								)
-								exception.fold(
-									onSuccess = { return@launch },
-									onFailure = { excp ->
-										NotificationBuilder(
-											context = activityContext,
-											title = "there is a error/Exception in making new alarm",
-											notificationText = excp.message ?:"Can't set you alarm please retry"
-										).showNotification()
-										logD("there is a error/Exception in making new alarm-->${excp}")
+						AlarmPickerScreen(key.alarmData, { newAlarmObject, alarmData->
+							when(alarmData){
+								 null ->{
+									// alarmData was not there so setting a new alarm
+									uncancellableScope.launch {
+										logD("the alarm data confirmed is $newAlarmObject, and is alarmData == newAlarmObject -> ${newAlarmObject.isOk(alarmData)} ")
+										val exception = alarmsController.scheduleMultipleAlarms(
+											alarmManager, alarmDao = alarmDao, messageForDB = newAlarmObject.message,
+											calendarForStartTime = newAlarmObject.startTime, calendarForEndTime = newAlarmObject.endTime,
+											freqAfterTheCallback = newAlarmObject.freqGottenAfterCallback.toInt(), activityContext = activityContext, dateInLong = newAlarmObject.date,
+										)
+										exception.fold(
+											onSuccess = { },
+											onFailure = { excp ->
+												NotificationBuilder( context = activityContext, title = "there is a error/Exception in making new alarm",
+													notificationText = excp.message ?:"Can't set you alarm please retry"
+												).showNotification()
+												logD("there is a error/Exception in making new alarm-->${excp}")
+											}
+										)
 									}
-								)
+
+								}
+								else->{
+									// alarmData was there so editing an existing alarm
+									uncancellableScope.launch {
+											alarmsController.cancelAlarmByCancelingPendingIntent(
+												context_of_activity = activityContext,
+												startTime = alarmData.startTime,
+												endTime = alarmData.endTime,
+												frequencyInMin = alarmData.getFreqInMillisecond(),
+												alarmDao = alarmDao,
+												alarmManager = alarmManager,
+												delete_the_alarm_from_db = true,
+												alarmData = alarmData
+											)
+										val exception = alarmsController.scheduleMultipleAlarms(
+											alarmManager, alarmDao = alarmDao, messageForDB = newAlarmObject.message,
+											calendarForStartTime = newAlarmObject.startTime, calendarForEndTime = newAlarmObject.endTime,
+											freqAfterTheCallback = newAlarmObject.freqGottenAfterCallback.toInt(), activityContext = activityContext, dateInLong = newAlarmObject.date,
+										)
+										exception.fold(
+											onSuccess = { },
+											onFailure = { excp ->
+												NotificationBuilder( context = activityContext, title = "there is a error/Exception in making new alarm",
+													notificationText = excp.message ?:"Can't set you alarm please retry"
+												).showNotification()
+												logD("there is a error/Exception in making new alarm-->${excp}")
+											}
+										)
+
+
+									}
+								}
 							}
 						}
 							, alarmSetGoBack = {backStack.removeLastOrNull()}
