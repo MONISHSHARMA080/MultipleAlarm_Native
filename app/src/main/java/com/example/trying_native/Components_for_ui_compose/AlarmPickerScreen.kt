@@ -86,16 +86,18 @@ enum class AccentColor(val value:Color) {
                 if (get(Calendar.DAY_OF_YEAR) != Calendar.getInstance().get(Calendar.DAY_OF_YEAR)) {
                     set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
                 }
+                set(Calendar.SECOND,0)
             },
             endTime =Calendar.getInstance().apply {
                 add(Calendar.MINUTE ,45)
                 if (get(Calendar.DAY_OF_YEAR) != Calendar.getInstance().get(Calendar.DAY_OF_YEAR)) {
                     set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
                 }
+                set(Calendar.SECOND,0)
             },
             date = Calendar.getInstance().timeInMillis,
-            message = "",
-            freqGottenAfterCallback = 1
+            message = alarm?.message ?: "",
+            freqGottenAfterCallback = alarm?.freqGottenAfterCallback ?: 1
         )
     ) }
     val weGood by remember { derivedStateOf { alarmObject.isOk(alarm)  } }

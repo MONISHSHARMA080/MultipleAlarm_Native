@@ -207,7 +207,7 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    suspend fun rescheduleAlarm(alarmManager: AlarmManager, calendarForStartTime:Calendar, calendarForEndTimer:Calendar, freqAfterCallback:Long, activityContext:ComponentActivity, alarmDao:AlarmDao, alarmData:AlarmData,
+    suspend fun rescheduleAlarm(alarmManager: AlarmManager, calendarForStartTime:Calendar, calendarForEndTimer:Calendar, freqAfterCallback:Long, activityContext: Context, alarmDao:AlarmDao, alarmData:AlarmData,
                                 receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, nextAlarmInfo: NextAlarmInfo ) : Result<Unit> {
         return runCatching {
 
@@ -389,7 +389,7 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
         logD("Finished cancelling all alarm PendingIntents")
     }
 
-    suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activityContext: ComponentActivity, alarmDao: AlarmDao): Result<Unit>{
+    suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activityContext: Context, alarmDao: AlarmDao): Result<Unit>{
         return runCatching {
             logD("in the reset alarm func-+")
             val startTime = alarmData.startTime

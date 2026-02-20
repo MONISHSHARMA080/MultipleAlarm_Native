@@ -144,7 +144,7 @@ dependencies {
     implementation(libs.androidx.junit.ktx)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("androidx.navigation:navigation-compose:2.9.7")
-
+    implementation("androidx.work:work-runtime-ktx:2.11.1")
 
     // -- roboelectric tests ---
     testImplementation("junit:junit")
