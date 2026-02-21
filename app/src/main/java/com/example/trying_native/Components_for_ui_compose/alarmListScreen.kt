@@ -1,6 +1,7 @@
 package com.example.trying_native.Components_for_ui_compose
 
 import android.app.AlarmManager
+import android.content.ClipData
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,6 +43,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -65,6 +68,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import kotlin.math.log
 
 
 @Composable fun AlarmListScreen(
@@ -77,6 +81,8 @@ import java.util.Calendar
 	val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 	val fontSize = (screenHeight * 0.05f).value.sp
 	val snackBarHostState = remember { SnackbarHostState() }
+	val clipBoard =LocalClipboard.current
+
 
 	Scaffold(contentWindowInsets = WindowInsets.systemBars) { edgeToEdgePadding ->
 		Box(
@@ -111,22 +117,43 @@ import java.util.Calendar
 					ElevatedCard(
 						modifier = Modifier
 							.fillMaxWidth()
-							.clickable{onNavigateToEdit(individualAlarm) }
+//							.clickable{onNavigateToEdit(individualAlarm); logD("Clicked  Elevated card ") }
 							.height(screenHeight / 4)
-							.pointerInput(Unit) {
-								detectTapGestures(
-									onLongPress = {
-										onNavigateToEdit(individualAlarm)
-									}
-								)
-							}
+//							.pointerInput(Unit) {
+//								detectTapGestures(
+//									onLongPress = {
+//										coroutineScope.launch {
+//											logD("long press copying to clipboard")
+//											val clip = ClipData.newPlainText("Alarm message", individualAlarm.message)
+//											clipBoard.setClipEntry(ClipEntry(clip))
+//											snackBarHostState.showSnackbar("Message copied")
+//
+//										}
+//									}
+//								)
+//							}
 							.padding(horizontal = 8.dp, vertical = 6.dp),
 						shape = RoundedCornerShape(45.dp)
 					) {
 						Column(
 							modifier = Modifier
-								.clickable{onNavigateToEdit(individualAlarm); logD("Clicked Colum and not Elevated card fix this") }
+//								.clickable{onNavigateToEdit(individualAlarm); logD("Clicked Colum and not Elevated card fix this") }
 								.fillMaxSize()
+								.pointerInput(Unit) {
+									detectTapGestures(
+										onTap = { onNavigateToEdit(individualAlarm) },
+										onLongPress = { offset ->
+											coroutineScope.launch {
+												logD("long press copying to clipboard")
+												val clip = ClipData.newPlainText("Alarm message", individualAlarm.message)
+												clipBoard.setClipEntry(ClipEntry(clip))
+												snackBarHostState.showSnackbar("Message copied")
+
+											}
+										}
+									)
+								}
+
 								.background(
 									color = if (!individualAlarm.isReadyToUse) {
 										Color(0xFF666b75)

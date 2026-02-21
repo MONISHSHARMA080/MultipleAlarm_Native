@@ -215,10 +215,10 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                 Text(
                     text = currentTime,
                     color = Color.Cyan,
-                    fontSize = 53.sp,
+                    fontSize = 58.sp,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(44.dp))
+                Spacer(modifier = Modifier.height(40.dp))
                 // Scrollable Message Area
                 Box(
                     modifier = Modifier
@@ -234,7 +234,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                         Text(
                             text = message,
                             color = Color.White,
-                            fontSize = 18.sp,
+                            fontSize = 28.sp,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Center,
                             lineHeight = 28.sp
