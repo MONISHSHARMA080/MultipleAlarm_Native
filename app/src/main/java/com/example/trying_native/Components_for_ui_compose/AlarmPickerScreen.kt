@@ -305,6 +305,8 @@ enum class AccentColor(val value:Color) {
                 Button(
                     onClick = {
                         if (weGood) {
+                            alarmObject.startTime.set(Calendar.SECOND, 0)
+                            alarmObject.endTime.set(Calendar.SECOND, 0)
                             onAlarmSet(alarmObject, alarm);alarmSetGoBack()
                         }
                     },
