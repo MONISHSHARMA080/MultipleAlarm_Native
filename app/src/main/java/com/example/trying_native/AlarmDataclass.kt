@@ -11,6 +11,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
 import androidx.room.Update
+import com.example.trying_native.logD
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 import java.text.SimpleDateFormat
@@ -105,6 +106,10 @@ interface AlarmDao {
 
 }
 
+data class ValidationResult(
+    val isValid: Boolean,
+    val errorMessage: String? = null
+)
 data class AlarmObject(
     val startTime: Calendar,
     val endTime: Calendar,
@@ -114,14 +119,37 @@ data class AlarmObject(
     val freqGottenAfterCallback: Long
 ){
     fun isOk(alarmData: AlarmData? = null): Boolean{
-         when(alarmData == null){
-            true -> return startTime.timeInMillis < endTime.timeInMillis && freqGottenAfterCallback >= 1 && freqGottenAfterCallback < 700
-            // here ! cause if the alarm is same then we are not ok, we need the new alarm to be diff, than the previous one
-//            false ->  !(alarmData.startTime == startTime.timeInMillis && alarmData.endTime == endTime.timeInMillis  && alarmData.freqGottenAfterCallback == freqGottenAfterCallback && alarmData.message == message  )
-            false -> return alarmData.startTime != startTime.timeInMillis && alarmData.endTime != endTime.timeInMillis  && alarmData.freqGottenAfterCallback != freqGottenAfterCallback && alarmData.message != message
-
-        }
+        val baseValidation = startTime.timeInMillis < endTime.timeInMillis && freqGottenAfterCallback in 1..700
+        if (alarmData == null) return baseValidation
+        val hasChanged = startTime.timeInMillis != alarmData.startTime || endTime.timeInMillis != alarmData.endTime ||
+                freqGottenAfterCallback != alarmData.freqGottenAfterCallback || message != alarmData.message || date != alarmData.date
+        return baseValidation && hasChanged
 	}
+    // when we get a weGood == false then we can call this function to see what value produced an error and then display it
+    fun validate(alarmData: AlarmData?): ValidationResult{
+        if (startTime.timeInMillis >= endTime.timeInMillis) {
+            return ValidationResult(false, "Start time must be before end time.")
+        }
+        if (freqGottenAfterCallback !in 1..700) {
+            return ValidationResult(false, "Frequency must be between 1 and 700 minutes.")
+        }
+
+        // 2. Check for Changes (If in Edit Mode)
+        if (alarmData != null) {
+            val hasChanged = startTime.timeInMillis != alarmData.startTime ||
+                    endTime.timeInMillis != alarmData.endTime ||
+                    freqGottenAfterCallback != alarmData.freqGottenAfterCallback ||
+                    message != alarmData.message ||
+                    date != alarmData.date
+
+            if (!hasChanged) {
+                return ValidationResult(false, "No changes detected. Change something to update the alarm.")
+            }
+        }
+
+        // 3. Everything is fine
+        return ValidationResult(true)
+    }
     private fun getDateTimeFormatted(time:Long):String{
         return SimpleDateFormat("hh:mm a dd/MM/yyyy", Locale.getDefault()).format(time)
     }

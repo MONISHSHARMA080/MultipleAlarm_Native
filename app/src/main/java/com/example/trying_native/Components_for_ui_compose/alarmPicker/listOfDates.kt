@@ -46,20 +46,15 @@ data class DayInWeek(
 ){
 	fun getCalendar(): Calendar {
 		return Calendar.getInstance().apply {
-			timeInMillis = date
-				.atStartOfDay(ZoneId.systemDefault())
-				.toInstant()
-				.toEpochMilli()
+			timeInMillis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
 		}
 
 	}
 }
-//@Composable fun DisplayDatesOfWeekDays(){}
-
-@Composable fun DateList(weekDates: List<DayInWeek>,  onSelect: (Int) -> Unit, startDateIndex:Long?, allowSelectingPastDate:Boolean= false ) {
+@Composable fun DateList(weekDates: List<DayInWeek>, onSelect: (Int) -> Unit, startDateIndex:Long?, weGood: Boolean, allowSelectingPastDate:Boolean= false ) {
 	// handling past dates and selecting today's date by default and future date is my problem
 	val currentDateIndex = weekDates.indexOfFirst { it.isToday  }
-	require(currentDateIndex != -1,{"expected to find a current date in the list returned but got it to be false "} )
+	require(currentDateIndex != -1) { "expected to find a current date in the list returned but got it to be false " }
 // 1. Calculate the initial index based on the timestamp or fallback to today
 	val initialIndex = remember (startDateIndex){
 		val foundIndex = weekDates.indexOfFirst {
@@ -68,10 +63,11 @@ data class DayInWeek(
 		if (foundIndex == -1) currentDateIndex else foundIndex
 	}
 	var selectedDate by remember { mutableIntStateOf(initialIndex) }
+	logD("selected date is $selectedDate and current date index is $currentDateIndex")
 
 	// ** get the date that is set by the user or get the date and if not null then check if it is in the list and if not then default to the current date **
 	val listState = rememberLazyListState()
-	LaunchedEffect(Unit) { listState.animateScrollToItem(currentDateIndex) }
+	LaunchedEffect(initialIndex ) { listState.animateScrollToItem(initialIndex) }
 	LazyRow(
 		state = listState,
 		contentPadding = PaddingValues(horizontal = 16.dp),
@@ -83,6 +79,7 @@ data class DayInWeek(
 			DateCard(
 				date = date.date,
 				isSelected = index == selectedDate,
+				weGood = weGood,
 				onClick = {
 					logD("clicked on a date component and index:$index and isSelectable:$isSelectable")
 					if (isSelectable){
@@ -95,8 +92,9 @@ data class DayInWeek(
 	}
 }
 
-@Composable fun DateCard(date: LocalDate, isSelected: Boolean, onClick: () -> Unit) {
+@Composable fun DateCard(date: LocalDate, isSelected: Boolean, weGood: Boolean, onClick: () -> Unit) {
 	val backgroundColor = if (isSelected) Color(0xFF152A46) else Color(0xFF1C1F26)
+	val backgroundColorIfErrorState = Color( 0xFFde0707)
 	val borderColor = if (isSelected) Color(0xFF1E88E5) else Color(0xFF2C313A)
 	val textColor = if (isSelected) Color.White else Color(0xFF7D8592)
 	val dayName =  date.dayOfWeek.name.take(3)
@@ -104,7 +102,7 @@ data class DayInWeek(
 	Surface(
 		onClick = onClick,
 		shape = RoundedCornerShape(12.dp),
-		color = backgroundColor,
+		color = if (!weGood && isSelected) backgroundColorIfErrorState else backgroundColor,
 		border = BorderStroke(2.dp, borderColor),
 		modifier = Modifier
 			.width(64.dp)

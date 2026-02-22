@@ -83,7 +83,7 @@ enum class AccentColor(val value:Color) {
     val coroutineScope = rememberCoroutineScope()
     val listOfDates =getListOfDatesInThisWeek()
     logD("alarm dates ->"+getListOfDatesInThisWeek() )
-    var alarmObject by remember { mutableStateOf<AlarmObject>(
+    var alarmObject by remember { mutableStateOf(
         alarm?.toAlarmObject() ?: AlarmObject(
             startTime =Calendar.getInstance().apply {
                 add(Calendar.MINUTE ,1)
@@ -151,9 +151,10 @@ enum class AccentColor(val value:Color) {
                 DateList(
 					listOfDates,
                     startDateIndex =alarm?.date,
-					 onSelect = {dateSelectionIndex ->
-                         logD("updating the alarmObject and current date is $dateSelectionIndex")
-                         val dateSelected = listOfDates[dateSelectionIndex]
+                    weGood = weGood,
+					 onSelect = {indexOfSelectedDate ->
+                         logD("updating the alarmObject and current date is $indexOfSelectedDate")
+                         val dateSelected = listOfDates[indexOfSelectedDate]
                          val calVersion = dateSelected.getCalendar()
                          logD(" updated date is :${getTimeFormatted(calVersion, "hh:mm dd/MM/yyyy")}")
                          val newStartDate = alarmObject.startTime.apply { set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR)) }
