@@ -1,5 +1,6 @@
 package com.example.trying_native.Components_for_ui_compose
 
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.content.Context
 import androidx.activity.ComponentActivity
@@ -13,12 +14,15 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
@@ -28,14 +32,16 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.room.Room
 import com.example.trying_native.AlarmLogic.AlarmsController
 import com.example.trying_native.Components_for_ui_compose.alarmPicker.AlarmPickerScreen
-import com.example.trying_native.components_for_ui_compose.AlarmContainer
+import com.example.trying_native.dataBase.AlarmDao
 
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmDatabase
 import com.example.trying_native.logD
 import com.example.trying_native.notification.NotificationBuilder
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -187,4 +193,18 @@ fun NavigationStack(activityContext: ComponentActivity) {
 			}
 		)
 	}
+}
+
+
+@SuppressLint("FlowOperatorInvokedInComposition")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AlarmContainer(activityContext: ComponentActivity, alarmDao: AlarmDao, alarmManager: AlarmManager,  onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit ) {
+	val coroutineScope = activityContext.lifecycleScope
+	val uncancellableScope = CoroutineScope(coroutineScope.coroutineContext + NonCancellable)
+	val alarms by alarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO).collectAsStateWithLifecycle(initialValue = emptyList())
+	AlarmListScreen(
+		alarmManager =alarmManager, alarmDao = alarmDao, onNavigateToEdit=onNavigateToEdit, onNavigateToCreate=onNavigateToCreate,
+		uncancellableScope = uncancellableScope, activityContext =activityContext,alarms = alarms
+	)
 }

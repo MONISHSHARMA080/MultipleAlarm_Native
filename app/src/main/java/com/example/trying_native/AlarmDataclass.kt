@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 @Serializable
@@ -119,7 +120,10 @@ data class AlarmObject(
     val freqGottenAfterCallback: Long
 ){
     fun isOk(alarmData: AlarmData? = null): Boolean{
-        val baseValidation = startTime.timeInMillis < endTime.timeInMillis && freqGottenAfterCallback in 1..700
+        val currentDate = Calendar.getInstance()
+        val selectedDate = Calendar.getInstance().apply { timeInMillis = date}
+        val dateSame = currentDate.get(Calendar.DAY_OF_YEAR) == selectedDate.get(Calendar.DAY_OF_YEAR)
+        val baseValidation = startTime.timeInMillis < endTime.timeInMillis && freqGottenAfterCallback in 1..700 && (dateSame || selectedDate.after(currentDate))
         if (alarmData == null) return baseValidation
         val hasChanged = startTime.timeInMillis != alarmData.startTime || endTime.timeInMillis != alarmData.endTime ||
                 freqGottenAfterCallback != alarmData.freqGottenAfterCallback || message != alarmData.message || date != alarmData.date
@@ -133,7 +137,12 @@ data class AlarmObject(
         if (freqGottenAfterCallback !in 1..700) {
             return ValidationResult(false, "Frequency must be between 1 and 700 minutes.")
         }
-
+        val currentDate = Calendar.getInstance()
+        val selectedDate = Calendar.getInstance().apply { timeInMillis = date}
+        val dateSame = currentDate.get(Calendar.DAY_OF_YEAR) == selectedDate.get(Calendar.DAY_OF_YEAR)
+        if ( !(dateSame || selectedDate.after(currentDate)) ){
+            return ValidationResult(false, "Date must be today or in the future.")
+        }
         // 2. Check for Changes (If in Edit Mode)
         if (alarmData != null) {
             val hasChanged = startTime.timeInMillis != alarmData.startTime ||

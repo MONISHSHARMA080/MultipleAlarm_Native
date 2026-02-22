@@ -10,7 +10,7 @@ import com.example.trying_native.workManager.ResetAlarmAfterBoot
 
 class BootReceiver : BroadcastReceiver(){
 	override fun onReceive(context: Context, intent: Intent) {
-		if (intent.action == Intent.ACTION_BOOT_COMPLETED ||
+		if (intent.action == Intent.ACTION_BOOT_COMPLETED || intent.action == Intent.ACTION_MY_PACKAGE_REPLACED ||
 			intent.action == Intent.ACTION_LOCKED_BOOT_COMPLETED) {
 			val workRequest = OneTimeWorkRequestBuilder<ResetAlarmAfterBoot>().build()
 			WorkManager.getInstance(context).enqueue(workRequest)

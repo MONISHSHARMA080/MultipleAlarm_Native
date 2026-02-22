@@ -81,7 +81,6 @@ enum class AccentColor(val value:Color) {
 @Composable fun AlarmPickerScreen(alarm: AlarmData? , onAlarmSet: (AlarmObject, AlarmData?) -> Unit , alarmSetGoBack: () -> Unit){
     //if the alarm is null then it's for a new alarm else we are editing an alarm
     val coroutineScope = rememberCoroutineScope()
-    val listOfDates =getListOfDatesInThisWeek()
     logD("alarm dates ->"+getListOfDatesInThisWeek() )
     var alarmObject by remember { mutableStateOf(
         alarm?.toAlarmObject() ?: AlarmObject(
@@ -144,18 +143,15 @@ enum class AccentColor(val value:Color) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Repeats", color = Color.Gray)
-                    Text("Weekdays", color = Color(0xFF3F8CFF))
+                    Text("Date", color = Color.Gray)
+                    Text("Open Calender", color = Color(0xFF3F8CFF))
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 DateList(
-					listOfDates,
+//					listOfDates,
                     startDateIndex =alarm?.date,
                     weGood = weGood,
-					 onSelect = {indexOfSelectedDate ->
-                         logD("updating the alarmObject and current date is $indexOfSelectedDate")
-                         val dateSelected = listOfDates[indexOfSelectedDate]
-                         val calVersion = dateSelected.getCalendar()
+					 onSelect = {calVersion ->
                          logD(" updated date is :${getTimeFormatted(calVersion, "hh:mm dd/MM/yyyy")}")
                          val newStartDate = alarmObject.startTime.apply { set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR)) }
                          val newEndDate = alarmObject.endTime.apply { set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR)) }

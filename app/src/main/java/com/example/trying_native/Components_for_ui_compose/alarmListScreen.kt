@@ -2,7 +2,10 @@ package com.example.trying_native.Components_for_ui_compose
 
 import android.app.AlarmManager
 import android.content.ClipData
+import android.content.Context
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -20,9 +23,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedCard
@@ -45,31 +50,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.trying_native.AlarmLogic.AlarmsController
-import com.example.trying_native.components_for_ui_compose.DialogToAskUserAboutAlarmUnified
-import com.example.trying_native.components_for_ui_compose.RoundPlusIcon
+import com.example.trying_native.FirstLaunchAskForPermission.FirstLaunchAskForPermission
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.logD
 import com.example.trying_native.notification.NotificationBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import java.util.Calendar
-import kotlin.math.log
-
 
 @Composable fun AlarmListScreen(
 	alarms:List<AlarmData>, alarmDao: AlarmDao,
@@ -77,7 +74,6 @@ import kotlin.math.log
 	uncancellableScope: CoroutineScope, activityContext: ComponentActivity,onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit
 ){
 	val coroutineScope = rememberCoroutineScope()
-	var showTheDialogToTheUserToAskForPermission by remember { mutableStateOf(false) }
 	val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 	val fontSize = (screenHeight * 0.05f).value.sp
 	val snackBarHostState = remember { SnackbarHostState() }
@@ -117,27 +113,12 @@ import kotlin.math.log
 					ElevatedCard(
 						modifier = Modifier
 							.fillMaxWidth()
-//							.clickable{onNavigateToEdit(individualAlarm); logD("Clicked  Elevated card ") }
 							.height(screenHeight / 4)
-//							.pointerInput(Unit) {
-//								detectTapGestures(
-//									onLongPress = {
-//										coroutineScope.launch {
-//											logD("long press copying to clipboard")
-//											val clip = ClipData.newPlainText("Alarm message", individualAlarm.message)
-//											clipBoard.setClipEntry(ClipEntry(clip))
-//											snackBarHostState.showSnackbar("Message copied")
-//
-//										}
-//									}
-//								)
-//							}
 							.padding(horizontal = 8.dp, vertical = 6.dp),
 						shape = RoundedCornerShape(45.dp)
 					) {
 						Column(
 							modifier = Modifier
-//								.clickable{onNavigateToEdit(individualAlarm); logD("Clicked Colum and not Elevated card fix this") }
 								.fillMaxSize()
 								.pointerInput(Unit) {
 									detectTapGestures(
@@ -148,12 +129,10 @@ import kotlin.math.log
 												val clip = ClipData.newPlainText("Alarm message", individualAlarm.message)
 												clipBoard.setClipEntry(ClipEntry(clip))
 												snackBarHostState.showSnackbar("Message copied")
-
 											}
 										}
 									)
 								}
-
 								.background(
 									color = if (!individualAlarm.isReadyToUse) {
 										Color(0xFF666b75)
@@ -308,68 +287,6 @@ import kotlin.math.log
 					}
 				}
 			}
-
-			// Dialog
-			if (showTheDialogToTheUserToAskForPermission) {
-				logD("displaying the dialog to ask user about the alarm")
-				DialogToAskUserAboutAlarmUnified(
-					onDismissRequest = {
-						logD("Dismissed by new one")
-						showTheDialogToTheUserToAskForPermission = false
-					},
-					onConfirmation = { startTimeHour, startTimeMinute, endTimeHour, endTimeMinute,
-									   startDateInMilliSec, endDateInMilliSec, frequency, alarmMessage ->
-						alarmDao.let { dao ->
-							logD("got the value in the dialogToAskUserAboutAlarmUnified")
-							try {
-								val startTimeCal = Calendar.getInstance().apply {
-									timeInMillis = startDateInMilliSec
-									set(Calendar.HOUR_OF_DAY, startTimeHour)
-									set(Calendar.MINUTE, startTimeMinute)
-									set(Calendar.SECOND, 0)
-								}
-								val endTimeCal = Calendar.getInstance().apply {
-									timeInMillis = endDateInMilliSec
-									set(Calendar.HOUR_OF_DAY, endTimeHour)
-									set(Calendar.MINUTE, endTimeMinute)
-									set(Calendar.SECOND, 0)
-								}
-								uncancellableScope.launch {
-									val exception = alarmsController.scheduleMultipleAlarms(
-										alarmManager,
-										startDateInMilliSec,
-										alarmDao = dao,
-										messageForDB = alarmMessage,
-										calendarForStartTime = startTimeCal,
-										calendarForEndTime = endTimeCal,
-										freqAfterTheCallback = frequency,
-										activityContext = activityContext
-									)
-									exception.fold(
-										onSuccess = { return@launch },
-										onFailure = { excp ->
-											NotificationBuilder(
-												context = activityContext,
-												title = "there is a error/Exception in making new alarm",
-												notificationText = excp.message ?:"Can't set you alarm please retry"
-											).showNotification()
-											logD("there is a error/Exception in making new alarm-->${excp}")
-										}
-									)
-								}
-							} catch (e: Exception) {
-								NotificationBuilder(
-									context = activityContext,
-									title = "there is a error/Exception in making new alarm",
-									notificationText = e.message ?:"Can't set you alarm please retry"
-								).showNotification()
-								logD("there is a error/Exception in making new alarm-->${e}")
-							}
-						}
-						showTheDialogToTheUserToAskForPermission = false
-					},
-				)
-			}
 			Box(
 				modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = screenHeight / 15)
 			) {
@@ -385,3 +302,29 @@ import kotlin.math.log
 	}
 
 }
+
+@Composable fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Color = Color.Blue, onClick: () -> Unit, context:Context) {
+	val coroutineScope = rememberCoroutineScope()
+	Box(
+		modifier = modifier
+			.size(size).zIndex(4f)
+			.background(color = backgroundColor, shape = CircleShape)
+			.clickable {
+				coroutineScope.launch {
+					FirstLaunchAskForPermission(context).checkAndRequestPermissions()
+				}
+				coroutineScope.launch {
+					onClick()
+				}
+			},
+		contentAlignment = Alignment.Center,
+	) {
+		Icon(
+			imageVector = Icons.Default.Add,
+			contentDescription = "Add",
+			modifier = Modifier.size(size / 2)
+		)
+	}
+
+}
+
