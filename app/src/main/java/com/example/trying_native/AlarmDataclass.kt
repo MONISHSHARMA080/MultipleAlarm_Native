@@ -114,10 +114,11 @@ data class AlarmObject(
     val freqGottenAfterCallback: Long
 ){
     fun isOk(alarmData: AlarmData? = null): Boolean{
-        return when(alarmData == null){
-            true -> startTime.timeInMillis < endTime.timeInMillis && freqGottenAfterCallback >= 1 && freqGottenAfterCallback < 700
+         when(alarmData == null){
+            true -> return startTime.timeInMillis < endTime.timeInMillis && freqGottenAfterCallback >= 1 && freqGottenAfterCallback < 700
             // here ! cause if the alarm is same then we are not ok, we need the new alarm to be diff, than the previous one
-            false -> return  !(alarmData.startTime == startTime.timeInMillis && alarmData.endTime == endTime.timeInMillis  &&alarmData.freqGottenAfterCallback == freqGottenAfterCallback )
+//            false ->  !(alarmData.startTime == startTime.timeInMillis && alarmData.endTime == endTime.timeInMillis  && alarmData.freqGottenAfterCallback == freqGottenAfterCallback && alarmData.message == message  )
+            false -> return alarmData.startTime != startTime.timeInMillis && alarmData.endTime != endTime.timeInMillis  && alarmData.freqGottenAfterCallback != freqGottenAfterCallback && alarmData.message != message
 
         }
 	}
@@ -127,8 +128,7 @@ data class AlarmObject(
     fun toAlarmData(alarmId:Int,isReadyToUse: Boolean = true ): AlarmData{
        return AlarmData(id = alarmId, startTime = startTime.timeInMillis, endTime= endTime.timeInMillis, date= date, message= message,  freqGottenAfterCallback=freqGottenAfterCallback, isReadyToUse = isReadyToUse)
     }
-
     override fun toString(): String {
-        return "startTime:${getDateTimeFormatted(startTime.timeInMillis)}, endTime:${getDateTimeFormatted(endTime.timeInMillis)}, date:$date, message:$message freqGottenAfterCallback:$freqGottenAfterCallback"
+        return "startTime:${getDateTimeFormatted(startTime.timeInMillis)}, endTime:${getDateTimeFormatted(endTime.timeInMillis)}, date:${getDateTimeFormatted(date)}, message:$message freqGottenAfterCallback:$freqGottenAfterCallback"
     }
 }

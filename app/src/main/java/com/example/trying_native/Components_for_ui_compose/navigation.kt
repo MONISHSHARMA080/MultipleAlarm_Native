@@ -3,38 +3,31 @@ package com.example.trying_native.Components_for_ui_compose
 import android.app.AlarmManager
 import android.content.Context
 import androidx.activity.ComponentActivity
-import androidx.compose.animation.core.EaseInOut
-import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideIn
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 
 import androidx.navigation3.ui.NavDisplay
-import androidx.navigation3.ui.NavDisplay.transitionSpec
 import androidx.room.Room
 import com.example.trying_native.AlarmLogic.AlarmsController
+import com.example.trying_native.Components_for_ui_compose.alarmPicker.AlarmPickerScreen
 import com.example.trying_native.components_for_ui_compose.AlarmContainer
 
 import com.example.trying_native.dataBase.AlarmData
@@ -42,12 +35,9 @@ import com.example.trying_native.dataBase.AlarmDatabase
 import com.example.trying_native.logD
 import com.example.trying_native.notification.NotificationBuilder
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import java.util.Calendar
 
 
 sealed interface Screen : NavKey {
@@ -104,22 +94,36 @@ fun NavigationStack(activityContext: ComponentActivity) {
 					}
 					is Screen.AlarmPicker -> NavEntry(key){
 						/**[ onAlarmSet] - here [ AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
-						AlarmPickerScreen(key.alarmData, { newAlarmObject, alarmData->
-							when(alarmData){
-								 null ->{
+						AlarmPickerScreen(key.alarmData, { newAlarmObject, alarmData ->
+							when (alarmData) {
+								null -> {
 									// alarmData was not there so setting a new alarm
 									uncancellableScope.launch {
-										logD("the alarm data confirmed is $newAlarmObject, and is alarmData == newAlarmObject -> ${newAlarmObject.isOk(alarmData)} ")
+										logD(
+											"the alarm data confirmed is $newAlarmObject, and is alarmData == newAlarmObject -> ${
+												newAlarmObject.isOk(
+													alarmData
+												)
+											} "
+										)
 										val exception = alarmsController.scheduleMultipleAlarms(
-											alarmManager, alarmDao = alarmDao, messageForDB = newAlarmObject.message,
-											calendarForStartTime = newAlarmObject.startTime, calendarForEndTime = newAlarmObject.endTime,
-											freqAfterTheCallback = newAlarmObject.freqGottenAfterCallback.toInt(), activityContext = activityContext, dateInLong = newAlarmObject.date,
+											alarmManager,
+											alarmDao = alarmDao,
+											messageForDB = newAlarmObject.message,
+											calendarForStartTime = newAlarmObject.startTime,
+											calendarForEndTime = newAlarmObject.endTime,
+											freqAfterTheCallback = newAlarmObject.freqGottenAfterCallback.toInt(),
+											activityContext = activityContext,
+											dateInLong = newAlarmObject.date,
 										)
 										exception.fold(
 											onSuccess = { },
 											onFailure = { excp ->
-												NotificationBuilder( context = activityContext, title = "there is a error/Exception in making new alarm",
-													notificationText = excp.message ?:"Can't set you alarm please retry"
+												NotificationBuilder(
+													context = activityContext,
+													title = "there is a error/Exception in making new alarm",
+													notificationText = excp.message
+														?: "Can't set you alarm please retry"
 												).showNotification()
 												logD("there is a error/Exception in making new alarm-->${excp}")
 											}
@@ -127,29 +131,38 @@ fun NavigationStack(activityContext: ComponentActivity) {
 									}
 
 								}
-								else->{
+
+								else -> {
 									// alarmData was there so editing an existing alarm
 									uncancellableScope.launch {
-											alarmsController.cancelAlarmByCancelingPendingIntent(
-												context_of_activity = activityContext,
-												startTime = alarmData.startTime,
-												endTime = alarmData.endTime,
-												frequencyInMin = alarmData.getFreqInMillisecond(),
-												alarmDao = alarmDao,
-												alarmManager = alarmManager,
-												delete_the_alarm_from_db = true,
-												alarmData = alarmData
-											)
+										alarmsController.cancelAlarmByCancelingPendingIntent(
+											context_of_activity = activityContext,
+											startTime = alarmData.startTime,
+											endTime = alarmData.endTime,
+											frequencyInMin = alarmData.getFreqInMillisecond(),
+											alarmDao = alarmDao,
+											alarmManager = alarmManager,
+											delete_the_alarm_from_db = true,
+											alarmData = alarmData
+										)
 										val exception = alarmsController.scheduleMultipleAlarms(
-											alarmManager, alarmDao = alarmDao, messageForDB = newAlarmObject.message,
-											calendarForStartTime = newAlarmObject.startTime, calendarForEndTime = newAlarmObject.endTime,
-											freqAfterTheCallback = newAlarmObject.freqGottenAfterCallback.toInt(), activityContext = activityContext, dateInLong = newAlarmObject.date,
+											alarmManager,
+											alarmDao = alarmDao,
+											messageForDB = newAlarmObject.message,
+											calendarForStartTime = newAlarmObject.startTime,
+											calendarForEndTime = newAlarmObject.endTime,
+											freqAfterTheCallback = newAlarmObject.freqGottenAfterCallback.toInt(),
+											activityContext = activityContext,
+											dateInLong = newAlarmObject.date,
 										)
 										exception.fold(
 											onSuccess = { },
 											onFailure = { excp ->
-												NotificationBuilder( context = activityContext, title = "there is a error/Exception in making new alarm",
-													notificationText = excp.message ?:"Can't set you alarm please retry"
+												NotificationBuilder(
+													context = activityContext,
+													title = "there is a error/Exception in making new alarm",
+													notificationText = excp.message
+														?: "Can't set you alarm please retry"
 												).showNotification()
 												logD("there is a error/Exception in making new alarm-->${excp}")
 											}
@@ -159,9 +172,9 @@ fun NavigationStack(activityContext: ComponentActivity) {
 									}
 								}
 							}
-						}
-							, alarmSetGoBack = {backStack.removeLastOrNull()}
-						)}
+						}, alarmSetGoBack = { backStack.removeLastOrNull() }
+						)
+					}
 					else -> { NavEntry(key){
 						AlarmContainer(
 							activityContext,

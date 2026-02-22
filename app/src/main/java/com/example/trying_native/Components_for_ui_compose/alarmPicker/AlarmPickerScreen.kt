@@ -1,5 +1,6 @@
-package com.example.trying_native.Components_for_ui_compose
+package com.example.trying_native.Components_for_ui_compose.alarmPicker
 
+import android.R.attr.top
 import java.util.Calendar
 import android.text.format.DateFormat
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -45,7 +46,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -62,12 +62,14 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmObject
 import com.example.trying_native.logD
 import kotlinx.coroutines.launch
+import kotlin.math.log
 
 enum class AccentColor(val value:Color) {
      Ok(Color(0xFF1A73E8)),
@@ -76,9 +78,11 @@ enum class AccentColor(val value:Color) {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 /**[onAlarmSet] - here [AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
-@Composable fun AlarmPickerScreen(alarm: AlarmData?, onAlarmSet: (AlarmObject, AlarmData?) -> Unit, alarmSetGoBack: () -> Unit){
+@Composable fun AlarmPickerScreen(alarm: AlarmData? , onAlarmSet: (AlarmObject, AlarmData?) -> Unit , alarmSetGoBack: () -> Unit){
     //if the alarm is null then it's for a new alarm else we are editing an alarm
     val coroutineScope = rememberCoroutineScope()
+    val listOfDates =getListOfDatesInThisWeek()
+    logD("alarm dates ->"+getListOfDatesInThisWeek() )
     var alarmObject by remember { mutableStateOf<AlarmObject>(
         alarm?.toAlarmObject() ?: AlarmObject(
             startTime =Calendar.getInstance().apply {
@@ -86,14 +90,14 @@ enum class AccentColor(val value:Color) {
                 if (get(Calendar.DAY_OF_YEAR) != Calendar.getInstance().get(Calendar.DAY_OF_YEAR)) {
                     set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
                 }
-                set(Calendar.SECOND,0)
+                set(Calendar.SECOND, 0)
             },
             endTime =Calendar.getInstance().apply {
                 add(Calendar.MINUTE ,45)
                 if (get(Calendar.DAY_OF_YEAR) != Calendar.getInstance().get(Calendar.DAY_OF_YEAR)) {
                     set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
                 }
-                set(Calendar.SECOND,0)
+                set(Calendar.SECOND, 0)
             },
             date = Calendar.getInstance().timeInMillis,
             message = alarm?.message ?: "",
@@ -102,7 +106,6 @@ enum class AccentColor(val value:Color) {
     ) }
     val weGood by remember { derivedStateOf { alarmObject.isOk(alarm)  } }
     val accentColor by remember { derivedStateOf { logD("weGood: $weGood"); if (weGood) AccentColor.Ok.value else AccentColor.Problem.value  } }
-    val listOfDays = remember { mutableStateListOf('M', 'T', 'W', 'T', 'F', 'S', 'S') }
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
     Scaffold(modifier = Modifier.fillMaxSize()) { contentPadding->
         Box(
@@ -112,16 +115,11 @@ enum class AccentColor(val value:Color) {
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF0F131A))
-                    .verticalScroll(rememberScrollState())
-                    .fillMaxSize()
-                    .navigationBarsPadding()
-                    .padding(horizontal = 20.dp)
-                    .padding(bottom = contentPadding.calculateBottomPadding() + 10.dp)
-                    .padding(top = contentPadding.calculateTopPadding() + 12.dp),
+                    .fillMaxWidth().background(Color(0xFF0F131A)).verticalScroll(rememberScrollState())
+                    .fillMaxSize().navigationBarsPadding()
+                    .padding(horizontal = 20.dp).padding(top = contentPadding.calculateTopPadding() + 12.dp)
+                    .padding(bottom = contentPadding.calculateBottomPadding() + 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
-
             ) {
                 // --- Header ---
                 Row(
@@ -134,9 +132,7 @@ enum class AccentColor(val value:Color) {
                 Spacer(modifier = Modifier.height(16.dp))
                 // --- Time Range Selector ---
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically
                 ) {
                     TimeBox("START TIME", alarmObject.startTime,  accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(startTime = newSelectedTime) })
                     Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
@@ -152,24 +148,20 @@ enum class AccentColor(val value:Color) {
                     Text("Weekdays", color = Color(0xFF3F8CFF))
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    listOfDays.forEach { day ->
-                        var isSelected = true
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .clickable {isSelected = !isSelected}
-                                .background(accentColor),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(day.toString(), color = if (isSelected) Color.White else Color.Gray)
-                        }
-                    }
-                }
+                DateList(
+					listOfDates,
+                    startDateIndex =alarm?.date,
+					 onSelect = {dateSelectionIndex ->
+                         logD("updating the alarmObject and current date is $dateSelectionIndex")
+                         val dateSelected = listOfDates[dateSelectionIndex]
+                         val calVersion = dateSelected.getCalendar()
+                         logD(" updated date is :${getTimeFormatted(calVersion, "hh:mm dd/MM/yyyy")}")
+                         val newStartDate = alarmObject.startTime.apply { set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR)) }
+                         val newEndDate = alarmObject.endTime.apply { set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR)) }
+                         alarmObject = alarmObject.copy(date = calVersion.timeInMillis, startTime = newStartDate, endTime = newEndDate)
+                         logD("updated the alarmObject for new date and it is $alarmObject")
+                     }
+				)
                 Spacer(modifier = Modifier.height(26.dp))
                 // --- frequency Section ---
                 Surface(
@@ -327,11 +319,9 @@ enum class AccentColor(val value:Color) {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TimeBox(label: String, time: Calendar, accentColor: Color, onNewTimeSelected: (Calendar) -> Unit) {
+@Composable fun TimeBox(label: String, time: Calendar, accentColor: Color, onNewTimeSelected: (Calendar) -> Unit) {
     var calendar by remember { mutableStateOf(time) }
     var showTimePicker by remember { mutableStateOf(false) }
-
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             modifier = Modifier
@@ -343,17 +333,13 @@ fun TimeBox(label: String, time: Calendar, accentColor: Color, onNewTimeSelected
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (showTimePicker) {
-                    // MOVE STATE INSIDE THE IF BLOCK
                     val timePickerState = rememberTimePickerState(
-                        initialHour = calendar.get(Calendar.HOUR_OF_DAY),
-                        initialMinute = calendar.get(Calendar.MINUTE),
+                        initialHour = calendar.get(Calendar.HOUR_OF_DAY), initialMinute = calendar.get(Calendar.MINUTE),
                         is24Hour = false,
                     )
-
                     AlertDialog(
                         onDismissRequest = { showTimePicker = false },
-                        title = { Text(text = "Select ${label.lowercase()}") },
-                        text = {
+                        title = { Text(text = "Select ${label.lowercase()}") }, text = {
                             TimePicker(state = timePickerState)
                         },
                         confirmButton = {
@@ -382,6 +368,11 @@ fun TimeBox(label: String, time: Calendar, accentColor: Color, onNewTimeSelected
             }
         }
     }
+}
+
+@Preview
+@Composable fun DisplayListOfDatesInWeek(){
+
 }
 
 fun getTimeFormatted(cal: Calendar, formatter:String = "hh:mm"): String{

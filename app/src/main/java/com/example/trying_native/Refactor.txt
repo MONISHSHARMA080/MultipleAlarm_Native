@@ -26,6 +26,7 @@ b) Code Refactor :--
     [X] replace the start activity with live notification or foreground activity, ask user [LATER after mvp]
     [*] use media player to make sure the audio focus mistake is not with ringtone manger
     [*] see and check that the app works for the minimum android version to latest (search for people using android version, go for 50% or > , android 11 or up hopefully)
+    [X] boot receiver
     * also add force update the app , or ask user to update the app
     * redo the cancelAlarmByCancelingPendingIntent()
     * put a ask user for review after 5 days popup
@@ -41,7 +42,6 @@ b) Code Refactor :--
     * complete the Result object and the error handling with the exception and the display user error
     * add postHog or other analytic
     * for now allow the user to schedule alarm on a specific date and not multiple
-    * boot receiver
     * something wrong with
     * alarm order in Db, like based on time zone( endtime-startTime , time hs date in them) and automatically in the List
 
@@ -61,6 +61,7 @@ c)  later :--
         * now use the alarm Intent data class to tell if we have alarm with random sound or what
         * ability to add repeating alarms (like MONDAY, WED, SAT etc)
         * add ability to schedule multiple alarms (calender)
+        * set alarm based on AlarmObject.Date and not take the alarmObject.StartTime alarmObject.EndTime, assert them to be right but take it from time
 
 
 

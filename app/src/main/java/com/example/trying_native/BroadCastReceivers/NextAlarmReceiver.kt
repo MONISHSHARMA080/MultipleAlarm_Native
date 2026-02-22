@@ -71,7 +71,6 @@ class NextAlarmReceiver: BroadcastReceiver() {
             logSoundPlay(alarmData = null, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "---- Invalid time values received in AlarmReceiver. currentAlarmTime: $currentTimeAlarmFired, originalDbStartTime: $startTimeForAlarmSeries, originalDbEndTime: $originalDbEndTime. Crashing. ----- ")
         }
         val alarmDaoImpl = this.alarmDao?:getAlarmDao(activityContext )
-        // Lookup using the original start and end times
         val alarmData: AlarmData? = alarmDaoImpl.getAlarmByValues(startTimeForAlarmSeries, originalDbEndTime)
 //        val alarmData = alarmDao.getAlarmByValues(startTimeForAlarmSeries, originalDbEndTime)
         if (alarmData == null) {

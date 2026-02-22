@@ -1,4 +1,4 @@
-package com.example.trying_native.Components_for_ui_compose
+package com.example.trying_native.Components_for_ui_compose.alarmPicker
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -130,9 +130,21 @@ import java.util.Calendar
 							horizontalArrangement = Arrangement.SpaceEvenly,
 							verticalAlignment = Alignment.CenterVertically
 						) {
-							TimeBox("START TIME", alarmObject.startTime,  accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(startTime = newSelectedTime) })
+							TimeBox(
+								"START TIME",
+								alarmObject.startTime,
+								accentColor,
+								onNewTimeSelected = { newSelectedTime ->
+									alarmObject = alarmObject.copy(startTime = newSelectedTime)
+								})
 							Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
-							TimeBox("END TIME", alarmObject.endTime,  accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(endTime = newSelectedTime) })
+							TimeBox(
+								"END TIME",
+								alarmObject.endTime,
+								accentColor,
+								onNewTimeSelected = { newSelectedTime ->
+									alarmObject = alarmObject.copy(endTime = newSelectedTime)
+								})
 						}
 						Spacer(modifier = Modifier.height(24.dp))
 						// --- Repeats / Day Picker ---
@@ -236,7 +248,11 @@ import java.util.Calendar
 									Text("Please enter the frequency value", color = Color.Gray, fontSize = 12.sp)
 								} else{
 									Text(
-										"Alarm will ring every ${alarmObject.freqGottenAfterCallback} minutes between ${getTimeFormatted(alarmObject.startTime)}  and ${getTimeFormatted(alarmObject.endTime)} AM.",
+										"Alarm will ring every ${alarmObject.freqGottenAfterCallback} minutes between ${
+											getTimeFormatted(
+												alarmObject.startTime
+											)
+										}  and ${getTimeFormatted(alarmObject.endTime)} AM.",
 										color = Color.Gray,
 										fontSize = 12.sp
 									)
