@@ -114,6 +114,7 @@ import kotlinx.coroutines.launch
 						modifier = Modifier
 							.fillMaxWidth()
 							.height(screenHeight / 4)
+							.animateItem()
 							.padding(horizontal = 8.dp, vertical = 6.dp),
 						shape = RoundedCornerShape(45.dp)
 					) {
