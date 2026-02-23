@@ -196,15 +196,13 @@ fun NavigationStack(activityContext: ComponentActivity) {
 }
 
 
-@SuppressLint("FlowOperatorInvokedInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmContainer(activityContext: ComponentActivity, alarmDao: AlarmDao, alarmManager: AlarmManager,  onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit ) {
 	val coroutineScope = activityContext.lifecycleScope
 	val uncancellableScope = CoroutineScope(coroutineScope.coroutineContext + NonCancellable)
-	val alarms by alarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO).collectAsStateWithLifecycle(initialValue = emptyList())
 	AlarmListScreen(
 		alarmManager =alarmManager, alarmDao = alarmDao, onNavigateToEdit=onNavigateToEdit, onNavigateToCreate=onNavigateToCreate,
-		uncancellableScope = uncancellableScope, activityContext =activityContext,alarms = alarms
+		uncancellableScope = uncancellableScope, activityContext =activityContext
 	)
 }

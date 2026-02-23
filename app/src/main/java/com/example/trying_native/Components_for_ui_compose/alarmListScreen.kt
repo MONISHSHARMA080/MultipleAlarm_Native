@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.trying_native.AlarmLogic.AlarmsController
 import com.example.trying_native.FirstLaunchAskForPermission.FirstLaunchAskForPermission
 import com.example.trying_native.dataBase.AlarmDao
@@ -69,10 +70,11 @@ import com.example.trying_native.logD
 import com.example.trying_native.notification.NotificationBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 
 @Composable fun AlarmListScreen(
-	alarms:List<AlarmData>, alarmDao: AlarmDao,
+	 alarmDao: AlarmDao,
 	alarmsController: AlarmsController = AlarmsController(), alarmManager: AlarmManager,
 	uncancellableScope: CoroutineScope, activityContext: ComponentActivity,onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit
 ){
@@ -81,6 +83,12 @@ import kotlinx.coroutines.launch
 	val fontSize = (screenHeight * 0.05f).value.sp
 	val snackBarHostState = remember { SnackbarHostState() }
 	val clipBoard =LocalClipboard.current
+//	val alarms by alarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO).collectAsStateWithLifecycle(initialValue = emptyList())
+	val alarmsFlow = remember { alarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO) }
+	val alarms by alarmsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
+//	val alarms by alarmDao.getAllAlarmsFlowIO()
+//		.collectAsStateWithLifecycle(initialValue = emptyList())
+
 
 
 	Scaffold(contentWindowInsets = WindowInsets.systemBars) { edgeToEdgePadding ->

@@ -81,7 +81,8 @@ interface AlarmDao {
     @Query("SELECT * FROM AlarmData")
     suspend fun getAllAlarms(): List<AlarmData>
 
-    @Query("SELECT * FROM AlarmData ORDER BY date_in_long ASC, first_value ASC")
+//    @Query("SELECT * FROM AlarmData ORDER BY date_in_long ASC, first_value ASC")
+    @Query("SELECT * FROM AlarmData ORDER BY first_value ASC, second_value ASC")
     fun getAllAlarmsFlow(): Flow<List<AlarmData>>
 
     // New function to retrieve an alarm by first_value and second_value
