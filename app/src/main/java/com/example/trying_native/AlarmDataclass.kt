@@ -34,7 +34,7 @@ data class AlarmData(
     @ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean
 ){
     override fun toString(): String {
-        return "{id:$id, startTime:${getDateTimeFormatted(startTime)}, endTime:${getDateTimeFormatted(endTime)}, date:$date, message:$message, freqGottenAfterCallback:$freqGottenAfterCallback, isReadyToUse:$isReadyToUse}"
+        return "{id:$id, startTime:${getDateTimeFormatted(startTime)}, endTime:${getDateTimeFormatted(endTime)}, date:${getDateFormatted(date)}, message:$message, freqGottenAfterCallback:$freqGottenAfterCallback, isReadyToUse:$isReadyToUse}"
     }
     /** converts the freq that we got in min to millisecond for same time, eg 6 min to 6 min in millisecond*/
      fun getFreqInMillisecond(): Long {

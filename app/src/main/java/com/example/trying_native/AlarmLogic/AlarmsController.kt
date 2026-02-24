@@ -529,6 +529,15 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
         Log.d("AAAAAA", "[AlarmController] $msg")
     }
 
+   /** cancels scheduled alarm*/
+    suspend fun cancelAlarm(alarmData: AlarmData) {
+        TODO()
+    }
+    suspend fun deleteAlarmFromDb(alarmData: AlarmData) {
+        // try to delete the alarm(and cancel it) if error then put it back, and also reschedule it and display the message
+        TODO()
+    }
+
 }
 
 

@@ -1,6 +1,5 @@
 package com.example.trying_native.Components_for_ui_compose
 
-import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.content.Context
 import androidx.activity.ComponentActivity
@@ -17,20 +16,18 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 
 import androidx.navigation3.ui.NavDisplay
 import androidx.room.Room
 import com.example.trying_native.AlarmLogic.AlarmsController
+import com.example.trying_native.Components_for_ui_compose.alarmListScreen.AlarmListScreen
 import com.example.trying_native.Components_for_ui_compose.alarmPicker.AlarmPickerScreen
 import com.example.trying_native.dataBase.AlarmDao
 
@@ -41,7 +38,6 @@ import com.example.trying_native.notification.NotificationBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -53,8 +49,7 @@ sealed interface Screen : NavKey {
 	data class AlarmPicker(val alarmData: AlarmData? = null) : Screen
 }
 
-@Composable
-fun NavigationStack(activityContext: ComponentActivity) {
+@Composable fun NavigationStack(activityContext: ComponentActivity) {
 	val backStack = rememberNavBackStack(Screen.AlarmContainer)
 	val alarmDao = remember { Room.databaseBuilder(activityContext.applicationContext, AlarmDatabase::class.java, "alarm-database").build().alarmDao() }
 	val context = LocalContext.current
@@ -88,17 +83,68 @@ fun NavigationStack(activityContext: ComponentActivity) {
 						fadeOut(tween(90, easing = LinearEasing))
 			},
 
-			entryProvider = {key ->
-				when(key){
-					is Screen.AlarmContainer -> NavEntry(key){
-						AlarmContainer(
-							activityContext = activityContext,
-							onNavigateToEdit = { alarm -> backStack.add(Screen.AlarmPicker(alarm))},
-							onNavigateToCreate = { backStack.add(Screen.AlarmPicker( null)) },
-							alarmDao = alarmDao,alarmManager=alarmManager
-						)
-					}
-					is Screen.AlarmPicker -> NavEntry(key){
+			entryProvider = { key ->
+				when(key) {
+					is Screen.AlarmContainer -> NavEntry(key) {
+							AlarmContainer(
+								activityContext = activityContext,
+								onNavigateToEdit = { alarm -> backStack.add(Screen.AlarmPicker(alarm)) },
+								onNavigateToCreate = { backStack.add(Screen.AlarmPicker(null)) },
+								alarmDao = alarmDao,
+								alarmManager = alarmManager, onAlarmStop = { alarmData ->
+									uncancellableScope.launch {
+										alarmsController.cancelAlarmByCancelingPendingIntent(
+											context_of_activity = activityContext,
+											startTime = alarmData.startTime,
+											endTime = alarmData.endTime,
+											frequencyInMin = alarmData.getFreqInMillisecond(),
+											alarmDao = alarmDao,
+											alarmManager = alarmManager,
+											delete_the_alarm_from_db = false,
+											alarmData = alarmData
+										)
+									}
+
+								}, onAlarmReset = { alarmData ->
+									uncancellableScope.launch {
+										logD("about to reset the alarm-+")
+										val exception = alarmsController.resetAlarms(
+											alarmData = alarmData,
+											alarmManager = alarmManager,
+											activityContext = activityContext,
+											alarmDao =alarmDao,
+										)
+										logD("the exception from the resetAlarm is ->$exception")
+										exception.fold(
+											onSuccess = {},
+											onFailure = {
+												NotificationBuilder(
+													activityContext,
+													title = "error returned in creating multiple alarm",
+													notificationText = "execution returned exception in schedule multiple alarm -->${exception}"
+												).showNotification()
+												logD("error in the schedule multiple -->${exception}")
+											}
+										)
+									}
+
+								}, onAlarmDelete = {alarmData ->
+									uncancellableScope.launch {
+										alarmsController.cancelAlarmByCancelingPendingIntent(
+											context_of_activity = activityContext,
+											startTime = alarmData.startTime,
+											endTime = alarmData.endTime,
+											frequencyInMin = alarmData.getFreqInMillisecond(),
+											alarmDao = alarmDao,
+											alarmManager = alarmManager,
+											delete_the_alarm_from_db = true,
+											alarmData = alarmData
+										)
+									}
+								}
+							)
+						}
+					is Screen.AlarmPicker ->						NavEntry(key) {
 						/**[ onAlarmSet] - here [ AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
 						AlarmPickerScreen(key.alarmData, { newAlarmObject, alarmData ->
 							when (alarmData) {
@@ -135,9 +181,7 @@ fun NavigationStack(activityContext: ComponentActivity) {
 											}
 										)
 									}
-
 								}
-
 								else -> {
 									// alarmData was there so editing an existing alarm
 									uncancellableScope.launch {
@@ -173,22 +217,71 @@ fun NavigationStack(activityContext: ComponentActivity) {
 												logD("there is a error/Exception in making new alarm-->${excp}")
 											}
 										)
-
-
 									}
 								}
 							}
-						}, alarmSetGoBack = { backStack.removeLastOrNull() }
-						)
+						}, alarmSetGoBack = { backStack.removeLastOrNull() })
 					}
-					else -> { NavEntry(key){
-						AlarmContainer(
-							activityContext,
-							onNavigateToEdit = { alarm -> backStack.add(Screen.AlarmPicker(alarm)) },
-							alarmDao = alarmDao,alarmManager=alarmManager,
-							onNavigateToCreate = { backStack.add(Screen.AlarmPicker( null)) }
-						) }
-					}
+					else ->
+						NavEntry(key) {
+							AlarmContainer(
+								activityContext = activityContext,
+								onNavigateToEdit = { alarm -> backStack.add(Screen.AlarmPicker(alarm)) },
+								onNavigateToCreate = { backStack.add(Screen.AlarmPicker(null)) },
+								alarmDao = alarmDao,
+								alarmManager = alarmManager, onAlarmStop = { alarmData ->
+									uncancellableScope.launch {
+										alarmsController.cancelAlarmByCancelingPendingIntent(
+											context_of_activity = activityContext,
+											startTime = alarmData.startTime,
+											endTime = alarmData.endTime,
+											frequencyInMin = alarmData.getFreqInMillisecond(),
+											alarmDao = alarmDao,
+											alarmManager = alarmManager,
+											delete_the_alarm_from_db = false,
+											alarmData = alarmData
+										)
+									}
+
+								}, onAlarmReset = { alarmData ->
+									uncancellableScope.launch {
+										logD("about to reset the alarm-+")
+										val exception = alarmsController.resetAlarms(
+											alarmData = alarmData,
+											alarmManager = alarmManager,
+											activityContext = activityContext,
+											alarmDao =alarmDao,
+										)
+										logD("the exception from the resetAlarm is ->$exception")
+										exception.fold(
+											onSuccess = {},
+											onFailure = {
+												NotificationBuilder(
+													activityContext,
+													title = "error returned in creating multiple alarm",
+													notificationText = "execution returned exception in schedule multiple alarm -->${exception}"
+												).showNotification()
+												logD("error in the schedule multiple -->${exception}")
+											}
+										)
+									}
+
+								}, onAlarmDelete = {alarmData ->
+									uncancellableScope.launch {
+										alarmsController.cancelAlarmByCancelingPendingIntent(
+											context_of_activity = activityContext,
+											startTime = alarmData.startTime,
+											endTime = alarmData.endTime,
+											frequencyInMin = alarmData.getFreqInMillisecond(),
+											alarmDao = alarmDao,
+											alarmManager = alarmManager,
+											delete_the_alarm_from_db = true,
+											alarmData = alarmData
+										)
+									}
+								}
+							)
+						}
 				}
 			}
 		)
@@ -196,13 +289,23 @@ fun NavigationStack(activityContext: ComponentActivity) {
 }
 
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AlarmContainer(activityContext: ComponentActivity, alarmDao: AlarmDao, alarmManager: AlarmManager,  onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit ) {
+fun AlarmContainer(activityContext: ComponentActivity, alarmDao: AlarmDao, alarmManager: AlarmManager,
+				   onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit , onAlarmDelete:(AlarmData) ->Unit, onAlarmStop:(AlarmData) -> Unit, onAlarmReset:(AlarmData) -> Unit
+) {
 	val coroutineScope = activityContext.lifecycleScope
 	val uncancellableScope = CoroutineScope(coroutineScope.coroutineContext + NonCancellable)
 	AlarmListScreen(
-		alarmManager =alarmManager, alarmDao = alarmDao, onNavigateToEdit=onNavigateToEdit, onNavigateToCreate=onNavigateToCreate,
-		uncancellableScope = uncancellableScope, activityContext =activityContext
+		alarmManager = alarmManager,
+		alarmDao = alarmDao,
+		onNavigateToEdit = onNavigateToEdit,
+		onNavigateToCreate = onNavigateToCreate,
+		uncancellableScope = uncancellableScope,
+		activityContext = activityContext,
+		onAlarmDelete = {alarmData -> onAlarmDelete(alarmData)},
+		onAlarmStop = {alarmData ->onAlarmStop(alarmData)},
+		onAlarmReset = {alarmData ->onAlarmReset(alarmData)},
 	)
 }

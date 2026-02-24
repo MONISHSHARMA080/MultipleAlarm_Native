@@ -136,6 +136,8 @@ dependencies {
     implementation(libs.androidx.compose.foundation.layout)
 	implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
+	implementation(libs.androidx.ui.text)
+    implementation(libs.androidx.compose.ui.graphics)
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation("androidx.test:runner:1.6.1")
     androidTestImplementation("androidx.test:rules:1.6.1")
