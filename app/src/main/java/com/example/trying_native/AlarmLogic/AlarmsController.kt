@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import androidx.activity.ComponentActivity
 import com.example.trying_native.Activities.AlarmActivityIntentData
 import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.BroadCastReceivers.AlarmInfoNotification
@@ -39,7 +38,7 @@ class TimeProviderImpl : TimeProvider {
 }
 
 class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImpl()){
-     var scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    var scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val alarmInfoNotificationClass:Class<out BroadcastReceiver> = AlarmInfoNotification::class.java
     private val alarmReceiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java
      val nextAlarmReceiver:Class<out BroadcastReceiver> = NextAlarmReceiver::class.java
@@ -174,7 +173,7 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
             val c = scope.async {
                 val newAlarm = AlarmData(
                     startTime = startTimeInMillis, endTime = endTimeInMillis, isReadyToUse = true, date = dateInLong,
-                    message = messageForDB, freqGottenAfterCallback = freqAfterTheCallback.toLong())
+                    message = messageForDB, frequencyInMin = freqAfterTheCallback.toLong())
                 check(newAlarm.getDateFormatted(calendarForStartTime.timeInMillis) == newAlarm.getDateFormatted(calendarForEndTime.timeInMillis)){ "expected the date produced by startTime and endTime to be same, we got startDate -> ${newAlarm.getDateFormatted(newAlarm.startTime)} , endDate -> ${newAlarm.getDateFormatted(newAlarm.endTime) }"}
                 val insertedId = alarmDao.insert(newAlarm)
                 logD("Inserted alarm with ID: $insertedId")
@@ -389,6 +388,35 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
         logD("Finished cancelling all alarm PendingIntents")
     }
 
+    /** cancels scheduled alarm*/
+    suspend fun cancelAlarm(alarmData: AlarmData) {
+        val cal = Calendar.getInstance()
+        // cancel the alarm and also try to cancel a few more to be on safe side and not to encounter race conditions
+        var extraSafteyAlarmsToCancel = 5
+        val currentTime = cal.timeInMillis
+        val alarmIterator = alarmData.iterator()
+        while (alarmIterator.hasNext()  && extraSafteyAlarmsToCancel >0 ) {
+            val alarmIterVal = alarmIterator.next()
+            if (alarmIterVal < currentTime) continue
+            logD("the time value gotten in iterating is ${getTimeInHumanReadableFormatProtectFrom0Included(alarmIterVal)}")
+            val intentData = AlarmActivityIntentData(
+                startTimeForDb = alarmData.startTime,
+                startTime = alarmIterVal,
+                endTime = alarmData.endTime,
+                message = alarmData.message,
+                alarmIdInDb = alarmData.id
+            )
+            // have to cancel next alarm receiver, nextAlarmReceiver, and also lastPITurnDbOff
+            extraSafteyAlarmsToCancel--
+        }
+
+
+
+
+        TODO()
+    }
+
+
     suspend fun resetAlarms(alarmData:AlarmData, alarmManager: AlarmManager, activityContext: Context, alarmDao: AlarmDao): Result<Unit>{
         return runCatching {
             logD("in the reset alarm func-+")
@@ -403,7 +431,7 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
             val startCalendar = Calendar.getInstance().apply { timeInMillis = startTime }
             val exception = this.rescheduleAlarm(
                 alarmManager, activityContext = activityContext, alarmDao = alarmDao, calendarForStartTime = startCalendar,
-                freqAfterCallback = alarmData.freqGottenAfterCallback,
+                freqAfterCallback = alarmData.frequencyInMin,
                 alarmData = alarmData, nextAlarmInfo =  nextAlarmInfo,calendarForEndTimer = endCalendar,
             )
             exception.fold(onFailure = { throwable->
@@ -529,10 +557,6 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
         Log.d("AAAAAA", "[AlarmController] $msg")
     }
 
-   /** cancels scheduled alarm*/
-    suspend fun cancelAlarm(alarmData: AlarmData) {
-        TODO()
-    }
     suspend fun deleteAlarmFromDb(alarmData: AlarmData) {
         // try to delete the alarm(and cancel it) if error then put it back, and also reschedule it and display the message
         TODO()

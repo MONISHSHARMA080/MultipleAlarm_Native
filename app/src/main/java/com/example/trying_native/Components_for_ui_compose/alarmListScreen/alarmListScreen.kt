@@ -6,6 +6,9 @@ import android.content.Context
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.animateBounds
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -69,8 +72,8 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 
 @Composable fun AlarmListScreen(
-	 alarmDao: AlarmDao, alarmsController: AlarmsController = AlarmsController(), alarmManager: AlarmManager, onAlarmDelete:(AlarmData) -> Unit, onAlarmStop:(AlarmData) -> Unit, onAlarmReset:(AlarmData) -> Unit,
-	uncancellableScope: CoroutineScope, activityContext: ComponentActivity,onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit
+	 alarmDao: AlarmDao, alarmsController: AlarmsController = AlarmsController(), alarmManager: AlarmManager, onAlarmDelete:(AlarmData) -> Unit, onAlarmStop:(AlarmData) -> Unit,
+	 onAlarmReset:(AlarmData) -> Unit, uncancellableScope: CoroutineScope, activityContext: ComponentActivity,onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit
 ){
 	val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 	val snackBarHostState = remember { SnackbarHostState() }
@@ -121,6 +124,7 @@ import kotlinx.coroutines.launch
 									}
 								}
 						},
+						modifier = Modifier.animateItem()
 					)
 				}
 			}

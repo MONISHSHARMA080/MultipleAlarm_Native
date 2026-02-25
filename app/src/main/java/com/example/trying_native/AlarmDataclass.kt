@@ -3,7 +3,6 @@ package com.example.trying_native.dataBase
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
-import androidx.room.Delete
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.Insert
@@ -11,12 +10,11 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
 import androidx.room.Update
-import com.example.trying_native.logD
+import com.example.trying_native.utils.Result.GenericDataIterator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 
 @Serializable
@@ -28,36 +26,43 @@ data class AlarmData(
     @ColumnInfo(name = "second_value") var endTime: Long,
     @ColumnInfo(name = "date_in_long") val date: Long,
     @ColumnInfo(name = "message") val message:String,
-    // we can just add freq_in_min to the start time in millisecond to recreate the behaviour
-    /** this is same as the oen used to skip the time just provide it and will just skip it */
-    @ColumnInfo(name = "freq_used_to_skip_start_alarm") val freqGottenAfterCallback: Long,
+    /** this is the freq enter by the user */
+    @ColumnInfo(name = "freq_used_to_skip_start_alarm") val frequencyInMin: Long,
     @ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean
 ){
     override fun toString(): String {
-        return "{id:$id, startTime:${getDateTimeFormatted(startTime)}, endTime:${getDateTimeFormatted(endTime)}, date:${getDateFormatted(date)}, message:$message, freqGottenAfterCallback:$freqGottenAfterCallback, isReadyToUse:$isReadyToUse}"
+        return "{id:$id, startTime:${getDateTimeFormatted(startTime)}, endTime:${getDateTimeFormatted(endTime)}, date:${getDateFormatted(date)}, message:$message, freqGottenAfterCallback:$frequencyInMin, isReadyToUse:$isReadyToUse}"
     }
+    fun iterator():AlarmDataIterator  {
+        return AlarmDataIterator(this)
+    }
+    fun iteratorGeneric(): GenericDataIterator<AlarmData, Long> {
+        return GenericDataIterator(
+            data = this,
+            startValue = this.startTime,
+            endValue = this.endTime,
+            incrementFunction = { alarm, currentTime ->
+                currentTime + (alarm.frequencyInMin * 60 * 1000)
+            }
+        )
+    }
+
     /** converts the freq that we got in min to millisecond for same time, eg 6 min to 6 min in millisecond*/
      fun getFreqInMillisecond(): Long {
-        return this.freqGottenAfterCallback * 60000
+        return this.frequencyInMin * 60000
     }
     /** converts the freq that we got in min to millisecond for same time, eg 6 min to 6 min in millisecond*/
      fun getFreqInMillisecond(freqInMin:Long): Long {
         return freqInMin * 60000
     }
-    fun getTimeFormatted(time:Long):String{
-        return SimpleDateFormat("hh:mm", Locale.getDefault()).format(time)
-    }
     fun getDateTimeFormatted(time:Long):String{
         return SimpleDateFormat("hh:mm a dd/MM/yyyy ", Locale.getDefault()).format(time)
-    }
-    fun getFormattedAmPm(time:Long):String{
-        return SimpleDateFormat("a", Locale.getDefault()).format(time).trim()
     }
     fun getDateFormatted(time:Long):String{
         return SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(time).trim()
     }
     fun  toAlarmObject():AlarmObject{
-        return AlarmObject(startTime = Calendar.getInstance().apply { timeInMillis = startTime }, endTime=Calendar.getInstance().apply { timeInMillis = endTime }, date=date, message=message, freqGottenAfterCallback=freqGottenAfterCallback)
+        return AlarmObject(startTime = Calendar.getInstance().apply { timeInMillis = startTime }, endTime=Calendar.getInstance().apply { timeInMillis = endTime }, date=date, message=message, freqGottenAfterCallback=frequencyInMin)
     }
 }
 
@@ -127,7 +132,7 @@ data class AlarmObject(
         val baseValidation = startTime.timeInMillis < endTime.timeInMillis && freqGottenAfterCallback in 1..700 && (dateSame || selectedDate.after(currentDate))
         if (alarmData == null) return baseValidation
         val hasChanged = startTime.timeInMillis != alarmData.startTime || endTime.timeInMillis != alarmData.endTime ||
-                freqGottenAfterCallback != alarmData.freqGottenAfterCallback || message != alarmData.message || date != alarmData.date
+                freqGottenAfterCallback != alarmData.frequencyInMin || message != alarmData.message || date != alarmData.date
         return baseValidation && hasChanged
 	}
     // when we get a weGood == false then we can call this function to see what value produced an error and then display it
@@ -148,7 +153,7 @@ data class AlarmObject(
         if (alarmData != null) {
             val hasChanged = startTime.timeInMillis != alarmData.startTime ||
                     endTime.timeInMillis != alarmData.endTime ||
-                    freqGottenAfterCallback != alarmData.freqGottenAfterCallback ||
+                    freqGottenAfterCallback != alarmData.frequencyInMin ||
                     message != alarmData.message ||
                     date != alarmData.date
 
@@ -163,10 +168,23 @@ data class AlarmObject(
     private fun getDateTimeFormatted(time:Long):String{
         return SimpleDateFormat("hh:mm a dd/MM/yyyy", Locale.getDefault()).format(time)
     }
-    fun toAlarmData(alarmId:Int,isReadyToUse: Boolean = true ): AlarmData{
-       return AlarmData(id = alarmId, startTime = startTime.timeInMillis, endTime= endTime.timeInMillis, date= date, message= message,  freqGottenAfterCallback=freqGottenAfterCallback, isReadyToUse = isReadyToUse)
-    }
     override fun toString(): String {
         return "startTime:${getDateTimeFormatted(startTime.timeInMillis)}, endTime:${getDateTimeFormatted(endTime.timeInMillis)}, date:${getDateTimeFormatted(date)}, message:$message freqGottenAfterCallback:$freqGottenAfterCallback"
     }
 }
+
+class AlarmDataIterator(alarm: AlarmData) {
+    val alarmData = alarm
+    var currentTime: Long = alarmData.startTime
+
+    fun hasNext(): Boolean {
+        return  alarmData.endTime >= currentTime
+    }
+    fun next():Long {
+        val newAlarm = currentTime + alarmData.getFreqInMillisecond()
+        currentTime = newAlarm
+        return newAlarm
+    }
+}
+
+

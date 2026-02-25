@@ -34,9 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.trying_native.dataBase.AlarmData
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
@@ -139,7 +137,7 @@ fun AlarmCardWierd(
 								)
 								Spacer(modifier = Modifier.width(8.dp))
 								Text(
-									text = formatFrequency(alarmData.freqGottenAfterCallback),
+									text = formatFrequency(alarmData.frequencyInMin),
 									color = primaryColor,
 									fontSize = 14.sp,
 									fontWeight = FontWeight.SemiBold

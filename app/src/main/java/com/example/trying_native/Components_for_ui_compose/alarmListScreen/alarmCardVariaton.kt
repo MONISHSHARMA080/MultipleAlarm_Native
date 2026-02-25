@@ -1,7 +1,5 @@
 package com.example.trying_native.Components_for_ui_compose.alarmListScreen
 
-import android.R.attr.button
-import android.R.attr.text
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
@@ -145,7 +143,7 @@ import com.example.trying_native.dataBase.AlarmData
 				// Frequency Chip
 				AssistChip(
 					onClick = { /* Detail */ },
-					label = { Text("Every ${alarmData.freqGottenAfterCallback / 60000} mins") },
+					label = { Text("Every ${alarmData.frequencyInMin / 60000} mins") },
 					shape = CircleShape,
 					colors = AssistChipDefaults.assistChipColors(
 						containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
@@ -257,7 +255,7 @@ fun AlarmCard2(
 					onClick = { /* No-op */ },
 					label = {
 						Text(
-							"Every ${alarmData.freqGottenAfterCallback / 60000} mins",
+							"Every ${alarmData.frequencyInMin / 60000} mins",
 							style = MaterialTheme.typography.labelSmall
 						)
 					},
@@ -397,7 +395,7 @@ fun AlarmCard3(
 					onClick = { /* No-op */ },
 					label = {
 						Text(
-							"Every ${alarmData.freqGottenAfterCallback / 60000} mins",
+							"Every ${alarmData.frequencyInMin / 60000} mins",
 							style = MaterialTheme.typography.labelSmall
 						)
 					},
@@ -539,7 +537,7 @@ fun AlarmCard4(
 					color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
 				) {
 					Text(
-						text = "Repeat: ${alarmData.freqGottenAfterCallback }m",
+						text = "Repeat: ${alarmData.frequencyInMin }m",
 						modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
 						style = MaterialTheme.typography.labelSmall,
 						fontWeight = FontWeight.Bold

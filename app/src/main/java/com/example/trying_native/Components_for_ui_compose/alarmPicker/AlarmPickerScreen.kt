@@ -1,6 +1,5 @@
 package com.example.trying_native.Components_for_ui_compose.alarmPicker
 
-import android.R.attr.top
 import java.util.Calendar
 import android.text.format.DateFormat
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -22,7 +21,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -48,7 +46,6 @@ import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -69,7 +66,6 @@ import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmObject
 import com.example.trying_native.logD
 import kotlinx.coroutines.launch
-import kotlin.math.log
 
 enum class AccentColor(val value:Color) {
      Ok(Color(0xFF1A73E8)),
@@ -100,7 +96,7 @@ enum class AccentColor(val value:Color) {
             },
             date = Calendar.getInstance().timeInMillis,
             message = alarm?.message ?: "",
-            freqGottenAfterCallback = alarm?.freqGottenAfterCallback ?: 1
+            freqGottenAfterCallback = alarm?.frequencyInMin ?: 1
         )
     ) }
     val weGood by remember { derivedStateOf { alarmObject.isOk(alarm)  } }

@@ -1,27 +1,20 @@
 package com.example.trying_native.Components_for_ui_compose.alarmListScreen
 
-import android.R.attr.onClick
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -31,39 +24,18 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.AlarmOff
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Event
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.SuggestionChipDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -71,13 +43,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.trying_native.dataBase.AlarmData
@@ -89,26 +58,25 @@ import com.example.trying_native.logD
 	onStop: (AlarmData) -> Unit ,
 	onReset: (AlarmData) -> Unit ,
 	onDelete: (AlarmData) -> Unit,
-    onLongPress: (AlarmData) -> Unit = {}
+    modifier: Modifier,
+    onLongPress: (AlarmData) -> Unit
 ) {
-var isExpanded by remember { mutableStateOf(false) }
+    var isExpanded by remember { mutableStateOf(false) }
     logD("the alarmData in card is $alarmData")
     val buttonColor by animateColorAsState(
         targetValue = if (alarmData.isReadyToUse) Color(0xFF00E5FF) else MaterialTheme.colorScheme.secondary,
         animationSpec = tween(durationMillis = 300),
         label = "buttonColor"
     )
-
-
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .animateContentSize(animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioNoBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
-            )
+//            .animateContentSize(animationSpec = spring(
+//                    dampingRatio = Spring.DampingRatioNoBouncy,
+//                    stiffness = Spring.StiffnessMedium
+//                )
+//            )
             .clip(RoundedCornerShape(32.dp))
             .combinedClickable(
                 onClick = { isExpanded = !isExpanded },
@@ -132,7 +100,7 @@ var isExpanded by remember { mutableStateOf(false) }
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "Every ${alarmData.freqGottenAfterCallback} mins",
+                        text = "Every ${alarmData.frequencyInMin} mins",
                         style = MaterialTheme.typography.bodySmall,
 						fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -186,26 +154,10 @@ var isExpanded by remember { mutableStateOf(false) }
                     fontStyle = if(alarmData.message.isEmpty()) FontStyle.Italic else FontStyle.Normal
                 )
             }
-            // Bottom Actions: Split Button Design
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // STOP / RESET Button (Primary Action)
-//                Button(
-//                    onClick = { if (alarmData.isReadyToUse) onStop(alarmData) else onReset(alarmData) },
-//                    modifier = Modifier.weight(1f).height(64.dp),
-//                    shape = RoundedCornerShape(24.dp),
-//                    colors = ButtonDefaults.buttonColors(
-//                        containerColor = if (alarmData.isReadyToUse) Color(0xFF00E5FF) else MaterialTheme.colorScheme.secondary,
-//                        contentColor = Color.Black
-//                    )
-//                ) {
-//                    Text(
-//                        text = if (alarmData.isReadyToUse) "STOP" else "RESET",
-//                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold)
-//                    )
-//                }
                 Button(
                     onClick = { if (alarmData.isReadyToUse) onStop(alarmData) else onReset(alarmData) },
                     modifier = Modifier.weight(1f).height(64.dp),
@@ -228,9 +180,6 @@ var isExpanded by remember { mutableStateOf(false) }
                         )
                     }
                 }
-
-
-                // DELETE Button (Secondary Action)
                 FilledIconButton(
                     onClick = { onDelete(alarmData) },
                     modifier = Modifier.size(64.dp),

@@ -142,6 +142,21 @@ class AlarmFlowRobolectricTest {
                 // now the thing is that if this is true then when we fire the first NextAlarmReceiver then it will set the future alarm and then it
                 // will recursively call till the end, idk why and without it we are able to control
                 ShadowAlarmManager.setAutoSchedule(false)
+                val alarmData = AlarmData(
+                    startTime = startCalendar.timeInMillis,
+                    endTime = endCalendar.timeInMillis,
+                    frequencyInMin = freqMs,
+                    date = dateInLong,
+                    message = "Test alarm",
+                    isReadyToUse = true
+                )
+                val iteratorGen =alarmData.iteratorGeneric()
+                val iteratorList = mutableListOf<Long>()
+                while (iteratorGen.hasNext()){
+                    iteratorList.add(iteratorGen.next())
+                }
+                logD("Added iteratorList , and size is  ${iteratorList.size} and expectedAlarmList:${expectedAlarmsAtTime.size}")
+
 
                 // eg if alarms are from 3:00 -> 3:08 then we would have 8 + 1 alarms
                 var index = 0

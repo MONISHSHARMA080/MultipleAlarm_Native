@@ -4,9 +4,9 @@ a) UI Refactor : --
     [X] when we click on alarms they should expand and also give me the message and alarm information (? to edit ?)
     [X] make the frequency one better, like I can type 0 and it should not have an autistic meltdown
     [X] design it better with this tool ->https://stitch.withgoogle.com/projects/3646385657259615705?pli=1
-    * better FSI Ui , --match the color scheme of the app,
-    * a better alarm List ui -- make the alarm more ergonomic
-    * alarmActivity gradient to fade text out so it looks scrollable
+    [X] better FSI Ui , --match the color scheme of the app,
+    [X] a better alarm List ui -- make the alarm more ergonomic
+    [X] alarmActivity gradient to fade text out so it looks scrollable
 
 
 
@@ -42,7 +42,7 @@ b) Code Refactor :--
     * complete the Result object and the error handling with the exception and the display user error
     * add postHog or other analytic
     * for now allow the user to schedule alarm on a specific date and not multiple
-    * something wrong with
+    * make sure that the db will not fall or crash in the prod; migration etc, see how real apps does it
     * alarm order in Db, like based on time zone( endtime-startTime , time hs date in them) and automatically in the List
 
 c)  later :--

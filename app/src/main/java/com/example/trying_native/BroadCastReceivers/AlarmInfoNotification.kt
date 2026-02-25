@@ -28,7 +28,7 @@ class AlarmInfoNotification: BroadcastReceiver()  {
         NotificationBuilder(context, title = "Upcoming alarm info",
             notificationText = "Alarm:${alarmData.id} will go from  ${getTimeInHumanReadableFormatProtectFrom0Included(alarmData.startTime)}" +
                     " --->  ${getTimeInHumanReadableFormatProtectFrom0Included(alarmData.endTime)}" +
-                    " after every ${alarmData.freqGottenAfterCallback} min  "
+                    " after every ${alarmData.frequencyInMin} min  "
         )
     }
 
