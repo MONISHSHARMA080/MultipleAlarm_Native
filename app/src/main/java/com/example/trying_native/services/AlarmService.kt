@@ -34,7 +34,7 @@ class AlarmService: Service() {
     }
     // if we receive more intents than we will use this; if the intent is from same alarm(see id) then we will replace it /not put it in / dismiss it as
     // it is same and no need to display same message again; if it is diff then we will put it in and when dismissed then we might need to display it
-    val intentHashMap: LinkedHashMap<Int,Intent> = LinkedHashMap(50)
+    val intentHashMap: LinkedHashMap<Int,Intent> = LinkedHashMap(20)
     val playAlarm by lazy { PlayAlarm(this) }
 
     override fun onBind(intent: Intent?) = null
@@ -77,60 +77,42 @@ class AlarmService: Service() {
         }
         val notification: Notification = res.first
         val alarmIntentData: AlarmActivityIntentData = res.second
-        ServiceCompat.startForeground(this, intent.hashCode(), notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
         intentHashMap.putIfAbsent(alarmIntentData.alarmIdInDb, intent)
+        // only start the alarm/activity if no other alarm was there , else just store the intent in the hashMap
+        ServiceCompat.startForeground(this, alarmIntentData.alarmIdInDb, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+        playAlarm.play()
         return START_REDELIVER_INTENT
     }
 
     private  fun handleStartAlarm(intent:Intent):Int{
-        when(intentHashMap.isEmpty()){
-            true ->{
-                val returnVal =  startPlayingAlarm(intent)
-                playAlarm.play()
-                return  returnVal
-            }
-            false -> {
-                // check if the alarm is in the hashMap and if not the do the normal start and if it is then do nothing and return
-                val intentData = intent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java)
-                if (intentData == null) {
-                    // reason being that we have an assumption about the world where we will receive intents from our
-                    // app only and we will include intentData field if not then we have fundamentally f'ed up
-                    logD("[ERROR FATAl] intent data is not present in the intent , $intent ")
-                    return problemSoStopTheService()
-                }
-                val intentInHashMap = intentHashMap[intentData.alarmIdInDb]
-                if (intentInHashMap == null){
-                    intentHashMap.putIfAbsent(intentData.alarmIdInDb, intent)
-                    return startPlayingAlarm(intent)  // ✅ Build notification + start foreground
-                }
-                playAlarm.play()
-                return  START_REDELIVER_INTENT
-            }
+        val intentData = intent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService()
+        val isFirstAlarm = intentHashMap.isEmpty()
+        intentHashMap.putIfAbsent(intentData.alarmIdInDb, intent)
+        if (isFirstAlarm){
+            startPlayingAlarm(intent)
+        }else{
+            logD("one alarm is already there so not-playing/ waiting on another one ")
         }
+        return  START_REDELIVER_INTENT
+
     }
 
     private fun handleDismissAlarm(intent:Intent):Int{
         // remove this intent from the hashmap, and then if we have other in the hashMap then start playing those
         // assert that this intent is in the hashMap if not then we have a problem
         // 1. Remove the dismissed alarm from the queue
-        val intentData = intent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java)
-        if (intentData == null) {
-            logD("[ERROR FATAl] intent data is not present in the intent , $intent ")
-            return problemSoStopTheService()
-        }
-        val isIntentInHashMap = intentHashMap.remove(intentData.alarmIdInDb) != null
+        val intentData = intent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService()
+        intentHashMap.remove(intentData.alarmIdInDb)
         when(intentHashMap.isEmpty()){
             true ->{
                 // nothing in the hashMap so we can stop this activity
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
+                playAlarm.pause()
+                playAlarm.destroy()
                 return START_REDELIVER_INTENT
             }
             false ->{
-                if (!isIntentInHashMap){
-                    logD("[ERROR FATAl] expected the intent to delete the alarm to be in the hashMap, $intent but didn't found it there ")
-                    return problemSoStopTheService()
-                }
              return   startPlayingAlarm(intentHashMap.entries.first().value)
             }
         }
@@ -181,7 +163,7 @@ class AlarmService: Service() {
             val fullScreenPendingIntent = PendingIntent.getActivity(
 
                 context,
-                0,
+                intentData.alarmIdInDb,
                 fullScreenIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )

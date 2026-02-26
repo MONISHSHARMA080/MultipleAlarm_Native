@@ -181,16 +181,15 @@ sealed interface Screen : NavKey {
 								else -> {
 									// alarmData was there so editing an existing alarm
 									uncancellableScope.launch {
-										alarmsController.cancelAlarmByCancelingPendingIntent(
-											context_of_activity = activityContext,
-											startTime = alarmData.startTime,
-											endTime = alarmData.endTime,
-											frequencyInMin = alarmData.getFreqInMillisecond(),
-											alarmDao = alarmDao,
-											alarmManager = alarmManager,
-											delete_the_alarm_from_db = true,
-											alarmData = alarmData
-										)
+										logD("deleting the alarm $alarmData")
+										alarmsController.deleteAlarmHandler(alarmData,  context, alarmDao,  alarmManager).fold(onSuccess = {}, onFailure = { exception ->
+											logD("there is a error in deleting the alarm  that is $exception ")
+											NotificationBuilder(
+												activityContext,
+												title = "error returned in deleting alarm",
+												notificationText = "error in deleting alarm was: $exception"
+											).showNotification()
+										})
 										val exception = alarmsController.scheduleMultipleAlarms(
 											alarmManager,
 											alarmDao = alarmDao,
@@ -258,13 +257,19 @@ sealed interface Screen : NavKey {
 											}
 										)
 									}
-
 								}, onAlarmDelete = {alarmData ->
 									uncancellableScope.launch {
 										logD("deleting the alarm $alarmData")
-										alarmsController.deleteAlarm(alarmData,  context, alarmDao,  alarmManager).fold(onSuccess = {}, onFailure = { exception ->
+										alarmsController.deleteAlarmHandler(alarmData,  context, alarmDao,  alarmManager).fold(onSuccess = {}, onFailure = { exception ->
 											logD("there is a error in deleting the alarm  that is $exception ")
-										})}
+											NotificationBuilder(
+												activityContext,
+												title = "error returned in deleting alarm",
+												notificationText = "error in deleting alarm was: $exception"
+											).showNotification()
+
+										})
+									}
 								}
 							)
 						}
