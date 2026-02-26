@@ -124,13 +124,19 @@ sealed interface Screen : NavKey {
 											}
 										)
 									}
-
 								}, onAlarmDelete = {alarmData ->
 									uncancellableScope.launch {
 										logD("deleting the alarm $alarmData")
 										alarmsController.deleteAlarmHandler(alarmData,  context, alarmDao,  alarmManager).fold(onSuccess = {}, onFailure = { exception ->
 											logD("there is a error in deleting the alarm  that is $exception ")
-										})}
+											NotificationBuilder(
+												activityContext,
+												title = "error returned in deleting alarm",
+												notificationText = "error in deleting alarm was: $exception"
+											).showNotification()
+
+										})
+									}
 								}
 							)
 						}

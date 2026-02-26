@@ -186,7 +186,7 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
                 startTimeForAlarmSeries = startTimeInMillis, alarmMessage = messageForDB, alarmData = alarm )  }
             val exception = a.await()
             exception.fold(onFailure = { excp ->
-                this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq, alarmDao, alarmManager, activityContext, false, alarmData = alarm)
+                this.cancelAlarm(alarm, activityContext, alarmManager)
                 throw  Exception(excp.message)
             }, onSuccess = {}
             )
@@ -196,7 +196,7 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
             // if we have gotten a error then we will need to cancel the alarm and return the exception and also delete the alarm
             try {
                 if (alarmDataForDeleting!= null){
-                    this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq, alarmDao, alarmManager, activityContext, false, alarmData = alarmDataForDeleting)
+                    this.cancelAlarm(alarmDataForDeleting, activityContext, alarmManager)
                 }
             }catch (e: Exception){} // lord help us!
             throw  e
@@ -242,7 +242,6 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
                         isReadyToUse = true,
                         startTime = nextAlarmInfo.newSeriesStartTime,
                         endTime = nextAlarmInfo.newSeriesEndTime
-
                     )
                     alarmDao.updateAlarmForReset(updatedAlarm)
                     return@async updatedAlarm
@@ -261,131 +260,13 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
                     throw Exception(res.getCompletionExceptionOrNull()?.message)
                 }
             } catch (e: Exception) {
-                // if we have gotten a error then we will need to cancel the alarm and return the exception and also delete the alarm
-                try {
-                    this.cancelAlarmByCancelingPendingIntent(startTimeInMillis, endTimeInMillis, freq, alarmDao, alarmManager, activityContext, false, alarmData = alarmDataForDeleting)
-                }catch (e: Exception){}
+                // if we have gotten an error then we will need to cancel the alarmcancelAlarmByCancelingPendingIntent and return the exception and also delete the alarm
+                    this.cancelAlarm(alarmDataForDeleting, activityContext, alarmManager,)
                 logD("error occurred in the schedule multiple alarms, so we are going to cancel the alarm whole, in scheduleAlarm2-->${e}")
                 throw e
             }
 
         }
-    }
-
-    suspend fun cancelAlarmByCancelingPendingIntent(startTime:Long, endTime:Long, frequencyInMin:Long, alarmDao: AlarmDao, alarmManager: AlarmManager, context_of_activity: Context, delete_the_alarm_from_db:Boolean, alarmData: AlarmData) {
-
-        val calendar = Calendar.getInstance()
-        var currentTime = calendar.timeInMillis
-        var currentStartTime = startTime
-
-        // Update database first
-        withContext(Dispatchers.IO) {
-            try {
-                if (delete_the_alarm_from_db) {
-                    alarmDao.deleteAlarm(firstValue = startTime, secondValue = endTime)
-                } else {
-                    alarmDao.updateReadyToUseInAlarm(firstValue = startTime, second_value = endTime, isReadyToUse = false)
-                }
-            } catch (e: Exception) {
-                logD("Error updating the database: $e")
-            }
-        }
-
-        logD("StartTime ->${getTimeInHumanReadableFormat(currentStartTime)} --- currentTime ->${getTimeInHumanReadableFormatProtectFrom0Included(currentTime)} -- freq -> $frequencyInMin ")
-
-        // Advance startTime to the next pending alarm (skip already fired alarms)
-        while (currentTime >= currentStartTime ){
-            currentStartTime += frequencyInMin
-            currentTime = calendar.timeInMillis
-        }
-
-        logD("After adjustment - StartTime ->${getTimeInHumanReadableFormat(currentStartTime)} --- currentTime ->${getTimeInHumanReadableFormatProtectFrom0Included(currentTime)}")
-
-        // Cancel all remaining AlarmReceiver PendingIntents
-        val alarmReceiverIntent = Intent(ALARM_ACTION)
-        alarmReceiverIntent.setClass(context_of_activity, alarmReceiverClass)
-
-        var tempStartTime = currentStartTime
-        while (tempStartTime <= endTime) {
-            // Add the same extras as when creating the alarm
-            alarmReceiverIntent.putExtra("startTimeForDb", startTime) // Original series start time
-            alarmReceiverIntent.putExtra("startTime", tempStartTime)
-            alarmReceiverIntent.putExtra("endTime", endTime)
-            alarmReceiverIntent.putExtra("message", alarmData.message)
-            alarmReceiverIntent.putExtra("alarmIdInDb", alarmData.id)
-
-            // Use the same request code as when creating: startTime.toInt() for AlarmReceiver
-            val alarmReceiverPI = PendingIntent.getBroadcast(
-                context_of_activity,
-                alarmData.id, // This matches the request code used in getPendingIntentForAlarm
-                alarmReceiverIntent,
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE
-            )
-
-            if (alarmReceiverPI != null) {
-                alarmManager.cancel(alarmReceiverPI)
-                alarmReceiverPI.cancel()
-                logD("Cancelled AlarmReceiver alarm at $tempStartTime")
-            }
-
-            tempStartTime += frequencyInMin
-        }
-
-        // Cancel all remaining NextAlarmReceiver PendingIntents
-        val nextAlarmReceiverIntent = Intent(ALARM_ACTION)
-        nextAlarmReceiverIntent.setClass(context_of_activity, nextAlarmReceiver)
-
-        tempStartTime = currentStartTime
-        while (tempStartTime <= endTime) {
-            // Add the same extras as when creating the next alarm
-            nextAlarmReceiverIntent.putExtra("startTimeForDb", startTime) // Original series start time
-            nextAlarmReceiverIntent.putExtra("startTime", tempStartTime)
-            nextAlarmReceiverIntent.putExtra("endTime", endTime)
-            nextAlarmReceiverIntent.putExtra("message", alarmData.message)
-            nextAlarmReceiverIntent.putExtra("alarmIdInDb", alarmData.id)
-
-            // Use alarmData.id as request code for NextAlarmReceiver (as seen in your code)
-            val nextAlarmPI = PendingIntent.getBroadcast(context_of_activity, alarmData.id, nextAlarmReceiverIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE)
-
-            if (nextAlarmPI != null) {
-                alarmManager.cancel(nextAlarmPI)
-                nextAlarmPI.cancel()
-                logD("Cancelled NextAlarmReceiver alarm at ${getTimeInHumanReadableFormat(tempStartTime)}")
-            }
-
-            tempStartTime += frequencyInMin
-        }
-
-        // Also cancel the AlarmClockInfo notification PendingIntents
-        val alarmInfoIntent = Intent(ALARM_ACTION)
-        alarmInfoIntent.setClass(context_of_activity, alarmInfoNotificationClass)
-
-        tempStartTime = currentStartTime
-        while (tempStartTime <= endTime) {
-            alarmInfoIntent.putExtra("startTimeForDb", startTime)
-            alarmInfoIntent.putExtra("startTime", tempStartTime)
-            alarmInfoIntent.putExtra("endTime", endTime)
-            alarmInfoIntent.putExtra("message", alarmData.message)
-            alarmInfoIntent.putExtra("alarmIdInDb", alarmData.id)
-
-            // Use startTime.toInt() as request code for alarm info notifications
-            val alarmInfoPI = PendingIntent.getBroadcast(
-                context_of_activity,
-                tempStartTime.toInt(),
-                alarmInfoIntent,
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE
-            )
-
-            if (alarmInfoPI != null) {
-                alarmManager.cancel(alarmInfoPI)
-                alarmInfoPI.cancel()
-                logD("Cancelled AlarmInfo notification at ${this.getTimeInHumanReadableFormatProtectFrom0Included(tempStartTime)}")
-            }
-
-            tempStartTime += frequencyInMin
-        }
-
-        logD("Finished cancelling all alarm PendingIntents")
     }
 
     /** tries to cancel the alarm and update the Db state, if error  */
@@ -630,11 +511,4 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
     private  fun  logD(msg: String): Unit{
         Log.d("AAAAAA", "[AlarmController] $msg")
     }
-
-
 }
-
-
-
-
-
