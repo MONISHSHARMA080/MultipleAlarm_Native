@@ -282,7 +282,7 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
         withContext(Dispatchers.IO) {
             try {
                 if (delete_the_alarm_from_db) {
-                    alarmDao.deleteAlarmByValues(firstValue = startTime, secondValue = endTime)
+                    alarmDao.deleteAlarm(firstValue = startTime, secondValue = endTime)
                 } else {
                     alarmDao.updateReadyToUseInAlarm(firstValue = startTime, second_value = endTime, isReadyToUse = false)
                 }
@@ -388,32 +388,109 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
         logD("Finished cancelling all alarm PendingIntents")
     }
 
-    /** cancels scheduled alarm*/
-    suspend fun cancelAlarm(alarmData: AlarmData) {
-        val cal = Calendar.getInstance()
-        // cancel the alarm and also try to cancel a few more to be on safe side and not to encounter race conditions
-        var extraSafteyAlarmsToCancel = 5
-        val currentTime = cal.timeInMillis
-        val alarmIterator = alarmData.iterator()
-        while (alarmIterator.hasNext()  && extraSafteyAlarmsToCancel >0 ) {
-            val alarmIterVal = alarmIterator.next()
-            if (alarmIterVal < currentTime) continue
-            logD("the time value gotten in iterating is ${getTimeInHumanReadableFormatProtectFrom0Included(alarmIterVal)}")
-            val intentData = AlarmActivityIntentData(
-                startTimeForDb = alarmData.startTime,
-                startTime = alarmIterVal,
-                endTime = alarmData.endTime,
-                message = alarmData.message,
-                alarmIdInDb = alarmData.id
-            )
-            // have to cancel next alarm receiver, nextAlarmReceiver, and also lastPITurnDbOff
-            extraSafteyAlarmsToCancel--
+    /** tries to cancel the alarm and update the Db state, if error  */
+    suspend fun cancelAlarmHandler(alarmData: AlarmData, context: Context, alarmManager: AlarmManager, alarmDao: AlarmDao):Result<Unit>{
+        return runCatching {
+            // first update the Db as it is more visible to the user
+
+            // the alarm was not in the DB so return
+            // since the alarm is not in the DB we can't insert it and also we can't just inser it as it wasn't there and the user did not wanted it
+             this@AlarmsController.updateAlarmStateInDb(alarmData.copy(isReadyToUse = false), alarmDao).getOrThrow()
+            cancelAlarm(alarmData, context,alarmManager).fold(onSuccess = {}, onFailure = {exception ->
+                // since we can't cancel it then we should just
+                alarmDao.updateOrInsert(alarmData.copy(isReadyToUse = false))
+                throw exception
+            })
         }
+    }
 
+    /** tries to delete the alarm and update the Db state, if error  */
+    suspend fun deleteAlarmHandler(alarmData: AlarmData, context: Context, alarmDao: AlarmDao, alarmManager: AlarmManager ):Result<Unit>{
+        return runCatching {
+            // first update the Db as it is more visible to the user, and there is a race condition here as we can't do it in parallel, as are accessing the db in failure in both
+            // the alarm was not in the DB so return
+            // since the alarm is not in the DB we can't insert it and also we can't just inser it as it wasn't there and the user did not wanted it
+//             this@AlarmsController.updateAlarmStateInDb().getOrThrow()
+            val rowsAffected =alarmDao.deleteAlarm(alarmData)
+            if (rowsAffected == 0) return Result.failure(Exception("No such alarm in the Db to delete, alarmData received was $alarmData "))
+            cancelAlarm(alarmData, context,alarmManager).fold(onSuccess = {}, onFailure = {exception ->
+                // since we can't delete it then we should just put it back and tell the user to try to cancel it again
+                alarmDao.updateOrInsert(alarmData.copy(isReadyToUse = false))
+                throw exception
+            })
+        }
+    }
 
+    /** cancels scheduled alarm*/
+    suspend fun cancelAlarm(alarmData: AlarmData, context: Context, alarmManager: AlarmManager): Result<Unit> {
+        return runCatching {
+            val cal = Calendar.getInstance()
+            // cancel the alarm and also try to cancel a few more to be on safe side and not to encounter race conditions
+            var extraSafetyAlarmsToCancel = 5
+            val currentTime = cal.timeInMillis
+            val alarmIterator = alarmData.iterator()
+            while (alarmIterator.hasNext()  && extraSafetyAlarmsToCancel >0 ) {
+                val alarmIterVal = alarmIterator.next()
+                logD("the time value gotten in iterating is ${getTimeInHumanReadableFormatProtectFrom0Included(alarmIterVal)}")
+                if (alarmIterVal < currentTime) continue
+                val intentData = AlarmActivityIntentData(
+                    startTimeForDb = alarmData.startTime,
+                    startTime = alarmIterVal,
+                    endTime = alarmData.endTime,
+                    message = alarmData.message,
+                    alarmIdInDb = alarmData.id
+                )
+                val baseIntent = Intent(ALARM_ACTION)
+                cancelPendingIntentReceiver(baseIntent, context, intentData, alarmReceiverClass, alarmManager, alarmData.id)
+                cancelPendingIntentReceiver(baseIntent, context, intentData, nextAlarmReceiver, alarmManager, alarmData.id)
+                cancelPendingIntentReceiver(baseIntent, context, intentData, alarmReceiverClass, alarmManager, alarmData.startTime.toInt())
+                // have to cancel next alarm receiver, nextAlarmReceiver, AlarmInfoNotification
+                extraSafetyAlarmsToCancel--
+            }
+            // cancel the lastPi that is there to stop the alarm
+            val lastAlarmRequestCode = (alarmData.endTime + alarmData.startTime).toInt()
+            val lastAlarmIntent = Intent(context, LastAlarmUpdateDBReceiver::class.java)
+            val lastAlarmPI = PendingIntent.getBroadcast(
+                context, lastAlarmRequestCode, lastAlarmIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE
+            )
+            lastAlarmPI?.let {
+                alarmManager.cancel(it)
+                it.cancel()
+                logD("Cancelled LastAlarmUpdateDBReceiver")
+            }
+            // now try to mark it as not ready to use in db and we done if problem then reschedule it and return error
+            logD("the alarmData is $alarmData")
 
+        }
+    }
 
-        TODO()
+    private inline fun cancelPendingIntentReceiver(baseIntent: Intent, context: Context, intentData: AlarmActivityIntentData, alarmReceiverClass:Class<out BroadcastReceiver>, alarmManager: AlarmManager, intentRequestCode: Int){
+        baseIntent.apply {
+            setClass(context, alarmReceiverClass)
+            putExtra("intentData", intentData)
+        }
+        val pendingIntent = PendingIntent.getBroadcast(context, intentRequestCode, baseIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE)
+        pendingIntent?.let { alarmManager.cancel(it) }
+    }
+
+    suspend fun updateAlarmStateInDb(alarmData: AlarmData, alarmDao: AlarmDao): Result<Unit>{
+        return  runCatching {
+            val rowsAffected = alarmDao.updateAlarm(alarmData)
+            if (rowsAffected == 0) return Result.failure(Exception("No rows affected for alarmData:$alarmData"))
+        }
+    }
+
+    /** try to delete the alarm fom the DB */
+    suspend fun deleteAlarm(alarmData: AlarmData, context: Context, alarmDao: AlarmDao, alarmManager: AlarmManager): Result<Unit> {
+        // try to delete the alarm(and cancel it) if error then put it back, and also reschedule it and display the message
+        return runCatching {
+            val rowsDeleted = alarmDao.deleteAlarm(alarmData.id)
+            // since I have marked it unique that means the rows deleted will one or none(0) nothing else
+            if (rowsDeleted == 0){
+                return Result.failure(Exception("the alarm $alarmData was not found in the DB so we can't delete it"))
+            }
+        }
     }
 
 
@@ -520,11 +597,8 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
     }
 
     fun lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarm_start_time_to_search_db: Long, context_of_activity:Context, alarmManager:AlarmManager, message_name_for_start_time:String, message_name_for_end_time: String, alarm_end_time_to_search_db:Long, broadcastReceiverClass:BroadcastReceiver){
-
         val intent = Intent(context_of_activity, broadcastReceiverClass::class.java)
-
         // probably should hardcode message_name_for_start_time to be alarm_end_time_to_search_db and same for message_name_for_end_time
-
         intent.putExtra(message_name_for_start_time,alarm_start_time_to_search_db)
         intent.putExtra(message_name_for_end_time,alarm_end_time_to_search_db)
         val pendingIntent = PendingIntent.getBroadcast(context_of_activity,(alarm_end_time_to_search_db+alarm_start_time_to_search_db).toInt(), intent, PendingIntent.FLAG_IMMUTABLE)
@@ -557,10 +631,6 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
         Log.d("AAAAAA", "[AlarmController] $msg")
     }
 
-    suspend fun deleteAlarmFromDb(alarmData: AlarmData) {
-        // try to delete the alarm(and cancel it) if error then put it back, and also reschedule it and display the message
-        TODO()
-    }
 
 }
 

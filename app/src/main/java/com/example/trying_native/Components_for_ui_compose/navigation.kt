@@ -93,16 +93,13 @@ sealed interface Screen : NavKey {
 								alarmDao = alarmDao,
 								alarmManager = alarmManager, onAlarmStop = { alarmData ->
 									uncancellableScope.launch {
-										alarmsController.cancelAlarmByCancelingPendingIntent(
-											context_of_activity = activityContext,
-											startTime = alarmData.startTime,
-											endTime = alarmData.endTime,
-											frequencyInMin = alarmData.getFreqInMillisecond(),
-											alarmDao = alarmDao,
-											alarmManager = alarmManager,
-											delete_the_alarm_from_db = false,
-											alarmData = alarmData
-										)
+										alarmsController.cancelAlarmHandler(alarmData,  context, alarmManager, alarmDao).fold(onSuccess = {}, onFailure = {exception ->
+											NotificationBuilder(
+												activityContext,
+												title = "error in cancelling the alarm",
+												notificationText = "got error while trying to cancel the alarm, exception: $exception"
+											).showNotification()
+										})
 									}
 
 								}, onAlarmReset = { alarmData ->
@@ -130,17 +127,10 @@ sealed interface Screen : NavKey {
 
 								}, onAlarmDelete = {alarmData ->
 									uncancellableScope.launch {
-										alarmsController.cancelAlarmByCancelingPendingIntent(
-											context_of_activity = activityContext,
-											startTime = alarmData.startTime,
-											endTime = alarmData.endTime,
-											frequencyInMin = alarmData.getFreqInMillisecond(),
-											alarmDao = alarmDao,
-											alarmManager = alarmManager,
-											delete_the_alarm_from_db = true,
-											alarmData = alarmData
-										)
-									}
+										logD("deleting the alarm $alarmData")
+										alarmsController.deleteAlarmHandler(alarmData,  context, alarmDao,  alarmManager).fold(onSuccess = {}, onFailure = { exception ->
+											logD("there is a error in deleting the alarm  that is $exception ")
+										})}
 								}
 							)
 						}
@@ -231,16 +221,13 @@ sealed interface Screen : NavKey {
 								alarmDao = alarmDao,
 								alarmManager = alarmManager, onAlarmStop = { alarmData ->
 									uncancellableScope.launch {
-										alarmsController.cancelAlarmByCancelingPendingIntent(
-											context_of_activity = activityContext,
-											startTime = alarmData.startTime,
-											endTime = alarmData.endTime,
-											frequencyInMin = alarmData.getFreqInMillisecond(),
-											alarmDao = alarmDao,
-											alarmManager = alarmManager,
-											delete_the_alarm_from_db = false,
-											alarmData = alarmData
-										)
+										alarmsController.cancelAlarmHandler(alarmData,  context, alarmManager, alarmDao).fold(onSuccess = {}, onFailure = {exception ->
+											NotificationBuilder(
+												activityContext,
+												title = "error in cancelling the alarm",
+												notificationText = "got error while trying to cancel the alarm, exception: $exception"
+											).showNotification()
+										})
 									}
 
 								}, onAlarmReset = { alarmData ->
@@ -268,17 +255,10 @@ sealed interface Screen : NavKey {
 
 								}, onAlarmDelete = {alarmData ->
 									uncancellableScope.launch {
-										alarmsController.cancelAlarmByCancelingPendingIntent(
-											context_of_activity = activityContext,
-											startTime = alarmData.startTime,
-											endTime = alarmData.endTime,
-											frequencyInMin = alarmData.getFreqInMillisecond(),
-											alarmDao = alarmDao,
-											alarmManager = alarmManager,
-											delete_the_alarm_from_db = true,
-											alarmData = alarmData
-										)
-									}
+										logD("deleting the alarm $alarmData")
+										alarmsController.deleteAlarm(alarmData,  context, alarmDao,  alarmManager).fold(onSuccess = {}, onFailure = { exception ->
+											logD("there is a error in deleting the alarm  that is $exception ")
+										})}
 								}
 							)
 						}

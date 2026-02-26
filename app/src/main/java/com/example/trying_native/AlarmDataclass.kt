@@ -3,6 +3,7 @@ package com.example.trying_native.dataBase
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
+import androidx.room.Delete
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.Insert
@@ -10,6 +11,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
 import androidx.room.Update
+import androidx.room.Upsert
 import com.example.trying_native.utils.Result.GenericDataIterator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
@@ -76,9 +78,17 @@ interface AlarmDao {
 
     @Insert
     suspend fun insert(alarmData: AlarmData): Long
+//    @Insert
+//    suspend fun insert(alarmData: AlarmData): Int
 
     @Query("DELETE FROM AlarmData WHERE first_value = :firstValue AND second_value = :secondValue")
-    suspend fun deleteAlarmByValues(firstValue: Long, secondValue: Long): Int
+    suspend fun deleteAlarm(firstValue: Long, secondValue: Long): Int
+
+    @Query("DELETE FROM AlarmData WHERE id = :id")
+    suspend fun deleteAlarm(id: Int): Int
+
+    @Delete
+    suspend fun deleteAlarm(alarm: AlarmData): Int
 
     @Query("SELECT * FROM AlarmData")
     fun getAll(): List<AlarmData>
@@ -94,9 +104,16 @@ interface AlarmDao {
     @Query("SELECT * FROM AlarmData WHERE first_value = :firstValue AND second_value = :secondValue LIMIT 1")
     suspend fun getAlarmByValues(firstValue: Long, secondValue: Long): AlarmData?
 
+    @Upsert
+    suspend fun updateOrInsert(alarmData: AlarmData): Long
+
     // New function to update the is_ready_to_use field of an alarm
     @Query("UPDATE AlarmData SET is_ready_to_use = :isReadyToUse WHERE first_value = :firstValue AND second_value = :second_value")
     suspend fun updateReadyToUseInAlarm(firstValue: Long, second_value: Long, isReadyToUse: Boolean)
+
+    @Update
+    suspend fun updateAlarm(alarmData: AlarmData): Int  // Returns number of rows updated
+
 
     @Query("SELECT * FROM AlarmData WHERE id = :id")
     suspend fun getAlarmById(id: Int): AlarmData?
@@ -109,8 +126,6 @@ interface AlarmDao {
 
     @Query("DELETE  FROM AlarmData")
     suspend fun deleteAllAlarmsFromDb()
-
-
 }
 
 data class ValidationResult(

@@ -110,8 +110,7 @@ import kotlinx.coroutines.launch
 				itemsIndexed(
 					alarms,
 					key = { _, alarm -> alarm.id }
-				) { indexOfIndividualAlarmInAlarm, individualAlarm ->
-
+				) { _, individualAlarm ->
 					AlarmCard(
 						individualAlarm, onEdit = {alarmData -> onNavigateToEdit(alarmData)}, onStop = { alarmData -> onAlarmStop(alarmData) },
 						onDelete = {alarmData -> onAlarmDelete(alarmData)}, onReset = {alarmData -> onAlarmReset(alarmData)}, onLongPress = { alarmData ->
@@ -134,9 +133,7 @@ import kotlinx.coroutines.launch
 				RoundPlusIcon(
 					size = screenHeight / 10,context = activityContext,
 					backgroundColor = accentColor,
-					onClick = {
-						onNavigateToCreate()
-				   },
+					onClick = { onNavigateToCreate() },
 				)
 			}
 		}
