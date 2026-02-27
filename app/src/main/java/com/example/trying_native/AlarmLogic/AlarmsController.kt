@@ -19,6 +19,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.time.ZoneId
@@ -83,6 +85,7 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
             val resultForSettingNextAlarmOpr = scope.async {getPendingIntentForAlarm(nextAlarmReceiver, componentActivity, startTimeForAlarmSeries, startTime, endTime, alarmMessage, alarmData.id, createIntentForAlarmMetaData = false)}
 
             val PIForAlarm = resultForAlarmOpr.await().fold(
+
                 onSuccess = {PI -> PI},
                 onFailure = {failureRes-> throw Exception(failureRes) }
             )
@@ -94,8 +97,6 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
             check(PIForSettingNextAlarm.pendingIntentToGiveUserUpcommingAlarmInfoWhenAsked == null ,{" the pending intent for setting next alarm's notification info. notification is not null "} )
             logD("\n\n\n [INFO] the pending Intent for the alarm is $PIForAlarm ")
             logD("\n\n\n [INFO] the pending Intent for setting the next alarm is $PIForSettingNextAlarm ")
-
-
             // here the PI for the alarm notification
             val alarmClockInfoObject = AlarmManager.AlarmClockInfo(startTime, PIForAlarm.pendingIntentToGiveUserUpcommingAlarmInfoWhenAsked)
             alarmManager.setAlarmClock(alarmClockInfoObject, PIForAlarm.pendingIntentForAlarm)
@@ -157,7 +158,7 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
 
     // this func is called only at the first time to schedule multiple alarms
     suspend fun scheduleMultipleAlarms(alarmManager: AlarmManager,  dateInLong: Long, calendarForStartTime:Calendar, calendarForEndTime:Calendar, freqAfterTheCallback:Int, activityContext: Context, alarmDao:AlarmDao,
-                                       receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, messageForDB:String   ) : Result<Unit>{
+                                       receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, messageForDB:String, insertInDbToo: Boolean = true   ) : Result<Unit>{
     return runCatching {
         // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
         val startTimeInMillis = calendarForStartTime.timeInMillis
@@ -175,8 +176,10 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
                     startTime = startTimeInMillis, endTime = endTimeInMillis, isReadyToUse = true, date = dateInLong,
                     message = messageForDB, frequencyInMin = freqAfterTheCallback.toLong())
                 check(newAlarm.getDateFormatted(calendarForStartTime.timeInMillis) == newAlarm.getDateFormatted(calendarForEndTime.timeInMillis)){ "expected the date produced by startTime and endTime to be same, we got startDate -> ${newAlarm.getDateFormatted(newAlarm.startTime)} , endDate -> ${newAlarm.getDateFormatted(newAlarm.endTime) }"}
-                val insertedId = alarmDao.insert(newAlarm)
-                logD("Inserted alarm with ID: $insertedId")
+                if (insertInDbToo){
+                    val insertedId = alarmDao.updateOrInsert(newAlarm)
+                    logD("Inserted alarm with ID: $insertedId")
+                }
                 return@async newAlarm
             }
             b.await()
@@ -202,6 +205,51 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
             throw  e
         }
     }
+    }
+
+    /**given an alarm Series(or alarm, or startTime->endTime, this function will start it. If the alarm startTime is greater than current startTime then we will iterate over it and set that alarm from that time */
+    suspend fun startAlarmSeries(
+        alarmData: AlarmData,alarmManager: AlarmManager, activityContext: Context, alarmDao:AlarmDao,
+        receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, incrementTheStartTimeIfLessThanCurrentTime: Boolean = true
+    ): Result<Unit>{
+        return runCatching {
+            val isValid =alarmData.isValid()
+            if (!isValid.isValid) return Result.failure(Exception(isValid.errorMessage))
+            val currentTIme = Calendar.getInstance()
+            if (alarmData.endTime > currentTIme.timeInMillis ) throw Exception("Expected the endTIme to be less than current time but got endTIme:${getTimeInHumanReadableFormat(alarmData.endTime)}, currentTime:${getTimeInHumanReadableFormat(currentTIme.timeInMillis)}")
+            val alarmIterator = alarmData.iteratorGeneric()
+            var timeReturned = alarmIterator.next()
+            while (timeReturned < currentTIme.timeInMillis && alarmIterator.hasNext()) {
+                timeReturned = alarmIterator.next()
+            }
+
+            val scheduleAlarmHandler  =   scope.async {scheduleAlarm(timeReturned , alarmData.endTime, alarmManager, activityContext,  receiverClass = receiverClass,
+                startTimeForAlarmSeries = alarmData.startTime, alarmMessage = alarmData.message, alarmData = alarmData )  }
+            val lastIntentHandler = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(
+                alarmData.startTime, activityContext, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", alarmData.endTime, LastAlarmUpdateDBReceiver())  }
+
+            scheduleAlarmHandler.await().getOrThrow()
+            lastIntentHandler.await()
+        }
+    }
+
+    /** handle setting the alarms and if fails then cancel it and update the DB state not running else running */
+    suspend fun startAlarmSeriesHandler(
+        alarmData: AlarmData,alarmManager: AlarmManager, activityContext: Context, alarmDao:AlarmDao,
+        receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, incrementTheStartTimeIfLessThanCurrentTime: Boolean = true
+    ): Result<Unit>{
+        return runCatching {
+            val result1 =scope.async {
+                this@AlarmsController.startAlarmSeries(alarmData, alarmManager, activityContext, alarmDao, receiverClass, incrementTheStartTimeIfLessThanCurrentTime)
+            }
+            val rowsAffected = scope.async { alarmDao.updateOrInsert(alarmData.copy(isReadyToUse = true)) }
+           val alarmResult = result1.await()
+            rowsAffected.await() // idk
+            alarmResult.fold(onSuccess = {}, onFailure = {throwable->
+                this@AlarmsController.cancelAlarmHandler(alarmData, activityContext, alarmManager, alarmDao)
+                throw throwable
+            })
+        }
     }
 
 
@@ -275,7 +323,7 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
             // first update the Db as it is more visible to the user
 
             // the alarm was not in the DB so return
-            // since the alarm is not in the DB we can't insert it and also we can't just inser it as it wasn't there and the user did not wanted it
+            // since the alarm is not in the DB we can't insert it and also we can't just inser it as it wasn't there and the user did not want it
              this@AlarmsController.updateAlarmStateInDb(alarmData.copy(isReadyToUse = false), alarmDao).getOrThrow()
             cancelAlarm(alarmData, context,alarmManager).fold(onSuccess = {}, onFailure = {exception ->
                 // since we can't cancel it then we should just

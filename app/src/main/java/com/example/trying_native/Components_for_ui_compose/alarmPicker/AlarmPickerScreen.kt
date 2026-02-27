@@ -133,7 +133,7 @@ enum class AccentColor(val value:Color) {
                     Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
                     TimeBox("END TIME", alarmObject.endTime,  accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(endTime = newSelectedTime) })
                 }
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(21.dp))
                 // --- Repeats / Day Picker ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -155,7 +155,7 @@ enum class AccentColor(val value:Color) {
                          logD("updated the alarmObject for new date and it is $alarmObject")
                      }
 				)
-                Spacer(modifier = Modifier.height(26.dp))
+                Spacer(modifier = Modifier.height(21.dp))
                 // --- frequency Section ---
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -238,7 +238,7 @@ enum class AccentColor(val value:Color) {
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(26.dp))
+                Spacer(modifier = Modifier.height(21.dp))
                 // --- Message Section ---
                 Surface(
                     modifier = Modifier.fillMaxWidth(),

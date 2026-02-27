@@ -142,18 +142,12 @@ sealed interface Screen : NavKey {
 						}
 					is Screen.AlarmPicker ->						NavEntry(key) {
 						/**[ onAlarmSet] - here [ AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
-						AlarmPickerScreen(key.alarmData, { newAlarmObject, alarmData ->
-							when (alarmData) {
+						AlarmPickerScreen(key.alarmData, { newAlarmObject, oldAlarm ->
+							when ( oldAlarm) {
 								null -> {
-									// alarmData was not there so setting a new alarm
+									//  oldAlarm was not there so setting a new alarm
 									uncancellableScope.launch {
-										logD(
-											"the alarm data confirmed is $newAlarmObject, and is alarmData == newAlarmObject -> ${
-												newAlarmObject.isOk(
-													alarmData
-												)
-											} "
-										)
+										logD("the alarm data confirmed is $newAlarmObject, and is  oldAlarm == newAlarmObject -> ${newAlarmObject.isOk( oldAlarm)} ")
 										val exception = alarmsController.scheduleMultipleAlarms(
 											alarmManager,
 											alarmDao = alarmDao,
@@ -179,39 +173,33 @@ sealed interface Screen : NavKey {
 									}
 								}
 								else -> {
-									// alarmData was there so editing an existing alarm
+									//  oldAlarm was there so editing an existing alarm
 									uncancellableScope.launch {
-										logD("deleting the alarm $alarmData")
-										alarmsController.deleteAlarmHandler(alarmData,  context, alarmDao,  alarmManager).fold(onSuccess = {}, onFailure = { exception ->
-											logD("there is a error in deleting the alarm  that is $exception ")
-											NotificationBuilder(
-												activityContext,
-												title = "error returned in deleting alarm",
-												notificationText = "error in deleting alarm was: $exception"
-											).showNotification()
-										})
-										val exception = alarmsController.scheduleMultipleAlarms(
-											alarmManager,
-											alarmDao = alarmDao,
-											messageForDB = newAlarmObject.message,
-											calendarForStartTime = newAlarmObject.startTime,
-											calendarForEndTime = newAlarmObject.endTime,
-											freqAfterTheCallback = newAlarmObject.freqGottenAfterCallback.toInt(),
-											activityContext = activityContext,
-											dateInLong = newAlarmObject.date,
+										logD("deleting the alarm $ oldAlarm")
+										alarmsController.updateAlarmStateInDb( oldAlarm, alarmDao).fold(onSuccess = {}, onFailure = { exception ->
+											// no such alarm exist in DB so can't update it
+												logD("there is a error while editing the alarm and updating it's state in DB and  that is $exception ")
+												NotificationBuilder(
+													activityContext,
+													title = "error returned in editing alarm",
+													notificationText = "error in editing the alarm, it was: $exception"
+												).showNotification()
+											}
 										)
-										exception.fold(
+										val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(newAlarmObject.toAlarmData(oldAlarm.id), alarmManager, activityContext, alarmDao)
+										// now the error case is handled there
+										alarmScheduledResult.fold(
 											onSuccess = { },
 											onFailure = { excp ->
 												NotificationBuilder(
 													context = activityContext,
 													title = "there is a error/Exception in making new alarm",
-													notificationText = excp.message
-														?: "Can't set you alarm please retry"
+													notificationText = excp.message ?: "Can't set you alarm please retry"
 												).showNotification()
-												logD("there is a error/Exception in making new alarm-->${excp}")
+												logD("there is a error/Exception in editing new alarm-->${excp}")
 											}
 										)
+
 									}
 								}
 							}

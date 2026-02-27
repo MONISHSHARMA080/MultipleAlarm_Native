@@ -66,6 +66,18 @@ data class AlarmData(
     fun  toAlarmObject():AlarmObject{
         return AlarmObject(startTime = Calendar.getInstance().apply { timeInMillis = startTime }, endTime=Calendar.getInstance().apply { timeInMillis = endTime }, date=date, message=message, freqGottenAfterCallback=frequencyInMin)
     }
+
+    fun isValid(): ValidationResult {
+        if (startTime < endTime) return ValidationResult(false, "expected startTime:${getDateTimeFormatted(startTime)} to be greater than endTime:${getDateTimeFormatted(endTime)}")
+        if (frequencyInMin !in 1..700) return ValidationResult(false, "Expected frequency must be between 1 and 700 minutes.")
+        val startTimeCal = Calendar.getInstance().apply { timeInMillis = startTime }
+        val endTimeCal = Calendar.getInstance().apply { timeInMillis = endTime }
+        val dateCal = Calendar.getInstance().apply { timeInMillis = date }
+        val dateSame = startTimeCal.get(Calendar.DAY_OF_YEAR) == endTimeCal.get(Calendar.DAY_OF_YEAR) && startTimeCal.get(Calendar.YEAR) == dateCal.get(Calendar.DAY_OF_YEAR)
+        if (!dateSame) return ValidationResult(false, "Expected the date to be same but got date for startTime:${getDateFormatted(startTime)}, endTime:${getDateFormatted(endTime)}, Date:${getDateFormatted(date)}")
+        return ValidationResult(true, "")
+    }
+
 }
 
 @Database(entities = [AlarmData::class], version = 1)
@@ -130,7 +142,7 @@ interface AlarmDao {
 
 data class ValidationResult(
     val isValid: Boolean,
-    val errorMessage: String? = null
+    val errorMessage: String
 )
 data class AlarmObject(
     val startTime: Calendar,
@@ -150,6 +162,17 @@ data class AlarmObject(
                 freqGottenAfterCallback != alarmData.frequencyInMin || message != alarmData.message || date != alarmData.date
         return baseValidation && hasChanged
 	}
+    fun toAlarmData(id:Int,isReadyToUse: Boolean = true): AlarmData{
+        return AlarmData(
+			startTime = startTime.timeInMillis,
+			endTime = endTime.timeInMillis,
+			date = date,
+			message = message,
+			id = id,
+			frequencyInMin = freqGottenAfterCallback,
+			isReadyToUse = isReadyToUse
+		)
+    }
     // when we get a weGood == false then we can call this function to see what value produced an error and then display it
     fun validate(alarmData: AlarmData?): ValidationResult{
         if (startTime.timeInMillis >= endTime.timeInMillis) {
@@ -176,9 +199,8 @@ data class AlarmObject(
                 return ValidationResult(false, "No changes detected. Change something to update the alarm.")
             }
         }
-
         // 3. Everything is fine
-        return ValidationResult(true)
+        return ValidationResult(true, "")
     }
     private fun getDateTimeFormatted(time:Long):String{
         return SimpleDateFormat("hh:mm a dd/MM/yyyy", Locale.getDefault()).format(time)
