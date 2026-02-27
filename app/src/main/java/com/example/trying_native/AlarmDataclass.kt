@@ -68,13 +68,13 @@ data class AlarmData(
     }
 
     fun isValid(): ValidationResult {
-        if (startTime < endTime) return ValidationResult(false, "expected startTime:${getDateTimeFormatted(startTime)} to be greater than endTime:${getDateTimeFormatted(endTime)}")
+        if (startTime > endTime) return ValidationResult(false, "expected startTime:${getDateTimeFormatted(startTime)} to be greater than endTime:${getDateTimeFormatted(endTime)}")
         if (frequencyInMin !in 1..700) return ValidationResult(false, "Expected frequency must be between 1 and 700 minutes.")
         val startTimeCal = Calendar.getInstance().apply { timeInMillis = startTime }
         val endTimeCal = Calendar.getInstance().apply { timeInMillis = endTime }
         val dateCal = Calendar.getInstance().apply { timeInMillis = date }
-        val dateSame = startTimeCal.get(Calendar.DAY_OF_YEAR) == endTimeCal.get(Calendar.DAY_OF_YEAR) && startTimeCal.get(Calendar.YEAR) == dateCal.get(Calendar.DAY_OF_YEAR)
-        if (!dateSame) return ValidationResult(false, "Expected the date to be same but got date for startTime:${getDateFormatted(startTime)}, endTime:${getDateFormatted(endTime)}, Date:${getDateFormatted(date)}")
+        val dateNotSame = startTimeCal.get(Calendar.DAY_OF_YEAR) != endTimeCal.get(Calendar.DAY_OF_YEAR) || startTimeCal.get(Calendar.YEAR) == dateCal.get(Calendar.DAY_OF_YEAR)
+        if (dateNotSame) return ValidationResult(false, "Expected the date to be same but got date for startTime:${getDateFormatted(startTime)}, endTime:${getDateFormatted(endTime)}, Date:${getDateFormatted(date)}")
         return ValidationResult(true, "")
     }
 
@@ -90,8 +90,6 @@ interface AlarmDao {
 
     @Insert
     suspend fun insert(alarmData: AlarmData): Long
-//    @Insert
-//    suspend fun insert(alarmData: AlarmData): Int
 
     @Query("DELETE FROM AlarmData WHERE first_value = :firstValue AND second_value = :secondValue")
     suspend fun deleteAlarm(firstValue: Long, secondValue: Long): Int
@@ -116,6 +114,7 @@ interface AlarmDao {
     @Query("SELECT * FROM AlarmData WHERE first_value = :firstValue AND second_value = :secondValue LIMIT 1")
     suspend fun getAlarmByValues(firstValue: Long, secondValue: Long): AlarmData?
 
+    /**-1L when update occurs and rest is the row ID*/
     @Upsert
     suspend fun updateOrInsert(alarmData: AlarmData): Long
 
@@ -125,7 +124,6 @@ interface AlarmDao {
 
     @Update
     suspend fun updateAlarm(alarmData: AlarmData): Int  // Returns number of rows updated
-
 
     @Query("SELECT * FROM AlarmData WHERE id = :id")
     suspend fun getAlarmById(id: Int): AlarmData?

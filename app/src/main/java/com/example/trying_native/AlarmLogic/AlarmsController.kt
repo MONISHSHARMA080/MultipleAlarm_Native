@@ -14,14 +14,13 @@ import com.example.trying_native.LastAlarmUpdateDBReceiver
 import com.example.trying_native.assertWithException
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
+import com.example.trying_native.dataBase.AlarmObject
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.selects.select
-import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -157,55 +156,55 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
     }
 
     // this func is called only at the first time to schedule multiple alarms
-    suspend fun scheduleMultipleAlarms(alarmManager: AlarmManager,  dateInLong: Long, calendarForStartTime:Calendar, calendarForEndTime:Calendar, freqAfterTheCallback:Int, activityContext: Context, alarmDao:AlarmDao,
-                                       receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, messageForDB:String, insertInDbToo: Boolean = true   ) : Result<Unit>{
-    return runCatching {
-        // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
-        val startTimeInMillis = calendarForStartTime.timeInMillis
-        val endTimeInMillis = calendarForEndTime.timeInMillis
-        val freq = freqAfterTheCallback.toLong() * 60000
-
-        assertWithException(startTimeInMillis < endTimeInMillis," the value of the start time should be < end time , you made a mistake" )
-        var alarmDataForDeleting: AlarmData? = null
-        try {
-            // since this is our first time the startTimeForReceiverToGetTheAlarmIs->
-            val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(
-                startTimeInMillis, activityContext, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillis, LastAlarmUpdateDBReceiver())  }
-            val c = scope.async {
-                val newAlarm = AlarmData(
-                    startTime = startTimeInMillis, endTime = endTimeInMillis, isReadyToUse = true, date = dateInLong,
-                    message = messageForDB, frequencyInMin = freqAfterTheCallback.toLong())
-                check(newAlarm.getDateFormatted(calendarForStartTime.timeInMillis) == newAlarm.getDateFormatted(calendarForEndTime.timeInMillis)){ "expected the date produced by startTime and endTime to be same, we got startDate -> ${newAlarm.getDateFormatted(newAlarm.startTime)} , endDate -> ${newAlarm.getDateFormatted(newAlarm.endTime) }"}
-                if (insertInDbToo){
-                    val insertedId = alarmDao.updateOrInsert(newAlarm)
-                    logD("Inserted alarm with ID: $insertedId")
-                }
-                return@async newAlarm
-            }
-            b.await()
-            val alarm = c.await()
-            alarmDataForDeleting= alarm
-            val a  =   scope.async {scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activityContext,  receiverClass = receiverClass,
-                startTimeForAlarmSeries = startTimeInMillis, alarmMessage = messageForDB, alarmData = alarm )  }
-            val exception = a.await()
-            exception.fold(onFailure = { excp ->
-                this.cancelAlarm(alarm, activityContext, alarmManager)
-                throw  Exception(excp.message)
-            }, onSuccess = {}
-            )
-        }catch (e:Exception){
-            logD("error occurred in the schedule multiple alarms-->${e}")
-            logD("we are not able to set the alarm so we are going to cancel it all and return  ")
-            // if we have gotten a error then we will need to cancel the alarm and return the exception and also delete the alarm
-            try {
-                if (alarmDataForDeleting!= null){
-                    this.cancelAlarm(alarmDataForDeleting, activityContext, alarmManager)
-                }
-            }catch (e: Exception){} // lord help us!
-            throw  e
-        }
-    }
-    }
+//    suspend fun scheduleMultipleAlarms(alarmManager: AlarmManager,  dateInLong: Long, calendarForStartTime:Calendar, calendarForEndTime:Calendar, freqAfterTheCallback:Int, activityContext: Context, alarmDao:AlarmDao,
+//                                       receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, messageForDB:String, insertInDbToo: Boolean = true   ) : Result<Unit>{
+//    return runCatching {
+//        // should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
+//        val startTimeInMillis = calendarForStartTime.timeInMillis
+//        val endTimeInMillis = calendarForEndTime.timeInMillis
+//        val freq = freqAfterTheCallback.toLong() * 60000
+//
+//        assertWithException(startTimeInMillis < endTimeInMillis," the value of the start time should be < end time , you made a mistake" )
+//        var alarmDataForDeleting: AlarmData? = null
+//        try {
+//            // since this is our first time the startTimeForReceiverToGetTheAlarmIs->
+//            val b = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(
+//                startTimeInMillis, activityContext, alarmManager, "alarm_start_time_to_search_db", "alarm_end_time_to_search_db", endTimeInMillis, LastAlarmUpdateDBReceiver())  }
+//            val c = scope.async {
+//                val newAlarm = AlarmData(
+//                    startTime = startTimeInMillis, endTime = endTimeInMillis, isReadyToUse = true, date = dateInLong,
+//                    message = messageForDB, frequencyInMin = freqAfterTheCallback.toLong())
+//                check(newAlarm.getDateFormatted(calendarForStartTime.timeInMillis) == newAlarm.getDateFormatted(calendarForEndTime.timeInMillis)){ "expected the date produced by startTime and endTime to be same, we got startDate -> ${newAlarm.getDateFormatted(newAlarm.startTime)} , endDate -> ${newAlarm.getDateFormatted(newAlarm.endTime) }"}
+//                if (insertInDbToo){
+//                    val insertedId = alarmDao.updateOrInsert(newAlarm)
+//                    logD("Inserted alarm with ID: $insertedId")
+//                }
+//                return@async newAlarm
+//            }
+//            b.await()
+//            val alarm = c.await()
+//            alarmDataForDeleting= alarm
+//            val a  =   scope.async {scheduleAlarm(startTimeInMillis, endTimeInMillis,alarmManager, activityContext,  receiverClass = receiverClass,
+//                startTimeForAlarmSeries = startTimeInMillis, alarmMessage = messageForDB, alarmData = alarm )  }
+//            val exception = a.await()
+//            exception.fold(onFailure = { excp ->
+//                this.cancelAlarm(alarm, activityContext, alarmManager)
+//                throw  Exception(excp.message)
+//            }, onSuccess = {}
+//            )
+//        }catch (e:Exception){
+//            logD("error occurred in the schedule multiple alarms-->${e}")
+//            logD("we are not able to set the alarm so we are going to cancel it all and return  ")
+//            // if we have gotten a error then we will need to cancel the alarm and return the exception and also delete the alarm
+//            try {
+//                if (alarmDataForDeleting!= null){
+//                    this.cancelAlarm(alarmDataForDeleting, activityContext, alarmManager)
+//                }
+//            }catch (e: Exception){} // lord help us!
+//            throw  e
+//        }
+//    }
+//    }
 
     /**given an alarm Series(or alarm, or startTime->endTime, this function will start it. If the alarm startTime is greater than current startTime then we will iterate over it and set that alarm from that time */
     suspend fun startAlarmSeries(
@@ -213,10 +212,10 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
         receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, incrementTheStartTimeIfLessThanCurrentTime: Boolean = true
     ): Result<Unit>{
         return runCatching {
-            val isValid =alarmData.isValid()
+            val isValid = alarmData.isValid()
             if (!isValid.isValid) return Result.failure(Exception(isValid.errorMessage))
             val currentTIme = Calendar.getInstance()
-            if (alarmData.endTime > currentTIme.timeInMillis ) throw Exception("Expected the endTIme to be less than current time but got endTIme:${getTimeInHumanReadableFormat(alarmData.endTime)}, currentTime:${getTimeInHumanReadableFormat(currentTIme.timeInMillis)}")
+            if (alarmData.endTime < currentTIme.timeInMillis ) throw Exception("Expected the endTIme to be less than current time but got endTIme:${getTimeInHumanReadableFormat(alarmData.endTime)}, currentTime:${getTimeInHumanReadableFormat(currentTIme.timeInMillis)}")
             val alarmIterator = alarmData.iteratorGeneric()
             var timeReturned = alarmIterator.next()
             while (timeReturned < currentTIme.timeInMillis && alarmIterator.hasNext()) {
@@ -233,18 +232,30 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
         }
     }
 
+    sealed interface AlarmValueForAlarmSeries{
+        data class alarmData(val alarmData: AlarmData): AlarmValueForAlarmSeries
+        data class alarmObject(val alarmObject: AlarmObject): AlarmValueForAlarmSeries
+    }
     /** handle setting the alarms and if fails then cancel it and update the DB state not running else running */
     suspend fun startAlarmSeriesHandler(
-        alarmData: AlarmData,alarmManager: AlarmManager, activityContext: Context, alarmDao:AlarmDao,
+        alarm: AlarmValueForAlarmSeries, alarmManager: AlarmManager, activityContext: Context, alarmDao:AlarmDao,
         receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, incrementTheStartTimeIfLessThanCurrentTime: Boolean = true
     ): Result<Unit>{
         return runCatching {
-            val result1 =scope.async {
-                this@AlarmsController.startAlarmSeries(alarmData, alarmManager, activityContext, alarmDao, receiverClass, incrementTheStartTimeIfLessThanCurrentTime)
+            var idOfAlarmInserted: Deferred<Long>? = null
+            val alarmData: AlarmData = when(alarm){
+                is AlarmValueForAlarmSeries.alarmData -> {
+                    idOfAlarmInserted= scope.async { alarmDao.updateOrInsert(alarm.alarmData.copy(isReadyToUse = true)) }
+                    alarm.alarmData.copy(isReadyToUse = true)
+                }
+                is AlarmValueForAlarmSeries.alarmObject -> {
+                    val insertId = alarmDao.insert( alarm.alarmObject.toAlarmData(id = 0, isReadyToUse = true))
+                    val insertedAlarm = alarmDao.getAlarmById(insertId.toInt())
+                      insertedAlarm ?: throw Exception("Failed to retrieve inserted alarm")
+                }
             }
-            val rowsAffected = scope.async { alarmDao.updateOrInsert(alarmData.copy(isReadyToUse = true)) }
-           val alarmResult = result1.await()
-            rowsAffected.await() // idk
+           val alarmResult  =this@AlarmsController.startAlarmSeries(alarmData, alarmManager, activityContext, alarmDao, receiverClass, incrementTheStartTimeIfLessThanCurrentTime)
+            idOfAlarmInserted?.await()
             alarmResult.fold(onSuccess = {}, onFailure = {throwable->
                 this@AlarmsController.cancelAlarmHandler(alarmData, activityContext, alarmManager, alarmDao)
                 throw throwable

@@ -72,11 +72,6 @@ import com.example.trying_native.logD
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-//            .animateContentSize(animationSpec = spring(
-//                    dampingRatio = Spring.DampingRatioNoBouncy,
-//                    stiffness = Spring.StiffnessMedium
-//                )
-//            )
             .clip(RoundedCornerShape(32.dp))
             .combinedClickable(
                 onClick = { isExpanded = !isExpanded },

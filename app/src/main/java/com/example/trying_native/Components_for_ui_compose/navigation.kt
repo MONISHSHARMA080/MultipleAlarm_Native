@@ -27,6 +27,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.room.Room
 import com.example.trying_native.AlarmLogic.AlarmsController
+import com.example.trying_native.AlarmLogic.AlarmsController.AlarmValueForAlarmSeries
 import com.example.trying_native.Components_for_ui_compose.alarmListScreen.AlarmListScreen
 import com.example.trying_native.Components_for_ui_compose.alarmPicker.AlarmPickerScreen
 import com.example.trying_native.dataBase.AlarmDao
@@ -148,22 +149,18 @@ sealed interface Screen : NavKey {
 									//  oldAlarm was not there so setting a new alarm
 									uncancellableScope.launch {
 										logD("the alarm data confirmed is $newAlarmObject, and is  oldAlarm == newAlarmObject -> ${newAlarmObject.isOk( oldAlarm)} ")
-										val exception = alarmsController.scheduleMultipleAlarms(
-											alarmManager,
+										val exception = alarmsController.startAlarmSeriesHandler(
+											alarm = AlarmValueForAlarmSeries.alarmObject(newAlarmObject),
+											alarmManager = alarmManager,
+											activityContext = context,
 											alarmDao = alarmDao,
-											messageForDB = newAlarmObject.message,
-											calendarForStartTime = newAlarmObject.startTime,
-											calendarForEndTime = newAlarmObject.endTime,
-											freqAfterTheCallback = newAlarmObject.freqGottenAfterCallback.toInt(),
-											activityContext = activityContext,
-											dateInLong = newAlarmObject.date,
 										)
 										exception.fold(
 											onSuccess = { },
 											onFailure = { excp ->
 												NotificationBuilder(
 													context = activityContext,
-													title = "there is a error/Exception in making new alarm",
+													title = "there is a error in making new alarm",
 													notificationText = excp.message
 														?: "Can't set you alarm please retry"
 												).showNotification()
@@ -186,14 +183,16 @@ sealed interface Screen : NavKey {
 												).showNotification()
 											}
 										)
-										val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(newAlarmObject.toAlarmData(oldAlarm.id), alarmManager, activityContext, alarmDao)
+										val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(
+											alarm = AlarmValueForAlarmSeries.alarmData(newAlarmObject.toAlarmData(oldAlarm.id) ),
+											alarmManager, activityContext, alarmDao)
 										// now the error case is handled there
 										alarmScheduledResult.fold(
 											onSuccess = { },
 											onFailure = { excp ->
 												NotificationBuilder(
 													context = activityContext,
-													title = "there is a error/Exception in making new alarm",
+													title = "there is a error in editing alarm",
 													notificationText = excp.message ?: "Can't set you alarm please retry"
 												).showNotification()
 												logD("there is a error/Exception in editing new alarm-->${excp}")
@@ -222,7 +221,6 @@ sealed interface Screen : NavKey {
 											).showNotification()
 										})
 									}
-
 								}, onAlarmReset = { alarmData ->
 									uncancellableScope.launch {
 										logD("about to reset the alarm-+")

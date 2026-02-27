@@ -55,6 +55,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -186,7 +187,7 @@ enum class AccentColor(val value:Color) {
                                         Icon(Icons.Default.Remove, contentDescription = null, tint = Color.White)
                                     }
                                     BasicTextField(
-                                        value = if (!(alarmObject.freqGottenAfterCallback in 1..710)) "" else alarmObject.freqGottenAfterCallback.toString() ,
+                                        value = if (alarmObject.freqGottenAfterCallback !in 1..710) "" else alarmObject.freqGottenAfterCallback.toString() ,
                                         onValueChange = { newValue ->
                                             val filteredValue = newValue.filter { it.isDigit() }
                                             if (filteredValue.isEmpty()) {
@@ -255,6 +256,7 @@ enum class AccentColor(val value:Color) {
                         BasicTextField(
                             value = alarmObject.message,
                             onValueChange = { alarmObject= alarmObject.copy(message = it) },
+                            cursorBrush = SolidColor(Color.White),
                             modifier = Modifier
                                 .bringIntoViewRequester(bringIntoViewRequester)
                                 .onFocusEvent {
@@ -286,7 +288,7 @@ enum class AccentColor(val value:Color) {
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(54.dp))
+                Spacer(modifier = Modifier.height(24.dp))
                 Button(
                     onClick = {
                         if (weGood) {
