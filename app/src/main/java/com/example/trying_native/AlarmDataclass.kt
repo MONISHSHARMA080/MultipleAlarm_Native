@@ -24,8 +24,8 @@ import java.util.Locale
 data class AlarmData(
 
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    @ColumnInfo(name = "first_value") var startTime: Long,
-    @ColumnInfo(name = "second_value") var endTime: Long,
+    @ColumnInfo(name = "startTime") var startTime: Long,
+    @ColumnInfo(name = "endTime") var endTime: Long,
     @ColumnInfo(name = "date_in_long") val date: Long,
     @ColumnInfo(name = "message") val message:String,
     /** this is the freq enter by the user */
@@ -91,7 +91,7 @@ interface AlarmDao {
     @Insert
     suspend fun insert(alarmData: AlarmData): Long
 
-    @Query("DELETE FROM AlarmData WHERE first_value = :firstValue AND second_value = :secondValue")
+    @Query("DELETE FROM AlarmData WHERE startTime= :firstValue AND endTime = :secondValue")
     suspend fun deleteAlarm(firstValue: Long, secondValue: Long): Int
 
     @Query("DELETE FROM AlarmData WHERE id = :id")
@@ -107,11 +107,11 @@ interface AlarmDao {
     suspend fun getAllAlarms(): List<AlarmData>
 
 //    @Query("SELECT * FROM AlarmData ORDER BY date_in_long ASC, first_value ASC")
-    @Query("SELECT * FROM AlarmData ORDER BY first_value ASC, second_value ASC")
+    @Query("SELECT * FROM AlarmData ORDER BY startTime ASC, endTime ASC")
     fun getAllAlarmsFlow(): Flow<List<AlarmData>>
 
     // New function to retrieve an alarm by first_value and second_value
-    @Query("SELECT * FROM AlarmData WHERE first_value = :firstValue AND second_value = :secondValue LIMIT 1")
+    @Query("SELECT * FROM AlarmData WHERE startTime = :firstValue AND endTime = :secondValue LIMIT 1")
     suspend fun getAlarmByValues(firstValue: Long, secondValue: Long): AlarmData?
 
     /**-1L when update occurs and rest is the row ID*/
@@ -119,8 +119,8 @@ interface AlarmDao {
     suspend fun updateOrInsert(alarmData: AlarmData): Long
 
     // New function to update the is_ready_to_use field of an alarm
-    @Query("UPDATE AlarmData SET is_ready_to_use = :isReadyToUse WHERE first_value = :firstValue AND second_value = :second_value")
-    suspend fun updateReadyToUseInAlarm(firstValue: Long, second_value: Long, isReadyToUse: Boolean)
+    @Query("UPDATE AlarmData SET is_ready_to_use = :isReadyToUse WHERE startTime = :startTime AND endTime = :endTime")
+    suspend fun updateReadyToUseInAlarm(startTime: Long, endTime: Long, isReadyToUse: Boolean)
 
     @Update
     suspend fun updateAlarm(alarmData: AlarmData): Int  // Returns number of rows updated
@@ -128,11 +128,11 @@ interface AlarmDao {
     @Query("SELECT * FROM AlarmData WHERE id = :id")
     suspend fun getAlarmById(id: Int): AlarmData?
 
-    @Query(" UPDATE AlarmData SET is_ready_to_use = :isReadyToUse ,first_value = :firstValue, second_value = :second_value  WHERE id = :id")
+    @Query(" UPDATE AlarmData SET is_ready_to_use = :isReadyToUse , startTime = :firstValue, endTime = :second_value  WHERE id = :id")
     suspend fun updateAlarmForReset(id: Int, firstValue: Long, second_value: Long, isReadyToUse: Boolean)
 
     @Update
-    suspend fun updateAlarmForReset(alarmData: AlarmData)
+    suspend fun updateAlarmForReset(alarmData: AlarmData): Long
 
     @Query("DELETE  FROM AlarmData")
     suspend fun deleteAllAlarmsFromDb()
@@ -162,14 +162,14 @@ data class AlarmObject(
 	}
     fun toAlarmData(id:Int,isReadyToUse: Boolean = true): AlarmData{
         return AlarmData(
-			startTime = startTime.timeInMillis,
-			endTime = endTime.timeInMillis,
-			date = date,
-			message = message,
-			id = id,
-			frequencyInMin = freqGottenAfterCallback,
-			isReadyToUse = isReadyToUse
-		)
+            startTime = startTime.timeInMillis,
+            endTime = endTime.timeInMillis,
+            date = date,
+            message = message,
+            id = id,
+            frequencyInMin = freqGottenAfterCallback,
+            isReadyToUse = isReadyToUse
+        )
     }
     // when we get a weGood == false then we can call this function to see what value produced an error and then display it
     fun validate(alarmData: AlarmData?): ValidationResult{

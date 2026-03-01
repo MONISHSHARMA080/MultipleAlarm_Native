@@ -28,8 +28,6 @@ import org.robolectric.shadows.ShadowAlarmManager
 import org.robolectric.shadows.ShadowLooper.shadowMainLooper
 import org.robolectric.shadows.ShadowSystemClock
 import java.util.Calendar
-import kotlin.math.exp
-import kotlin.math.min
 import kotlin.random.Random
 
 class TestTimeProvider(var fixedTime: Long) : TimeProvider {

@@ -21,7 +21,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 
 import androidx.navigation3.ui.NavDisplay
@@ -37,7 +36,6 @@ import com.example.trying_native.dataBase.AlarmDatabase
 import com.example.trying_native.logD
 import com.example.trying_native.notification.NotificationBuilder
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -150,7 +148,7 @@ sealed interface Screen : NavKey {
 									uncancellableScope.launch {
 										logD("the alarm data confirmed is $newAlarmObject, and is  oldAlarm == newAlarmObject -> ${newAlarmObject.isOk( oldAlarm)} ")
 										val exception = alarmsController.startAlarmSeriesHandler(
-											alarm = AlarmValueForAlarmSeries.alarmObject(newAlarmObject),
+											alarm = AlarmValueForAlarmSeries.AlarmObject(newAlarmObject),
 											alarmManager = alarmManager,
 											activityContext = context,
 											alarmDao = alarmDao,
@@ -184,7 +182,7 @@ sealed interface Screen : NavKey {
 											}
 										)
 										val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(
-											alarm = AlarmValueForAlarmSeries.alarmData(newAlarmObject.toAlarmData(oldAlarm.id) ),
+											alarm = AlarmValueForAlarmSeries.AlarmData(newAlarmObject.toAlarmData(oldAlarm.id) ),
 											alarmManager, activityContext, alarmDao)
 										// now the error case is handled there
 										alarmScheduledResult.fold(

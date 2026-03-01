@@ -2,7 +2,6 @@ package com.example.trying_native.workManager
 
 import android.app.AlarmManager
 import android.content.Context
-import androidx.compose.runtime.remember
 import androidx.room.Room
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -14,7 +13,6 @@ import com.example.trying_native.logD
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import kotlin.collections.filter
 import  kotlin.Result as ResultObj
 
