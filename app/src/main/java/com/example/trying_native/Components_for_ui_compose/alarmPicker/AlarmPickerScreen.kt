@@ -99,7 +99,8 @@ enum class AccentColor(val value:Color) {
             message = alarm?.message ?: "",
             freqGottenAfterCallback = alarm?.frequencyInMin ?: 1
         )
-    ) }
+    )
+    }
     val weGood by remember { derivedStateOf { alarmObject.isOk(alarm)  } }
     val accentColor by remember { derivedStateOf { logD("weGood: $weGood"); if (weGood) AccentColor.Ok.value else AccentColor.Problem.value  } }
     val bringIntoViewRequester = remember { BringIntoViewRequester() }

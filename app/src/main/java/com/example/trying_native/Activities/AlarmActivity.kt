@@ -19,8 +19,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -186,7 +190,13 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                     onClick = { onFinish() },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Cyan, contentColor = Color.Black),
                     shape = RoundedCornerShape(49.dp),
-                    modifier = Modifier.height(94.dp).width(327.dp)) {
+                    modifier = Modifier.height(94.dp).width(327.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Cancel,
+                        contentDescription = "Cancel"
+                    )
+                    Spacer(modifier = Modifier.width(8.dp)) // Space between icon and text
                     Text(text = "Stop", fontSize = 22.sp, fontWeight = FontWeight.Bold)
                 }
             }
