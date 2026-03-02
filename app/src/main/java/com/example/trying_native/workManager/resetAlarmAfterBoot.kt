@@ -10,10 +10,12 @@ import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmDatabase
 import com.example.trying_native.logD
+import com.example.trying_native.notification.NotificationBuilder
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlin.collections.filter
+import kotlin.onFailure
 import  kotlin.Result as ResultObj
 
 class ResetAlarmAfterBoot(appContext: Context, workerParams: WorkerParameters): CoroutineWorker(appContext, workerParams) {
@@ -29,41 +31,30 @@ class ResetAlarmAfterBoot(appContext: Context, workerParams: WorkerParameters): 
 		val results = coroutineScope {
 			enabledAlarms.map { alarmData ->
 				async {
-					resetAlarm(alarmData, alarmDao)
+					alarmsController.resetAlarms(alarmData = alarmData, alarmManager = alarmManager, activityContext = applicationContext, alarmDao = alarmDao)
 				}
 			}.awaitAll()
 		}
-
-		// Check if any failed
-		val hasError = results.any { it.isFailure }
+		val hasError = results.any { it.isErr() }
 
 		results.forEach { result ->
-			result.onFailure { exception ->
-				logD("Failed to reset alarm: ${exception.message}")
-			}
+			result.fold(onSuccess = {}, onError = {errorToDisplayUser, exception ->
+				NotificationBuilder(applicationContext, title = "error in resetting the alarm, after boot or app update ", notificationText = errorToDisplayUser.messageToDisplayUser )
+			})
 		}
 
 		return if (hasError) Result.failure() else Result.success()
 
-//		enabledAlarms.forEach { alarmData ->
-//			coroutineScope { launch {
-//					resetAlarm(alarmData, alarmDao, appContext).fold(onSuccess = {}, onFailure = {exception ->
-//						logD("there is an exception in resetting the alarm after boot and  it is ${exception.message} --")
-//						doWeHaveError = true
-//					})
-//				} }
-//		}
 	}
 	private suspend fun getAllAlarms(alarmDao: AlarmDao): List<AlarmData> {
 		return alarmDao.getAllAlarms()
 	}
-	private suspend fun resetAlarm(alarm: AlarmData, alarmDao: AlarmDao): ResultObj<Unit> {
-		return runCatching {
-			val a = alarmsController.resetAlarms(alarmData = alarm, alarmManager = alarmManager, activityContext = applicationContext, alarmDao = alarmDao)
-			if (a.isFailure) {
-				logD("there is an exception in resetting the alarm after boot and  it is ${a.exceptionOrNull()} --")
-				throw Exception(a.exceptionOrNull()?.message ?:"there is an exception while setting the alarm after boot")
-			} else return@runCatching
-		}
-	}
+//	private suspend fun resetAlarm(alarm: AlarmData, alarmDao: AlarmDao): ResultObj<Unit> {
+//		return runCatching {
+//			 alarmsController.resetAlarms(alarmData = alarm, alarmManager = alarmManager, activityContext = applicationContext, alarmDao = alarmDao).fold(onSuccess = {}, onError = {errorToDisplayUser, exception ->
+//				 logD("there is an exception in resetting the alarm after boot and  it is $exception -- and the message for the user is $errorToDisplayUser")
+//
+//			 })
+//		}
+//	}
 }

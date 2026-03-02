@@ -91,8 +91,8 @@ class NextAlarmReceiver: BroadcastReceiver() {
 
             res.fold(onSuccess = {
                 logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "there was no exception in scheduling the future alarm ")
-            }, onFailure = {exception->
-                NotificationBuilder(context, title = "error returned in scheduling upcoming alarm ", notificationText = "error returned in scheduling upcoming alarm -->${exception}").showNotification()
+            }, onError = {messageToDisplayUser, exception->
+                NotificationBuilder(context, title = "error returned in scheduling upcoming alarm ", notificationText = "${messageToDisplayUser.messageToDisplayUser} . The Exception is ->$exception").showNotification()
                 alarmDaoImpl.updateAlarmForReset(alarmData.copy(isReadyToUse = false))
                 logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "the alarm Exception is not null and it is ${exception.message}-----and it is ${exception} ")
             })

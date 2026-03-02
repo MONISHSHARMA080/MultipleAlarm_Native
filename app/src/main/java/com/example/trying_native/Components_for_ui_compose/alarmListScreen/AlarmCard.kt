@@ -59,7 +59,6 @@ import com.example.trying_native.logD
     onLongPress: (AlarmData) -> Unit
 ) {
     var isExpanded by remember { mutableStateOf(false) }
-    logD("the alarmData in card is $alarmData")
     val buttonColor by animateColorAsState(
         targetValue = if (alarmData.isReadyToUse) Color(0xFF00E5FF) else MaterialTheme.colorScheme.secondary,
         animationSpec = tween(durationMillis = 300),
@@ -86,7 +85,7 @@ import com.example.trying_native.logD
             ) {
                 Column {
                     Text(
-                        text =formatDate(alarmData.date) ,
+                        text =formatDate(alarmData.startTime) ,
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
 						fontSize = 18.sp,
                         color = MaterialTheme.colorScheme.primary

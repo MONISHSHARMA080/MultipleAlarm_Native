@@ -30,13 +30,14 @@ sealed class StartAlarmSeriesHandlerError: Error{
 
 sealed class RescheduleAlarmError: Error{
 	data class GenericError(override  val messageToDisplayUser: String = defaultErrorToDisplayUser): RescheduleAlarmError()
-	data class ProgrammerError(override  val messageToDisplayUser: String): RescheduleAlarmError()
+	data class ProgrammerError(override  val messageToDisplayUser: String = defaultErrorToDisplayUser): RescheduleAlarmError()
 	data class AlarmScheduleError(override  val messageToDisplayUser: String): RescheduleAlarmError()
 }
 
 sealed class CancelAlarmHandlerError : Error{
 	data class GenericError(override  val messageToDisplayUser: String = defaultErrorToDisplayUser): CancelAlarmHandlerError()
 	data class CancellingAlarmError(override  val messageToDisplayUser: String): CancelAlarmHandlerError()
+	data class ErrorDeletingAlarmFromDb(override  val messageToDisplayUser: String = defaultErrorToDisplayUser): CancelAlarmHandlerError()
 }
 
 sealed class DeleteAlarmHandlerError : Error{
@@ -64,10 +65,11 @@ sealed class ResetAlarmError : Error{
 	data class GenericError(override  val messageToDisplayUser: String = defaultErrorToDisplayUser): ResetAlarmError()
 	data class CalculateNextAlarmError(override  val messageToDisplayUser: String = defaultErrorToDisplayUser): ResetAlarmError()
 	data class ProgrammerError(override  val messageToDisplayUser: String = defaultErrorToDisplayUser): ResetAlarmError()
-	data class ReschedulingAlarmError(override  val messageToDisplayUser: String = defaultErrorToDisplayUser): ResetAlarmError()
+	data class SchedulingAlarmError(override  val messageToDisplayUser: String = defaultErrorToDisplayUser): ResetAlarmError()
 }
 
 sealed class CalculateNextAlarmInfo : Error{
 	data class GenericError(override  val messageToDisplayUser: String = defaultErrorToDisplayUser): CalculateNextAlarmInfo()
 	data class ProgrammerError(override  val messageToDisplayUser: String = defaultErrorToDisplayUser): CalculateNextAlarmInfo()
+	data class IllegalStateError(override  val messageToDisplayUser: String = defaultErrorToDisplayUser): CalculateNextAlarmInfo()
 }

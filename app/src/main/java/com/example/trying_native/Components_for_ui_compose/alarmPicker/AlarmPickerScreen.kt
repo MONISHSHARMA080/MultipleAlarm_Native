@@ -145,8 +145,7 @@ enum class AccentColor(val value:Color) {
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 DateList(
-//					listOfDates,
-                    startDateIndex =alarm?.date,
+                    startDateIndex =alarm?.startTime,
                     weGood = weGood,
 					 onSelect = {calVersion ->
                          logD(" updated date is :${getTimeFormatted(calVersion, "hh:mm dd/MM/yyyy")}")

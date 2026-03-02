@@ -20,20 +20,20 @@ import java.util.Calendar
 import java.util.Locale
 
 @Serializable
-@Entity(indices = [Index(value = ["first_value", "second_value"])])
+@Entity(indices = [Index(value = ["startTime", "endTime"])])
 data class AlarmData(
 
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "startTime") var startTime: Long,
     @ColumnInfo(name = "endTime") var endTime: Long,
-    @ColumnInfo(name = "date_in_long") val date: Long,
+//    @ColumnInfo(name = "date_in_long") val date: Long,
     @ColumnInfo(name = "message") val message:String,
     /** this is the freq enter by the user */
     @ColumnInfo(name = "freq_used_to_skip_start_alarm") val frequencyInMin: Long,
     @ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean
 ){
     override fun toString(): String {
-        return "{id:$id, startTime:${getDateTimeFormatted(startTime)}, endTime:${getDateTimeFormatted(endTime)}, date:${getDateFormatted(date)}, message:$message, freqGottenAfterCallback:$frequencyInMin, isReadyToUse:$isReadyToUse}"
+        return "alarmData: id:$id, startTime:${getDateTimeFormatted(startTime)}, endTime:${getDateTimeFormatted(endTime)}, date:${getDateFormatted(startTime)}, message:$message, freqGottenAfterCallback:$frequencyInMin, isReadyToUse:$isReadyToUse"
     }
     fun iterator():AlarmDataIterator  {
         return AlarmDataIterator(this)
@@ -64,7 +64,7 @@ data class AlarmData(
         return SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(time).trim()
     }
     fun  toAlarmObject():AlarmObject{
-        return AlarmObject(startTime = Calendar.getInstance().apply { timeInMillis = startTime }, endTime=Calendar.getInstance().apply { timeInMillis = endTime }, date=date, message=message, freqGottenAfterCallback=frequencyInMin)
+        return AlarmObject(startTime = Calendar.getInstance().apply { timeInMillis = startTime }, endTime=Calendar.getInstance().apply { timeInMillis = endTime }, message=message, freqGottenAfterCallback=frequencyInMin, date = startTime)
     }
 
     fun isValid(): ValidationResult {
@@ -72,15 +72,15 @@ data class AlarmData(
         if (frequencyInMin !in 1..700) return ValidationResult(false, "Expected frequency must be between 1 and 700 minutes.")
         val startTimeCal = Calendar.getInstance().apply { timeInMillis = startTime }
         val endTimeCal = Calendar.getInstance().apply { timeInMillis = endTime }
-        val dateCal = Calendar.getInstance().apply { timeInMillis = date }
-        val dateNotSame = startTimeCal.get(Calendar.DAY_OF_YEAR) != endTimeCal.get(Calendar.DAY_OF_YEAR) || startTimeCal.get(Calendar.YEAR) == dateCal.get(Calendar.DAY_OF_YEAR)
-        if (dateNotSame) return ValidationResult(false, "Expected the date to be same but got date for startTime:${getDateFormatted(startTime)}, endTime:${getDateFormatted(endTime)}, Date:${getDateFormatted(date)}")
+        val startDate = startTimeCal.get(Calendar.YEAR) to startTimeCal.get(Calendar.DAY_OF_YEAR)
+        val endDate = endTimeCal.get(Calendar.YEAR) to endTimeCal.get(Calendar.DAY_OF_YEAR)
+        if (startDate != endDate ) return ValidationResult(false, "Expected the date to be same but got date for startTime:${getDateFormatted(startTime)}, endTime:${getDateFormatted(endTime)}")
         return ValidationResult(true, "")
     }
 
 }
 
-@Database(entities = [AlarmData::class], version = 1)
+@Database(entities = [AlarmData::class], version = 1, )
 abstract class AlarmDatabase : RoomDatabase() {
     abstract fun alarmDao(): AlarmDao
 }
@@ -132,7 +132,7 @@ interface AlarmDao {
     suspend fun updateAlarmForReset(id: Int, firstValue: Long, second_value: Long, isReadyToUse: Boolean)
 
     @Update
-    suspend fun updateAlarmForReset(alarmData: AlarmData): Long
+    suspend fun updateAlarmForReset(alarmData: AlarmData): Int
 
     @Query("DELETE  FROM AlarmData")
     suspend fun deleteAllAlarmsFromDb()
@@ -154,17 +154,17 @@ data class AlarmObject(
         val currentDate = Calendar.getInstance()
         val selectedDate = Calendar.getInstance().apply { timeInMillis = date}
         val dateSame = currentDate.get(Calendar.DAY_OF_YEAR) == selectedDate.get(Calendar.DAY_OF_YEAR)
-        val baseValidation = startTime.timeInMillis < endTime.timeInMillis && freqGottenAfterCallback in 1..700 && (dateSame || selectedDate.after(currentDate))
+        val sameDateInTime = startTime.get(Calendar.DAY_OF_YEAR) == endTime.get(Calendar.DAY_OF_YEAR)
+        val baseValidation = startTime.timeInMillis < endTime.timeInMillis && freqGottenAfterCallback in 1..700 && (dateSame || selectedDate.after(currentDate)) &&sameDateInTime
         if (alarmData == null) return baseValidation
         val hasChanged = startTime.timeInMillis != alarmData.startTime || endTime.timeInMillis != alarmData.endTime ||
-                freqGottenAfterCallback != alarmData.frequencyInMin || message != alarmData.message || date != alarmData.date
+                freqGottenAfterCallback != alarmData.frequencyInMin || message != alarmData.message
         return baseValidation && hasChanged
 	}
     fun toAlarmData(id:Int,isReadyToUse: Boolean = true): AlarmData{
         return AlarmData(
             startTime = startTime.timeInMillis,
             endTime = endTime.timeInMillis,
-            date = date,
             message = message,
             id = id,
             frequencyInMin = freqGottenAfterCallback,
@@ -182,6 +182,8 @@ data class AlarmObject(
         val currentDate = Calendar.getInstance()
         val selectedDate = Calendar.getInstance().apply { timeInMillis = date}
         val dateSame = currentDate.get(Calendar.DAY_OF_YEAR) == selectedDate.get(Calendar.DAY_OF_YEAR)
+        val startAndEndTimeHaveSameDate = startTime.get(Calendar.DAY_OF_YEAR) == endTime.get(Calendar.DAY_OF_YEAR)
+        if (!startAndEndTimeHaveSameDate) return ValidationResult(false, "expected the date in startTime and endTime to be same but got startTimeDate:${getDateTimeFormatted(startTime.timeInMillis)} endDateTime:${getDateTimeFormatted(endTime.timeInMillis)}")
         if ( !(dateSame || selectedDate.after(currentDate)) ){
             return ValidationResult(false, "Date must be today or in the future.")
         }
@@ -190,8 +192,7 @@ data class AlarmObject(
             val hasChanged = startTime.timeInMillis != alarmData.startTime ||
                     endTime.timeInMillis != alarmData.endTime ||
                     freqGottenAfterCallback != alarmData.frequencyInMin ||
-                    message != alarmData.message ||
-                    date != alarmData.date
+                    message != alarmData.message
 
             if (!hasChanged) {
                 return ValidationResult(false, "No changes detected. Change something to update the alarm.")

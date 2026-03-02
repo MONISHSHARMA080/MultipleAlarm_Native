@@ -523,7 +523,7 @@ fun AlarmCard4(
 				verticalAlignment = Alignment.CenterVertically
 			) {
 				Text(
-					text = formatDate(alarmData.date).uppercase(),
+					text = formatDate(alarmData.startTime).uppercase(),
 					style = MaterialTheme.typography.labelLarge.copy(
 						fontWeight = FontWeight.ExtraBold,
 						letterSpacing = 2.sp

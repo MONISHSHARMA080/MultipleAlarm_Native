@@ -13,7 +13,7 @@ import java.util.Date
 import java.util.Locale
 import kotlin.random.Random
 
-open class NotificationBuilder(context:Context, notificationText:String, title:String, val NOTIFICATION_ID: Int = Random.nextInt(0, 1000)) {
+open class NotificationBuilder(context:Context, notificationText:String, title:String, val notificationId: Int = Random.nextInt(0, 1000)) {
      companion object {
         private const val CHANNEL_ID = "default_channel"
         private const val CHANNEL_NAME = "Default Channel"
@@ -52,7 +52,7 @@ open class NotificationBuilder(context:Context, notificationText:String, title:S
     fun showNotification() {
         val notification = builder.build()
         writeLogToFile(title = notificationTitle, message = notificationBody)
-        notificationManager.notify(NOTIFICATION_ID, notification)
+        notificationManager.notify(notificationId, notification)
     }
     fun cancelNotification(notificationId: Int) {
         notificationManager.cancel(notificationId)

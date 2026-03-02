@@ -66,7 +66,7 @@ fun AlarmCardWierd(
 		) {
 			// Date Display
 			Text(
-				text = formatDate(alarmData.date),
+				text = formatDate(alarmData.startTime),
 				color = onSurfaceVariant,
 				fontSize = 14.sp,
 				fontWeight = FontWeight.Medium,

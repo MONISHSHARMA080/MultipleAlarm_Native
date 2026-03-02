@@ -62,6 +62,7 @@ c)  later :--
         * ability to add repeating alarms (like MONDAY, WED, SAT etc)
         * add ability to schedule multiple alarms (calender)
         * set alarm based on AlarmObject.Date and not take the alarmObject.StartTime alarmObject.EndTime, assert them to be right but take it from time
+        * DB migration test
 
 
 

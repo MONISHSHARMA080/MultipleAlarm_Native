@@ -9,7 +9,7 @@ sealed class Result<out SuccessType, out ErrorType : Error> {
 //    data class Failure<out E : Error>(val errorMessageToDisplayUser: E, val exception: Throwable) : Result<Nothing, E>()
     data class Failure<out E : Error>(
         val errorMessageToDisplayUser: E,
-        val exception: Throwable
+        val internalException: Throwable
     ) : Result<Nothing, E>() {
         // Secondary constructor that creates exception from error message
         constructor(errorMessageToDisplayUser: E) : this(
@@ -32,18 +32,18 @@ sealed class Result<out SuccessType, out ErrorType : Error> {
     }
     fun getException(): Throwable? = when (this) {
         is Success -> null
-        is Failure -> exception
+        is Failure -> internalException
     }
 
 
     inline fun <R> map(transform: (SuccessType) -> R): Result<R, ErrorType> = when (this) {
         is Success -> Success(transform(value))
-        is Failure -> Failure(errorMessageToDisplayUser, exception)
+        is Failure -> Failure(errorMessageToDisplayUser, internalException)
     }
 
     inline fun <R : Error> mapErr(transform: (ErrorType) -> R): Result<SuccessType, R> = when (this) {
         is Success -> Success(value)
-        is Failure -> Failure(transform(errorMessageToDisplayUser), exception)
+        is Failure -> Failure(transform(errorMessageToDisplayUser), internalException)
     }
 
     inline fun <R>fold(
@@ -51,7 +51,7 @@ sealed class Result<out SuccessType, out ErrorType : Error> {
         onError: (ErrorType, Throwable) -> R
     ):R = when(this){
         is Success -> onSuccess(value)
-        is Failure -> onError(errorMessageToDisplayUser, exception)
+        is Failure -> onError(errorMessageToDisplayUser, internalException)
     }
 
     companion object{
