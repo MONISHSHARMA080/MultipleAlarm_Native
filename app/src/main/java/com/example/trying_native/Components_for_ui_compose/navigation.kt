@@ -37,6 +37,7 @@ import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmDatabase
 import com.example.trying_native.logD
 import com.example.trying_native.notification.NotificationBuilder
+import com.example.trying_native.utils.Result.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
@@ -190,7 +191,8 @@ sealed interface Screen : NavKey {
 										)
 										val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(
 											alarm = AlarmValueForAlarmSeries.AlarmData(newAlarmObject.toAlarmData(oldAlarm.id) ),
-											alarmManager, activityContext, alarmDao)
+											alarmManager, activityContext, alarmDao
+										)
 										// now the error case is handled there
 										alarmScheduledResult.fold(
 											onSuccess = { },

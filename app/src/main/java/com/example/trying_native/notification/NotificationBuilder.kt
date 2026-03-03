@@ -54,12 +54,6 @@ open class NotificationBuilder(context:Context, notificationText:String, title:S
         writeLogToFile(title = notificationTitle, message = notificationBody)
         notificationManager.notify(notificationId, notification)
     }
-    fun cancelNotification(notificationId: Int) {
-        notificationManager.cancel(notificationId)
-    }
-    fun cancelAllNotifications() {
-        notificationManager.cancelAll()
-    }
     private fun writeLogToFile(title: String, message: String) {
         try {
             val now = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())

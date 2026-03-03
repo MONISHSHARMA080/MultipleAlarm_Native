@@ -172,7 +172,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
     LaunchedEffect(Unit) {
         while (true) {
             currentTime = getCurrentTime()
-            delay(500)
+            delay(720)
         }
     }
 
@@ -216,16 +216,19 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                     text = currentTime,
                     color = Color.Cyan,
                     fontSize = 53.sp,
+                    softWrap = false,
+                    maxLines = 1,
                     fontWeight = FontWeight.Bold
                 )
             } else {
                 // Original layout with message
                 Spacer(modifier = Modifier.height(20.dp))
-
                 Text(
                     text = currentTime,
                     color = Color.Cyan,
-                    fontSize = 58.sp,
+                    fontSize = 53.sp,
+                    softWrap = false,
+                    maxLines = 1,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(40.dp))
