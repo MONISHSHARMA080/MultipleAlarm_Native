@@ -1,24 +1,26 @@
 package com.example.trying_native.ErrorHandling
 
 import android.util.Log
+import com.example.trying_native.notification.NotificationChannelType
+import com.example.trying_native.notification.NotificationHandler
 import com.example.trying_native.utils.Result.Error
 import com.example.trying_native.utils.Result.Result
 
 
 // class will init, and take in the error message to display user and the exception, make the notification and log it and report it to the server
 // also follow single responsibility principle
-class ErrorHandler {
-	init {
-	}
-	fun <E: Error>handleError(error: Result.Failure<E>): Unit {
+class ErrorHandler(val notificationHandler: NotificationHandler) {
+
+
+	val defaultTitle = "Sorry an error occurred, Please try again"
+
+	fun <E: Error>handleError(error: Result.Failure<E>, title: String = defaultTitle): Unit {
 		logD("got an error messageTODisplay to user:${error.errorMessageToDisplayUser.messageToDisplayUser} and exception:${error.internalException.message}")
-		// log the error
-		// user notification
-		// report the error
-
+		notifyUserAboutError(error, title)
 	}
-	fun notifyUserAboutError(): Unit {
-
+	fun <E: Error> notifyUserAboutError(error: Result.Failure<E>, title: String ): Unit {
+		val notification = notificationHandler.build( notificationChannel = NotificationChannelType.ErrorChannel, notificationTitle = "Sorry an error occurred, Please try again", notificationText = error.errorMessageToDisplayUser.messageToDisplayUser )
+		notificationHandler.show(notification)
 	}
 	fun reportError(): Unit {
 

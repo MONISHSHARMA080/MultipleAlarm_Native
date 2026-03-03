@@ -9,10 +9,13 @@ import androidx.room.Room
 import com.example.trying_native.Activities.AlarmActivityIntentData
 import com.example.trying_native.AlarmLogic.AlarmsController
 import com.example.trying_native.AlarmReceiver
+import com.example.trying_native.ErrorHandling.ErrorHandler
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmDatabase
-import com.example.trying_native.notification.NotificationBuilder
+import com.example.trying_native.notification.NotificationHandler
+import com.example.trying_native.utils.Result.Error
+import com.example.trying_native.utils.Result.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -23,6 +26,10 @@ import java.io.FileWriter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+sealed interface NextAlarmReceiverError: Error {
+    data class GenericError(override val messageToDisplayUser: String): NextAlarmReceiverError
+}
 
 class NextAlarmReceiver: BroadcastReceiver() {
     private lateinit var context: Context
@@ -70,7 +77,6 @@ class NextAlarmReceiver: BroadcastReceiver() {
         }
         val alarmDaoImpl = this.alarmDao?:getAlarmDao(activityContext )
         val alarmData: AlarmData? = alarmDaoImpl.getAlarmByValues(startTimeForAlarmSeries, originalDbEndTime)
-//        val alarmData = alarmDao.getAlarmByValues(startTimeForAlarmSeries, originalDbEndTime)
         if (alarmData == null) {
             logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "we were not able to find the alarmData in the DB")
             return
@@ -92,7 +98,8 @@ class NextAlarmReceiver: BroadcastReceiver() {
             res.fold(onSuccess = {
                 logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "there was no exception in scheduling the future alarm ")
             }, onError = {messageToDisplayUser, exception->
-                NotificationBuilder(context, title = "error returned in scheduling upcoming alarm ", notificationText = "${messageToDisplayUser.messageToDisplayUser} . The Exception is ->$exception").showNotification()
+                val errorHandler = ErrorHandler(NotificationHandler(context))
+                errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "error returned in scheduling upcoming alarm " )
                 alarmDaoImpl.updateAlarmForReset(alarmData.copy(isReadyToUse = false))
                 logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "the alarm Exception is not null and it is ${exception.message}-----and it is ${exception} ")
             })

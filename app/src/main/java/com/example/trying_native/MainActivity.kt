@@ -8,11 +8,25 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import com.example.trying_native.Components_for_ui_compose.NavigationStack
+import com.example.trying_native.notification.NotificationHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlin.coroutines.coroutineContext
 
 class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    val coroutineScope = CoroutineScope( Dispatchers.IO)
+
+    coroutineScope.launch { runCatching {
+        NotificationHandler(this@MainActivity).createNotificationChannels()
+      logD("created notification Channels")
+      }
+    }
+
     try {
       enableEdgeToEdge()
       setContent {
@@ -24,7 +38,6 @@ class MainActivity : ComponentActivity() {
       logD(" \n\n\n\n\n\n [FATAL] --> error occurred in the onCreate, and it is ${e}\n}")
     }
   }
-
 }
 
 fun logD(message: String): Unit {

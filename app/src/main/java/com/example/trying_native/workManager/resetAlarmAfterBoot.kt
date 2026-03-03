@@ -6,17 +6,17 @@ import androidx.room.Room
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.trying_native.AlarmLogic.AlarmsController
+import com.example.trying_native.AlarmLogic.ResetAlarmError
+import com.example.trying_native.ErrorHandling.ErrorHandler
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmDatabase
-import com.example.trying_native.logD
-import com.example.trying_native.notification.NotificationBuilder
+import com.example.trying_native.notification.NotificationHandler
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlin.collections.filter
-import kotlin.onFailure
-import  kotlin.Result as ResultObj
+import  com.example.trying_native.utils.Result.Result as ResultsCustom
 
 class ResetAlarmAfterBoot(appContext: Context, workerParams: WorkerParameters): CoroutineWorker(appContext, workerParams) {
 	val alarmsController = AlarmsController()
@@ -31,7 +31,11 @@ class ResetAlarmAfterBoot(appContext: Context, workerParams: WorkerParameters): 
 		val results = coroutineScope {
 			enabledAlarms.map { alarmData ->
 				async {
-					alarmsController.resetAlarms(alarmData = alarmData, alarmManager = alarmManager, activityContext = applicationContext, alarmDao = alarmDao)
+					val result =alarmsController.resetAlarms(alarmData = alarmData, alarmManager = alarmManager, activityContext = applicationContext, alarmDao = alarmDao)
+					if (result.isErr()){
+						alarmsController.updateAlarmStateInDb(alarmData.copy(isReadyToUse = false), alarmDao)
+					}
+					return@async result
 				}
 			}.awaitAll()
 		}
@@ -39,12 +43,10 @@ class ResetAlarmAfterBoot(appContext: Context, workerParams: WorkerParameters): 
 
 		results.forEach { result ->
 			result.fold(onSuccess = {}, onError = {errorToDisplayUser, exception ->
-				NotificationBuilder(applicationContext, title = "error in resetting the alarm, after boot or app update ", notificationText = errorToDisplayUser.messageToDisplayUser )
+				ErrorHandler(NotificationHandler(applicationContext)).handleError(ResultsCustom.Failure(errorToDisplayUser, exception), "error in resetting the alarm, after boot or app update ")
 			})
 		}
-
 		return if (hasError) Result.failure() else Result.success()
-
 	}
 	private suspend fun getAllAlarms(alarmDao: AlarmDao): List<AlarmData> {
 		return alarmDao.getAllAlarms()

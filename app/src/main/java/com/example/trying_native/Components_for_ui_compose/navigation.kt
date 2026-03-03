@@ -31,12 +31,13 @@ import com.example.trying_native.AlarmLogic.CancelAlarmError
 import com.example.trying_native.AlarmLogic.DeleteAlarmHandlerError
 import com.example.trying_native.Components_for_ui_compose.alarmListScreen.AlarmListScreen
 import com.example.trying_native.Components_for_ui_compose.alarmPicker.AlarmPickerScreen
+import com.example.trying_native.ErrorHandling.ErrorHandler
 import com.example.trying_native.dataBase.AlarmDao
 
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmDatabase
 import com.example.trying_native.logD
-import com.example.trying_native.notification.NotificationBuilder
+import com.example.trying_native.notification.NotificationHandler
 import com.example.trying_native.utils.Result.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
@@ -57,6 +58,8 @@ sealed interface Screen : NavKey {
 	val context = LocalContext.current
 	val alarmManager = remember { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
 	val alarmsController = AlarmsController()
+	val notificationHandler = NotificationHandler(activityContext)
+	val errorHandler = ErrorHandler(notificationHandler)
 
 	val coroutineScope = activityContext.lifecycleScope
 	val uncancellableScope = CoroutineScope(coroutineScope.coroutineContext + NonCancellable)
@@ -96,11 +99,7 @@ sealed interface Screen : NavKey {
 								alarmManager = alarmManager, onAlarmStop = { alarmData ->
 									uncancellableScope.launch {
 										alarmsController.cancelAlarmHandler(alarmData,  context, alarmManager, alarmDao).fold(onSuccess = {}, onError = {messageToDisplayUser,exception ->
-											NotificationBuilder(
-												activityContext,
-												title = "error in cancelling the alarm",
-												notificationText = messageToDisplayUser.messageToDisplayUser
-											).showNotification()
+											errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while cancelling alarm, Please try again" )
 											logD("there is a error/Exception in making new alarm-->${exception.message}")
 
 										})
@@ -118,12 +117,8 @@ sealed interface Screen : NavKey {
 										exception.fold(
 											onSuccess = {},
 											onError = { messageToDisplayUser, exception->
-												NotificationBuilder(
-													activityContext,
-													title = "error in resting alarm",
-													notificationText ="${messageToDisplayUser.messageToDisplayUser}, and exception is ${exception.message}"
-												).showNotification()
-												logD("error/exception in the schedule multiple -->${exception.message}")
+												errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while resting the  alarm, Please try again" )
+												logD("error/exception in the reset alarm -->${exception.message}")
 											}
 										)
 									}
@@ -132,17 +127,7 @@ sealed interface Screen : NavKey {
 										logD("deleting the alarm $alarmData")
 										alarmsController.deleteAlarmHandler(alarmData,  context, alarmDao,  alarmManager).fold(onSuccess = {}, onError = {messageToDisplayUser, exception ->
 											logD("there is a error in deleting the alarm  that is $exception ")
-											when(messageToDisplayUser){
-												is DeleteAlarmHandlerError.AlarmNotInDbToDelete ->{}
-												is DeleteAlarmHandlerError.GenericError ->{}
-
-											}
-											NotificationBuilder(
-												activityContext,
-												title = "error returned in deleting alarm",
-												notificationText = "${messageToDisplayUser.messageToDisplayUser}, and exception is: ${exception.message}"
-											).showNotification()
-
+											errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while deleting the alarm, Please try again" )
 										})
 									}
 								}
@@ -165,12 +150,8 @@ sealed interface Screen : NavKey {
 										exception.fold(
 											onSuccess = { },
 											onError = {messageToDisplayUser, exception ->
-												NotificationBuilder(
-													context = activityContext,
-													title = "there is a error in making new alarm",
-													notificationText = messageToDisplayUser.messageToDisplayUser
-												).showNotification()
-												logD("there is a error/Exception in making new alarm-->${exception.message}")
+												logD("there is a error in making new alarm  that is $exception ")
+												errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while making new alarm, Please try again" )
 											}
 										)
 									}
@@ -182,11 +163,7 @@ sealed interface Screen : NavKey {
 										alarmsController.updateAlarmStateInDb( oldAlarm, alarmDao).fold(onSuccess = {}, onError = { messageToDisplayUser, exception  ->
 											// no such alarm exist in DB so can't update it
 												logD("there is a error while editing the alarm and updating it's state in DB and  that is ${exception.message} ")
-												NotificationBuilder(
-													activityContext,
-													title = "error returned in editing alarm",
-													notificationText = messageToDisplayUser.messageToDisplayUser
-												).showNotification()
+												errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while editing alarm, Please try again" )
 											}
 										)
 										val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(
@@ -197,11 +174,7 @@ sealed interface Screen : NavKey {
 										alarmScheduledResult.fold(
 											onSuccess = { },
 											onError = { messageToDisplayUser, exception ->
-												NotificationBuilder(
-													context = activityContext,
-													title = "there is a error in editing alarm",
-													notificationText = messageToDisplayUser.messageToDisplayUser
-												).showNotification()
+												errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while editing alarm, Please try again" )
 												logD("there is a error/Exception in editing new alarm-->${exception.message}")
 											}
 										)
@@ -220,16 +193,13 @@ sealed interface Screen : NavKey {
 								alarmDao = alarmDao,
 								alarmManager = alarmManager, onAlarmStop = { alarmData ->
 									uncancellableScope.launch {
-										alarmsController.cancelAlarmHandler(alarmData,  context, alarmManager, alarmDao).fold(onSuccess = {}, onError = { messageToDisplayUser, exception ->
-											NotificationBuilder(
-												activityContext,
-												title = "error in cancelling the alarm",
-												notificationText = messageToDisplayUser.messageToDisplayUser
-											).showNotification()
-											logD("there is a error/Exception in editing new alarm-->${exception.message}")
+										alarmsController.cancelAlarmHandler(alarmData,  context, alarmManager, alarmDao).fold(onSuccess = {}, onError = {messageToDisplayUser,exception ->
+											errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while cancelling alarm, Please try again" )
+											logD("there is a error/Exception in making new alarm-->${exception.message}")
 										})
 									}
-								}, onAlarmReset = { alarmData ->
+							   },
+								onAlarmReset = { alarmData ->
 									uncancellableScope.launch {
 										logD("about to reset the alarm-+")
 										val exception = alarmsController.resetAlarms(
@@ -238,29 +208,20 @@ sealed interface Screen : NavKey {
 											activityContext = activityContext,
 											alarmDao =alarmDao,
 										)
-										logD("the exception from the resetAlarm is ->$exception")
 										exception.fold(
 											onSuccess = {},
-											onError = { messageToDisplayUser, exception  ->
-												NotificationBuilder(
-													activityContext,
-													title = "error returned in creating multiple alarm",
-													notificationText = messageToDisplayUser.messageToDisplayUser
-												).showNotification()
-												logD("error in the schedule multiple -->${exception.message}")
+											onError = { messageToDisplayUser, exception->
+												errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while resting the  alarm, Please try again" )
+												logD("error/exception in the reset alarm -->${exception.message}")
 											}
 										)
 									}
 								}, onAlarmDelete = {alarmData ->
 									uncancellableScope.launch {
 										logD("deleting the alarm $alarmData")
-										alarmsController.deleteAlarmHandler(alarmData,  context, alarmDao,  alarmManager).fold(onSuccess = {}, onError = { messageToDisplayUser, exception ->
-											logD("there is a error in deleting the alarm  that is ${exception.message} ")
-											NotificationBuilder(
-												activityContext,
-												title = "error returned in deleting alarm",
-												notificationText = messageToDisplayUser.messageToDisplayUser
-											).showNotification()
+										alarmsController.deleteAlarmHandler(alarmData,  context, alarmDao,  alarmManager).fold(onSuccess = {}, onError = {messageToDisplayUser, exception ->
+											logD("there is a error in deleting the alarm  that is $exception ")
+											errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while deleting the alarm, Please try again" )
 										})
 									}
 								}

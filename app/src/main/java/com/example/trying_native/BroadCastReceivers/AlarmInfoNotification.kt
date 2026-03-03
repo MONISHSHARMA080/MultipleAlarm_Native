@@ -4,10 +4,14 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.room.Room
+import com.example.trying_native.ErrorHandling.ErrorHandler
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmDatabase
-import com.example.trying_native.notification.NotificationBuilder
+import com.example.trying_native.notification.NotificationChannelType
+import com.example.trying_native.notification.NotificationHandler
+import com.example.trying_native.utils.Result.Error
+import com.example.trying_native.utils.Result.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -18,6 +22,11 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+sealed interface AlarmInfoNotificationError: Error{
+    data class GenericError(override val messageToDisplayUser: String): AlarmInfoNotificationError
+}
+
+
 class AlarmInfoNotification: BroadcastReceiver()  {
     private val coroutineScope = CoroutineScope( Dispatchers.IO)
     private lateinit var context: Context
@@ -25,29 +34,20 @@ class AlarmInfoNotification: BroadcastReceiver()  {
         File(context.getExternalFilesDir(null), "alarmMetadataInfo.txt")
     }
     private fun DisplayAlarmsMetadataInNotification(alarmData: AlarmData){
-        NotificationBuilder(context, title = "Upcoming alarm info",
-            notificationText = "Alarm:${alarmData.id} will go from  ${getTimeInHumanReadableFormatProtectFrom0Included(alarmData.startTime)}" +
-                    " --->  ${getTimeInHumanReadableFormatProtectFrom0Included(alarmData.endTime)}" +
-                    " after every ${alarmData.frequencyInMin} min  "
-        )
+        val notificationHandler =NotificationHandler(context)
+        val notification = notificationHandler.build(NotificationChannelType.GeneralNotification, "Upcoming alarm info",
+"Alarm:${alarmData.id} will go from  ${getTimeInHumanReadableFormatProtectFrom0Included(alarmData.startTime)} --->  ${getTimeInHumanReadableFormatProtectFrom0Included(alarmData.endTime)}" +
+                " after every ${alarmData.frequencyInMin} min  " )
     }
 
     /**
      * if there is a error then this function writes it to a file and also notify the user
      * */
     private fun errorOccurred(error: String){
-         coroutineScope.launch {
-             FileWriter(logFile, true).use {
-                "\n\n -------\n" +
-                        "error occurred in the AlarmInfoNotificationClass and it is --${error}" +
-                        "----------\n\n\n"
-             }
-         }
         coroutineScope.launch {
-            NotificationBuilder(context, title = "there was an error in displaying the alarm info ",
-                notificationText = "error->${error}"
-            )
-
+            val notificationHandler =NotificationHandler(context)
+            val errorHandler =ErrorHandler(notificationHandler)
+            errorHandler.handleError(Result.Failure(AlarmInfoNotificationError.GenericError("there was an error in displaying the alarm info "), Exception(error)))
         }
     }
 
