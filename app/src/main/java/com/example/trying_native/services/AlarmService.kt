@@ -8,11 +8,16 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.service.carrier.CarrierMessagingService
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.example.trying_native.Activities.AlarmActivity
 import com.example.trying_native.Activities.AlarmActivityIntentData
+import com.example.trying_native.analytics.Analytics
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlin.getOrElse
 
 class AlarmService: Service() {
@@ -23,7 +28,9 @@ class AlarmService: Service() {
     // if we receive more intents than we will use this; if the intent is from same alarm(see id) then we will replace it /not put it in / dismiss it as
     // it is same and no need to display same message again; if it is diff then we will put it in and when dismissed then we might need to display it
     val intentHashMap: LinkedHashMap<Int,Intent> = LinkedHashMap(20)
-    val playAlarm by lazy { PlayAlarm(this) }
+    val analytics by lazy { Analytics(this) }
+    val playAlarm by lazy { PlayAlarm(this, analytics) }
+    val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun onBind(intent: Intent?) = null
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -33,6 +40,9 @@ class AlarmService: Service() {
         if (intent == null) {
             // The service was killed and restarted by the system without the original intent.
             // Since we don't have the alarm data, we should just stop.
+            analytics.captureEvent("error occurred", mapOf(
+                "error" to "intent was null in AlarmService"
+            ))
             stopSelf()
             return START_NOT_STICKY
         }
@@ -53,6 +63,7 @@ class AlarmService: Service() {
         }
     }
 
+
     /** launches the notification with full screen intent, plays the alarm sound , and puts intent in the hashMap if required*/
     private fun startPlayingAlarm(intent: Intent):Int{
         val res = buildNotification(this, intent).getOrElse { exception ->
@@ -61,21 +72,32 @@ class AlarmService: Service() {
             //      log the error
             // ----------------------
             logD(" Error building notification: ${exception.message} ")
-            return problemSoStopTheService()
+            return problemSoStopTheService(" Error building notification: ${exception.message} ")
         }
         val notification: Notification = res.first
         val alarmIntentData: AlarmActivityIntentData = res.second
         intentHashMap.putIfAbsent(alarmIntentData.alarmIdInDb, intent)
-        // only start the alarm/activity if no other alarm was there , else just store the intent in the hashMap
         ServiceCompat.startForeground(this, alarmIntentData.alarmIdInDb, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
         playAlarm.play()
         return START_REDELIVER_INTENT
     }
 
     private  fun handleStartAlarm(intent:Intent):Int{
-        val intentData = intent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService()
+        val intentData = intent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService("intentData parsed is null")
         val isFirstAlarm = intentHashMap.isEmpty()
         intentHashMap.putIfAbsent(intentData.alarmIdInDb, intent)
+
+        coroutineScope.launch {
+            analytics.captureEvent("starting new alarm", mapOf(
+                "intentData" to intentData.toString(),
+                "isFirstAlarm" to isFirstAlarm,
+                "areWePuttingTheAlarmIntoHashMapAndLetOtherPlay" to !isFirstAlarm,
+                "class" to "AlarmService"
+                )
+            )
+        }
+
+
         if (isFirstAlarm){
             startPlayingAlarm(intent)
         }else{
@@ -89,8 +111,18 @@ class AlarmService: Service() {
         // remove this intent from the hashmap, and then if we have other in the hashMap then start playing those
         // assert that this intent is in the hashMap if not then we have a problem
         // 1. Remove the dismissed alarm from the queue
-        val intentData = intent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService()
+        val intentData = intent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService("intentData parsed is null")
         intentHashMap.remove(intentData.alarmIdInDb)
+        coroutineScope.launch {
+            analytics.captureEvent("handling dismiss of alarm", mapOf(
+                "intentData" to intentData.toString(),
+                "isLastAlarm" to intentHashMap.isEmpty(),
+                "areWePullingOtherAlarmFromHashMapAndPlayingThose" to intentHashMap.isNotEmpty(),
+                "class" to "AlarmService"
+                )
+            )
+        }
+
         when(intentHashMap.isEmpty()){
             true ->{
                 // nothing in the hashMap so we can stop this activity
@@ -106,7 +138,10 @@ class AlarmService: Service() {
         }
     }
 
-    private  fun problemSoStopTheService():Int{
+    private  fun problemSoStopTheService(errorMessage: String):Int{
+            analytics.captureEvent("error occurred, so we are stopping the alarm(s)", mapOf(
+                "error" to errorMessage
+            ))
         stopSelf()
         return  START_NOT_STICKY
     }
@@ -182,8 +217,4 @@ class AlarmService: Service() {
             return@runCatching Pair(builder.build(), intentData)
         }
     }
-
-
-
-
 }

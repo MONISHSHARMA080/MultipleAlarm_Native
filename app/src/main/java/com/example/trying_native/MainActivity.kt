@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import com.example.trying_native.Components_for_ui_compose.NavigationStack
+import com.example.trying_native.analytics.Analytics
 import com.example.trying_native.notification.NotificationHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,6 +18,7 @@ import kotlin.coroutines.coroutineContext
 
 class MainActivity : ComponentActivity() {
 
+  val analytics by lazy { Analytics(this) }
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     val coroutineScope = CoroutineScope( Dispatchers.IO)
@@ -26,7 +28,6 @@ class MainActivity : ComponentActivity() {
       logD("created notification Channels")
       }
     }
-
     try {
       enableEdgeToEdge()
       setContent {
@@ -36,6 +37,10 @@ class MainActivity : ComponentActivity() {
       }
     } catch (e: Exception) {
       logD(" \n\n\n\n\n\n [FATAL] --> error occurred in the onCreate, and it is ${e}\n}")
+      analytics.captureEvent("main activity class got error", mapOf(
+        "error Exception" to e.toString()
+      ))
+
     }
   }
 }

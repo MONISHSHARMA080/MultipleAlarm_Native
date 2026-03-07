@@ -191,7 +191,6 @@ import java.util.Calendar
 								Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
 									// Interval Value Stepper
 									Column(modifier = Modifier.weight(1f)) {
-										Text("Interval Value", color = Color.Gray, fontSize = 12.sp, modifier = Modifier.padding(bottom = 8.dp))
 										Row(
 											modifier = Modifier
 												.fillMaxWidth()

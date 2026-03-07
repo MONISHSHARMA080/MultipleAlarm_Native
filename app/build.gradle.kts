@@ -1,4 +1,5 @@
 import com.android.build.api.dsl.ApplicationExtension
+import org.gradle.kotlin.dsl.implementation
 import org.gradle.kotlin.dsl.testImplementation
 
 plugins {
@@ -128,7 +129,7 @@ kotlin {
 }
 
 dependencies {
-//    implementation("com.posthog:posthog-android:3.+")
+    implementation ("com.posthog:posthog-android:3.+")
     implementation(libs.androidx.espresso.contrib)
     implementation(libs.androidx.ui.test.junit4.android)
     implementation(libs.androidx.compose.ui.text)

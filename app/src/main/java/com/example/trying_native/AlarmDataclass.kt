@@ -205,7 +205,7 @@ data class AlarmObject(
         return SimpleDateFormat("hh:mm a dd/MM/yyyy", Locale.getDefault()).format(time)
     }
     override fun toString(): String {
-        return "startTime:${getDateTimeFormatted(startTime.timeInMillis)}, endTime:${getDateTimeFormatted(endTime.timeInMillis)}, date:${getDateTimeFormatted(date)}, message:$message freqGottenAfterCallback:$freqGottenAfterCallback"
+        return "alarmObject: startTime:${getDateTimeFormatted(startTime.timeInMillis)}, endTime:${getDateTimeFormatted(endTime.timeInMillis)}, date:${getDateTimeFormatted(date)}, message:$message freqGottenAfterCallback:$freqGottenAfterCallback"
     }
 }
 

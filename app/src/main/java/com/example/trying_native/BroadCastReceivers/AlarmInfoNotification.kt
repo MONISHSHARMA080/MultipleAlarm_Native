@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.room.Room
 import com.example.trying_native.ErrorHandling.ErrorHandler
+import com.example.trying_native.analytics.Analytics
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmDatabase
@@ -30,14 +31,20 @@ sealed interface AlarmInfoNotificationError: Error{
 class AlarmInfoNotification: BroadcastReceiver()  {
     private val coroutineScope = CoroutineScope( Dispatchers.IO)
     private lateinit var context: Context
-    private  val logFile : File by lazy {
-        File(context.getExternalFilesDir(null), "alarmMetadataInfo.txt")
-    }
-    private fun DisplayAlarmsMetadataInNotification(alarmData: AlarmData){
+    val analytics = Analytics(context)
+
+    private fun displayAlarmsMetadataInNotification(alarmData: AlarmData){
         val notificationHandler =NotificationHandler(context)
-        val notification = notificationHandler.build(NotificationChannelType.GeneralNotification, "Upcoming alarm info",
-"Alarm:${alarmData.id} will go from  ${getTimeInHumanReadableFormatProtectFrom0Included(alarmData.startTime)} --->  ${getTimeInHumanReadableFormatProtectFrom0Included(alarmData.endTime)}" +
-                " after every ${alarmData.frequencyInMin} min  " )
+        val title = "Upcoming alarm info"
+        val notificationText ="Alarm:${alarmData.id} will go from  ${getTimeInHumanReadableFormatProtectFrom0Included(alarmData.startTime)} --->  ${getTimeInHumanReadableFormatProtectFrom0Included(alarmData.endTime)} after every ${alarmData.frequencyInMin} min  "
+        val notification = notificationHandler.build(NotificationChannelType.GeneralNotification,title, notificationText)
+        notificationHandler.show(notification)
+        analytics.captureEvent("user asked for upcoming notification meta-data notification", mapOf(
+            "notificationTitle" to title,
+            "notificationText" to notificationText,
+            "alarmData" to alarmData.toString(),
+            "class" to "AlarmInfoNotification"
+        ))
     }
 
     /**
@@ -46,7 +53,7 @@ class AlarmInfoNotification: BroadcastReceiver()  {
     private fun errorOccurred(error: String){
         coroutineScope.launch {
             val notificationHandler =NotificationHandler(context)
-            val errorHandler =ErrorHandler(notificationHandler)
+            val errorHandler = ErrorHandler(notificationHandler, analytics )
             errorHandler.handleError(Result.Failure(AlarmInfoNotificationError.GenericError("there was an error in displaying the alarm info "), Exception(error)))
         }
     }
@@ -67,7 +74,7 @@ class AlarmInfoNotification: BroadcastReceiver()  {
             return
         }
         // now display a notification
-        this.DisplayAlarmsMetadataInNotification(alarmData)
+        this.displayAlarmsMetadataInNotification(alarmData)
     }
 
     private  fun getTimeInHumanReadableFormatProtectFrom0Included(t:Long): String{

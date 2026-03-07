@@ -44,6 +44,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,6 +64,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.trying_native.analytics.Analytics
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmObject
 import com.example.trying_native.logD
@@ -75,7 +77,7 @@ enum class AccentColor(val value:Color) {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 /**[onAlarmSet] - here [AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
-@Composable fun AlarmPickerScreen(alarm: AlarmData? , onAlarmSet: (AlarmObject, AlarmData?) -> Unit , alarmSetGoBack: () -> Unit){
+@Composable fun AlarmPickerScreen(alarm: AlarmData? , onAlarmSet: (AlarmObject, AlarmData?) -> Unit , alarmSetGoBack: () -> Unit, analytics: Analytics){
     //if the alarm is null then it's for a new alarm else we are editing an alarm
     val coroutineScope = rememberCoroutineScope()
     logD("alarm dates ->"+getListOfDatesInThisWeek() )
@@ -104,6 +106,16 @@ enum class AccentColor(val value:Color) {
     val weGood by remember { derivedStateOf { alarmObject.isOk(alarm)  } }
     val accentColor by remember { derivedStateOf { logD("weGood: $weGood"); if (weGood) AccentColor.Ok.value else AccentColor.Problem.value  } }
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
+
+    LaunchedEffect(weGood) {
+        analytics.captureEvent("is alarmObject value valid changed", mapOf(
+            "weGood" to weGood,
+            "alarmObject" to alarmObject.toString(),
+            "alarmData" to alarm.toString()
+        ))
+    }
+
+
     Scaffold(modifier = Modifier.fillMaxSize()) { contentPadding->
         Box(
             modifier = Modifier
@@ -142,7 +154,6 @@ enum class AccentColor(val value:Color) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("Date", color = Color.Gray)
-                    Text("Open Calender", color = Color(0xFF3F8CFF))
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 DateList(
@@ -173,7 +184,6 @@ enum class AccentColor(val value:Color) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             // Interval Value Stepper
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Interval Value", color = Color.Gray, fontSize = 12.sp, modifier = Modifier.padding(bottom = 8.dp))
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -291,10 +301,11 @@ enum class AccentColor(val value:Color) {
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(
                     onClick = {
-                        if (weGood) {
+                        if (weGood && alarmObject.isOk(alarm)) {
                             alarmObject.startTime.set(Calendar.SECOND, 0)
                             alarmObject.endTime.set(Calendar.SECOND, 0)
-                            onAlarmSet(alarmObject, alarm);alarmSetGoBack()
+                            onAlarmSet(alarmObject, alarm)
+                            alarmSetGoBack()
                         }
                     },
                     modifier = Modifier.fillMaxWidth().height(64.dp),

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.lifecycleScope
@@ -32,6 +33,7 @@ import com.example.trying_native.AlarmLogic.DeleteAlarmHandlerError
 import com.example.trying_native.Components_for_ui_compose.alarmListScreen.AlarmListScreen
 import com.example.trying_native.Components_for_ui_compose.alarmPicker.AlarmPickerScreen
 import com.example.trying_native.ErrorHandling.ErrorHandler
+import com.example.trying_native.analytics.Analytics
 import com.example.trying_native.dataBase.AlarmDao
 
 import com.example.trying_native.dataBase.AlarmData
@@ -59,10 +61,13 @@ sealed interface Screen : NavKey {
 	val alarmManager = remember { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
 	val alarmsController = AlarmsController()
 	val notificationHandler = NotificationHandler(activityContext)
-	val errorHandler = ErrorHandler(notificationHandler)
-
+	val errorHandler = remember { ErrorHandler(notificationHandler, Analytics(context))}
+	val analytics = remember {  Analytics(context) }
 	val coroutineScope = activityContext.lifecycleScope
 	val uncancellableScope = CoroutineScope(coroutineScope.coroutineContext + NonCancellable)
+
+
+
 	Scaffold(contentWindowInsets = WindowInsets.systemBars) { _->
 		NavDisplay(
 			backStack=backStack,
@@ -93,21 +98,41 @@ sealed interface Screen : NavKey {
 					is Screen.AlarmContainer -> NavEntry(key) {
 							AlarmContainer(
 								activityContext = activityContext,
-								onNavigateToEdit = { alarm -> backStack.add(Screen.AlarmPicker(alarm)) },
-								onNavigateToCreate = { backStack.add(Screen.AlarmPicker(null)) },
+								onNavigateToEdit = { alarm ->
+									backStack.add(Screen.AlarmPicker(alarm))
+									coroutineScope.launch {
+										analytics.screen("AlarmPicker", mapOf("is_to_edit_alarm" to true, "alarmData to edit" to alarm.toString()) )
+									}
+							   },
+								onNavigateToCreate = {
+									backStack.add(Screen.AlarmPicker(null))
+									coroutineScope.launch {
+										analytics.screen("AlarmPicker", mapOf("is_to_create_new_alarm" to true) )
+									}
+								 },
 								alarmDao = alarmDao,
 								alarmManager = alarmManager, onAlarmStop = { alarmData ->
 									uncancellableScope.launch {
+										launch {
+											analytics.captureEvent("user stopped the alarm", mapOf(
+												"alarmData" to alarmData.toString()
+											))
+										}
+										logD("user asked to stop the alarm $alarmData")
 										alarmsController.cancelAlarmHandler(alarmData,  context, alarmManager, alarmDao).fold(onSuccess = {}, onError = {messageToDisplayUser,exception ->
 											errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while cancelling alarm, Please try again" )
 											logD("there is a error/Exception in making new alarm-->${exception.message}")
-
 										})
 									}
 
 								}, onAlarmReset = { alarmData ->
 									uncancellableScope.launch {
 										logD("about to reset the alarm-+")
+										launch {
+											analytics.captureEvent("user reset the alarm", mapOf(
+												"new alarmData" to alarmData.toString()
+											))
+										}
 										val exception = alarmsController.resetAlarms(
 											alarmData = alarmData,
 											alarmManager = alarmManager,
@@ -115,7 +140,13 @@ sealed interface Screen : NavKey {
 											alarmDao =alarmDao,
 										)
 										exception.fold(
-											onSuccess = {},
+											onSuccess = {
+												coroutineScope.launch {
+													 analytics.captureEvent("alarm successfully reset", mapOf(
+														 "alarmData" to alarmData.toString()
+													 ))
+												}
+											},
 											onError = { messageToDisplayUser, exception->
 												errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while resting the  alarm, Please try again" )
 												logD("error/exception in the reset alarm -->${exception.message}")
@@ -124,6 +155,12 @@ sealed interface Screen : NavKey {
 									}
 								}, onAlarmDelete = {alarmData ->
 									uncancellableScope.launch {
+										launch {
+											analytics.captureEvent("user deleting the alarm", mapOf(
+												"alarmData" to alarmData.toString()
+												)
+											)
+										}
 										logD("deleting the alarm $alarmData")
 										alarmsController.deleteAlarmHandler(alarmData,  context, alarmDao,  alarmManager).fold(onSuccess = {}, onError = {messageToDisplayUser, exception ->
 											logD("there is a error in deleting the alarm  that is $exception ")
@@ -132,14 +169,22 @@ sealed interface Screen : NavKey {
 									}
 								}
 							)
+							LaunchedEffect(Unit) {
+								analytics.screen("AlarmContainer")
+							}
 						}
 					is Screen.AlarmPicker ->						NavEntry(key) {
 						/**[ onAlarmSet] - here [ AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
-						AlarmPickerScreen(key.alarmData, { newAlarmObject, oldAlarm ->
+						AlarmPickerScreen(key.alarmData, analytics =analytics, onAlarmSet =  { newAlarmObject, oldAlarm ->
 							when ( oldAlarm) {
 								null -> {
 									//  oldAlarm was not there so setting a new alarm
 									uncancellableScope.launch {
+										launch {
+											analytics.captureEvent("user clicked on setting the old alarm", mapOf(
+												"alarmObject" to newAlarmObject.toString()
+											))
+										}
 										logD("the alarm data confirmed is $newAlarmObject, and is  oldAlarm == newAlarmObject -> ${newAlarmObject.isOk( oldAlarm)} ")
 										val exception = alarmsController.startAlarmSeriesHandler(
 											alarm = AlarmValueForAlarmSeries.AlarmObject(newAlarmObject),
@@ -148,7 +193,11 @@ sealed interface Screen : NavKey {
 											alarmDao = alarmDao,
 										)
 										exception.fold(
-											onSuccess = { },
+											onSuccess = {
+												launch {
+													analytics.captureEvent("new alarm successfully set", mapOf("alarmObject" to newAlarmObject.toString()))
+												}
+											},
 											onError = {messageToDisplayUser, exception ->
 												logD("there is a error in making new alarm  that is $exception ")
 												errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while making new alarm, Please try again" )
@@ -183,25 +232,49 @@ sealed interface Screen : NavKey {
 								}
 							}
 						}, alarmSetGoBack = { backStack.removeLastOrNull() })
+						LaunchedEffect(Unit) {
+							analytics.screen("alarm Picker screen")
+						}
 					}
 					else ->
 						NavEntry(key) {
 							AlarmContainer(
 								activityContext = activityContext,
-								onNavigateToEdit = { alarm -> backStack.add(Screen.AlarmPicker(alarm)) },
-								onNavigateToCreate = { backStack.add(Screen.AlarmPicker(null)) },
+								onNavigateToEdit = { alarm ->
+									backStack.add(Screen.AlarmPicker(alarm))
+									coroutineScope.launch {
+										analytics.screen("AlarmPicker", mapOf("is_to_edit_alarm" to true, "alarmData to edit" to alarm.toString()) )
+									}
+								},
+								onNavigateToCreate = {
+									backStack.add(Screen.AlarmPicker(null))
+									coroutineScope.launch {
+										analytics.screen("AlarmPicker", mapOf("is_to_create_new_alarm" to true) )
+									}
+								},
 								alarmDao = alarmDao,
 								alarmManager = alarmManager, onAlarmStop = { alarmData ->
 									uncancellableScope.launch {
+										launch {
+											analytics.captureEvent("user stopped the alarm", mapOf(
+												"alarmData" to alarmData.toString()
+											))
+										}
 										alarmsController.cancelAlarmHandler(alarmData,  context, alarmManager, alarmDao).fold(onSuccess = {}, onError = {messageToDisplayUser,exception ->
 											errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while cancelling alarm, Please try again" )
 											logD("there is a error/Exception in making new alarm-->${exception.message}")
 										})
 									}
-							   },
-								onAlarmReset = { alarmData ->
+
+								}, onAlarmReset = { alarmData ->
 									uncancellableScope.launch {
 										logD("about to reset the alarm-+")
+										launch {
+											analytics.captureEvent("user reset the alarm", mapOf(
+												"new alarmData" to alarmData.toString()
+											))
+										}
+
 										val exception = alarmsController.resetAlarms(
 											alarmData = alarmData,
 											alarmManager = alarmManager,
@@ -218,6 +291,12 @@ sealed interface Screen : NavKey {
 									}
 								}, onAlarmDelete = {alarmData ->
 									uncancellableScope.launch {
+										launch {
+											analytics.captureEvent("user deleting the alarm", mapOf(
+												"new alarmData" to alarmData.toString()
+											))
+										}
+
 										logD("deleting the alarm $alarmData")
 										alarmsController.deleteAlarmHandler(alarmData,  context, alarmDao,  alarmManager).fold(onSuccess = {}, onError = {messageToDisplayUser, exception ->
 											logD("there is a error in deleting the alarm  that is $exception ")
@@ -226,6 +305,9 @@ sealed interface Screen : NavKey {
 									}
 								}
 							)
+							LaunchedEffect(Unit) {
+								analytics.screen("AlarmContainer", mapOf("from_else_branch_in_navigation" to true))
+							}
 						}
 				}
 			}

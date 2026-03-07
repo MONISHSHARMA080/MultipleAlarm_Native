@@ -8,6 +8,7 @@ import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.net.Uri
 import android.util.Log
+import com.example.trying_native.analytics.Analytics
 import com.example.trying_native.logD
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,16 +18,22 @@ import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
 
-class PlayAlarm (private val context: Context){
+class PlayAlarm (private val context: Context, val analytics: Analytics){
+
     var mediaPlayer: MediaPlayer? =  null
     var audioFocusRequest: AudioFocusRequest? = null
     private val audioManager: AudioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     val coroutineScope = CoroutineScope(Dispatchers.IO)
 
-
-
     private val audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
         logD("Audio Focus changed in the listener and it is $focusChange and Loss:${AudioManager.AUDIOFOCUS_LOSS} loss transient ${AudioManager.AUDIOFOCUS_LOSS_TRANSIENT} gain:${AudioManager.AUDIOFOCUS_GAIN } Gain transient:${AudioManager.AUDIOFOCUS_GAIN_TRANSIENT } gain transient exclusive:${AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE }AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK:${AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK }  ")
+        coroutineScope.launch {
+            analytics.captureEvent("audio focus changed", mapOf(
+                "focus_change" to focusChange,
+                "additional_info" to "Audio Focus changed in the listener and it is $focusChange and Loss:${AudioManager.AUDIOFOCUS_LOSS} loss transient ${AudioManager.AUDIOFOCUS_LOSS_TRANSIENT} gain:${AudioManager.AUDIOFOCUS_GAIN} Gain transient:${AudioManager.AUDIOFOCUS_GAIN_TRANSIENT} gain transient exclusive:${AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE}AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK:${AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK}  "
+                )
+            )
+        }
         when (focusChange) {
             AudioManager.AUDIOFOCUS_LOSS -> mediaPlayer?.stop()
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> pause()
@@ -56,7 +63,6 @@ class PlayAlarm (private val context: Context){
                 AudioManager.AUDIOFOCUS_REQUEST_FAILED ->{
                         mediaPlayer?.start()
                 }
-
                 else -> {}
             }
         }
@@ -117,6 +123,12 @@ class PlayAlarm (private val context: Context){
         val ringtoneCursor = ringtoneManager.cursor
         val len = ringtoneCursor.count
         val randomIndex = Random.nextInt(len)
+        coroutineScope.launch {
+            analytics.captureEvent("fetched alarms on device", mapOf(
+                "random_index_selected" to randomIndex,
+                "total_alarms" to len
+            ))
+        }
         val ringtone = ringtoneManager.getRingtone(randomIndex)
 
         ringtone.audioAttributes = AudioAttributes.Builder()

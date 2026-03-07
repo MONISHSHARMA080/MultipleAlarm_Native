@@ -10,6 +10,7 @@ import com.example.trying_native.Activities.AlarmActivityIntentData
 import com.example.trying_native.AlarmLogic.AlarmsController
 import com.example.trying_native.AlarmReceiver
 import com.example.trying_native.ErrorHandling.ErrorHandler
+import com.example.trying_native.analytics.Analytics
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
 import com.example.trying_native.dataBase.AlarmDatabase
@@ -36,14 +37,11 @@ class NextAlarmReceiver: BroadcastReceiver() {
     private val coroutineScopeThatDoesNotCancel = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val coroutineScope = CoroutineScope( Dispatchers.Default)
     private val alarmManager by lazy { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
-     var alarmsController = AlarmsController()
-    private val logFile : File by lazy {
-        File(context.getExternalFilesDir(null), "Next_Alarm_Receiver_logs.txt")
-    }
+    var alarmsController = AlarmsController()
+    val analytics by lazy {Analytics(context)}
     private  val receiverClass: Class<out BroadcastReceiver> = AlarmReceiver::class.java
     var alarmDao: AlarmDao? = null
     val doWeWantToGoAsync =true
-
 
      override  fun onReceive(context: Context, intent: Intent) {
         logD("in the NextAlarmReceiver class and here is the intent --> $intent")
@@ -73,12 +71,15 @@ class NextAlarmReceiver: BroadcastReceiver() {
         val originalDbEndTime = parsedIntentData.endTime
 
         if ((currentTimeAlarmFired <= 0L) || (startTimeForAlarmSeries <= 0L) || (originalDbEndTime <= 0L)) { // Added check for originalDbStartTime/EndTime too
-            logSoundPlay(alarmData = null, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "---- Invalid time values received in AlarmReceiver. currentAlarmTime: $currentTimeAlarmFired, originalDbStartTime: $startTimeForAlarmSeries, originalDbEndTime: $originalDbEndTime. Crashing. ----- ")
+//            logSoundPlay(alarmData = null, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "---- Invalid time values received in AlarmReceiver. currentAlarmTime: $currentTimeAlarmFired, originalDbStartTime: $startTimeForAlarmSeries, originalDbEndTime: $originalDbEndTime. Crashing. ----- ")
         }
         val alarmDaoImpl = this.alarmDao?:getAlarmDao(activityContext )
         val alarmData: AlarmData? = alarmDaoImpl.getAlarmByValues(startTimeForAlarmSeries, originalDbEndTime)
         if (alarmData == null) {
-            logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "we were not able to find the alarmData in the DB")
+            analytics.captureEvent("alarmData delivered from intent not found in DB", mapOf(
+                "alarmData parsed from intent" to parsedIntentData.toString(),
+                "alarmDaoImpl.getAlarmByValues(startTimeForAlarmSeries, originalDbEndTime) returned" to "null"
+            ))
             return
         }
         val nextAlarmTime = currentTimeAlarmFired + alarmData.getFreqInMillisecond()
@@ -96,12 +97,13 @@ class NextAlarmReceiver: BroadcastReceiver() {
            }.await()
 
             res.fold(onSuccess = {
-                logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "there was no exception in scheduling the future alarm ")
+                analytics.captureEvent("scheduled next alarm successfully", mapOf(
+                    "next alarmData" to alarmData.copy(startTime = nextAlarmTime).toString()
+                ))
             }, onError = {messageToDisplayUser, exception->
-                val errorHandler = ErrorHandler(NotificationHandler(context))
+                val errorHandler = ErrorHandler(NotificationHandler(context), analytics)
                 errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "error returned in scheduling upcoming alarm " )
                 alarmDaoImpl.updateAlarmForReset(alarmData.copy(isReadyToUse = false))
-                logSoundPlay(alarmData = alarmData, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "the alarm Exception is not null and it is ${exception.message}-----and it is ${exception} ")
             })
         }
     }
@@ -113,16 +115,6 @@ class NextAlarmReceiver: BroadcastReceiver() {
         ).build()
         return db.alarmDao()
 
-    }
-    private fun logSoundPlay(alarmData: AlarmData?,alarmSeriesStartTime: Long,alarmStartTime: Long, alarmEndTime: Long, alarmScheduleMessage: String ) {
-        try {
-            val now = getTimeInHumanReadableFormat(Date().time)
-            val logEntry = " \n\n\n --------(at $now)--------- \n  alarm series start time:${getTimeInHumanReadableFormat(alarmSeriesStartTime)}  \n alarm start time(time for the alarm to be received):${getTimeInHumanReadableFormat(alarmStartTime)}  \n alarm end time:${getTimeInHumanReadableFormat(alarmEndTime)} \n alarmData ->\n $alarmData \n<--- \n alarmScheduleMessage: $alarmScheduleMessage  \n ------- \n\n\n"
-            FileWriter(logFile, true).use { writer -> writer.append(logEntry) }
-            logD("Logged from NextAlarmReceiver: $logEntry")
-        } catch (e: Exception) {
-            logD("Failed to log from NextAlarmReceiver: ${e.message}")
-        }
     }
     private  fun getTimeInHumanReadableFormat(t:Long): String{
         if (t == 0L) return "--the time here(probablyFromTheIntent) is 0--"

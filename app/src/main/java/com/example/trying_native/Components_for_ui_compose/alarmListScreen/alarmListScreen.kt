@@ -41,10 +41,12 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.trying_native.AlarmLogic.AlarmsController
 import com.example.trying_native.FirstLaunchAskForPermission.FirstLaunchAskForPermission
+import com.example.trying_native.analytics.Analytics
 import com.example.trying_native.dataBase.AlarmDao
 import com.example.trying_native.dataBase.AlarmData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 
@@ -58,6 +60,8 @@ import kotlinx.coroutines.launch
 	val alarmsFlow = remember { alarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO) }
 	val alarms by alarmsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
 	val accentColor = Color.Blue
+	val coroutineScope = rememberCoroutineScope()
+	val analytics = Analytics(activityContext)
 	Scaffold(contentWindowInsets = WindowInsets.systemBars) { edgeToEdgePadding ->
 		Box(
 			modifier = Modifier
@@ -92,6 +96,14 @@ import kotlinx.coroutines.launch
 						individualAlarm, onEdit = {alarmData -> onNavigateToEdit(alarmData)}, onStop = { alarmData -> onAlarmStop(alarmData) },
 						onDelete = {alarmData -> onAlarmDelete(alarmData)}, onReset = {alarmData -> onAlarmReset(alarmData)}, onLongPress = { alarmData ->
 								uncancellableScope.launch {
+									launch {
+										analytics.captureEvent("user long pressed the alarm", mapOf(
+											"copying the alarm message" to true,
+											"is message empty" to alarmData.message.isEmpty(),
+											"showing snackBar" to alarmData.message.isNotEmpty()
+											)
+										)
+									}
 									if (alarmData.message.isNotEmpty()) {
 										clipBoard.setClipEntry(ClipEntry(ClipData.newPlainText("alarm message", alarmData.message)))
 										snackBarHostState.showSnackbar("Message copied to clipboard")
@@ -110,7 +122,12 @@ import kotlinx.coroutines.launch
 				RoundPlusIcon(
 					size = screenHeight / 10,context = activityContext,
 					backgroundColor = accentColor,
-					onClick = { onNavigateToCreate() },
+					onClick = {
+						onNavigateToCreate()
+						coroutineScope.launch {
+							analytics.captureEvent("Plus Icon clicked", mapOf("round plus icon " to "new alarm"))
+						}
+				  },
 				)
 			}
 		}

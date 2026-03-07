@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
+import com.example.trying_native.analytics.Analytics
 import com.example.trying_native.logD
 import com.example.trying_native.services.AlarmService
 import java.text.SimpleDateFormat
@@ -64,6 +65,7 @@ class AlarmActivity : ComponentActivity() {
     private lateinit var intentReceived: Intent
     private  val AUTO_FINISH_DELAY = 120000L // 2 sec is 120000
     private var dismissIntent : Intent? = null
+    val analytics = Analytics(this)
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,6 +87,10 @@ class AlarmActivity : ComponentActivity() {
                         messageVarToSet = intentDataAccessed.message
                     }
                     logD("the message from intent we got is $messageVarToSet ")
+                    analytics.captureEvent("alarm activity created", mapOf(
+                        "intentData" to intentDataAccessed.toString(),
+                        "class" to "AlarmActivity"
+                    ))
                 }
                 LaunchedEffect(Unit) {
                     if (dismissIntent == null) dismissIntent = makeDismissIntent()
@@ -118,10 +124,14 @@ class AlarmActivity : ComponentActivity() {
         } catch (e: Exception) {
             logD("Error releasing WakeLock: ${e.message}")
         }
+        analytics.captureEvent("receiver new intent in AlarmActivity", mapOf(
+            "newIntent" to intent.toString(),
+            "class" to "AlarmActivity"
+        ))
 
         onDestroy()
         finish()
-        startActivity(intent) // Optionally, restart the activity with the new intent
+        startActivity(intent)
     }
 
     override fun onDestroy() {
