@@ -79,6 +79,9 @@ jobs:
           echo "$ENCODED_KEYSTORE" | base64 --decode > app/release.keystore
           ls -l app/release.keystore
 
+      - name: Install PostHog CLI
+        run: npm install -g @posthog/cli
+
       - name: Build and Sign APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}

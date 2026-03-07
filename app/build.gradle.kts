@@ -130,8 +130,7 @@ kotlin {
 }
 
 dependencies {
-    implementation ("com.posthog:posthog-android:3.+")
-
+    implementation ("com.posthog:posthog-android:3.35.0")
     implementation(libs.androidx.espresso.contrib)
     implementation(libs.androidx.ui.test.junit4.android)
     implementation(libs.androidx.compose.ui.text)

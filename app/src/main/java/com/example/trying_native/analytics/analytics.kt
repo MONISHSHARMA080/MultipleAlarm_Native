@@ -32,7 +32,9 @@ class  Analytics(val context: Context){
 				captureScreenViews= true
 				personProfiles  = PersonProfiles.ALWAYS
 				errorTrackingConfig.autoCapture = true
+				sessionReplayConfig.captureLogcat = true
 		}
+		postHogConfig.sessionReplay = true
 		PostHogAndroid.setup(context, postHogConfig)
 		config = postHogConfig
 		coroutineScope.launch {
