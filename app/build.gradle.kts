@@ -8,6 +8,7 @@ plugins {
     id("kotlin-kapt")
     id("com.google.devtools.ksp") version "2.3.5"
     id ("kotlin-parcelize")
+    id("com.posthog.android") version "1.0.3"
     alias(libs.plugins.jetbrains.kotlin.serialization)
     alias(libs.plugins.kotlin.compose)
 
@@ -130,6 +131,7 @@ kotlin {
 
 dependencies {
     implementation ("com.posthog:posthog-android:3.+")
+
     implementation(libs.androidx.espresso.contrib)
     implementation(libs.androidx.ui.test.junit4.android)
     implementation(libs.androidx.compose.ui.text)

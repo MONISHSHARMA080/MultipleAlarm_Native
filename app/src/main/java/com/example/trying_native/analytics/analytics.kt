@@ -31,6 +31,7 @@ class  Analytics(val context: Context){
 		).apply {
 				captureScreenViews= true
 				personProfiles  = PersonProfiles.ALWAYS
+				errorTrackingConfig.autoCapture = true
 		}
 		PostHogAndroid.setup(context, postHogConfig)
 		config = postHogConfig
