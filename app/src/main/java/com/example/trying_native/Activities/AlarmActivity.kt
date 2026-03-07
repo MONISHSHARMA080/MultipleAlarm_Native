@@ -259,7 +259,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                             color = Color.White,
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Normal,
-                            textAlign = TextAlign.Center,
+//                            textAlign = TextAlign.Start,
                             lineHeight = 28.sp
                         )
                         Spacer(modifier = Modifier.height(20.dp))
