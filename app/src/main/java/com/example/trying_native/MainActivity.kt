@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import com.example.trying_native.Components_for_ui_compose.NavigationStack
+import com.example.trying_native.FirstLaunchAskForPermission.FirstLaunchAskForPermission
 import com.example.trying_native.analytics.Analytics
 import com.example.trying_native.notification.NotificationHandler
 import kotlinx.coroutines.CoroutineScope
@@ -23,9 +24,13 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     val coroutineScope = CoroutineScope( Dispatchers.IO)
 
-    coroutineScope.launch { runCatching {
+    coroutineScope.launch {
+      runCatching {
         NotificationHandler(this@MainActivity).createNotificationChannels()
       logD("created notification Channels")
+      }
+      launch {
+        FirstLaunchAskForPermission(this@MainActivity).checkIfWeHaveNotificationPermissionElseMarkitFalse()
       }
     }
     try {

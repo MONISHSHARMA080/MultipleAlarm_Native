@@ -67,5 +67,4 @@ class  Analytics(val context: Context){
 					distinctId = anonymousId,
 				)
 	}
-
 }

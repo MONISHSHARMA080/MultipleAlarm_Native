@@ -27,10 +27,17 @@ class FirstLaunchAskForPermission(private val context: Context) {
         logD("here in the check andRequest func")
         if (isFirstLaunch()) {
             askForNotificationPermission()
-            ifMiuiGetBgAutoStartPermission().onFailure { exception -> logD("Error in checking if device is XIAOMI and it is $exception") }
-            setFirstLaunchComplete()
+            ifMiuiGetBgAutoStartPermission().onFailure { exception -> logD("Error in checking if device is XIAOMI and it is $exception");return }
+            if (this.doWeHavePermissionForNotification()) setFirstLaunchComplete()
         }
     }
+
+    fun checkIfWeHaveNotificationPermissionElseMarkitFalse(){
+        if (!this.doWeHavePermissionForNotification()){
+            this.prefs.edit { putBoolean(isFirstLaunchKey, false) }
+        }
+    }
+
     private fun ifMiuiGetBgAutoStartPermission(): Result<Unit>{
         return runCatching {
             val brand = Build.BRAND ?: return Result.failure(Exception("Can't find brand of the device "))
@@ -49,12 +56,14 @@ class FirstLaunchAskForPermission(private val context: Context) {
         }
     }
 
+    private fun doWeHavePermissionForNotification(): Boolean{
+        val notificationPermission =ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+        logD("here in the notification func and the post notification permission is -->$notificationPermission")
+         return  notificationPermission == PackageManager.PERMISSION_GRANTED
+    }
 
     private fun askForNotificationPermission() {
-        logD("here in the notification func and the post notification permission is -->${
-            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
-        }")
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) {
+        if (!this.doWeHavePermissionForNotification()) {
             ActivityCompat.requestPermissions(
                 context as Activity,
                 arrayOf(Manifest.permission.POST_NOTIFICATIONS),
@@ -82,7 +91,7 @@ class FirstLaunchAskForPermission(private val context: Context) {
     }
 
      fun isFirstLaunch(): Boolean {
-        return prefs.getBoolean(isFirstLaunchKey, true)
+        return prefs.getBoolean(isFirstLaunchKey, true) && this.doWeHavePermissionForNotification()
     }
 
     private fun setFirstLaunchComplete() {
