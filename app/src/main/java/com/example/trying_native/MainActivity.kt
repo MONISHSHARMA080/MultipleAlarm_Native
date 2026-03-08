@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.trying_native.Components_for_ui_compose.NavigationStack
 import com.example.trying_native.FirstLaunchAskForPermission.FirstLaunchAskForPermission
 import com.example.trying_native.analytics.Analytics
@@ -21,18 +22,25 @@ class MainActivity : ComponentActivity() {
 
   val analytics by lazy { Analytics(this) }
   override fun onCreate(savedInstanceState: Bundle?) {
+    val splashScreen = installSplashScreen()
+
     super.onCreate(savedInstanceState)
     val coroutineScope = CoroutineScope( Dispatchers.IO)
 
     coroutineScope.launch {
-      runCatching {
-        NotificationHandler(this@MainActivity).createNotificationChannels()
-      logD("created notification Channels")
+      launch {
+        runCatching {
+          NotificationHandler(this@MainActivity).createNotificationChannels()
+          logD("created notification Channels")
+        }
+
       }
       launch {
         FirstLaunchAskForPermission(this@MainActivity).checkIfWeHaveNotificationPermissionElseMarkitFalse()
       }
     }
+
+
     try {
       enableEdgeToEdge()
       setContent {

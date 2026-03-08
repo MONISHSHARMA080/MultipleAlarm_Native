@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <!-- Splash screen background color -->
+        <item name="windowSplashScreenBackground">@color/app_icon_background</item>
 
-    <style name="Theme.Trying_native" parent="android:Theme.Material.Light.NoActionBar" />
+        <!-- Center icon (optional) -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/app_icon_foreground</item>
+
+        <!-- Icon size (optional, default is 240dp) -->
+        <item name="windowSplashScreenIconBackgroundColor">@color/app_icon_background</item>
+
+        <!-- Brand image at bottom (optional) -->
+<!--        <item name="android:windowSplashScreenBrandingImage"></item>-->
+
+        <!-- Post-splash theme -->
+        <item name="postSplashScreenTheme">@style/Theme.AppCompat</item>
+    </style>
 </resources>
