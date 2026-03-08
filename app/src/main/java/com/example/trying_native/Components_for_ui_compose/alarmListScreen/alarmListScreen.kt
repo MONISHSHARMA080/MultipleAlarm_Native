@@ -145,6 +145,8 @@ import kotlinx.coroutines.launch
 			.clickable {
 				coroutineScope.launch {
 					FirstLaunchAskForPermission(context).checkAndRequestPermissions()
+				}
+				coroutineScope.launch {
 					onClick()
 				}
 			},
