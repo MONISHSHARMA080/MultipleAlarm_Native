@@ -25,11 +25,26 @@ class FirstLaunchAskForPermission(private val context: Context) {
 
     fun checkAndRequestPermissions() {
         logD("here in the check andRequest func")
-        if (isFirstLaunch()) {
+//        if (isFirstLaunch()) {
+//            askForNotificationPermission()
+//            ifMiuiGetBgAutoStartPermission().onFailure { exception -> logD("Error in checking if device is XIAOMI and it is $exception");return }
+//            if (this.doWeHavePermissionForNotification()) setFirstLaunchComplete()
+//        }
+        logD("here in the check andRequest func")
+
+        // Ask for permission if it's first launch OR we don't have permission
+        if (isFirstLaunch() || !doWeHavePermissionForNotification()) {
             askForNotificationPermission()
-            ifMiuiGetBgAutoStartPermission().onFailure { exception -> logD("Error in checking if device is XIAOMI and it is $exception");return }
-            if (this.doWeHavePermissionForNotification()) setFirstLaunchComplete()
+            ifMiuiGetBgAutoStartPermission().onFailure { exception ->
+                logD("Error in checking if device is XIAOMI and it is $exception")
+            }
+
+            // Mark first launch as complete only on first launch
+            if (isFirstLaunch()) {
+                setFirstLaunchComplete()
+            }
         }
+
     }
 
     fun checkIfWeHaveNotificationPermissionElseMarkitFalse(){
@@ -91,7 +106,7 @@ class FirstLaunchAskForPermission(private val context: Context) {
     }
 
      fun isFirstLaunch(): Boolean {
-        return prefs.getBoolean(isFirstLaunchKey, true) && this.doWeHavePermissionForNotification()
+        return prefs.getBoolean(isFirstLaunchKey, true)
     }
 
     private fun setFirstLaunchComplete() {
