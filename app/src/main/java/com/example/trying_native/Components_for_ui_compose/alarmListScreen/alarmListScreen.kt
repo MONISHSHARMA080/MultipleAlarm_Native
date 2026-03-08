@@ -123,6 +123,7 @@ import kotlinx.coroutines.launch
 					size = screenHeight / 10,context = activityContext,
 					backgroundColor = accentColor,
 					onClick = {
+
 						onNavigateToCreate()
 						coroutineScope.launch {
 							analytics.captureEvent("Plus Icon clicked", mapOf("round plus icon " to "new alarm"))
@@ -144,8 +145,6 @@ import kotlinx.coroutines.launch
 			.clickable {
 				coroutineScope.launch {
 					FirstLaunchAskForPermission(context).checkAndRequestPermissions()
-				}
-				coroutineScope.launch {
 					onClick()
 				}
 			},
