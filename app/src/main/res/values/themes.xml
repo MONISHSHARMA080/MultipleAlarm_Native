@@ -1,19 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Main App Theme - NO ACTION BAR -->
+    <style name="Theme.Trying_native" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Ensures no title bar shows -->
+    </style>
+
+    <!-- Splash Screen Theme -->
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
-        <!-- Splash screen background color -->
         <item name="windowSplashScreenBackground">@color/app_icon_background</item>
-
-        <!-- Center icon (optional) -->
         <item name="windowSplashScreenAnimatedIcon">@drawable/app_icon_foreground</item>
-
-        <!-- Icon size (optional, default is 240dp) -->
         <item name="windowSplashScreenIconBackgroundColor">@color/app_icon_background</item>
-
-        <!-- Brand image at bottom (optional) -->
-<!--        <item name="android:windowSplashScreenBrandingImage"></item>-->
-
-        <!-- Post-splash theme -->
-        <item name="postSplashScreenTheme">@style/Theme.AppCompat</item>
+        <item name="postSplashScreenTheme">@style/Theme.Trying_native</item>
     </style>
 </resources>

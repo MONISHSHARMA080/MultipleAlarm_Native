@@ -381,12 +381,6 @@ enum class AccentColor(val value:Color) {
         }
     }
 }
-
-@Preview
-@Composable fun DisplayListOfDatesInWeek(){
-
-}
-
 fun getTimeFormatted(cal: Calendar, formatter:String = "hh:mm"): String{
     return DateFormat.format(formatter, cal.timeInMillis).toString()
 }

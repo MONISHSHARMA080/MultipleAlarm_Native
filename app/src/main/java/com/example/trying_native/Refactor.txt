@@ -63,6 +63,9 @@ c)  later :--
         * add ability to schedule multiple alarms (calender)
         * set alarm based on AlarmObject.Date and not take the alarmObject.StartTime alarmObject.EndTime, assert them to be right but take it from time
         * DB migration test
+        * AlarmService check if the notification permission is denied or not (or a coro) if it is then send the user a notification and tell them to enable it
+            1) also analytics 2) FYI there will be many notification of this, this is by desing , eg from startTime to endTime no of alarms notification , and we will tell user that a alarm was there
+            on $CurrentTime but since the permission was not there we can't deliver it please enable the permission
         * allow user to schedule multiple alarms (like multiple dates)
         * fix the weGood/AlarmData ok as when we edit the alarm and the change the time/date(IDK) then I have to click the date again to force the ui to be blue and notred
 
