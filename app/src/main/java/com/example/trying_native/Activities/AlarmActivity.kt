@@ -65,7 +65,7 @@ class AlarmActivity : ComponentActivity() {
     private lateinit var intentReceived: Intent
     private  val AUTO_FINISH_DELAY = 120000L // 2 sec is 120000
     private var dismissIntent : Intent? = null
-    val analytics = Analytics(this)
+    val analytics by lazy {Analytics(this)}
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {

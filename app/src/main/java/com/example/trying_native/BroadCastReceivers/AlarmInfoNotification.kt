@@ -15,6 +15,7 @@ import com.example.trying_native.utils.Result.Error
 import com.example.trying_native.utils.Result.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -31,7 +32,7 @@ sealed interface AlarmInfoNotificationError: Error{
 class AlarmInfoNotification: BroadcastReceiver()  {
     private val coroutineScope = CoroutineScope( Dispatchers.IO)
     private lateinit var context: Context
-    val analytics = Analytics(context)
+    val analytics by lazy {Analytics(context)}
 
     private fun displayAlarmsMetadataInNotification(alarmData: AlarmData){
         val notificationHandler =NotificationHandler(context)

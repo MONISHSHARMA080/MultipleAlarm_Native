@@ -61,7 +61,7 @@ import kotlinx.coroutines.launch
 	val alarms by alarmsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
 	val accentColor = Color.Blue
 	val coroutineScope = rememberCoroutineScope()
-	val analytics = Analytics(activityContext)
+	val analytics by lazy{ Analytics(activityContext) }
 	Scaffold(contentWindowInsets = WindowInsets.systemBars) { edgeToEdgePadding ->
 		Box(
 			modifier = Modifier
