@@ -28,6 +28,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AlarmAdd
+import androidx.compose.material.icons.filled.AlarmOff
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
@@ -318,15 +319,22 @@ import java.util.Calendar
 							colors = ButtonDefaults.buttonColors(containerColor = accentColor)
 						) {
 							Row(verticalAlignment = Alignment.CenterVertically) {
-								Icon(Icons.Default.AlarmAdd, contentDescription = null, tint = Color.White)
-								Spacer(modifier = Modifier.width(8.dp))
-								Text("Set Alarm", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+								if (weGood){
+									Icon(Icons.Default.AlarmAdd, contentDescription = null, tint = Color.White)
+									Spacer(modifier = Modifier.width(8.dp))
+									Text("Set Alarm", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+
+								}else{
+									Icon(Icons.Default.AlarmOff, contentDescription = null, tint = Color.White)
+									Spacer(modifier = Modifier.width(8.dp))
+									Text("Can't set alarm, fix the value", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+
+								}
 							}
 						}
 					}
 				}
 			}
-
 		}
 	}
 }
