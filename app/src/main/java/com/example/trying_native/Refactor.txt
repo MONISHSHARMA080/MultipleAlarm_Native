@@ -28,7 +28,7 @@ b) Code Refactor :--
     [*] see and check that the app works for the minimum android version to latest (search for people using android version, go for 50% or > , android 11 or up hopefully)
     [X] boot receiver
     * also add force update the app , or ask user to update the app
-    * redo the cancelAlarmByCancelingPendingIntent()
+    [X] redo the cancelAlarmByCancelingPendingIntent()
     * put a ask user for review after 5 days popup
     * redo the ask for alarm sheet(alarm detail enter sheet); like that popup is ugly --
          now we can either use the the sat sun mon day etc remainder for the weekly repeating alarm or we can give the user a custom
@@ -36,14 +36,14 @@ b) Code Refactor :--
          Friday then scroll to the end and show the Friday), horizontal list and ask them to select dates they want to schedule
          the alarms at, can do only 20 at max, and when the user selects the past date then tell them they can't;
          and give them a option to go see the cal and select multiple dates
-    * alarmData/Object method to iterate over the alarm, and use it in the searching the activity for closing
-    * if received 2 alarms the alarm sound will not play idk why (FSI)
-    * better logging (postHog or other analytic) -- make sure to enable networking
-    * complete the Result object and the error handling with the exception and the display user error
-    * add postHog or other analytic
-    * for now allow the user to schedule alarm on a specific date and not multiple
+    [X] alarmData/Object method to iterate over the alarm, and use it in the searching the activity for closing
+    [X] if received 2 alarms the alarm sound will not play idk why (FSI)
+    [X] better logging (postHog or other analytic) -- make sure to enable networking
+    [X] complete the Result object and the error handling with the exception and the display user error
+    [X] add postHog or other analytic
+    [X] for now allow the user to schedule alarm on a specific date and not multiple
     * make sure that the db will not fall or crash in the prod; migration etc, see how real apps does it
-    * alarm order in Db, like based on time zone( endtime-startTime , time hs date in them) and automatically in the List
+    [X] alarm order in Db, like based on time zone( endtime-startTime , time hs date in them) and automatically in the List
 
 c)  later :--
        [X] abandon or work on multiple dates alarm, eg start form  today 9:00Pm to tomorrow 4:00 Am -- decided not to
@@ -63,6 +63,8 @@ c)  later :--
         * add ability to schedule multiple alarms (calender)
         * set alarm based on AlarmObject.Date and not take the alarmObject.StartTime alarmObject.EndTime, assert them to be right but take it from time
         * DB migration test
+        * allow user to schedule multiple alarms (like multiple dates)
+        * fix the weGood/AlarmData ok as when we edit the alarm and the change the time/date(IDK) then I have to click the date again to force the ui to be blue and notred
 
 
 
