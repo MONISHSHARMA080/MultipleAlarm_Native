@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
@@ -159,7 +160,7 @@ import com.example.trying_native.logD
                     )
                 ) {
                     AnimatedContent(
-                        targetState = if (alarmData.isReadyToUse) "STOP" else "RESET",
+                        targetState = if (alarmData.isReadyToUse) "Stop" else "Reset",
                         transitionSpec = {
                             fadeIn(tween(300)) togetherWith fadeOut(tween(300))
                         },
@@ -176,11 +177,11 @@ import com.example.trying_native.logD
                     modifier = Modifier.size(64.dp),
                     shape = RoundedCornerShape(24.dp),
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.93f),
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Icon(Icons.Default.DeleteSweep, contentDescription = "Delete")
+                    Icon(Icons.Default.Delete, contentDescription = "Delete")
                 }
             }
         }
