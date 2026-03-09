@@ -40,6 +40,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.trying_native.analytics.Analytics
 import com.example.trying_native.logD
@@ -72,6 +74,7 @@ class AlarmActivity : ComponentActivity() {
          logD("about to create a new alarm")
         this.intentReceived = intent
         window.isNavigationBarContrastEnforced = false
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {

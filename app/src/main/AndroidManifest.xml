@@ -58,7 +58,7 @@
         <activity
             android:name=".Activities.AlarmActivity"
             android:launchMode="singleInstance"
-            android:theme="@style/Theme.Trying_native"
+            android:theme="@style/Theme.Trying_native.Fullscreen"
             android:showOnLockScreen="true"
             android:turnScreenOn="true"
             android:excludeFromRecents="true"
