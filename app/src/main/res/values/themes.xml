@@ -11,5 +11,16 @@
         <item name="windowSplashScreenAnimatedIcon">@drawable/app_icon_foreground</item>
         <item name="windowSplashScreenIconBackgroundColor">@color/app_icon_background</item>
         <item name="postSplashScreenTheme">@style/Theme.Trying_native</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+
     </style>
+
+<!--    <style name="Theme.Trying_native" parent="android:Theme.Material.Light.NoActionBar">-->
+<!--        <item name="android:windowNoTitle">true</item>-->
+<!--        <item name="android:windowActionBar">false</item>-->
+
+<!--        <item name="android:windowDrawsSystemBarBackgrounds">true</item>-->
+<!--        <item name="android:statusBarColor">@android:color/transparent</item>-->
+<!--    </style>-->
 </resources>

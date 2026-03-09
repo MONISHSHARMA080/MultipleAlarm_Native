@@ -69,11 +69,11 @@ class AlarmActivity : ComponentActivity() {
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
-    logD("about to create a new alarm")
+         logD("about to create a new alarm")
         this.intentReceived = intent
-        enableEdgeToEdge()
         window.isNavigationBarContrastEnforced = false
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContent {
             MaterialTheme(colorScheme = dynamicDarkColorScheme(this)) {
                 var messageVarToSet by remember { mutableStateOf("") }

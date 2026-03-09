@@ -19,8 +19,8 @@ import kotlinx.coroutines.launch
 import kotlin.coroutines.coroutineContext
 
 class MainActivity : ComponentActivity() {
-
   val analytics by lazy { Analytics(this) }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     val splashScreen = installSplashScreen()
 
