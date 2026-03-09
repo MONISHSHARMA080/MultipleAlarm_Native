@@ -139,7 +139,7 @@ import com.example.trying_native.logD
             // The Hidden Message (Revealed on Tap)
             AnimatedVisibility(visible = isExpanded) {
                 Text(
-                    text = alarmData.message.ifEmpty { "No notes added" },
+                    text = alarmData.message.ifEmpty { "No message added" },
                     modifier = Modifier.padding(bottom = 16.dp),
                     style = MaterialTheme.typography.bodyLarge,
                     fontStyle = if(alarmData.message.isEmpty()) FontStyle.Italic else FontStyle.Normal
