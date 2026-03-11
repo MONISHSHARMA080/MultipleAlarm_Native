@@ -181,7 +181,7 @@ sealed interface Screen : NavKey {
 									//  oldAlarm was not there so setting a new alarm
 									uncancellableScope.launch {
 										launch {
-											analytics.captureEvent("user clicked on setting the old alarm", mapOf(
+											analytics.captureEvent("user setting new alarm", mapOf(
 												"alarmObject" to newAlarmObject.toString()
 											))
 										}
@@ -233,7 +233,7 @@ sealed interface Screen : NavKey {
 							}
 						}, alarmSetGoBack = { backStack.removeLastOrNull() })
 						LaunchedEffect(Unit) {
-							analytics.screen("alarm Picker screen")
+							analytics.screen("AlarmPicker")
 						}
 					}
 					else ->
