@@ -69,6 +69,8 @@ c)  later :--
         * allow user to schedule multiple alarms (like multiple dates)
         * fix the weGood/AlarmData ok as when we edit the alarm and the change the time/date(IDK) then I have to click the date again to force the ui to be blue and notred
         * we can make the splash screen like this one ->  https://djectstudio.com/ (the round circle icon splash and changes the colour)
+        * the value from the shared preference should be an Data class (serializable) , and when should take it out
+            also there should be a app or per alarm setting if important then if the sound is slow then raise it
 
 
 

@@ -73,7 +73,6 @@ import kotlinx.coroutines.launch
 
 enum class AccentColor(val value:Color) {
      Ok(Color(0xFF1A73E8)),
-//     Ok(Color.Cyan),
     Problem(Color(0xFFde0707))
 }
 
@@ -357,7 +356,9 @@ enum class AccentColor(val value:Color) {
                         },
                         confirmButton = {
                             Button(onClick = {
-                                calendar = calendar.apply {
+                                // here we need to update the reference of the calendar object
+                                calendar = Calendar.getInstance().apply {
+                                    timeInMillis = calendar.timeInMillis
                                     set(Calendar.HOUR_OF_DAY, timePickerState.hour)
                                     set(Calendar.MINUTE, timePickerState.minute)
                                 }

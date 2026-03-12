@@ -175,7 +175,7 @@ sealed interface Screen : NavKey {
 						}
 					is Screen.AlarmPicker ->						NavEntry(key) {
 						/**[ onAlarmSet] - here [ AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
-						AlarmPickerScreen(key.alarmData, analytics =analytics, onAlarmSet =  { newAlarmObject, oldAlarm ->
+						AlarmPickerScreen(key.alarmData, analytics=analytics, onAlarmSet =  { newAlarmObject, oldAlarm ->
 							when ( oldAlarm) {
 								null -> {
 									//  oldAlarm was not there so setting a new alarm
