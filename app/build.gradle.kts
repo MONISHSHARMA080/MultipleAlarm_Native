@@ -167,9 +167,9 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.media3.common)
     implementation(libs.androidx.ui.test.android)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 
-    val roomVersion = ""
+    val roomVersion = "2.8.4"
     implementation("androidx.room:room-runtime:$roomVersion")
     annotationProcessor("androidx.room:room-compiler:$roomVersion")
 //    kapt("androidx.room:room-compiler:$room_version")
