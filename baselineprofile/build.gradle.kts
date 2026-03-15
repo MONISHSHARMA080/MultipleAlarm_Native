@@ -25,10 +25,6 @@ android {
 	}
 
 	targetProjectPath = ":app"
-	kotlinOptions {
-		jvmTarget = "11"
-	}
-
 }
 
 // This is the configuration block for the Baseline Profile plugin.
