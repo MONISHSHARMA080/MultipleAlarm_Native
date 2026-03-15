@@ -26,3 +26,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Trying_native"
 include(":app")
+include(":baselineprofile")

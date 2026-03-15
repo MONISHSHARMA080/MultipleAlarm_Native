@@ -11,6 +11,7 @@ plugins {
     id("com.posthog.android") version "1.0.3"
     alias(libs.plugins.jetbrains.kotlin.serialization)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.baselineprofile)
 
 }
 val myAppName="Multiple alarms"
@@ -130,8 +131,13 @@ kotlin {
 }
 
 dependencies {
+
+    implementation("com.google.android.play:app-update:2.1.0")
+    implementation("com.google.android.play:app-update-ktx:2.1.0")
+
     implementation ("com.posthog:posthog-android:3.35.0")
     implementation("androidx.core:core-splashscreen:1.2.0")
+    
     implementation(libs.androidx.espresso.contrib)
     implementation(libs.androidx.ui.test.junit4.android)
     implementation(libs.androidx.compose.ui.text)
@@ -141,10 +147,12 @@ dependencies {
     implementation(libs.androidx.navigation3.ui)
 	implementation(libs.androidx.ui.text)
     implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.profileinstaller)
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation("androidx.test:runner:1.6.1")
     androidTestImplementation("androidx.test:rules:1.6.1")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.1")
+    "baselineProfile"(project(":baselineprofile"))
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation(libs.androidx.junit.ktx)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
