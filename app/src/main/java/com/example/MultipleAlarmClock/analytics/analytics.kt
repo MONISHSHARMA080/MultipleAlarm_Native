@@ -32,6 +32,7 @@ class  Analytics(val context: Context){
 				sessionReplayConfig.maskAllTextInputs = false
 				sessionReplay = true
 				sessionReplayConfig.captureLogcat = true
+			sessionReplayConfig.screenshot = true
 		}
 		PostHogAndroid.setup(context, postHogConfig)
 		config = postHogConfig
