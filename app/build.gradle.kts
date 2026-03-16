@@ -19,7 +19,6 @@ configureAndroid()
 fun Project.configureAndroid() {
     extensions.configure<ApplicationExtension> {
         namespace = "com.example.trying_native"
-//        namespace = "com.example.MultipleAlarms"
         compileSdk = 36
 
         defaultConfig {
