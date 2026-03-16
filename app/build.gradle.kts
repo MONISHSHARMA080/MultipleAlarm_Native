@@ -23,7 +23,6 @@ fun Project.configureAndroid() {
 
         defaultConfig {
             applicationId = "com.coolApps.trying_native"
-//            applicationId = "com.coolApps.MultipleAlarms"
             minSdk = 33
             targetSdk = 36
             versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
