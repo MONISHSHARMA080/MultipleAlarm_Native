@@ -70,14 +70,14 @@
             android:name=".AlarmReceiver"
             android:exported="false" >
             <intent-filter>
-                <action android:name="com.example.trying_native.ALARM_TRIGGERED" />
+                <action android:name="com.coolApps.trying_native.ALARM_TRIGGERED" />
             </intent-filter>
         </receiver>
         <receiver
             android:name=".BroadCastReceivers.NextAlarmReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.example.trying_native.ALARM_TRIGGERED" />
+                <action android:name="com.coolApps.trying_native.ALARM_TRIGGERED" />
             </intent-filter>
         </receiver>
         <receiver

@@ -18,11 +18,11 @@ val myAppName="Multiple alarms"
 configureAndroid()
 fun Project.configureAndroid() {
     extensions.configure<ApplicationExtension> {
-        namespace = "com.example.trying_native"
+        namespace = "com.coolApps.MultipleAlarmClock"
         compileSdk = 36
 
         defaultConfig {
-            applicationId = "com.coolApps.trying_native"
+            applicationId = "com.coolApps.MultipleAlarmClock"
             minSdk = 33
             targetSdk = 36
             versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
@@ -39,7 +39,6 @@ fun Project.configureAndroid() {
             create("release") {
                 val keystoreFile = file("release.keystore")
                 if (keystoreFile.exists()) {
-                    // Production signing (CI/CD)
                     storeFile = keystoreFile
                     storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
                         ?: project.findProperty("android.injected.signing.store.password")?.toString()
