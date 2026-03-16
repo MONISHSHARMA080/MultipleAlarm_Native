@@ -113,7 +113,10 @@ import com.example.trying_native.logD
                 }
             }
             Column(modifier = Modifier.padding(vertical = 16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     val timeSize = 29.sp
                     Text(
                         text = formatTime12h(alarmData.startTime),
@@ -128,13 +131,23 @@ import com.example.trying_native.logD
                         modifier = Modifier.padding(horizontal = 12.dp).size(30.dp),
                         tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
                     )
+//                    Text(
+//                        text = formatTime12h(alarmData.endTime),
+//                        style = MaterialTheme.typography.displaySmall.copy(
+//                            fontWeight = FontWeight.Black,
+//                            fontSize = timeSize
+//                        )
+//                    )
                     Text(
                         text = formatTime12h(alarmData.endTime),
                         style = MaterialTheme.typography.displaySmall.copy(
                             fontWeight = FontWeight.Black,
                             fontSize = timeSize
-                        )
+                        ),
+                        maxLines = 1,
+                        softWrap = false
                     )
+
                 }
             }
             // The Hidden Message (Revealed on Tap)
