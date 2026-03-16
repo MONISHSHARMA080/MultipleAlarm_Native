@@ -26,7 +26,6 @@ data class AlarmData(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     @ColumnInfo(name = "startTime") var startTime: Long,
     @ColumnInfo(name = "endTime") var endTime: Long,
-//    @ColumnInfo(name = "date_in_long") val date: Long,
     @ColumnInfo(name = "message") val message:String,
     /** this is the freq enter by the user */
     @ColumnInfo(name = "freq_used_to_skip_start_alarm") val frequencyInMin: Long,
