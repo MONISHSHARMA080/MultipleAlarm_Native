@@ -80,7 +80,7 @@ jobs:
           ls -l app/release.keystore
 
       - name: Install PostHog CLI
-        run: npm install -g @posthog/cli@0.4.8
+        run: npm install -g @posthog/cli
 
       - name: Build and Sign APK
         env:
