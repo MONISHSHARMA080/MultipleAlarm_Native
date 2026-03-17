@@ -54,6 +54,7 @@ class BaselineProfileGenerator {
 			// Start default activity for your app
 			pressHome()
 			startActivityAndWait()
+			device.waitForIdle()
 
 			// TODO Write more interactions to optimize advanced journeys of your app.
 			// For example:

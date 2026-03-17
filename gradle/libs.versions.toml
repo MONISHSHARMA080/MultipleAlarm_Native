@@ -14,6 +14,7 @@ materialIconsExtended = "1.7.8"
 protobufJavaliteVersion = "4.33.5"
 protobufKotlin = "4.33.5"
 media3Common = "1.9.2"
+uiautomatorVersion = "2.4.0-alpha05"
 uiTestAndroid = "1.10.3"
 junitKtx = "1.2.1"
 espressoContrib = "3.6.1"
@@ -40,6 +41,7 @@ coreKtxVersion = "1.18.0"
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3Core" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "nav3Core" }
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycleViewmodelNav3" }
+androidx-uiautomator-v240alpha05 = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomatorVersion" }
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerializationCore" }
 androidx-material3-adaptive-navigation3 = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation3", version.ref = "material3AdaptiveNav3" }
 

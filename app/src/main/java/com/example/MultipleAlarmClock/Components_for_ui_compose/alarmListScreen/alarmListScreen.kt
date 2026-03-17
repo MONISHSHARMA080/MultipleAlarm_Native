@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.content.ClipData
 import android.content.Context
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -40,7 +41,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
-import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmListScreen.AlarmCard
 import com.coolApps.MultipleAlarmClock.FirstLaunchAskForPermission.FirstLaunchAskForPermission
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
@@ -58,7 +58,8 @@ import kotlinx.coroutines.launch
 	val snackBarHostState = remember { SnackbarHostState() }
 	val clipBoard =LocalClipboard.current
 	val alarmsFlow = remember { alarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO) }
-	val alarms by alarmsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
+	val alarms by alarmsFlow.collectAsStateWithLifecycle(initialValue = null  )
+	ReportDrawnWhen { alarms != null }	// for the startUp profile
 	val accentColor = Color.Blue
 	val coroutineScope = rememberCoroutineScope()
 	val analytics by lazy{ Analytics(activityContext) }
@@ -88,20 +89,22 @@ import kotlinx.coroutines.launch
 				modifier = Modifier.fillMaxSize() ,
 				contentPadding = edgeToEdgePadding
 			) {
-				itemsIndexed(
-					alarms,
-					key = { _, alarm -> alarm.id }
-				) { _, individualAlarm ->
-					AlarmCard(
-						individualAlarm, onEdit = {alarmData -> onNavigateToEdit(alarmData)}, onStop = { alarmData -> onAlarmStop(alarmData) },
-						onDelete = {alarmData -> onAlarmDelete(alarmData)}, onReset = {alarmData -> onAlarmReset(alarmData)}, onLongPress = { alarmData ->
+				val alarmList = alarms
+				if (alarmList != null){
+					itemsIndexed(
+						items = alarmList,
+						key = { _, alarm -> alarm.id }
+					) { _, individualAlarm ->
+						AlarmCard(
+							individualAlarm, onEdit = {alarmData -> onNavigateToEdit(alarmData)}, onStop = { alarmData -> onAlarmStop(alarmData) },
+							onDelete = {alarmData -> onAlarmDelete(alarmData)}, onReset = {alarmData -> onAlarmReset(alarmData)}, onLongPress = { alarmData ->
 								uncancellableScope.launch {
 									launch {
 										analytics.captureEvent("user long pressed the alarm", mapOf(
 											"copying the alarm message" to true,
 											"is message empty" to alarmData.message.isEmpty(),
 											"showing snackBar" to alarmData.message.isNotEmpty()
-											)
+										)
 										)
 									}
 									if (alarmData.message.isNotEmpty()) {
@@ -111,9 +114,10 @@ import kotlinx.coroutines.launch
 										snackBarHostState.showSnackbar("Message message not present")
 									}
 								}
-						},
-						modifier = Modifier.animateItem()
-					)
+							},
+							modifier = Modifier.animateItem()
+						)
+					}
 				}
 			}
 			Box(

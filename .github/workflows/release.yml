@@ -60,7 +60,7 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: "17"
+          java-version: "25"
           distribution: "temurin"
           cache: gradle
 
@@ -81,6 +81,14 @@ jobs:
 
       - name: Install PostHog CLI
         run: npm install -g @posthog/cli
+
+      - name: Run Baseline Profile Generator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          script: ./gradlew :app:generateReleaseBaselineProfile -Pandroid.testInstrumentationRunnerArguments.targetAppId=com.coolApps.MultipleAlarmClock
 
       - name: Build and Sign APK
         env:
