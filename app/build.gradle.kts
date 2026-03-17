@@ -1,6 +1,5 @@
+
 import com.android.build.api.dsl.ApplicationExtension
-import org.gradle.kotlin.dsl.implementation
-import org.gradle.kotlin.dsl.testImplementation
 
 plugins {
     alias(libs.plugins.android.application)
@@ -213,4 +212,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.4.0-alpha05")
 }
