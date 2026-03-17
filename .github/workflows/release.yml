@@ -82,18 +82,18 @@ jobs:
       - name: Install PostHog CLI
         run: npm install -g @posthog/cli
 
-      # CRITICAL: Free up disk space before emulator (fixes 25-30% of startup failures)
-      - name: Free Disk Space for Emulator
-        run: |
-          echo "Disk space before cleanup:"
-          df -h
-          sudo rm -rf /Applications/Xcode_1[4567]*.app
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/share/chromium
-          sudo rm -rf /opt/microsoft
-          docker image prune --all --force
-          echo "Disk space after cleanup:"
-          df -h
+#      # CRITICAL: Free up disk space before emulator (fixes 25-30% of startup failures)
+#      - name: Free Disk Space for Emulator
+#        run: |
+#          echo "Disk space before cleanup:"
+#          df -h
+#          sudo rm -rf /Applications/Xcode_1[4567]*.app
+#          sudo rm -rf /usr/share/dotnet
+#          sudo rm -rf /usr/local/share/chromium
+#          sudo rm -rf /opt/microsoft
+#          docker image prune --all --force
+#          echo "Disk space after cleanup:"
+#          df -h
 
       # Install system image for Gradle Managed Device
       - name: Install Android SDK System Image
