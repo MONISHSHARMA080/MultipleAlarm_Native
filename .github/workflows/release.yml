@@ -82,16 +82,18 @@ jobs:
       - name: Install PostHog CLI
         run: npm install -g @posthog/cli
 
-      - name: Run Baseline Profile Generator
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 31 # API 31/32 is sometimes slightly lighter than 33
-          target: google_apis
-          arch: x86_64
-          force-avd-creation: false
-          disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: ./gradlew :app:generateReleaseBaselineProfile
+      - name: Install GMD image for baseline profile generation
+        run: |
+          yes | "$ANDROID_HOME"/cmdline-tools/latest/bin/sdkmanager "system-images;android-33;aosp_atd;x86_64"
+
+      - name: Accept Android licenses
+        run: yes | "$ANDROID_HOME"/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+      - name: Generate Baseline Profile
+        run: |
+          ./gradlew :app:generateReleaseBaselineProfile \
+          -Pandroid.testoptions.manageddevices.emulator.gpu="swiftshader_indirect" \
+          -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=BaselineProfile
 
       - name: Build and Sign APK
         env:
