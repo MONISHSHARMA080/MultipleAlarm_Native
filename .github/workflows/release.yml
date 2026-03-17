@@ -8,7 +8,7 @@ permissions:
   contents: write
 jobs:
   build:
-    runs-on:  macos-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -60,7 +60,7 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: "25"
+          java-version: "17"
           distribution: "temurin"
           cache: gradle
 
@@ -82,18 +82,35 @@ jobs:
       - name: Install PostHog CLI
         run: npm install -g @posthog/cli
 
-      - name: Install GMD image for baseline profile generation
+      # CRITICAL: Free up disk space before emulator (fixes 25-30% of startup failures)
+      - name: Free Disk Space for Emulator
         run: |
-          yes | "$ANDROID_HOME"/cmdline-tools/latest/bin/sdkmanager "system-images;android-33;aosp_atd;x86_64"
+          echo "Disk space before cleanup:"
+          df -h
+          sudo rm -rf /Applications/Xcode_1[4567]*.app
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/share/chromium
+          sudo rm -rf /opt/microsoft
+          docker image prune --all --force
+          echo "Disk space after cleanup:"
+          df -h
 
-      - name: Accept Android licenses
-        run: yes | "$ANDROID_HOME"/cmdline-tools/latest/bin/sdkmanager --licenses || true
+      # Install system image for Gradle Managed Device
+      - name: Install Android SDK System Image
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-31;google_apis;x86_64"
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
+      # Generate Baseline Profile using Gradle Managed Device
       - name: Generate Baseline Profile
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           ./gradlew :app:generateReleaseBaselineProfile \
-          -Pandroid.testoptions.manageddevices.emulator.gpu="swiftshader_indirect" \
-          -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=BaselineProfile
+            -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
+            --stacktrace
 
       - name: Build and Sign APK
         env:

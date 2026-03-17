@@ -26,9 +26,8 @@ android {
 	// Configure Gradle Managed Device for CI
 	testOptions {
 		managedDevices {
-			devices {
-				// Define the managed device for baseline profile generation
-				create<com.android.build.api.dsl.ManagedVirtualDevice>("pixel6Api31") {
+			localDevices {  // <- This is the correct one!
+				create("pixel6Api31") {
 					device = "Pixel 6"
 					apiLevel = 31
 					systemImageSource = "google"
