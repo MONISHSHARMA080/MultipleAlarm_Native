@@ -28,7 +28,7 @@ android {
 		managedDevices {
 			localDevices {  // <- This is the correct one!
 				create("pixel6Api31") {
-					device = "Pixel 6"
+					device = "Pixel 8a"
 					apiLevel = 33
 					systemImageSource = "google"
 				}
