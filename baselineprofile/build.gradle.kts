@@ -23,10 +23,9 @@ android {
 
 	targetProjectPath = ":app"
 
-	// Configure Gradle Managed Device for CI
 	testOptions {
 		managedDevices {
-			localDevices {  // <- This is the correct one!
+			localDevices {
 				create("pixel6Api31") {
 					device = "Pixel 8a"
 					apiLevel = 33
