@@ -29,7 +29,7 @@ android {
 			localDevices {  // <- This is the correct one!
 				create("pixel6Api31") {
 					device = "Pixel 6"
-					apiLevel = 31
+					apiLevel = 33
 					systemImageSource = "google"
 				}
 			}

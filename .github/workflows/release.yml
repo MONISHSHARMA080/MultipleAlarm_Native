@@ -8,7 +8,7 @@ permissions:
   contents: write
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -82,25 +82,20 @@ jobs:
       - name: Install PostHog CLI
         run: npm install -g @posthog/cli
 
-#      # CRITICAL: Free up disk space before emulator (fixes 25-30% of startup failures)
-#      - name: Free Disk Space for Emulator
-#        run: |
-#          echo "Disk space before cleanup:"
-#          df -h
-#          sudo rm -rf /Applications/Xcode_1[4567]*.app
-#          sudo rm -rf /usr/share/dotnet
-#          sudo rm -rf /usr/local/share/chromium
-#          sudo rm -rf /opt/microsoft
-#          docker image prune --all --force
-#          echo "Disk space after cleanup:"
-#          df -h
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          sudo usermod -aG kvm $USER
 
       # Install system image for Gradle Managed Device
       - name: Install Android SDK System Image
         run: |
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-31;google_apis;arm64-v8a"
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+            --install "system-images;android-31;google_apis;x86_64"
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
           
 
       # Generate Baseline Profile using Gradle Managed Device
