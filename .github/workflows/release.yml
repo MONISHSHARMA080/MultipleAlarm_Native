@@ -8,7 +8,7 @@ permissions:
   contents: write
 jobs:
   build:
-    runs-on: ubuntu
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -98,8 +98,10 @@ jobs:
       # Install system image for Gradle Managed Device
       - name: Install Android SDK System Image
         run: |
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-31;google_apis;x86_64"
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "system-images;android-31;google_apis;arm64-v8a"
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          
 
       # Generate Baseline Profile using Gradle Managed Device
       - name: Generate Baseline Profile
