@@ -1,3 +1,9 @@
+
+
+
+
+// --- adding the gradle managed device and asking claude to do vibe coding
+
 plugins {
 	alias(libs.plugins.android.test)
 	alias(libs.plugins.baselineprofile)
@@ -25,6 +31,7 @@ android {
 	}
 
 	targetProjectPath = ":app"
+
 }
 
 kotlin {
@@ -36,7 +43,6 @@ kotlin {
 // This is the configuration block for the Baseline Profile plugin.
 // You can specify to run the generators on a managed devices or connected devices.
 baselineProfile {
-	useConnectedDevices = true
 }
 
 dependencies {
