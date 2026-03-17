@@ -54,16 +54,6 @@ fun Project.configureAndroid() {
                     keyAlias = "androiddebugkey"
                     keyPassword = "android"
                 }
-
-//                storeFile = file(System.getenv("ANDROID_KEYSTORE_FILE") ?:
-//                project.findProperty("android.injected.signing.store.file")?.toString() ?:
-//                "release.keystore")
-//                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?:
-//                        project.findProperty("android.injected.signing.store.password")?.toString()
-//                keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?:
-//                        project.findProperty("android.injected.signing.key.alias")?.toString()
-//                keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?:
-//                        project.findProperty("android.injected.signing.key.password")?.toString()
             }
         }
 
