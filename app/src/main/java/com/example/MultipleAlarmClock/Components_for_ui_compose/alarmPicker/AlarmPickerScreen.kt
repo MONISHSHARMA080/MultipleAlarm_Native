@@ -1,7 +1,10 @@
 package com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker
 
-import java.util.Calendar
 import android.text.format.DateFormat
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -64,13 +67,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.DateList
-import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.getListOfDatesInThisWeek
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmObject
 import com.coolApps.MultipleAlarmClock.logD
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 enum class AccentColor(val value:Color) {
      Ok(Color(0xFF1A73E8)),
@@ -106,7 +108,12 @@ enum class AccentColor(val value:Color) {
     )
     }
     val weGood by remember { derivedStateOf { alarmObject.isOk(alarm)  } }
-    val accentColor by remember { derivedStateOf { logD("weGood: $weGood"); if (weGood) AccentColor.Ok.value else AccentColor.Problem.value  } }
+//    val accentColor by remember { derivedStateOf { logD("weGood: $weGood"); if (weGood) AccentColor.Ok.value else AccentColor.Problem.value  } }
+    val accentColor by animateColorAsState(
+        targetValue = if (weGood) AccentColor.Ok.value else AccentColor.Problem.value ,
+        animationSpec = tween(durationMillis = 180),
+        label = "accent_color_animation"
+    )
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
 
     LaunchedEffect(weGood) {
@@ -127,7 +134,7 @@ enum class AccentColor(val value:Color) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth().background(Color(0xFF0F131A)).verticalScroll(rememberScrollState())
-                    .fillMaxSize().navigationBarsPadding()
+                    .fillMaxSize().navigationBarsPadding().animateContentSize()
                     .padding(horizontal = 20.dp).padding(top = contentPadding.calculateTopPadding() + 12.dp)
                     .padding(bottom = contentPadding.calculateBottomPadding() + 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -315,14 +322,18 @@ enum class AccentColor(val value:Color) {
                     colors = ButtonDefaults.buttonColors(containerColor = accentColor)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (weGood){
-                            Icon(Icons.Default.AlarmAdd, contentDescription = null, tint = Color.White)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Set Alarm", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        }else{
-                            Icon(Icons.Default.AlarmOff, contentDescription = null, tint = Color.White)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Fix the input to set alarm", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        AnimatedContent(targetState = weGood) { isGood ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (isGood) {
+                                    Icon(Icons.Default.AlarmAdd, contentDescription = null, tint = Color.White)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Set Alarm", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                } else {
+                                    Icon(Icons.Default.AlarmOff, contentDescription = null, tint = Color.White)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Fix the input to set alarm", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                }
+                            }
                         }
                     }
                 }
