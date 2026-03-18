@@ -100,6 +100,7 @@ jobs:
 
       # Generate Baseline Profile using Gradle Managed Device
       - name: Generate Baseline Profile
+        if: github.ref == 'refs/heads/main'
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
