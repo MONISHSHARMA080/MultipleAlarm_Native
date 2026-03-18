@@ -12,6 +12,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -67,7 +68,9 @@ sealed interface Screen : NavKey {
 
 
 
-	Scaffold(contentWindowInsets = WindowInsets.systemBars) { _->
+	Scaffold(
+		contentWindowInsets = WindowInsets.safeContent,
+	) { _->
 		NavDisplay(
 			backStack=backStack,
 			onBack = { backStack.removeLastOrNull()},

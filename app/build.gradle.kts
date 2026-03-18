@@ -1,6 +1,5 @@
 
 import com.android.build.api.dsl.ApplicationExtension
-import org.gradle.kotlin.dsl.testImplementation
 
 plugins {
     alias(libs.plugins.android.application)
@@ -123,7 +122,7 @@ dependencies {
     implementation("com.google.android.play:app-update:2.1.0")
     implementation("com.google.android.play:app-update-ktx:2.1.0")
 
-    implementation ("com.posthog:posthog-android:3.35.0")
+    implementation ("com.posthog:posthog-android:3.38.2")
     implementation("androidx.core:core-splashscreen:1.2.0")
     
     implementation(libs.androidx.espresso.contrib)

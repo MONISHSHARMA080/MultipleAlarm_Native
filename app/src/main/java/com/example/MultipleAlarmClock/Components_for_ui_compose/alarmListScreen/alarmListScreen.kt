@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
@@ -63,7 +63,7 @@ import kotlinx.coroutines.launch
 	val accentColor = Color.Blue
 	val coroutineScope = rememberCoroutineScope()
 	val analytics by lazy{ Analytics(activityContext) }
-	Scaffold(contentWindowInsets = WindowInsets.systemBars) { edgeToEdgePadding ->
+	Scaffold(contentWindowInsets = WindowInsets.safeContent) { edgeToEdgePadding ->
 		Box(
 			modifier = Modifier
 				.testTag("AlarmContainer")
