@@ -36,13 +36,13 @@ b) Code Refactor :--
          Friday then scroll to the end and show the Friday), horizontal list and ask them to select dates they want to schedule
          the alarms at, can do only 20 at max, and when the user selects the past date then tell them they can't;
          and give them a option to go see the cal and select multiple dates
+    * make sure that the db will not fall or crash in the prod; migration etc, see how real apps does it
     [X] alarmData/Object method to iterate over the alarm, and use it in the searching the activity for closing
     [X] if received 2 alarms the alarm sound will not play idk why (FSI)
     [X] better logging (postHog or other analytic) -- make sure to enable networking
     [X] complete the Result object and the error handling with the exception and the display user error
     [X] add postHog or other analytic
     [X] for now allow the user to schedule alarm on a specific date and not multiple
-    * make sure that the db will not fall or crash in the prod; migration etc, see how real apps does it
     [X] alarm order in Db, like based on time zone( endtime-startTime , time hs date in them) and automatically in the List
 
 c)  later :--
