@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -211,10 +212,11 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Cancel,
+                        modifier = Modifier.size(35.dp),
                         contentDescription = "Cancel"
                     )
-                    Spacer(modifier = Modifier.width(8.dp)) // Space between icon and text
-                    Text(text = "Stop", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.width(14.dp)) // Space between icon and text
+                    Text(text = "Stop", fontSize = 35.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
