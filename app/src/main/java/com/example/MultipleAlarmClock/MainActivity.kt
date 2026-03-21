@@ -21,6 +21,7 @@ class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     val splashScreen = installSplashScreen()
+    enablePredictiveBackGesture()
 
     super.onCreate(savedInstanceState)
     val coroutineScope = CoroutineScope( Dispatchers.IO)
