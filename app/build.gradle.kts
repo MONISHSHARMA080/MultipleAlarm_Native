@@ -73,6 +73,11 @@ fun Project.configureAndroid() {
                 proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
                 signingConfig = signingConfigs.getByName("release")
 
+                val versionCode = project.findProperty("versionCode") as String? ?: "0"
+                val versionName = project.findProperty("versionName") as String? ?: "0.0.0"
+                buildConfigField("String", "POSTHOG_RELEASE", "\"$versionName.$versionCode\"")
+
+
             }
             debug {
                 applicationIdSuffix = ".debug"
