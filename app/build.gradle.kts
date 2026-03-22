@@ -11,12 +11,12 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.serialization)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.baselineprofile)
-
-
 }
+
 val myAppName="Multiple alarms"
 configureAndroid()
 fun Project.configureAndroid() {
+
     extensions.configure<ApplicationExtension> {
         namespace = "com.coolApps.MultipleAlarmClock"
         compileSdk = 36
@@ -70,6 +70,7 @@ fun Project.configureAndroid() {
                 isMinifyEnabled = true
                 proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
                 signingConfig = signingConfigs.getByName("release")
+
             }
             debug {
                 applicationIdSuffix = ".debug"  // Makes it com.example.trying_native.debug
