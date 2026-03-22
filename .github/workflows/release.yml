@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history for version calculation
+          fetch-depth: 0
 
 #      - name: Gradle cache
 #        uses: actions/cache@v4

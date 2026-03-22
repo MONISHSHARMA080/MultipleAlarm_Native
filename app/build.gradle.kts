@@ -73,7 +73,7 @@ fun Project.configureAndroid() {
 
             }
             debug {
-                applicationIdSuffix = ".debug"  // Makes it com.example.trying_native.debug
+                applicationIdSuffix = ".debug"
                 resValue("string", "app_name", "debug-$myAppName")
             }
         }
@@ -112,6 +112,7 @@ fun Project.configureAndroid() {
         }
     }
 }
+
 kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25)
