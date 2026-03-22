@@ -13,15 +13,15 @@ jobs:
         with:
           fetch-depth: 0  # Fetch all history for version calculation
 
-      - name: Gradle cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-main-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-main-
+#      - name: Gradle cache
+#        uses: actions/cache@v4
+#        with:
+#          path: |
+#            ~/.gradle/caches
+#            ~/.gradle/wrapper
+#          key: gradle-main-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+#          restore-keys: |
+#            gradle-main-
 
 #      - name: Android build cache
 #        uses: actions/cache@v4
@@ -63,7 +63,7 @@ jobs:
         with:
           java-version: "17"
           distribution: "temurin"
-          cache: gradle
+#          cache: gradle
 
       - name: Grant execute permission for gradlew
         env:
