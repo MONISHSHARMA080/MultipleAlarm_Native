@@ -18,6 +18,7 @@ configureAndroid()
 fun Project.configureAndroid() {
 
     extensions.configure<ApplicationExtension> {
+
         namespace = "com.coolApps.MultipleAlarmClock"
         compileSdk = 36
 
@@ -34,6 +35,7 @@ fun Project.configureAndroid() {
                 useSupportLibrary = true
             }
         }
+
 
         signingConfigs {
             create("release") {
@@ -60,9 +62,9 @@ fun Project.configureAndroid() {
             release {
                 val isProductionBuild = file("release.keystore").exists()
                 val appName = if (isProductionBuild) {
-                    myAppName  // "Multiple Alarms" for production
+                    myAppName
                 } else {
-                    "debug-$myAppName"  // "debug-Multiple Alarms" for local
+                    "debug-$myAppName"
                 }
 
                 resValue("string", "app_name", appName)
@@ -112,6 +114,8 @@ fun Project.configureAndroid() {
         }
     }
 }
+
+
 
 kotlin {
     compilerOptions {

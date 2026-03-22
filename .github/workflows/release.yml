@@ -13,24 +13,24 @@ jobs:
         with:
           fetch-depth: 0
 
-#      - name: Gradle cache
-#        uses: actions/cache@v4
-#        with:
-#          path: |
-#            ~/.gradle/caches
-#            ~/.gradle/wrapper
-#          key: gradle-main-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-#          restore-keys: |
-#            gradle-main-
+      - name: Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-main-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-main-
 
-#      - name: Android build cache
-#        uses: actions/cache@v4
-#        with:
-#          path: |
-#            app/build
-#          key: build-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/*.kt', '**/*.java') }}
-#          restore-keys: |
-#            build-
+      - name: Android build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            app/build
+          key: build-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/*.kt', '**/*.java') }}
+          restore-keys: |
+            build-
 
 
 
@@ -199,4 +199,4 @@ jobs:
           path: |
               app/build/outputs/apk/release/app-${{ steps.version.outputs.VERSION_TAG }}.apk
               app/build/outputs/bundle/release/app-${{ steps.version.outputs.VERSION_TAG }}.aab
-          retention-days: 90
+          retention-days: 3
