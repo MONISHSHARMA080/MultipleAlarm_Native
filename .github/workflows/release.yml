@@ -115,10 +115,6 @@ jobs:
       - name: Check Files
         run: tree
 
-      - name: Hash mapping file
-        run: |
-          md5sum app/build/outputs/mapping/release/mapping.txt
-          wc -l app/build/outputs/mapping/release/mapping.txt
       - name: Stamp proguard with git SHA
         run: |
           echo "# Build: ${{ github.sha }}" >> app/proguard-rules.pro
@@ -155,6 +151,9 @@ jobs:
         run: |
           find app/build -name "posthog-proguard-map-id.properties" -print -exec cat {} \;
           find app/build -name "mapping.txt" -print | head -5
+          md5sum app/build/outputs/mapping/release/mapping.txt
+          wc -l app/build/outputs/mapping/release/mapping.txt
+          
 
 #      - name: Build and Sign AAB
 #        if: github.ref == 'refs/heads/main'
