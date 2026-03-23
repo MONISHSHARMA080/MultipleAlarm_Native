@@ -12,6 +12,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.baselineprofile)
 }
+
 val myAppName="Multiple alarms"
 configureAndroid()
 fun Project.configureAndroid() {
