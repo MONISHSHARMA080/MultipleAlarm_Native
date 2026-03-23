@@ -122,7 +122,7 @@ jobs:
           POSTHOG_CLI_HOST: https://us.posthog.com
           POSTHOG_CLI_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
-          POSTHOG_RELEASE: "MultipleAlarm_Native@${{ github.sha }}"
+          POSTHOG_RELEASE: "MultipleAlarm_Native@${{ steps.version.outputs.VERSION_TAG }}"  # ADD THIS
         run: |
             # Clear stale proguard outputs to avoid PostHog symbol set hash conflicts
             rm -rf app/build/outputs/mapping
