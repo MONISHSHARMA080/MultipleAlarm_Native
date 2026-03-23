@@ -124,6 +124,9 @@ jobs:
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
           POSTHOG_RELEASE: "MultipleAlarm_Native@${{ steps.version.outputs.VERSION_TAG }}"  # ADD THIS
         run: |
+            # Clear stale proguard outputs to avoid PostHog symbol set hash conflicts
+            rm -rf app/build/outputs/mapping
+            rm -rf app/build/intermediates/posthog*
           ./gradlew assembleRelease \
             -Pandroid.injected.signing.store.file=$PWD/app/release.keystore \
             -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
