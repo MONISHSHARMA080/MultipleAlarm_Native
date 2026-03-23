@@ -119,6 +119,9 @@ jobs:
         run: |
           md5sum app/build/outputs/mapping/release/mapping.txt
           wc -l app/build/outputs/mapping/release/mapping.txt
+      - name: Stamp proguard with git SHA
+        run: |
+          echo "# Build: ${{ github.sha }}" >> app/proguard-rules.pro
 
       - name: Build and Sign APK
         env:
@@ -130,7 +133,6 @@ jobs:
           POSTHOG_CLI_HOST: https://us.posthog.com
           POSTHOG_CLI_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
-#          POSTHOG_RELEASE: "MultipleAlarm_Native@${{ github.sha }}"
           POSTHOG_RELEASE: "MultipleAlarm_Native@${{ github.sha }}"
         run: |
             # Clear stale proguard outputs to avoid PostHog symbol set hash conflicts
