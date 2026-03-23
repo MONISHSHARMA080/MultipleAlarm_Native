@@ -1,4 +1,4 @@
-# (Download) [https://play.google.com/store/apps/details?id=com.coolApps.MultipleAlarmClock]
+# [Download] (https://play.google.com/store/apps/details?id=com.coolApps.MultipleAlarmClock)
 
 
 >> Xiaomi phones require background autostart permission
