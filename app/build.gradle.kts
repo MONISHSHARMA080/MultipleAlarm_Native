@@ -74,6 +74,7 @@ fun Project.configureAndroid() {
                 isMinifyEnabled = true
                 proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
                 signingConfig = signingConfigs.getByName("release")
+
             }
             debug {
                 applicationIdSuffix = ".debug"
