@@ -7,7 +7,7 @@ plugins {
     id("kotlin-kapt")
     id("com.google.devtools.ksp") version "2.3.5"
     id ("kotlin-parcelize")
-    id("com.posthog.android") version "1.0.1"
+    id("com.posthog.android") version "1.0.3"
     alias(libs.plugins.jetbrains.kotlin.serialization)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.baselineprofile)
