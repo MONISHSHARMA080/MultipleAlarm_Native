@@ -122,7 +122,7 @@ jobs:
           POSTHOG_CLI_HOST: https://us.posthog.com
           POSTHOG_CLI_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
-          POSTHOG_RELEASE: "MultipleAlarm_Native@${{ steps.version.outputs.VERSION_TAG }}"  # ADD THIS
+          POSTHOG_RELEASE: "MultipleAlarm_Native@${{ github.sha }}"
         run: |
             # Clear stale proguard outputs to avoid PostHog symbol set hash conflicts
             rm -rf app/build/outputs/mapping
@@ -134,6 +134,10 @@ jobs:
             -Pandroid.injected.signing.key.password=$KEY_PASSWORD \
             -PversionCode=$VERSION_CODE \
             -PversionName=$VERSION_NAME
+      - name: Debug PostHog map ID state
+        run: |
+           find app/build -name "posthog-proguard-map-id.properties" -print -exec cat {} \;
+           find app/build -name "mapping.txt" -print | head -5
 
 #      - name: Build and Sign AAB
 #        if: github.ref == 'refs/heads/main'
