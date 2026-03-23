@@ -26,10 +26,8 @@ fun Project.configureAndroid() {
             applicationId = "com.coolApps.MultipleAlarmClock"
             minSdk = 33
             targetSdk = 36
-//            versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
-//            versionName = project.findProperty("versionName") as String? ?: "1.0.0"
-            versionCode = 696969
-            versionName =  "69.0.0"
+            versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
+            versionName = project.findProperty("versionName") as String? ?: "1.0.0"
 
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
