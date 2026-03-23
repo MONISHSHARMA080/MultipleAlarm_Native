@@ -68,8 +68,8 @@ fun Project.configureAndroid() {
                 }
 
                 resValue("string", "app_name", appName)
-                isShrinkResources = true
-                isMinifyEnabled = true
+//                isShrinkResources = true
+//                isMinifyEnabled = true
                 proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
                 signingConfig = signingConfigs.getByName("release")
             }
