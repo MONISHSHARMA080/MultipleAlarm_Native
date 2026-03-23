@@ -98,17 +98,17 @@ jobs:
           
 
       # Generate Baseline Profile using Gradle Managed Device
-      - name: Generate Baseline Profile
-        if: github.ref == 'refs/heads/main'
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          ./gradlew :app:generateReleaseBaselineProfile \
-            -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
-            -PskipPostHog=true \
-            --stacktrace
+#      - name: Generate Baseline Profile
+#        if: github.ref == 'refs/heads/main'
+#        env:
+#          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+#          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+#          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+#        run: |
+#          ./gradlew :app:generateReleaseBaselineProfile \
+#            -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
+#            -PskipPostHog=true \
+#            --stacktrace
 
       - name: Check Files
         run: tree
