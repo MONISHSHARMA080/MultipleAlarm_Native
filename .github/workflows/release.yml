@@ -139,6 +139,11 @@ jobs:
         run: |
            find app/build -name "posthog-proguard-map-id.properties" -print -exec cat {} \;
            find app/build -name "mapping.txt" -print | head -5
+      - name: Debug PostHog map ID state
+        if: failure()
+        run: |
+          find app/build -name "posthog-proguard-map-id.properties" -print -exec cat {} \;
+          find app/build -name "mapping.txt" -print | head -5
 
 #      - name: Build and Sign AAB
 #        if: github.ref == 'refs/heads/main'
