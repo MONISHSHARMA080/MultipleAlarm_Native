@@ -66,7 +66,6 @@ class StartupBenchmarks {
 				// The app is fully drawn when Activity.reportFullyDrawn is called.
 				// For Jetpack Compose, you can use ReportDrawn, ReportDrawnWhen and ReportDrawnAfter
 				// from the AndroidX Activity library.
-
 				// Check the UiAutomator documentation for more information on how to
 				// interact with the app.
 				// https://d.android.com/training/testing/other-components/ui-automator
