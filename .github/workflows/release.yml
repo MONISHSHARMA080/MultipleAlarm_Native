@@ -107,7 +107,7 @@ jobs:
         run: |
           ./gradlew :app:generateReleaseBaselineProfile \
             -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
-            -PskipPostHog=true \ 
+            -PskipPostHog=true \
             --stacktrace
 
       - name: Check Files
