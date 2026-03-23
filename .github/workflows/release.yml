@@ -115,6 +115,11 @@ jobs:
       - name: Check Files
         run: tree
 
+      - name: Hash mapping file
+        run: |
+          md5sum app/build/outputs/mapping/release/mapping.txt
+          wc -l app/build/outputs/mapping/release/mapping.txt
+
       - name: Build and Sign APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
