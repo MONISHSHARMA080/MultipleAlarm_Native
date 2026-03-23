@@ -99,7 +99,7 @@ jobs:
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
           
 
-      # Generate Baseline Profile using Gradle Managed Device
+#       Generate Baseline Profile using Gradle Managed Device
 #      - name: Generate Baseline Profile
 #        if: github.ref == 'refs/heads/main'
 #        env:
@@ -155,26 +155,6 @@ jobs:
           wc -l app/build/outputs/mapping/release/mapping.txt
           
 
-#      - name: Build and Sign AAB
-#        if: github.ref == 'refs/heads/main'
-#        env:
-#          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-#          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-#          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-#          VERSION_CODE: ${{ steps.version.outputs.VERSION_CODE }}
-#          VERSION_NAME: ${{ steps.version.outputs.VERSION_NAME }}
-#          POSTHOG_CLI_HOST: https://us.posthog.com
-#          POSTHOG_CLI_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
-#          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
-#        run: |
-#          ./gradlew assembleRelease bundleRelease  \
-#            -Pandroid.injected.signing.store.file=$PWD/app/release.keystore \
-#            -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
-#            -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
-#            -Pandroid.injected.signing.key.password=$KEY_PASSWORD \
-#            -PversionCode=$VERSION_CODE \
-#            -PversionName=$VERSION_NAME
-          
 
       - name: Rename APK
         run: |
