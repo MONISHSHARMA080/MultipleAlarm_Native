@@ -74,7 +74,22 @@ fun Project.configureAndroid() {
                 isMinifyEnabled = true
                 proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
                 signingConfig = signingConfigs.getByName("release")
+                // --- THE POSTHOG FIX (The Salt) ---
+                // We create a dynamic proguard file that changes based on the version
+                val saltValue = "v${defaultConfig.versionCode}"
+                val saltFile = project.layout.buildDirectory.file("intermediates/posthog_salt_$saltValue.pro").get().asFile
 
+                saltFile.parentFile.mkdirs()
+                saltFile.writeText("# PostHog Salt: $saltValue\n-printconfiguration ${saltFile.path}.txt")
+
+                proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro",
+                    saltFile // Add the salt file here
+                )
+                // ----------------------------------
+
+                signingConfig = signingConfigs.getByName("release")
             }
             debug {
                 applicationIdSuffix = ".debug"
