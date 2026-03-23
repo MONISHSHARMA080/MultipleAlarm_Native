@@ -7,7 +7,7 @@ plugins {
     id("kotlin-kapt")
     id("com.google.devtools.ksp") version "2.3.5"
     id ("kotlin-parcelize")
-    id("com.posthog.android") version "1.0.3"
+    id("com.posthog.android") version "1.0.1"
     alias(libs.plugins.jetbrains.kotlin.serialization)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.baselineprofile)
@@ -68,8 +68,8 @@ fun Project.configureAndroid() {
                 }
 
                 resValue("string", "app_name", appName)
-//                isShrinkResources = true
-//                isMinifyEnabled = true
+                isShrinkResources = true
+                isMinifyEnabled = true
                 proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
                 signingConfig = signingConfigs.getByName("release")
             }
