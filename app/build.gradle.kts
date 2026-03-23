@@ -72,12 +72,6 @@ fun Project.configureAndroid() {
                 isMinifyEnabled = true
                 proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
                 signingConfig = signingConfigs.getByName("release")
-//
-//                val versionCode = project.findProperty("versionCode") as String? ?: "0"
-//                val versionName = project.findProperty("versionName") as String? ?: "0.0.0"
-//                buildConfigField("String", "POSTHOG_RELEASE", "\"$versionName.$versionCode\"")
-
-
             }
             debug {
                 applicationIdSuffix = ".debug"
@@ -86,8 +80,8 @@ fun Project.configureAndroid() {
         }
 
         compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_25
-            targetCompatibility = JavaVersion.VERSION_25
+            sourceCompatibility = JavaVersion.VERSION_21
+            targetCompatibility = JavaVersion.VERSION_21
         }
 
         buildFeatures {
@@ -110,8 +104,6 @@ fun Project.configureAndroid() {
                 all {
                     it.systemProperty("robolectric.logging", "stdout")
                     it.systemProperty("robolectric.graphicsMode", "NATIVE")
-                    // Increase memory for tests
-                    // Important for avoiding bytecode verification errors
                     it.jvmArgs("-noverify")
                 }
 
@@ -124,7 +116,7 @@ fun Project.configureAndroid() {
 
 kotlin {
     compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25)
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
     }
 }
 
