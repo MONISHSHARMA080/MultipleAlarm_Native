@@ -127,7 +127,7 @@ jobs:
             # Clear stale proguard outputs to avoid PostHog symbol set hash conflicts
             rm -rf app/build/outputs/mapping
             rm -rf app/build/intermediates/posthog*
-          ./gradlew assembleRelease \
+            ./gradlew assembleRelease \
             -Pandroid.injected.signing.store.file=$PWD/app/release.keystore \
             -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
             -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
