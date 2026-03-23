@@ -124,7 +124,6 @@ jobs:
           POSTHOG_CLI_HOST: https://us.posthog.com
           POSTHOG_CLI_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
-          POSTHOG_RELEASE: "MultipleAlarm_Native@${{ steps.version.outputs.VERSION_TAG }}"  # ← only this line added
         run: |
           ./gradlew assembleRelease \
             -Pandroid.injected.signing.store.file=$PWD/app/release.keystore \
