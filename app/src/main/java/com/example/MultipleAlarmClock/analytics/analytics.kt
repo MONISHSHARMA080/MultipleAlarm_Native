@@ -1,6 +1,9 @@
 package com.coolApps.MultipleAlarmClock.analytics
 
 import android.content.Context
+import androidx.core.content.edit
+import com.coolApps.MultipleAlarmClock.BuildConfig
+import com.coolApps.MultipleAlarmClock.logD
 import com.posthog.PersonProfiles
 import com.posthog.PostHog
 import com.posthog.android.PostHogAndroid
@@ -9,8 +12,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.UUID
-import androidx.core.content.edit
-import com.coolApps.MultipleAlarmClock.logD
 
 
 class  Analytics(val context: Context){
@@ -31,10 +32,13 @@ class  Analytics(val context: Context){
 				errorTrackingConfig.autoCapture = true
 				sessionReplayConfig.maskAllTextInputs = false
 				sessionReplay = true
+				debug = BuildConfig.DEBUG
+				optOut = BuildConfig.DEBUG
 				sessionReplayConfig.captureLogcat = true
 			sessionReplayConfig.screenshot = true
 		}
 		PostHogAndroid.setup(context, postHogConfig)
+		logD("the buildConfig.Debug is ${BuildConfig.DEBUG}")
 		config = postHogConfig
 		coroutineScope.launch {
 			identifyAnonymousUser()

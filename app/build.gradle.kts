@@ -86,6 +86,7 @@ fun Project.configureAndroid() {
 
         buildFeatures {
             compose = true
+            buildConfig = true
         }
         packaging {
             resources {
@@ -130,7 +131,9 @@ dependencies {
 
     implementation ("com.posthog:posthog-android:3.38.2")
     implementation("androidx.core:core-splashscreen:1.2.0")
-    
+
+    implementation("com.google.android.gms:play-services-appset:16.1.0")
+
     implementation(libs.androidx.espresso.contrib)
     implementation(libs.androidx.ui.test.junit4.android)
     implementation(libs.androidx.compose.ui.text)
