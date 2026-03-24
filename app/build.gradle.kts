@@ -111,6 +111,9 @@ fun Project.configureAndroid() {
         }
     }
 }
+tasks.matching { it.name.startsWith("uploadPostHogProguardMappings") }.configureEach {
+    enabled = false
+}
 
 
 

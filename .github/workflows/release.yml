@@ -141,6 +141,29 @@ jobs:
             -Pandroid.injected.signing.key.password=$KEY_PASSWORD \
             -PversionCode=$VERSION_CODE \
             -PversionName=$VERSION_NAME
+          
+
+      - name: Upload ProGuard mapping to PostHog
+        if: github.ref == 'refs/heads/main'   # only main, or remove condition for all branches
+        env:
+          POSTHOG_CLI_HOST: https://us.posthog.com
+          POSTHOG_CLI_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+          POSTHOG_RELEASE: "MultipleAlarm_Native@${{ github.sha }}"
+        run: |
+          # Derive a UUID that is unique per commit SHA — deterministic and conflict-free
+          MAP_ID=$(python3 -c "
+          import uuid, sys
+          sha = '${{ github.sha }}'
+          print(uuid.uuid5(uuid.NAMESPACE_DNS, 'MultipleAlarm_Native.' + sha))
+          ")
+          echo "Using map ID: $MAP_ID"
+        
+          posthog-cli exp proguard upload \
+          --path app/build/outputs/mapping/release/mapping.txt \
+          --map-id "$MAP_ID"
+               
+
       - name: Debug PostHog map ID state
         run: |
            find app/build -name "posthog-proguard-map-id.properties" -print -exec cat {} \;
