@@ -5,8 +5,11 @@ import android.content.ClipData
 import android.content.Context
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.ReportDrawnWhen
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,28 +19,33 @@ import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AlarmAdd
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
@@ -123,11 +131,10 @@ import kotlinx.coroutines.launch
 			Box(
 				modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = screenHeight / 15)
 			) {
-				RoundPlusIcon(
-					size = screenHeight / 10,context = activityContext,
+				AddAlarmButton(
+					context = activityContext,
 					backgroundColor = accentColor,
 					onClick = {
-
 						onNavigateToCreate()
 						coroutineScope.launch {
 							analytics.captureEvent("Plus Icon clicked", mapOf("round plus icon " to "new alarm"))
@@ -140,28 +147,48 @@ import kotlinx.coroutines.launch
 
 }
 
-@Composable fun RoundPlusIcon(modifier: Modifier = Modifier, size: Dp , backgroundColor: Color, onClick: () -> Unit, context:Context) {
+@Composable fun AddAlarmButton(modifier: Modifier = Modifier,  backgroundColor: Color, onClick: () -> Unit, context:Context) {
 	val coroutineScope = rememberCoroutineScope()
-	Box(
+	val interactionSource = remember { MutableInteractionSource() }
+	val isPressed by interactionSource.collectIsPressedAsState()
+	val scale by animateFloatAsState(
+		targetValue = if (isPressed) 0.94f else 1f,
+		animationSpec = spring(),
+	)
+	ExtendedFloatingActionButton(
+		onClick = {
+			coroutineScope.launch {
+				FirstLaunchAskForPermission(context).checkAndRequestPermissions()
+			}
+			coroutineScope.launch {
+				onClick()
+			}
+		},
 		modifier = modifier
-			.size(size).zIndex(4f)
-			.background(color = backgroundColor, shape = CircleShape)
-			.clickable {
-				coroutineScope.launch {
-					FirstLaunchAskForPermission(context).checkAndRequestPermissions()
-				}
-				coroutineScope.launch {
-					onClick()
-				}
-			},
-		contentAlignment = Alignment.Center,
-	) {
-		Icon(
-			imageVector = Icons.Default.Add,
-			contentDescription = "Add",
-			modifier = Modifier.size(size / 2)
-		)
-	}
-
+			.padding(bottom = 29.dp, end = 16.dp)
+			.scale(scale)
+			.zIndex(5f),
+		interactionSource = interactionSource,
+		shape = MaterialTheme.shapes.extraLarge,
+		containerColor = Color(0xFF0a446e),
+		contentColor = Color.White,
+		elevation = FloatingActionButtonDefaults.elevation(
+			defaultElevation = 6.dp,
+			pressedElevation = 6.dp
+		),
+		icon = {
+			Icon(
+				imageVector = Icons.Default.AlarmAdd, contentDescription = null,
+				modifier = Modifier.size(28.dp)
+			)
+		},
+		text = {
+			Text(
+				text = "Add alarm",
+				style = MaterialTheme.typography.labelLarge,
+				fontSize = 17.sp,
+				fontWeight = FontWeight.SemiBold
+			)
+		}
+	)
 }
-
