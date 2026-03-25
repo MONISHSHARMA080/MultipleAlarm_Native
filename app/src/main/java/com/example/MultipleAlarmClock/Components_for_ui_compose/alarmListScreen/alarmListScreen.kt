@@ -167,6 +167,7 @@ import kotlinx.coroutines.launch
 		modifier = modifier
 			.padding(bottom = 29.dp, end = 16.dp)
 			.scale(scale)
+			.size(width = 180.dp, height = 80.dp)
 			.zIndex(5f),
 		interactionSource = interactionSource,
 		shape = MaterialTheme.shapes.extraLarge,
