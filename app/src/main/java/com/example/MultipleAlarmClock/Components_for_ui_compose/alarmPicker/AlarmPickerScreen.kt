@@ -256,7 +256,7 @@ enum class AccentColor(val value:Color) {
                             Text("Please enter the frequency value", color = Color.Gray, fontSize = 12.sp)
                         } else{
                             Text(
-                                "Alarm will ring every ${alarmObject.freqGottenAfterCallback} minutes between ${getTimeFormatted(alarmObject.startTime)}  and ${getTimeFormatted(alarmObject.endTime)} AM.",
+                                "Alarm will ring every ${alarmObject.freqGottenAfterCallback} minutes between ${getTimeFormatted(alarmObject.startTime)}  and ${getTimeFormatted(alarmObject.endTime)} AM",
                                 color = Color.Gray,
                                 fontSize = 12.sp
                             )
