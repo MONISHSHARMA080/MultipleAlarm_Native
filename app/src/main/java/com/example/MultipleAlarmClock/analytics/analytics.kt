@@ -93,8 +93,6 @@ class Analytics(val context: Context){
 				 userProperties = mapOf("id_source" to "uuid_fallback")
 			 )
 			 logD("identified via UUID fallback: $anonymousId")
-
-
 		 }
 	}
 }
