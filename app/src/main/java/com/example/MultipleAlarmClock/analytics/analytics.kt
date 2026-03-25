@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 
 
-class  Analytics(val context: Context){
+class Analytics(val context: Context){
 	companion object {
 		const val POSTHOG_API_KEY = "phc_wFUsQjwTmEznOhwyNUeAD0fe70cGWr5MuWRSjJMh5Cb"
 		const val POSTHOG_HOST = "https://us.i.posthog.com"

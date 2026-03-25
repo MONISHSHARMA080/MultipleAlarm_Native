@@ -112,10 +112,6 @@ fun Project.configureAndroid() {
         }
     }
 }
-//tasks.matching { it.name.startsWith("uploadPostHogProguardMappings") }.configureEach {
-//    enabled = false
-//}
-
 
 
 kotlin {
@@ -133,6 +129,9 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.2.0")
 
     implementation("com.google.android.gms:play-services-appset:16.1.0")
+
+    implementation("androidx.datastore:datastore-preferences:1.2.1")
+    implementation("androidx.datastore:datastore:1.2.1")
 
     implementation(libs.androidx.espresso.contrib)
     implementation(libs.androidx.ui.test.junit4.android)
