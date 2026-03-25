@@ -74,7 +74,9 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmObject
 import com.coolApps.MultipleAlarmClock.logD
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 
 enum class AccentColor(val value:Color) {
      Ok(Color(0xFF1A73E8)),
@@ -110,6 +112,9 @@ enum class AccentColor(val value:Color) {
     )
     }
     val weGood by remember { derivedStateOf { alarmObject.isOk(alarm)  } }
+    val freqText by remember { derivedStateOf {
+        if (weGood) "your alarm will ring on "+getPreviewAlarms(alarmObject) else ""
+    } }
 //    val accentColor by remember { derivedStateOf { logD("weGood: $weGood"); if (weGood) AccentColor.Ok.value else AccentColor.Problem.value  } }
     val accentColor by animateColorAsState(
         targetValue = if (weGood) AccentColor.Ok.value else AccentColor.Problem.value ,
@@ -256,7 +261,8 @@ enum class AccentColor(val value:Color) {
                             Text("Please enter the frequency value", color = Color.Gray, fontSize = 12.sp)
                         } else{
                             Text(
-                                "Alarm will ring every ${alarmObject.freqGottenAfterCallback} minutes between ${getTimeFormatted(alarmObject.startTime)}  and ${getTimeFormatted(alarmObject.endTime)} AM",
+//                                "Alarm will ring every ${alarmObject.freqGottenAfterCallback} minutes between ${getTimeFormatted(alarmObject.startTime)}  and ${getTimeFormatted(alarmObject.endTime)} AM" +
+										freqText,
                                 color = Color.Gray,
                                 fontSize = 12.sp
                             )
@@ -400,7 +406,34 @@ enum class AccentColor(val value:Color) {
         }
     }
 }
+
+
 fun getTimeFormatted(cal: Calendar, formatter:String = "hh:mm"): String{
     return DateFormat.format(formatter, cal.timeInMillis).toString()
+}
+
+fun getPreviewAlarms(alarm: AlarmObject, numberOfAlarmPreviewToReturn:Int = 3): String{
+
+
+    val alarmObj = alarm.deepCopy()
+    val stringBuilder= StringBuilder()
+    val timeFormat = SimpleDateFormat("h:mm", Locale.getDefault())
+    var index = 0
+
+    while (!alarmObj.startTime.after(alarmObj.endTime) && index < numberOfAlarmPreviewToReturn) {
+        stringBuilder.append(timeFormat.format(alarmObj.startTime.time))
+        alarmObj.startTime.timeInMillis += alarmObj.getFreqInMillisecond()
+        if (alarmObj.freqGottenAfterCallback <= 0) break
+        index ++
+        if (index < numberOfAlarmPreviewToReturn && !alarmObj.startTime.after(alarmObj.endTime)) {
+            stringBuilder.append(", ")
+        }
+    }
+
+    return if(alarmObj.startTime.after(alarmObj.endTime)){
+        stringBuilder.toString().trim()
+    }else{
+        stringBuilder.append(".....${timeFormat.format(alarmObj.endTime.time)}").toString().trim()
+    }
 }
 

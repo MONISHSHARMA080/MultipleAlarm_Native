@@ -167,6 +167,17 @@ data class AlarmObject(
 
         return baseValidation && hasChanged
 	}
+    fun getFreqInMillisecond(): Long {
+        return this.freqGottenAfterCallback * 60000
+    }
+
+    fun deepCopy(): AlarmObject {
+        return this.copy(
+            startTime = (this.startTime.clone() as Calendar),
+            endTime = (this.endTime.clone() as Calendar)
+        )
+    }
+
     fun toAlarmData(id:Int,isReadyToUse: Boolean = true): AlarmData{
         return AlarmData(
             startTime = startTime.timeInMillis,
