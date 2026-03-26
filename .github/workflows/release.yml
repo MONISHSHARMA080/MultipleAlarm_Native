@@ -129,13 +129,13 @@ jobs:
           POSTHOG_RELEASE: "MultipleAlarm_Native@${{ github.sha }}"
         run: |
             ./gradlew assembleRelease bundleRelease \
-            -Pandroid.injected.signing.store.file=$PWD/app/release.keystore \
-            -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
-            -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
-            -Pandroid.injected.signing.key.password=$KEY_PASSWORD \
-            -PversionCode=$VERSION_CODE \
-            -PversionName=$VERSION_NAME
-          
+            "-Pandroid.injected.signing.store.file=$PWD/app/release.keystore" \
+            "-Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD" \
+            "-Pandroid.injected.signing.key.alias=$KEY_ALIAS" \
+            "-Pandroid.injected.signing.key.password=$KEY_PASSWORD" \
+            "-PversionCode=$VERSION_CODE" \
+            "-PversionName=$VERSION_NAME"
+
       - name: Debug PostHog map ID state
         run: |
            find app/build -name "posthog-proguard-map-id.properties" -print -exec cat {} \;
