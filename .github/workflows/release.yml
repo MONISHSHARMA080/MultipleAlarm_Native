@@ -45,8 +45,8 @@ jobs:
           fi
           
           # Generate version name with timestamp
-          VERSION_NAME="$(date +'%Y.%m.%d.%H%M')"
-          VERSION_TAG="v${VERSION_NAME}-vc${VERSION_CODE}"
+          VERSION_NAME="Version: ${VERSION_CODE}"
+          VERSION_TAG="v${VERSION_CODE}"
           
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_OUTPUT

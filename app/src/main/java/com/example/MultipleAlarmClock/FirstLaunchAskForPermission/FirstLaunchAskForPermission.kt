@@ -1,20 +1,20 @@
 package com.coolApps.MultipleAlarmClock.FirstLaunchAskForPermission
 
-import android.app.Activity
-import android.content.Context
-import android.content.SharedPreferences
-import android.content.pm.PackageManager
-import androidx.core.content.ContextCompat
 import android.Manifest
+import android.app.Activity
 import android.app.NotificationManager
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.core.app.ActivityCompat
-import com.coolApps.MultipleAlarmClock.logD
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
+import com.coolApps.MultipleAlarmClock.logD
 
 class FirstLaunchAskForPermission(private val context: Context) {
     private val prefsName = "AppPreferences"
@@ -25,11 +25,6 @@ class FirstLaunchAskForPermission(private val context: Context) {
 
     fun checkAndRequestPermissions() {
         logD("here in the check andRequest func")
-//        if (isFirstLaunch()) {
-//            askForNotificationPermission()
-//            ifMiuiGetBgAutoStartPermission().onFailure { exception -> logD("Error in checking if device is XIAOMI and it is $exception");return }
-//            if (this.doWeHavePermissionForNotification()) setFirstLaunchComplete()
-//        }
         logD("here in the check andRequest func")
 
         // Ask for permission if it's first launch OR we don't have permission
