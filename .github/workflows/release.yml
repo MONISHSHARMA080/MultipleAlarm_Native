@@ -153,17 +153,32 @@ jobs:
 
       - name: Rename APK
         run: |
-          APK_PATH="app/build/outputs/apk/release/app-release.apk"
-          NEW_APK_NAME="app-${{ steps.version.outputs.VERSION_TAG }}.apk"
-          mv "$APK_PATH" "app/build/outputs/apk/release/$NEW_APK_NAME"
+          # Define your custom name here
+          CUSTOM_NAME="MultipleAlarms-${{ steps.version.outputs.VERSION_TAG }}"
+          TIMESTAMP=$(date +'%Y%m%d-%H%M')
+        
+          APK_SOURCE="app/build/outputs/apk/release/app-release.apk"
+          NEW_APK_NAME="${CUSTOM_NAME}-${TIMESTAMP}.apk"
+        
+          mv "$APK_SOURCE" "app/build/outputs/apk/release/$NEW_APK_NAME"
+        
+          # Save the name for the Release step to find
+          echo "FINAL_APK_NAME=$NEW_APK_NAME" >> $GITHUB_ENV
           echo "Renamed APK to: $NEW_APK_NAME"
 
       - name: Rename AAB
         if: github.ref == 'refs/heads/main'
         run: |
-          AAB_PATH="app/build/outputs/bundle/release/app-release.aab"
-          NEW_AAB_NAME="app-${{ steps.version.outputs.VERSION_TAG }}.aab"
-          mv "$AAB_PATH" "app/build/outputs/bundle/release/$NEW_AAB_NAME"
+          CUSTOM_NAME="MultipleAlarms-${{ steps.version.outputs.VERSION_TAG }}"
+          TIMESTAMP=$(date +'%Y%m%d-%H%M')
+          
+          AAB_SOURCE="app/build/outputs/bundle/release/app-release.aab"
+          NEW_AAB_NAME="${CUSTOM_NAME}-${TIMESTAMP}.aab"
+          
+          mv "$AAB_SOURCE" "app/build/outputs/bundle/release/$NEW_AAB_NAME"
+          
+          # Save the name for the Release step to find
+          echo "FINAL_AAB_NAME=$NEW_AAB_NAME" >> $GITHUB_ENV
           echo "Renamed AAB to: $NEW_AAB_NAME"
 
       - name: Create Release
@@ -175,8 +190,8 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            app/build/outputs/apk/release/app-${{ steps.version.outputs.VERSION_TAG }}.apk
-            app/build/outputs/bundle/release/app-${{ steps.version.outputs.VERSION_TAG }}.aab
+            app/build/outputs/apk/release/${{ env.FINAL_APK_NAME }}
+            app/build/outputs/bundle/release/${{ env.FINAL_AAB_NAME }}
           body: |
             ## Release ${{ steps.version.outputs.VERSION_TAG }}
             
