@@ -51,7 +51,6 @@ jobs:
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_OUTPUT
           echo "VERSION_TAG=$VERSION_TAG" >> $GITHUB_OUTPUT
-          
           echo "Building version: $VERSION_TAG (code: $VERSION_CODE, name: $VERSION_NAME)"
 
       - name: Set up JDK 17
