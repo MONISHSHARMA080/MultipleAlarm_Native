@@ -153,7 +153,6 @@ import kotlinx.coroutines.launch
 			}
 		}
 	}
-
 }
 
 @Composable fun AddAlarmButton(modifier: Modifier = Modifier,  backgroundColor: Color, onClick: () -> Unit, context:Context) {

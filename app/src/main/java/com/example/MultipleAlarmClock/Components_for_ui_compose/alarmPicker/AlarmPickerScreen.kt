@@ -36,6 +36,7 @@ import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AlarmAdd
 import androidx.compose.material.icons.filled.AlarmOff
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
@@ -62,6 +63,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -191,46 +193,52 @@ enum class AccentColor(val value:Color) {
                 }
                 Spacer(modifier = Modifier.height(21.dp))
                 // --- Repeats / Day Picker ---
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("Date", color = Color.Gray)
+                CardContainer {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.CalendarMonth,
+                                contentDescription = null,
+                                tint = accentColor,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Date", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+
+                        DateList(
+                            startDateIndex =alarm?.startTime,
+                            weGood = weGood,
+                            onSelect = {calVersion ->
+                                logD(" updated date is :${getTimeFormatted(calVersion, "hh:mm dd/MM/yyyy")}")
+                                val newStartDate = alarmObject.startTime.apply {
+                                    timeInMillis = timeInMillis  // Keep existing time
+                                    set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR))
+                                    set(Calendar.YEAR, calVersion.get(Calendar.YEAR))
+                                }
+                                val newEndDate = alarmObject.endTime.apply {
+                                    timeInMillis = timeInMillis
+                                    set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR))
+                                    set(Calendar.YEAR, calVersion.get(Calendar.YEAR))
+                                }
+                                alarmObject = alarmObject.copy(
+                                    date = calVersion.timeInMillis,
+                                    startTime = newStartDate,
+                                    endTime = newEndDate
+                                )
+                                logD("updated the alarmObject for new date and it is $alarmObject")
+                            }
+                        )
+                    }
+
                 }
-                Spacer(modifier = Modifier.height(12.dp))
-                DateList(
-                    startDateIndex =alarm?.startTime,
-                    weGood = weGood,
-					 onSelect = {calVersion ->
-                         logD(" updated date is :${getTimeFormatted(calVersion, "hh:mm dd/MM/yyyy")}")
-//                         val newStartDate = alarmObject.startTime.apply { set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR)) }
-//                         val newEndDate = alarmObject.endTime.apply { set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR)) }
-//                         alarmObject = alarmObject.copy(date = calVersion.timeInMillis, startTime = newStartDate, endTime = newEndDate)
-                         val newStartDate = alarmObject.startTime.apply {
-                             timeInMillis = timeInMillis  // Keep existing time
-                             set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR))
-                             set(Calendar.YEAR, calVersion.get(Calendar.YEAR))  // ← Add this for year changes
-                         }
-                         val newEndDate = alarmObject.endTime.apply {
-                             timeInMillis = timeInMillis
-                             set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR))
-                             set(Calendar.YEAR, calVersion.get(Calendar.YEAR))  // ← Add this too
-                         }
-                         alarmObject = alarmObject.copy(
-                             date = calVersion.timeInMillis,
-                             startTime = newStartDate,
-                             endTime = newEndDate
-                         )
-                         logD("updated the alarmObject for new date and it is $alarmObject")
-                     }
-				)
+
                 Spacer(modifier = Modifier.height(21.dp))
                 // --- frequency Section ---
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(28.dp),
-                    color = Color(0xFF1C222B)
-                ) {
+                CardContainer {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Schedule, contentDescription = null, tint = accentColor, modifier = Modifier.size(20.dp))
@@ -308,12 +316,7 @@ enum class AccentColor(val value:Color) {
                     }
                 }
                 Spacer(modifier = Modifier.height(21.dp))
-                // --- Message Section ---
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(25.dp),
-                    color = Color(0xFF1C222B)
-                ) {
+                CardContainer {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.AutoMirrored.Filled.Message, contentDescription = null, tint = accentColor)
@@ -447,14 +450,19 @@ enum class AccentColor(val value:Color) {
     }
 }
 
+@Composable fun CardContainer(modifier: Modifier = Modifier, shape: Shape = RoundedCornerShape(26.dp), color: Color = Color(0xFF1C222B), content: @Composable (() -> Unit)) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = shape,
+        color = color
+    ) { content() }
+}
 
 fun getTimeFormatted(cal: Calendar, formatter:String = "hh:mm"): String{
     return DateFormat.format(formatter, cal.timeInMillis).toString()
 }
 
 fun getPreviewAlarms(alarm: AlarmObject, numberOfAlarmPreviewToReturn:Int = 3): String{
-
-
     val alarmObj = alarm.deepCopy()
     val stringBuilder= StringBuilder()
     val timeFormat = SimpleDateFormat("h:mm", Locale.getDefault())
