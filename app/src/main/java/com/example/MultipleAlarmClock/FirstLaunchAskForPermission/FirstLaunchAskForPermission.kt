@@ -25,8 +25,6 @@ class FirstLaunchAskForPermission(private val context: Context) {
 
     fun checkAndRequestPermissions() {
         logD("here in the check andRequest func")
-        logD("here in the check andRequest func")
-
         // Ask for permission if it's first launch OR we don't have permission
         if (isFirstLaunch() || !doWeHavePermissionForNotification()) {
             askForNotificationPermission()

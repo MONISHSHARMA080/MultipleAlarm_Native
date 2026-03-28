@@ -92,19 +92,41 @@ enum class AccentColor(val value:Color) {
     //if the alarm is null then it's for a new alarm else we are editing an alarm
     val coroutineScope = rememberCoroutineScope()
     logD("alarm dates ->"+getListOfDatesInThisWeek() )
+    val now = Calendar.getInstance()
     var alarmObject by remember { mutableStateOf(
         alarm?.toAlarmObject() ?: AlarmObject(
-            startTime =Calendar.getInstance().apply {
-                add(Calendar.MINUTE ,1)
-                if (get(Calendar.DAY_OF_YEAR) != Calendar.getInstance().get(Calendar.DAY_OF_YEAR)) {
-                    set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
+//            startTime =Calendar.getInstance().apply {
+//                add(Calendar.MINUTE ,1)
+//                if (get(Calendar.DAY_OF_YEAR) != Calendar.getInstance().get(Calendar.DAY_OF_YEAR)) {
+//                    set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
+//                }
+//                set(Calendar.SECOND, 0)
+//            },
+//            endTime =Calendar.getInstance().apply {
+//                add(Calendar.MINUTE ,45)
+//                logD("endTImeDay:${get(Calendar.DAY_OF_YEAR)} , date of cal: ${Calendar.getInstance().get(Calendar.DAY_OF_YEAR)} ")
+//                if (get(Calendar.DAY_OF_YEAR) != Calendar.getInstance().get(Calendar.DAY_OF_YEAR)) {
+//                    set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
+//                }
+//                set(Calendar.SECOND, 0)
+//            },
+            startTime = (now.clone() as Calendar).apply {
+                add(Calendar.MINUTE, 1)
+                // If adding 1 min pushed us to tomorrow, cap at 23:59 today
+                if (get(Calendar.DAY_OF_YEAR) != now.get(Calendar.DAY_OF_YEAR)) {
+                    set(Calendar.DAY_OF_YEAR, now.get(Calendar.DAY_OF_YEAR)) // Reset to today
+                    set(Calendar.HOUR_OF_DAY, 23)
+                    set(Calendar.MINUTE, 59)
                 }
                 set(Calendar.SECOND, 0)
             },
-            endTime =Calendar.getInstance().apply {
-                add(Calendar.MINUTE ,45)
-                if (get(Calendar.DAY_OF_YEAR) != Calendar.getInstance().get(Calendar.DAY_OF_YEAR)) {
-                    set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
+            endTime = (now.clone() as Calendar).apply {
+                add(Calendar.MINUTE, 45)
+                // If adding 45 mins pushed us to tomorrow, cap at 23:59 today
+                if (get(Calendar.DAY_OF_YEAR) != now.get(Calendar.DAY_OF_YEAR)) {
+                    set(Calendar.DAY_OF_YEAR, now.get(Calendar.DAY_OF_YEAR)) // Reset to today
+                    set(Calendar.HOUR_OF_DAY, 23)
+                    set(Calendar.MINUTE, 59)
                 }
                 set(Calendar.SECOND, 0)
             },
@@ -214,13 +236,11 @@ enum class AccentColor(val value:Color) {
                             weGood = weGood,
                             onSelect = {calVersion ->
                                 logD(" updated date is :${getTimeFormatted(calVersion, "hh:mm dd/MM/yyyy")}")
-                                val newStartDate = alarmObject.startTime.apply {
-                                    timeInMillis = timeInMillis  // Keep existing time
+                                val newStartDate = (alarmObject.startTime.clone() as Calendar).apply {
                                     set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR))
                                     set(Calendar.YEAR, calVersion.get(Calendar.YEAR))
                                 }
-                                val newEndDate = alarmObject.endTime.apply {
-                                    timeInMillis = timeInMillis
+                                val newEndDate = (alarmObject.endTime.clone() as Calendar).apply {
                                     set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR))
                                     set(Calendar.YEAR, calVersion.get(Calendar.YEAR))
                                 }
