@@ -187,7 +187,7 @@ sealed interface Screen : NavKey {
 												"alarmObject" to newAlarmObject.toString()
 											))
 										}
-										logD("the alarm data confirmed is $newAlarmObject, and is  oldAlarm == newAlarmObject -> ${newAlarmObject.isOk( oldAlarm)} ")
+										logD("the alarm data confirmed is $newAlarmObject, and is  oldAlarm == newAlarmObject ->  ")
 										val exception = alarmsController.startAlarmSeriesHandler(
 											alarm = AlarmValueForAlarmSeries.AlarmObjectType(newAlarmObject),
 											alarmManager = alarmManager,

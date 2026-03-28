@@ -64,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmObject
+import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.coolApps.MultipleAlarmClock.logD
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -91,7 +92,25 @@ import java.util.Calendar
 			freqGottenAfterCallback = 1
 		)
 	) }
-	val weGood by remember { derivedStateOf { alarmObject.isOk(alarm)  } }
+
+	val validationResult by remember { derivedStateOf {
+		alarmObject.validate(alarm)
+	} }
+
+	val weGood: Boolean by remember { derivedStateOf {
+		 when(validationResult){
+			 is ValidationResult.Success -> true
+			 is ValidationResult.Failure -> false
+		 }
+	} }
+
+	val validationErrorMessage by remember { derivedStateOf {
+		when(val res = validationResult){
+			is ValidationResult.Success -> ""
+			is ValidationResult.Failure -> res.message
+		}
+	} }
+
 	val accentColor by remember { derivedStateOf { logD("weGood: $weGood"); if (weGood) AccentColor.Ok.value else AccentColor.Problem.value  } }
 	val listOfDays = remember { mutableStateListOf('M', 'T', 'W', 'T', 'F', 'S', 'S') }
 	val bringIntoViewRequester = remember { BringIntoViewRequester() }
@@ -317,7 +336,12 @@ import java.util.Calendar
 						Spacer(modifier = Modifier.height(54.dp))
 						Button(
 							onClick = {
-								if (alarmObject.isOk(alarm)) onAlarmSet(alarmObject)
+								alarmObject.validate(alarm).let {
+									when(it){
+										is ValidationResult.Success -> onAlarmSet(alarmObject)
+										else -> {}
+									}
+								}
 							},
 							modifier = Modifier.fillMaxWidth().height(64.dp),
 							shape = RoundedCornerShape(33.dp),

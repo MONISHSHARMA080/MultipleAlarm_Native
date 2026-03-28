@@ -16,25 +16,24 @@ c)  later :--
        [X] abandon or work on multiple dates alarm, eg start form  today 9:00Pm to tomorrow 4:00 Am -- decided not to
        -- try adding the set same alarm on multiple week days form click like stock clock
        -- can't use my alarms as they are copyrighted, would need to use the alarms present in the system
-        * a click on alarm value and edit feature, eg endtime and a time picker appears etc
-        * [UI] stop for 10(prefer)/20 min button that can be used 3 times,
+       [X] a click on alarm value and edit feature, eg endtime and a time picker appears etc
+       [X] [UI] stop for 10(prefer)/20 min button that can be used 3 times,
         * a restart for 30 min button, here we can create a temp value or alarm where (alarm was from 2:00--6:00) from now(7:00) to now + 30 min (7:30) , create a new
             alarm instead of making db changes as that will be easier
         * in alarmActivity store the new intents in a list and when clicking destroy ensure that the app does not have more
         intent if we do then start them/ use an animation to start them in current instance
           here we will do this in the service
-        * in the alarm Service add a after 1 min or so cancel the current playing alarm
-        * re-design app using material 3 expressive
+        [X] in the alarm Service add a after 1 min or so cancel the current playing alarm
+        [X] re-design app using material 3 expressive
         * now use the alarm Intent data class to tell if we have alarm with random sound or what
-        * ability to add repeating alarms (like MONDAY, WED, SAT etc)
-        * add ability to schedule multiple alarms (calender)
+        * add ability to schedule multiple alarms (calender) or ability to add repeating alarms (like MONDAY, WED, SAT etc)
         * set alarm based on AlarmObject.Date and not take the alarmObject.StartTime alarmObject.EndTime, assert them to be right but take it from time
         * DB migration test
         * AlarmService check if the notification permission is denied or not (or a coro) if it is then send the user a notification and tell them to enable it
             1) also analytics 2) FYI there will be many notification of this, this is by desing , eg from startTime to endTime no of alarms notification , and we will tell user that a alarm was there
             on $CurrentTime but since the permission was not there we can't deliver it please enable the permission
         * allow user to schedule multiple alarms (like multiple dates)
-        * fix the weGood/AlarmData ok as when we edit the alarm and the change the time/date(IDK) then I have to click the date again to force the ui to be blue and notred
+        [X] fix the weGood/AlarmData ok as when we edit the alarm and the change the time/date(IDK) then I have to click the date again to force the ui to be blue and notred
         * we can make the splash screen like this one ->  https://djectstudio.com/ (the round circle icon splash and changes the colour)
         * the value from the shared preference should be an Data class (serializable) , and when should take it out
             also there should be a app or per alarm setting if important then if the sound is slow then raise it
@@ -45,20 +44,16 @@ c)  later :--
 
 
 d) Publishing
-    * check for the restriction,
-        -- app should launch a notification with the full screen intent and can't just start a full screen activity [check, got from gemini]
     * have to change the alarm sound, should be using the system's alarm clock sound, -- now you will need to clean up your proguard file
-    * Initial screen when fetching the alarms
+    [X] Initial screen when fetching the alarms
     * maybe a initial signup screen, like ask user what are they using the app for , and how can we help them, productivity, distracton, Alarm
         or all, explain them how can we help, maybe a/b test this
-    * ask users for review on play store helps to boost app
-    * analytics -- try post-hog or google ad mob
+     ask users for review on play store helps to boost app
+    [X] analytics -- try post-hog or google ad mob
     * app permissions and justification screen, like I would need to tell the user to give me the notification and bg autostart permission
       and explain why I need it, and also check the actual permission in the app and not just some db field, like notification etc in seperate coro
       as if user or system revoked it we would no be able to display the alarm
-    * hey we can also like shake it alarm display ads on top of the alarmActivity
-    * Error handling in prod, make a enum or tagged using class that we'll use with result , it will have a exception(state etc for us, to store), and error enum , and a message to display to the user
-        -- https://claude.ai/chat/54703a9e-442a-4029-85e1-f5df7ca61c72
+    [X] hey we can also like shake it alarm display ads on top of the alarmActivity
 
 e) after mvp --
     * maybe like slice like reward points and  spend points for using the app, watch ads or pay to get more pionts, full 8 months version also

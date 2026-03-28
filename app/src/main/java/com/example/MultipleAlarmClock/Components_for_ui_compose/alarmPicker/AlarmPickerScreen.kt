@@ -72,6 +72,7 @@ import androidx.compose.ui.unit.sp
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmObject
+import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.coolApps.MultipleAlarmClock.logD
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -111,7 +112,29 @@ enum class AccentColor(val value:Color) {
         )
     )
     }
-    val weGood by remember { derivedStateOf { alarmObject.isOk(alarm)  } }
+
+    val validationResult by remember { derivedStateOf {
+        alarmObject.validate(alarm)
+    } }
+
+    val weGood: Boolean by remember { derivedStateOf {
+        when(validationResult){
+            is ValidationResult.Success -> true
+            is ValidationResult.Failure -> false
+        }
+    } }
+
+    val validationErrorMessage by remember { derivedStateOf {
+        when(val res = validationResult){
+            is ValidationResult.Success -> ""
+            is ValidationResult.Failure -> res.message
+        }
+    } }
+
+    LaunchedEffect(validationErrorMessage) {
+        logD("validation error: $validationErrorMessage")
+    }
+
     val freqText by remember { derivedStateOf {
         if (weGood) "your alarm will ring on "+getPreviewAlarms(alarmObject) else ""
     } }
@@ -180,9 +203,24 @@ enum class AccentColor(val value:Color) {
                     weGood = weGood,
 					 onSelect = {calVersion ->
                          logD(" updated date is :${getTimeFormatted(calVersion, "hh:mm dd/MM/yyyy")}")
-                         val newStartDate = alarmObject.startTime.apply { set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR)) }
-                         val newEndDate = alarmObject.endTime.apply { set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR)) }
-                         alarmObject = alarmObject.copy(date = calVersion.timeInMillis, startTime = newStartDate, endTime = newEndDate)
+//                         val newStartDate = alarmObject.startTime.apply { set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR)) }
+//                         val newEndDate = alarmObject.endTime.apply { set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR)) }
+//                         alarmObject = alarmObject.copy(date = calVersion.timeInMillis, startTime = newStartDate, endTime = newEndDate)
+                         val newStartDate = alarmObject.startTime.apply {
+                             timeInMillis = timeInMillis  // Keep existing time
+                             set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR))
+                             set(Calendar.YEAR, calVersion.get(Calendar.YEAR))  // ← Add this for year changes
+                         }
+                         val newEndDate = alarmObject.endTime.apply {
+                             timeInMillis = timeInMillis
+                             set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR))
+                             set(Calendar.YEAR, calVersion.get(Calendar.YEAR))  // ← Add this too
+                         }
+                         alarmObject = alarmObject.copy(
+                             date = calVersion.timeInMillis,
+                             startTime = newStartDate,
+                             endTime = newEndDate
+                         )
                          logD("updated the alarmObject for new date and it is $alarmObject")
                      }
 				)
@@ -321,7 +359,8 @@ enum class AccentColor(val value:Color) {
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(
                     onClick = {
-                        if (weGood && alarmObject.isOk(alarm)) {
+
+                        if (weGood && alarmObject.validate(alarm) == ValidationResult.Success) {
                             alarmObject.startTime.set(Calendar.SECOND, 0)
                             alarmObject.endTime.set(Calendar.SECOND, 0)
                             onAlarmSet(alarmObject, alarm)
@@ -384,6 +423,7 @@ enum class AccentColor(val value:Color) {
                                     timeInMillis = calendar.timeInMillis
                                     set(Calendar.HOUR_OF_DAY, timePickerState.hour)
                                     set(Calendar.MINUTE, timePickerState.minute)
+                                    set(Calendar.SECOND, 0)
                                 }
                                 onNewTimeSelected(calendar)
                                 showTimePicker = false

@@ -11,7 +11,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -42,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -94,8 +98,13 @@ import kotlinx.coroutines.launch
 				)
 			}
 			LazyColumn(
-				modifier = Modifier.fillMaxSize() ,
-				contentPadding = edgeToEdgePadding
+				modifier = Modifier.fillMaxSize(),
+				contentPadding = PaddingValues(
+					start = edgeToEdgePadding.calculateStartPadding(LocalLayoutDirection.current),
+					top = edgeToEdgePadding.calculateTopPadding(),
+					end = edgeToEdgePadding.calculateEndPadding(LocalLayoutDirection.current),
+					bottom = edgeToEdgePadding.calculateBottomPadding() + 145.dp
+				)
 			) {
 				val alarmList = alarms
 				if (alarmList != null){
@@ -167,7 +176,7 @@ import kotlinx.coroutines.launch
 		modifier = modifier
 			.padding(bottom = 29.dp, end = 16.dp)
 			.scale(scale)
-			.size(width = 180.dp, height = 80.dp)
+			.size(width = 180.dp, height = 74.dp)
 			.zIndex(5f),
 		interactionSource = interactionSource,
 		shape = MaterialTheme.shapes.extraLarge,
