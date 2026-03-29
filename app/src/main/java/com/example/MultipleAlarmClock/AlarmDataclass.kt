@@ -144,7 +144,7 @@ data class ValidationResultAlarmData(
 )
 
 enum class AlarmErrorField {
-    StartTime,
+    Time,
 //    EndTime, // since not useful
     DATE, FREQUENCY, MESSAGE, AlarmIsNotDiff
 }
@@ -204,7 +204,7 @@ data class AlarmObject(
     // when we get a weGood == false then we can call this function to see what value produced an error and then display it
     fun validate(alarmData: AlarmData?): ValidationResult{
         if (startTime.timeInMillis >= endTime.timeInMillis) {
-            return ValidationResult.Failure( message = "Start time must be before end time.", field = AlarmErrorField.StartTime)
+            return ValidationResult.Failure( message = "Start time must be before end time.", field = AlarmErrorField.Time)
         }
         if (freqGottenAfterCallback !in 1..700) {
             return ValidationResult.Failure(AlarmErrorField.FREQUENCY, "Frequency must be between 1 and 700 minutes.")

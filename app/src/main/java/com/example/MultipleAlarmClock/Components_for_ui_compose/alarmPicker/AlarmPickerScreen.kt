@@ -69,10 +69,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
+import com.coolApps.MultipleAlarmClock.dataBase.AlarmErrorField
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmObject
 import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.coolApps.MultipleAlarmClock.logD
@@ -89,27 +91,11 @@ enum class AccentColor(val value:Color) {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 /**[onAlarmSet] - here [AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
 @Composable fun AlarmPickerScreen(alarm: AlarmData? , onAlarmSet: (AlarmObject, AlarmData?) -> Unit , alarmSetGoBack: () -> Unit, analytics: Analytics){
-    //if the alarm is null then it's for a new alarm else we are editing an alarm
+    // if the alarm is null then it's for a new alarm else we are editing an alarm
     val coroutineScope = rememberCoroutineScope()
-    logD("alarm dates ->"+getListOfDatesInThisWeek() )
     val now = Calendar.getInstance()
     var alarmObject by remember { mutableStateOf(
         alarm?.toAlarmObject() ?: AlarmObject(
-//            startTime =Calendar.getInstance().apply {
-//                add(Calendar.MINUTE ,1)
-//                if (get(Calendar.DAY_OF_YEAR) != Calendar.getInstance().get(Calendar.DAY_OF_YEAR)) {
-//                    set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
-//                }
-//                set(Calendar.SECOND, 0)
-//            },
-//            endTime =Calendar.getInstance().apply {
-//                add(Calendar.MINUTE ,45)
-//                logD("endTImeDay:${get(Calendar.DAY_OF_YEAR)} , date of cal: ${Calendar.getInstance().get(Calendar.DAY_OF_YEAR)} ")
-//                if (get(Calendar.DAY_OF_YEAR) != Calendar.getInstance().get(Calendar.DAY_OF_YEAR)) {
-//                    set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
-//                }
-//                set(Calendar.SECOND, 0)
-//            },
             startTime = (now.clone() as Calendar).apply {
                 add(Calendar.MINUTE, 1)
                 // If adding 1 min pushed us to tomorrow, cap at 23:59 today
@@ -155,12 +141,16 @@ enum class AccentColor(val value:Color) {
         }
     } }
 
+    val currentError = validationResult as? ValidationResult.Failure
+//    val currentError by remember { derivedStateOf {  validationResult as? ValidationResult.Failure } }
+
+
     LaunchedEffect(validationErrorMessage) {
         logD("validation error: $validationErrorMessage")
     }
 
     val freqText by remember { derivedStateOf {
-        if (weGood) "your alarm will ring on "+getPreviewAlarms(alarmObject) else ""
+        if (weGood) "your alarm will ring on "+getPreviewAlarms(alarmObject, 4) else ""
     } }
 //    val accentColor by remember { derivedStateOf { logD("weGood: $weGood"); if (weGood) AccentColor.Ok.value else AccentColor.Problem.value  } }
     val accentColor by animateColorAsState(
@@ -206,14 +196,20 @@ enum class AccentColor(val value:Color) {
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 // --- Time Range Selector ---
-                Row(
-                    modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TimeBox("START TIME", alarmObject.startTime,  accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(startTime = newSelectedTime) })
-                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
-                    TimeBox("END TIME", alarmObject.endTime,  accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(endTime = newSelectedTime) })
+                CardContainer {
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TimeBox("Start time", alarmObject.startTime,  accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(startTime = newSelectedTime) })
+                            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
+                            TimeBox("End time", alarmObject.endTime,  accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(endTime = newSelectedTime) })
+                        }
+                        if (currentError != null && currentError.field == AlarmErrorField.Time){
+                            Text(currentError.message)
+                        }
+                    }
                 }
-                Spacer(modifier = Modifier.height(21.dp))
                 // --- Repeats / Day Picker ---
                 CardContainer {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -227,10 +223,7 @@ enum class AccentColor(val value:Color) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Date", color = Color.White, fontWeight = FontWeight.Bold)
                         }
-
                         Spacer(modifier = Modifier.height(12.dp))
-
-
                         DateList(
                             startDateIndex =alarm?.startTime,
                             weGood = weGood,
@@ -255,8 +248,6 @@ enum class AccentColor(val value:Color) {
                     }
 
                 }
-
-                Spacer(modifier = Modifier.height(21.dp))
                 // --- frequency Section ---
                 CardContainer {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -327,15 +318,13 @@ enum class AccentColor(val value:Color) {
                             Text("Please enter the frequency value", color = Color.Gray, fontSize = 12.sp)
                         } else{
                             Text(
-//                                "Alarm will ring every ${alarmObject.freqGottenAfterCallback} minutes between ${getTimeFormatted(alarmObject.startTime)}  and ${getTimeFormatted(alarmObject.endTime)} AM" +
-										freqText,
+                                freqText,
                                 color = Color.Gray,
                                 fontSize = 12.sp
                             )
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(21.dp))
                 CardContainer {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -379,7 +368,6 @@ enum class AccentColor(val value:Color) {
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(24.dp))
                 Button(
                     onClick = {
 
@@ -470,12 +458,13 @@ enum class AccentColor(val value:Color) {
     }
 }
 
-@Composable fun CardContainer(modifier: Modifier = Modifier, shape: Shape = RoundedCornerShape(26.dp), color: Color = Color(0xFF1C222B), content: @Composable (() -> Unit)) {
+@Composable fun CardContainer(modifier: Modifier = Modifier, endSpaceHeight: Dp = 16.dp, shape: Shape = RoundedCornerShape(26.dp), color: Color = Color(0xFF1C222B), content: @Composable (() -> Unit)) {
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = shape,
         color = color
-    ) { content() }
+    ) { content()}
+    Spacer(Modifier.height(endSpaceHeight))
 }
 
 fun getTimeFormatted(cal: Calendar, formatter:String = "hh:mm"): String{
