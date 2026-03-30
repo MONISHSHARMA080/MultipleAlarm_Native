@@ -190,11 +190,10 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/bundle/release/*.aab
+            app/build/outputs/apk/release/${{ env.FINAL_APK_NAME }}
+            app/build/outputs/bundle/release/${{ env.FINAL_AAB_NAME }}
           body: |
             ## Release ${{ steps.version.outputs.VERSION_TAG }}
-            
             **Version Code:** ${{ steps.version.outputs.VERSION_CODE }}
             **Version Name:** ${{ steps.version.outputs.VERSION_NAME }}
             
