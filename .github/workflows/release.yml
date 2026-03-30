@@ -11,24 +11,24 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Gradle cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-main-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-main-
-
-      - name: Android build cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            app/build
-          key: build-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/*.kt', '**/*.java') }}
-          restore-keys: |
-            build-
+#      - name: Gradle cache
+#        uses: actions/cache@v4
+#        with:
+#          path: |
+#            ~/.gradle/caches
+#            ~/.gradle/wrapper
+#          key: gradle-main-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+#          restore-keys: |
+#            gradle-main-
+#
+#      - name: Android build cache
+#        uses: actions/cache@v4
+#        with:
+#          path: |
+#            app/build
+#          key: build-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/*.kt', '**/*.java') }}
+#          restore-keys: |
+#            build-
 
       - name: Calculate Version Code
         id: version
@@ -58,7 +58,6 @@ jobs:
         with:
           java-version: "17"
           distribution: "temurin"
-#          cache: gradle
 
       - name: Grant execute permission for gradlew
         env:
