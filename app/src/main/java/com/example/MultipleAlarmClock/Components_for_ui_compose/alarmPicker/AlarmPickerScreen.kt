@@ -2,9 +2,14 @@ package com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker
 
 import android.text.format.DateFormat
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -33,6 +38,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Message
+import androidx.compose.material.icons.filled.AccessTimeFilled
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AlarmAdd
 import androidx.compose.material.icons.filled.AlarmOff
@@ -150,7 +156,11 @@ enum class AccentColor(val value:Color) {
     }
 
     val freqText by remember { derivedStateOf {
-        if (weGood) "your alarm will ring on "+getPreviewAlarms(alarmObject, 4) else ""
+        if (weGood) "your alarm will ring on "+getPreviewAlarms(alarmObject, 4) else {
+            if (currentError?.field == AlarmErrorField.FREQUENCY){
+                currentError.message
+            }else ""
+        }
     } }
 //    val accentColor by remember { derivedStateOf { logD("weGood: $weGood"); if (weGood) AccentColor.Ok.value else AccentColor.Problem.value  } }
     val accentColor by animateColorAsState(
@@ -168,7 +178,6 @@ enum class AccentColor(val value:Color) {
         ))
     }
 
-
     Scaffold(
         contentWindowInsets = WindowInsets.safeContent,
         modifier = Modifier.fillMaxSize()
@@ -182,7 +191,8 @@ enum class AccentColor(val value:Color) {
                 modifier = Modifier
                     .fillMaxWidth().background(Color(0xFF0F131A)).verticalScroll(rememberScrollState())
                     .fillMaxSize().navigationBarsPadding().animateContentSize()
-                    .padding(horizontal = 20.dp).padding(top = contentPadding.calculateTopPadding() + 12.dp)
+                    .padding(horizontal = 20.dp)
+                    .padding(top = contentPadding.calculateTopPadding() )
                     .padding(bottom = contentPadding.calculateBottomPadding() + 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -194,20 +204,35 @@ enum class AccentColor(val value:Color) {
                 ) {
                     Text(if (alarm == null)"New alarm" else "Edit Alarm" , color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 }
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 // --- Time Range Selector ---
                 CardContainer {
-                    Column {
+                    Column (modifier = Modifier.padding( bottom = 11.dp, start = 18.dp, end = 6.dp, top = 5.dp ) ){
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.AccessTimeFilled,
+                                contentDescription = null,
+                                tint = if (currentError != null && currentError.field == AlarmErrorField.Time) AccentColor.Problem.value else AccentColor.Ok.value,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Time", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.width(15.dp))
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically
+                            modifier = Modifier.fillMaxWidth().padding(0.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically
                         ) {
-                            TimeBox("Start time", alarmObject.startTime,  accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(startTime = newSelectedTime) })
-                            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(24.dp))
-                            TimeBox("End time", alarmObject.endTime,  accentColor, onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(endTime = newSelectedTime) })
+                            TimeBox("Start time", alarmObject.startTime,
+                                if (currentError != null && currentError.field == AlarmErrorField.Time) AccentColor.Problem.value else AccentColor.Ok.value,
+                                onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(startTime = newSelectedTime) })
+                            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null,
+                                tint = Color.Gray,
+                                modifier = Modifier.size(24.dp))
+                            TimeBox("End time", alarmObject.endTime,
+                                 if (currentError != null && currentError.field == AlarmErrorField.Time) AccentColor.Problem.value else AccentColor.Ok.value,
+                                onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(endTime = newSelectedTime) })
                         }
-                        if (currentError != null && currentError.field == AlarmErrorField.Time){
-                            Text(currentError.message)
-                        }
+                        ShowErrorMessageIfError(currentError, AlarmErrorField.Time)
                     }
                 }
                 // --- Repeats / Day Picker ---
@@ -217,7 +242,7 @@ enum class AccentColor(val value:Color) {
                             Icon(
                                 Icons.Default.CalendarMonth,
                                 contentDescription = null,
-                                tint = accentColor,
+                                tint = if (currentError != null && currentError.field == AlarmErrorField.DATE) AccentColor.Problem.value else AccentColor.Ok.value,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -226,7 +251,7 @@ enum class AccentColor(val value:Color) {
                         Spacer(modifier = Modifier.height(12.dp))
                         DateList(
                             startDateIndex =alarm?.startTime,
-                            weGood = weGood,
+                            weGood = !(currentError != null && currentError.field == AlarmErrorField.DATE),
                             onSelect = {calVersion ->
                                 logD(" updated date is :${getTimeFormatted(calVersion, "hh:mm dd/MM/yyyy")}")
                                 val newStartDate = (alarmObject.startTime.clone() as Calendar).apply {
@@ -245,14 +270,16 @@ enum class AccentColor(val value:Color) {
                                 logD("updated the alarmObject for new date and it is $alarmObject")
                             }
                         )
+                        ShowErrorMessageIfError(currentError, AlarmErrorField.DATE)
                     }
-
                 }
                 // --- frequency Section ---
                 CardContainer {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Schedule, contentDescription = null, tint = accentColor, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Schedule, contentDescription = null,
+                                tint = if (currentError != null && currentError.field == AlarmErrorField.FREQUENCY) AccentColor.Problem.value else AccentColor.Ok.value,
+                                modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Frequency", color = Color.White, fontWeight = FontWeight.Bold)
                         }
@@ -265,7 +292,7 @@ enum class AccentColor(val value:Color) {
                                         .fillMaxWidth()
                                         .height(48.dp)
                                         .clip(RoundedCornerShape(25.dp))
-                                        .background(accentColor),
+                                        .background(if (currentError != null && currentError.field == AlarmErrorField.FREQUENCY) AccentColor.Problem.value else AccentColor.Ok.value),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
@@ -315,7 +342,7 @@ enum class AccentColor(val value:Color) {
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         if ( alarmObject.freqGottenAfterCallback < 1){
-                            Text("Please enter the frequency value", color = Color.Gray, fontSize = 12.sp)
+                            Text("Please enter the frequency value", color = Color.White, fontSize = 12.sp)
                         } else{
                             Text(
                                 freqText,
@@ -323,12 +350,16 @@ enum class AccentColor(val value:Color) {
                                 fontSize = 12.sp
                             )
                         }
+                        // we want to show user the error message and also ask them to enter the freq value
+                        ShowErrorMessageIfError(currentError, AlarmErrorField.FREQUENCY)
                     }
                 }
                 CardContainer {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.AutoMirrored.Filled.Message, contentDescription = null, tint = accentColor)
+                            Icon(Icons.AutoMirrored.Filled.Message, contentDescription = null,
+                                tint = if (currentError != null && currentError.field == AlarmErrorField.FREQUENCY) AccentColor.Problem.value else AccentColor.Ok.value
+                            )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Message", color = Color.White, fontWeight = FontWeight.Bold)
                         }
@@ -389,6 +420,9 @@ enum class AccentColor(val value:Color) {
                                     Icon(Icons.Default.AlarmAdd, contentDescription = null, tint = Color.White)
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text("Set Alarm", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+
+                                }else if(currentError?.field == AlarmErrorField.AlarmIsNotDiff){
+                                    ShowErrorMessageIfError(currentError, AlarmErrorField.AlarmIsNotDiff)
                                 } else {
                                     Icon(Icons.Default.AlarmOff, contentDescription = null, tint = Color.White)
                                     Spacer(modifier = Modifier.width(8.dp))
@@ -465,6 +499,20 @@ enum class AccentColor(val value:Color) {
         color = color
     ) { content()}
     Spacer(Modifier.height(endSpaceHeight))
+}
+
+@Composable fun ShowErrorMessageIfError( currentError: ValidationResult.Failure?, alarmErrorField: AlarmErrorField){
+    AnimatedVisibility(
+        visible = currentError != null && currentError.field == alarmErrorField,
+        enter = fadeIn() + expandHorizontally(),
+        exit = fadeOut() + shrinkHorizontally()
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Spacer(modifier = Modifier.width(7.dp))
+            Text(currentError?.message ?: "",color = Color.White, fontSize = 12.sp )
+        }
+    }
+
 }
 
 fun getTimeFormatted(cal: Calendar, formatter:String = "hh:mm"): String{
