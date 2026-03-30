@@ -152,7 +152,7 @@ jobs:
           TIMESTAMP=$(date +'%Y%m%d-%H%M')
           
           APK_SOURCE="app/build/outputs/apk/release/app-release.apk"
-          NEW_APK_NAME="${CUSTOM_NAME}-${TIMESTAMP}.apk"
+          NEW_APK_NAME="${CUSTOM_NAME}.apk"
           
           mv "$APK_SOURCE" "app/build/outputs/apk/release/$NEW_APK_NAME"
           
