@@ -209,6 +209,6 @@ jobs:
         with:
           name: app-release-${{ steps.version.outputs.VERSION_TAG }}
           path: |
-              app/build/outputs/apk/release/app-${{ steps.version.outputs.VERSION_TAG }}.apk
-              app/build/outputs/bundle/release/app-${{ steps.version.outputs.VERSION_TAG }}.aab
+              app/build/outputs/apk/release/${{ env.FINAL_APK_NAME }}
+              app/build/outputs/bundle/release/${{ env.FINAL_AAB_NAME }}
           retention-days: 3
