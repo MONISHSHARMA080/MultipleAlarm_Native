@@ -112,9 +112,9 @@ jobs:
       - name: Check Files
         run: tree
 
-      - name: Stamp proguard with git SHA
-        run: |
-          echo "# Build: ${{ github.sha }}" >> app/proguard-rules.pro
+#      - name: Stamp proguard with git SHA
+#        run: |
+#          echo "# Build: ${{ github.sha }}" >> app/proguard-rules.pro
 
       - name: Build and Sign APK
         env:
