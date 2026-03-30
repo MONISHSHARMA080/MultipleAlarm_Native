@@ -33,27 +33,25 @@ jobs:
       - name: Calculate Version Code
         id: version
         run: |
-          # 1. Ensure we have all tags from the server
-          git fetch --tags --force
-
-          # 2. Get the latest tag matching "v*"
+          # Try to get the last version tag
           LAST_VERSION_TAG=$(git tag -l "v*" --sort=-v:refname | head -n 1 || echo "")
           
           if [ -z "$LAST_VERSION_TAG" ]; then
             VERSION_CODE=1
           else
-            # 3. FIX: Strip the 'v' from the start to get just the number
-            # If tag is "v5", this results in "5"
-            LAST_VERSION_CODE=$(echo "$LAST_VERSION_TAG" | sed 's/^v//' | grep -oE '[0-9]+' || echo "0")
+            # Extract version code from last tag (assumes format like v2024.01.19-1234-vc42)
+            LAST_VERSION_CODE=$(echo "$LAST_VERSION_TAG" | grep -oP 'vc\K[0-9]+' || echo "0")
             VERSION_CODE=$((LAST_VERSION_CODE + 1))
           fi
           
+          # Generate version name with timestamp
           VERSION_NAME="Version: ${VERSION_CODE}"
           VERSION_TAG="v${VERSION_CODE}"
           
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_OUTPUT
           echo "VERSION_TAG=$VERSION_TAG" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION_TAG (code: $VERSION_CODE, name: $VERSION_NAME)"
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
