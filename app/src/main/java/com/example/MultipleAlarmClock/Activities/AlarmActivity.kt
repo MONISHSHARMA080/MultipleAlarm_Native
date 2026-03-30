@@ -212,11 +212,11 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Cancel,
-                        modifier = Modifier.size(35.dp),
+                        modifier = Modifier.size(33.dp),
                         contentDescription = "Cancel"
                     )
-                    Spacer(modifier = Modifier.width(14.dp)) // Space between icon and text
-                    Text(text = "Stop", fontSize = 35.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.width(13.dp)) // Space between icon and text
+                    Text(text = "Stop", fontSize = 33.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
