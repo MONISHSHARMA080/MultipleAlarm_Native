@@ -11,46 +11,48 @@ jobs:
         with:
           fetch-depth: 0
 
-#      - name: Gradle cache
-#        uses: actions/cache@v4
-#        with:
-#          path: |
-#            ~/.gradle/caches
-#            ~/.gradle/wrapper
-#          key: gradle-main-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-#          restore-keys: |
-#            gradle-main-
-#
-#      - name: Android build cache
-#        uses: actions/cache@v4
-#        with:
-#          path: |
-#            app/build
-#          key: build-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/*.kt', '**/*.java') }}
-#          restore-keys: |
-#            build-
+      - name: Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-main-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-main-
+
+      - name: Android build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            app/build
+          key: build-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/*.kt', '**/*.java') }}
+          restore-keys: |
+            build-
 
       - name: Calculate Version Code
         id: version
         run: |
-          # Try to get the last version tag
           LAST_VERSION_TAG=$(git tag -l "v*" --sort=-v:refname | head -n 1 || echo "")
           
           if [ -z "$LAST_VERSION_TAG" ]; then
             VERSION_CODE=1
           else
-            # Extract version code from last tag (assumes format like v2024.01.19-1234-vc42)
-            LAST_VERSION_CODE=$(echo "$LAST_VERSION_TAG" | grep -oP 'vc\K[0-9]+' || echo "0")
+            # Extract version code - handles both v128 and v2026.03.25.1213-vc127 formats
+            LAST_VERSION_CODE=$(echo "$LAST_VERSION_TAG" | grep -oP 'vc\K[0-9]+' || echo "")
+            if [ -z "$LAST_VERSION_CODE" ]; then
+              LAST_VERSION_CODE=$(echo "$LAST_VERSION_TAG" | sed 's/^v//' | grep -oE '^[0-9]+' || echo "0")
+            fi
             VERSION_CODE=$((LAST_VERSION_CODE + 1))
           fi
           
-          # Generate version name with timestamp
-          VERSION_NAME="Version: ${VERSION_CODE}"
+          VERSION_NAME="$(date +'%Y.%m.%d.%H%M')"
           VERSION_TAG="v${VERSION_CODE}"
           
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_OUTPUT
           echo "VERSION_TAG=$VERSION_TAG" >> $GITHUB_OUTPUT
+          
           echo "Building version: $VERSION_TAG (code: $VERSION_CODE, name: $VERSION_NAME)"
 
       - name: Set up JDK 17
@@ -87,13 +89,11 @@ jobs:
           sudo udevadm trigger --name-match=kvm
           sudo usermod -aG kvm $USER
 
-      # Install system image for Gradle Managed Device
       - name: Install Android SDK System Image
         run: |
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
             --install "system-images;android-31;google_apis;x86_64"
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-          
 
       - name: Generate Baseline Profile
         if: github.ref == 'refs/heads/main'
@@ -110,6 +110,10 @@ jobs:
       - name: Check Files
         run: tree
 
+      - name: Stamp proguard with git SHA
+        run: |
+          echo "# Build: ${{ github.sha }}" >> app/proguard-rules.pro
+
       - name: Build and Sign APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -122,57 +126,42 @@ jobs:
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
           POSTHOG_RELEASE: "MultipleAlarm_Native@${{ github.sha }}"
         run: |
-            ./gradlew assembleRelease bundleRelease \
-            "-Pandroid.injected.signing.store.file=$PWD/app/release.keystore" \
-            "-Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD" \
-            "-Pandroid.injected.signing.key.alias=$KEY_ALIAS" \
-            "-Pandroid.injected.signing.key.password=$KEY_PASSWORD" \
-            "-PversionCode=$VERSION_CODE" \
-            "-PversionName=$VERSION_NAME"
+          ./gradlew assembleRelease bundleRelease \
+          -Pandroid.injected.signing.store.file=$PWD/app/release.keystore \
+          -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
+          -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
+          -Pandroid.injected.signing.key.password=$KEY_PASSWORD \
+          -PversionCode=$VERSION_CODE \
+          -PversionName=$VERSION_NAME
 
       - name: Debug PostHog map ID state
         run: |
-           find app/build -name "posthog-proguard-map-id.properties" -print -exec cat {} \;
-           find app/build -name "mapping.txt" -print | head -5
+          find app/build -name "posthog-proguard-map-id.properties" -print -exec cat {} \;
+          find app/build -name "mapping.txt" -print | head -5
 
-      - name: Debug PostHog map ID state
+      - name: Debug PostHog map ID state (on failure)
         if: failure()
         run: |
           find app/build -name "posthog-proguard-map-id.properties" -print -exec cat {} \;
           find app/build -name "mapping.txt" -print | head -5
           md5sum app/build/outputs/mapping/release/mapping.txt
           wc -l app/build/outputs/mapping/release/mapping.txt
-          
 
-
-      - name: Rename APK
+      - name: Rename APK and AAB
         run: |
-          # Define your custom name here
-          CUSTOM_NAME="MultipleAlarms-${{ steps.version.outputs.VERSION_TAG }}"
-          TIMESTAMP=$(date +'%Y%m%d-%H%M')
-        
+          # Rename APK
           APK_SOURCE="app/build/outputs/apk/release/app-release.apk"
-          NEW_APK_NAME="${CUSTOM_NAME}-${TIMESTAMP}.apk"
-        
-          mv "$APK_SOURCE" "app/build/outputs/apk/release/$NEW_APK_NAME"
-        
-          # Save the name for the Release step to find
-          echo "FINAL_APK_NAME=$NEW_APK_NAME" >> $GITHUB_ENV
-          echo "Renamed APK to: $NEW_APK_NAME"
-
-      - name: Rename AAB
-        run: |
-          CUSTOM_NAME="MultipleAlarms-${{ steps.version.outputs.VERSION_TAG }}"
-          TIMESTAMP=$(date +'%Y%m%d-%H%M')
+          APK_NAME="${{ steps.version.outputs.VERSION_TAG }}.apk"
+          mv "$APK_SOURCE" "app/build/outputs/apk/release/$APK_NAME"
+          echo "✅ Renamed APK to: $APK_NAME"
           
-          AAB_SOURCE="app/build/outputs/bundle/release/app-release.aab"
-          NEW_AAB_NAME="${CUSTOM_NAME}-${TIMESTAMP}.aab"
-          
-          mv "$AAB_SOURCE" "app/build/outputs/bundle/release/$NEW_AAB_NAME"
-          
-          # Save the name for the Release step to find
-          echo "FINAL_AAB_NAME=$NEW_AAB_NAME" >> $GITHUB_ENV
-          echo "Renamed AAB to: $NEW_AAB_NAME"
+          # Rename AAB (only if on main branch)
+          if [ -f "app/build/outputs/bundle/release/app-release.aab" ]; then
+            AAB_SOURCE="app/build/outputs/bundle/release/app-release.aab"
+            AAB_NAME="${{ steps.version.outputs.VERSION_TAG }}.aab"
+            mv "$AAB_SOURCE" "app/build/outputs/bundle/release/$AAB_NAME"
+            echo "✅ Renamed AAB to: $AAB_NAME"
+          fi
 
       - name: Create Release
         id: create_release
@@ -183,16 +172,17 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            app/build/outputs/apk/release/${{ env.FINAL_APK_NAME }}
-            app/build/outputs/bundle/release/${{ env.FINAL_AAB_NAME }}
+            app/build/outputs/apk/release/${{ steps.version.outputs.VERSION_TAG }}.apk
+            app/build/outputs/bundle/release/${{ steps.version.outputs.VERSION_TAG }}.aab
           body: |
             ## Release ${{ steps.version.outputs.VERSION_TAG }}
+            
             **Version Code:** ${{ steps.version.outputs.VERSION_CODE }}
             **Version Name:** ${{ steps.version.outputs.VERSION_NAME }}
             
             Built from commit: ${{ github.sha }}
             
-            ${{ github.ref == 'refs/heads/main' && '**Includes:** APK + AAB with Startup Profile' || '**Includes:** APK only (dev build)' }}
+            ${{ github.ref == 'refs/heads/main' && '**Includes:** APK + AAB with Baseline Profile' || '**Includes:** APK only (dev build)' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -201,10 +191,6 @@ jobs:
         with:
           name: app-release-${{ steps.version.outputs.VERSION_TAG }}
           path: |
-              echo "Checking APK path: app/build/outputs/apk/release/${{ env.FINAL_APK_NAME }}"
-              ls -lh app/build/outputs/apk/release/
-              echo "Checking AAB path: app/build/outputs/bundle/release/${{ env.FINAL_AAB_NAME }}"
-              ls -lh app/build/outputs/bundle/release/
-              app/build/outputs/apk/release/${{ env.FINAL_APK_NAME }}
-              app/build/outputs/bundle/release/${{ env.FINAL_AAB_NAME }}
+            app/build/outputs/apk/release/${{ steps.version.outputs.VERSION_TAG }}.apk
+            app/build/outputs/bundle/release/${{ steps.version.outputs.VERSION_TAG }}.aab
           retention-days: 3
