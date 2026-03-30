@@ -161,7 +161,6 @@ jobs:
           echo "Renamed APK to: $NEW_APK_NAME"
 
       - name: Rename AAB
-        if: github.ref == 'refs/heads/main'
         run: |
           CUSTOM_NAME="MultipleAlarms-${{ steps.version.outputs.VERSION_TAG }}"
           TIMESTAMP=$(date +'%Y%m%d-%H%M')
