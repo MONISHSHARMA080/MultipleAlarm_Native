@@ -209,6 +209,10 @@ jobs:
         with:
           name: app-release-${{ steps.version.outputs.VERSION_TAG }}
           path: |
+              echo "Checking APK path: app/build/outputs/apk/release/${{ env.FINAL_APK_NAME }}"
+              ls -lh app/build/outputs/apk/release/
+              echo "Checking AAB path: app/build/outputs/bundle/release/${{ env.FINAL_AAB_NAME }}"
+              ls -lh app/build/outputs/bundle/release/
               app/build/outputs/apk/release/${{ env.FINAL_APK_NAME }}
               app/build/outputs/bundle/release/${{ env.FINAL_AAB_NAME }}
           retention-days: 3
