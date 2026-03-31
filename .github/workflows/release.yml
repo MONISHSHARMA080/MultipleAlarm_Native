@@ -165,19 +165,9 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.VERSION_TAG }}
           name: Release ${{ steps.version.outputs.VERSION_TAG }}
-          draft: false
-          prerelease: false
           files: |
-            app/build/outputs/apk/release/${{ env.FINAL_APK_NAME }}
-            app/build/outputs/bundle/release/${{ env.FINAL_AAB_NAME }}
-          body: |
-            ## Release ${{ steps.version.outputs.VERSION_TAG }}
-            **Version Code:** ${{ steps.version.outputs.VERSION_CODE }}
-            **Version Name:** ${{ steps.version.outputs.VERSION_NAME }}
-            
-            Built from commit: ${{ github.sha }}
-            
-            ${{ github.ref == 'refs/heads/main' && '**Includes:** APK + AAB with Startup Profile' || '**Includes:** APK only (dev build)' }}
+            ${{ env.FINAL_APK_PATH }}
+            ${{ env.FINAL_AAB_PATH }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -186,10 +176,6 @@ jobs:
         with:
           name: app-release-${{ steps.version.outputs.VERSION_TAG }}
           path: |
-            echo "Checking APK path: app/build/outputs/apk/release/${{ env.FINAL_APK_NAME }}"
-            ls -lh app/build/outputs/apk/release/
-            echo "Checking AAB path: app/build/outputs/bundle/release/${{ env.FINAL_AAB_NAME }}"
-            ls -lh app/build/outputs/bundle/release/
-            app/build/outputs/apk/release/${{ env.FINAL_APK_NAME }}
-            app/build/outputs/bundle/release/${{ env.FINAL_AAB_NAME }}
+           ${{ env.FINAL_APK_PATH }}
+           ${{ env.FINAL_AAB_PATH }}
           retention-days: 3
