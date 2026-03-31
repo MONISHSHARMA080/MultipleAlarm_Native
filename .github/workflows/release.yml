@@ -78,22 +78,13 @@ jobs:
           POSTHOG_CLI_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
           POSTHOG_RELEASE: "MultipleAlarm_Native@${{ github.sha }}"
-        run: |
-          ./gradlew clean assembleRelease bundleRelease \
+       run: |
+          ./gradlew clean assembleRelease    bundleRelease \
          "-Pandroid.injected.signing.store.file=$PWD/app/release.keystore" \
     "-Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD" \
     "-Pandroid.injected.signing.key.alias=$KEY_ALIAS" \
        "-Pandroid.injected.signing.key.password=$KEY_PASSWORD""
 
-      - name: Build Release AAB
-        env:
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          ./gradlew bundleRelease \
-            -PversionCode=${{ steps.version.outputs.version_code }} \
-            -PversionName=${{ steps.version.outputs.version_name }}
 
       - name: Rename APK
         run: |
