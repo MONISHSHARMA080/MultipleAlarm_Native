@@ -21,15 +21,6 @@ jobs:
           restore-keys: |
               gradle-main-
 
-#            - name: Android build cache
-#              uses: actions/cache@v4
-#              with:
-#                path: |
-#                  app/build
-#                key: build-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/*.kt', '**/*.java') }}
-#                restore-keys: |
-#                  build-
-
       - name: Calculate Version Code
         id: version
         run: |
@@ -146,35 +137,27 @@ jobs:
 
 
 
-      - name: Rename APK
+      - name: Prepare Apk & AAB
         run: |
-          # Define your custom name here
-          CUSTOM_NAME="MultipleAlarms-${{ steps.version.outputs.VERSION_TAG }}"
-          TIMESTAMP=$(date +'%Y%m%d-%H%M')
+          # 1. Search for the actual APK file generated in the release folder
+          # We look for any .apk file in the release directory to avoid hardcoding names
+               APK_PATH=$(find app/build/outputs/apk/release/ -name "*.apk" -type f | head -n 1)
+               APK_FILENAME=$(basename "$APK_PATH")
           
-          APK_SOURCE="app/build/outputs/apk/release/app-release.apk"
-          NEW_APK_NAME="${CUSTOM_NAME}.apk"
-          
-          mv "$APK_SOURCE" "app/build/outputs/apk/release/$NEW_APK_NAME"
-          
-          # Save the name for the Release step to find
-          echo "FINAL_APK_NAME=$NEW_APK_NAME" >> $GITHUB_ENV
-          echo "Renamed APK to: $NEW_APK_NAME"
+          # 2. Search for the actual AAB file
+               AAB_PATH=$(find app/build/outputs/bundle/release/ -name "*.aab" -type f | head -n 1)
+               AAB_FILENAME=$(basename "$AAB_PATH")
 
-      - name: Rename AAB
-        if: github.ref == 'refs/heads/main'
-        run: |
-          CUSTOM_NAME="MultipleAlarms-${{ steps.version.outputs.VERSION_TAG }}"
-          TIMESTAMP=$(date +'%Y%m%d-%H%M')
-          
-          AAB_SOURCE="app/build/outputs/bundle/release/app-release.aab"
-          NEW_AAB_NAME="${CUSTOM_NAME}-${TIMESTAMP}.aab"
-          
-          mv "$AAB_SOURCE" "app/build/outputs/bundle/release/$NEW_AAB_NAME"
-          
-          # Save the name for the Release step to find
-          echo "FINAL_AAB_NAME=$NEW_AAB_NAME" >> $GITHUB_ENV
-          echo "Renamed AAB to: $NEW_AAB_NAME"
+          # 3. Save the actual paths and names to GITHUB_ENV for later steps
+               echo "FINAL_APK_PATH=$APK_PATH" >> $GITHUB_ENV
+               echo "FINAL_APK_NAME=$APK_FILENAME" >> $GITHUB_ENV
+               
+               echo "FINAL_AAB_PATH=$AAB_PATH" >> $GITHUB_ENV
+               echo "FINAL_AAB_NAME=$AAB_FILENAME" >> $GITHUB_ENV
+               
+               echo "Successfully located APK: $APK_FILENAME"
+               echo "Successfully located AAB: $AAB_FILENAME"
+
 
       - name: Create Release
         id: create_release
