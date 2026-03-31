@@ -37,7 +37,7 @@ class Analytics(val context: Context){
 				sessionReplayConfig.maskAllTextInputs = false
 				sessionReplay = true
 				debug = BuildConfig.DEBUG
-				optOut = BuildConfig.DEBUG
+				optOut = BuildConfig.DEBUG || BuildConfig.SKIP_POSTHOG
 				sessionReplayConfig.captureLogcat = true
 			sessionReplayConfig.screenshot = true
 		}

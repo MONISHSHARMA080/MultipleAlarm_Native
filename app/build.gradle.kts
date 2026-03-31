@@ -66,7 +66,8 @@ fun Project.configureAndroid() {
                 } else {
                     "debug-$myAppName"
                 }
-
+                val skipPostHog = project.findProperty("skipPostHog")?.toString() == "true"
+                buildConfigField("boolean", "SKIP_POSTHOG", skipPostHog.toString())
                 resValue("string", "app_name", appName)
                 isShrinkResources = true
                 isMinifyEnabled = true
@@ -76,6 +77,7 @@ fun Project.configureAndroid() {
             debug {
                 applicationIdSuffix = ".debug"
                 resValue("string", "app_name", "debug-$myAppName")
+                buildConfigField("boolean", "SKIP_POSTHOG", "false")
             }
         }
 
