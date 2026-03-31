@@ -9,7 +9,7 @@ on:
 jobs:
   build-release:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -55,7 +55,6 @@ jobs:
           npm install -g @posthog/cli;
           posthog-cli --version
 
-
       - name: Generate Baseline Profile
         if: github.ref == 'refs/heads/main'
         env:
@@ -68,7 +67,6 @@ jobs:
             -PskipPostHog=true \
             --stacktrace
 
-
       - name: Build Release APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -78,13 +76,12 @@ jobs:
           POSTHOG_CLI_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
           POSTHOG_RELEASE: "MultipleAlarm_Native@${{ github.sha }}"
-       run: |
-          ./gradlew clean assembleRelease    bundleRelease \
-         "-Pandroid.injected.signing.store.file=$PWD/app/release.keystore" \
-    "-Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD" \
-    "-Pandroid.injected.signing.key.alias=$KEY_ALIAS" \
-       "-Pandroid.injected.signing.key.password=$KEY_PASSWORD""
-
+        run: |
+          ./gradlew clean assembleRelease bundleRelease \
+            "-Pandroid.injected.signing.store.file=$PWD/app/release.keystore" \
+            "-Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD" \
+            "-Pandroid.injected.signing.key.alias=$KEY_ALIAS" \
+            "-Pandroid.injected.signing.key.password=$KEY_PASSWORD"
 
       - name: Rename APK
         run: |
