@@ -122,19 +122,3 @@ jobs:
           name: Multiple-Alarms-${{ steps.version.outputs.version_name }}-AAB
           path: Multiple-Alarms-${{ steps.version.outputs.version_name }}.aab
           retention-days: 30
-Required GitHub Secrets
-You need to add these secrets to your GitHub repository (Settings → Secrets and variables → Actions):
-KEYSTORE_BASE64: Your release.keystore file encoded in base64
-base64 -i release.keystore | pbcopy  # macOS
-base64 release.keystore | xclip      # Linux
-KEYSTORE_PASSWORD: Your keystore password
-KEY_ALIAS: Your key alias
-KEY_PASSWORD: Your key password
-How it works:
-Auto-versioning: Gets the last git tag, increments it (v92 → v93)
-Baseline Profiles: Generates baseline and startup profiles
-Builds: Creates both APK and AAB with proper signing
-Naming: APK/AAB named like Multiple-Alarms-v93.apk
-GitHub Release: Creates a release with tag v93, attaches both files
-Artifacts: Uploads files as GitHub Actions artifacts for 30 days
-The version code and name are passed as Gradle properties, which your build file already supports!
