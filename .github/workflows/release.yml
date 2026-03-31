@@ -50,6 +50,12 @@ jobs:
           sudo udevadm trigger --name-match=kvm
           sudo usermod -aG kvm $USER
 
+      - name: Install PostHog CLI
+        run: |
+          npm install -g @posthog/cli;
+          posthog-cli --version
+
+
       - name: Generate Baseline Profile
         if: github.ref == 'refs/heads/main'
         env:
