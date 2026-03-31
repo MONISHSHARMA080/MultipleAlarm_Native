@@ -79,7 +79,7 @@ jobs:
         run: |
           ./gradlew clean assembleRelease bundleRelease \
             -PversionCode=${{ steps.version.outputs.version_code }} \
-            -PversionName=${{ steps.version.outputs.version_name }} \ 
+            -PversionName=${{ steps.version.outputs.version_name }} \
             "-Pandroid.injected.signing.store.file=$PWD/app/release.keystore" \
             "-Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD" \
             "-Pandroid.injected.signing.key.alias=$KEY_ALIAS" \
