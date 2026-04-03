@@ -21,9 +21,12 @@ class ErrorHandler(val notificationHandler: NotificationHandler, val analytics: 
 	fun <E: Error> notifyUserAboutError(error: Result.Failure<E>, title: String ): Unit {
 		val notification = notificationHandler.build( notificationChannel = NotificationChannelType.ErrorChannel, notificationTitle = "Sorry an error occurred, Please try again", notificationText = error.errorMessageToDisplayUser.messageToDisplayUser )
 		notificationHandler.show(notification)
+
 		analytics.captureEvent("Error occurred", mapOf(
 			"error message displayed to user" to error.errorMessageToDisplayUser.messageToDisplayUser,
-			"exception occurred" to error.internalException.toString()
+			"exception occurred" to error.internalException.toString(),
+			"stack trace" to error.internalException.stackTrace,
+			"exception" to error.internalException
 		))
 	}
 	private  fun  logD(msg: String): Unit{
