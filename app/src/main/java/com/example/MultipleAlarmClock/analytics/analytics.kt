@@ -35,6 +35,8 @@ class Analytics(val context: Context){
 				personProfiles  = PersonProfiles.ALWAYS
 				errorTrackingConfig.autoCapture = true
 				sessionReplayConfig.maskAllTextInputs = false
+				sessionReplayConfig.maskAllImages = false
+				sessionReplayConfig.captureLogcat = true
 				sessionReplay = true
 				debug = BuildConfig.DEBUG
 				optOut = BuildConfig.DEBUG || BuildConfig.SKIP_POSTHOG

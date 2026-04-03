@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
+import com.posthog.android.replay.PostHogMaskModifier.postHogMask
 
 @Composable fun AlarmCard(
 	alarmData: AlarmData,
@@ -99,6 +100,7 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
                 IconButton(
                     onClick = { onEdit(alarmData) },
                     modifier = Modifier
+                        .postHogMask()
                         .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
                         .size(43.dp)
                 ) {
