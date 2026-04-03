@@ -25,7 +25,8 @@ class ErrorHandler(val notificationHandler: NotificationHandler, val analytics: 
 		analytics.captureEvent("Error occurred", mapOf(
 			"error message displayed to user" to error.errorMessageToDisplayUser.messageToDisplayUser,
 			"exception occurred" to error.internalException.toString(),
-			"stack trace" to error.internalException.stackTrace,
+			"stack trace" to error.internalException.stackTraceToString(),
+			"cause" to (error.internalException.cause?.toString() ?: "No cause" ) ,
 			"exception" to error.internalException
 		))
 	}
