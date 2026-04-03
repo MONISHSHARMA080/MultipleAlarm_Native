@@ -225,7 +225,7 @@ data class AlarmObject(
                     message != alarmData.message
 
             if (!hasChanged) {
-                return ValidationResult.Failure(AlarmErrorField.AlarmIsNotDiff, "No changes detected. Change something to update the alarm.")
+                return ValidationResult.Failure(AlarmErrorField.AlarmIsNotDiff, "No changes made. Change something to update the alarm.")
             }
         }
         return ValidationResult.Success
