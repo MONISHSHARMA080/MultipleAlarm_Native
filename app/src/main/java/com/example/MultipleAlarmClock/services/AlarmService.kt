@@ -17,8 +17,6 @@ import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlin.getOrElse
-import kotlin.jvm.java
 
 class AlarmService: Service() {
     companion object {
@@ -88,7 +86,7 @@ class AlarmService: Service() {
         intentHashMap.putIfAbsent(intentData.alarmIdInDb, intent)
 
         coroutineScope.launch {
-            analytics.captureEvent("starting new alarm", mapOf(
+            analytics.captureEvent("alarm notification sent", mapOf(
                 "intentData" to intentData.toString(),
                 "isFirstAlarm" to isFirstAlarm,
                 "areWePuttingTheAlarmIntoHashMapAndLetOtherPlay" to !isFirstAlarm,
