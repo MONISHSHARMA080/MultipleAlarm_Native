@@ -193,7 +193,8 @@ class AlarmService: Service() {
                 putExtras(originalIntent) // Carry over your alarm data
             }
             val dismissPendingIntent = PendingIntent.getService(
-                this, 0, dismissIntent,
+                this,
+                intentData.alarmIdInDb, dismissIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
