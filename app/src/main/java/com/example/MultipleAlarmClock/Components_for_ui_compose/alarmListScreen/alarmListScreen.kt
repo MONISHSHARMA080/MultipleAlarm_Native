@@ -142,6 +142,7 @@ import kotlinx.coroutines.launch
 			) {
 				AddAlarmButton(
 					context = activityContext,
+					analytics = analytics,
 					backgroundColor = accentColor,
 					onClick = {
 						onNavigateToCreate()
@@ -155,7 +156,7 @@ import kotlinx.coroutines.launch
 	}
 }
 
-@Composable fun AddAlarmButton(modifier: Modifier = Modifier,  backgroundColor: Color, onClick: () -> Unit, context:Context) {
+@Composable fun AddAlarmButton(modifier: Modifier = Modifier,  backgroundColor: Color, onClick: () -> Unit, context:Context, analytics: Analytics) {
 	val coroutineScope = rememberCoroutineScope()
 	val interactionSource = remember { MutableInteractionSource() }
 	val isPressed by interactionSource.collectIsPressedAsState()
@@ -166,7 +167,7 @@ import kotlinx.coroutines.launch
 	ExtendedFloatingActionButton(
 		onClick = {
 			coroutineScope.launch {
-				FirstLaunchAskForPermission(context).checkAndRequestPermissions()
+				FirstLaunchAskForPermission(context).checkAndRequestPermissions(analytics, coroutineScope)
 			}
 			coroutineScope.launch {
 				onClick()

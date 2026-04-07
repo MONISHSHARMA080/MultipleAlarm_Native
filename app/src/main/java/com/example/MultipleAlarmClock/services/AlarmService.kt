@@ -11,6 +11,7 @@ import android.content.pm.ServiceInfo
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import androidx.core.content.IntentCompat
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivity
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
@@ -109,7 +110,7 @@ class AlarmService: Service() {
         // remove this intent from the hashmap, and then if we have other in the hashMap then start playing those
         // assert that this intent is in the hashMap if not then we have a problem
         // 1. Remove the dismissed alarm from the queue
-        val intentData = intent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService("intentData parsed is null")
+        val intentData = IntentCompat.getParcelableExtra(intent,"intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService("intentData parsed is null")
         intentHashMap.remove(intentData.alarmIdInDb)
         coroutineScope.launch {
             analytics.captureEvent("handling dismiss of alarm", mapOf(
@@ -160,7 +161,8 @@ class AlarmService: Service() {
         return runCatching {
             val notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val channelId = "alarm_channel_id"
-            val intentData = originalIntent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java)
+
+            val intentData = IntentCompat.getParcelableExtra( originalIntent,"intentData", AlarmActivityIntentData::class.java)
                 ?: return Result.failure(Exception("Expected to intent data to be in the intent but got it as null"))
 
             val channel = NotificationChannel(

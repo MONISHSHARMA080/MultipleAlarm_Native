@@ -14,7 +14,10 @@ import android.provider.Settings
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
+import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.logD
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 class FirstLaunchAskForPermission(private val context: Context) {
     private val prefsName = "AppPreferences"
@@ -23,15 +26,14 @@ class FirstLaunchAskForPermission(private val context: Context) {
         context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
     }
 
-    fun checkAndRequestPermissions() {
+    fun checkAndRequestPermissions(analytics: Analytics, coroutineScope: CoroutineScope) {
         logD("here in the check andRequest func")
         // Ask for permission if it's first launch OR we don't have permission
         if (isFirstLaunch() || !doWeHavePermissionForNotification()) {
-            askForNotificationPermission()
+            askForNotificationPermission(analytics, coroutineScope)
             ifMiuiGetBgAutoStartPermission().onFailure { exception ->
                 logD("Error in checking if device is XIAOMI and it is $exception")
             }
-
             // Mark first launch as complete only on first launch
             if (isFirstLaunch()) {
                 setFirstLaunchComplete()
@@ -70,15 +72,19 @@ class FirstLaunchAskForPermission(private val context: Context) {
          return  notificationPermission == PackageManager.PERMISSION_GRANTED
     }
 
-    private fun askForNotificationPermission() {
+    private fun askForNotificationPermission(analytics: Analytics, coroutineScope: CoroutineScope) {
         if (!this.doWeHavePermissionForNotification()) {
             ActivityCompat.requestPermissions(
                 context as Activity,
                 arrayOf(Manifest.permission.POST_NOTIFICATIONS),
                 1
             )
+            coroutineScope.launch {
+                analytics.captureEvent("notification permission requested", mapOf())
+            }
         }
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
 
         logD("checking for the full screen intent")
         // FSI management was introduced/tightened in API 34+
@@ -88,7 +94,6 @@ class FirstLaunchAskForPermission(private val context: Context) {
                 // Intent to take the user directly to the "Manage Full Screen Intents" settings page
                 val intent = Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT).apply {
                     data = Uri.fromParts("package", context.packageName, null)
-//                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
                 context.startActivity(intent)
                 logD("asked and launched the FSI intent ")
