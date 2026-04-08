@@ -148,12 +148,6 @@ enum class AccentColor(val value:Color) {
     } }
 
     val currentError = validationResult as? ValidationResult.Failure
-//    val currentError by remember { derivedStateOf {  validationResult as? ValidationResult.Failure } }
-
-
-    LaunchedEffect(validationErrorMessage) {
-        logD("validation error: $validationErrorMessage")
-    }
 
     val freqText by remember { derivedStateOf {
         if (weGood) "your alarm will ring on "+getPreviewAlarms(alarmObject, 4) else {
@@ -174,6 +168,7 @@ enum class AccentColor(val value:Color) {
         analytics.captureEvent("is alarmObject value valid changed", mapOf(
             "weGood" to weGood,
             "alarmObject" to alarmObject.toString(),
+            "validation error message" to validationErrorMessage,
             "alarmData" to alarm.toString()
         ))
     }
