@@ -161,24 +161,6 @@ data class AlarmObject(
     /** this is same as the oen used to skip the time just provide it and will just skip it */
     val freqGottenAfterCallback: Long
 ){
-//    fun isOk(alarmData: AlarmData? ): Boolean{
-//        val currentDate = Calendar.getInstance()
-//        val selectedDate = Calendar.getInstance().apply { timeInMillis = date}
-//        val dateSame = currentDate.get(Calendar.DAY_OF_YEAR) == selectedDate.get(Calendar.DAY_OF_YEAR)
-//        val sameDateInTime = startTime.get(Calendar.DAY_OF_YEAR) == endTime.get(Calendar.DAY_OF_YEAR)
-//        val baseValidation = startTime.timeInMillis < endTime.timeInMillis && freqGottenAfterCallback in 1..700 && (dateSame || selectedDate.after(currentDate)) &&sameDateInTime
-//        if (alarmData == null) return baseValidation
-//        val alarmObjDate = Calendar.getInstance().apply { timeInMillis = date }
-//        val alarmDataDate = Calendar.getInstance().apply { timeInMillis = alarmData.startTime }
-//
-//        val dateChanged = alarmObjDate.get(Calendar.DAY_OF_YEAR) != alarmDataDate.get(Calendar.DAY_OF_YEAR) ||
-//                alarmObjDate.get(Calendar.YEAR) != alarmDataDate.get(Calendar.YEAR)
-//
-//        val hasChanged = startTime.timeInMillis != alarmData.startTime || endTime.timeInMillis != alarmData.endTime ||
-//                freqGottenAfterCallback != alarmData.frequencyInMin || message != alarmData.message || dateChanged
-//
-//        return baseValidation && hasChanged
-//	}
 
     fun getFreqInMillisecond(): Long {
         return this.freqGottenAfterCallback * 60000

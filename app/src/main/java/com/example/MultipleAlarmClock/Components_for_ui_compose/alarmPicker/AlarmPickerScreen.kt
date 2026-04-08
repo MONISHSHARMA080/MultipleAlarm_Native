@@ -249,14 +249,25 @@ enum class AccentColor(val value:Color) {
                             weGood = !(currentError != null && currentError.field == AlarmErrorField.DATE),
                             onSelect = {calVersion ->
                                 logD(" updated date is :${getTimeFormatted(calVersion, "hh:mm dd/MM/yyyy")}")
+//                                val newStartDate = (alarmObject.startTime.clone() as Calendar).apply {
+//                                    set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR))
+//                                    set(Calendar.YEAR, calVersion.get(Calendar.YEAR))
+//                                }
+//                                val newEndDate = (alarmObject.endTime.clone() as Calendar).apply {
+//                                    set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR))
+//                                    set(Calendar.YEAR, calVersion.get(Calendar.YEAR))
+//                                }
                                 val newStartDate = (alarmObject.startTime.clone() as Calendar).apply {
-                                    set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR))
                                     set(Calendar.YEAR, calVersion.get(Calendar.YEAR))
+                                    set(Calendar.MONTH, calVersion.get(Calendar.MONTH))
+                                    set(Calendar.DAY_OF_MONTH, calVersion.get(Calendar.DAY_OF_MONTH))
                                 }
                                 val newEndDate = (alarmObject.endTime.clone() as Calendar).apply {
-                                    set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR))
                                     set(Calendar.YEAR, calVersion.get(Calendar.YEAR))
+                                    set(Calendar.MONTH, calVersion.get(Calendar.MONTH))
+                                    set(Calendar.DAY_OF_MONTH, calVersion.get(Calendar.DAY_OF_MONTH))
                                 }
+
                                 alarmObject = alarmObject.copy(
                                     date = calVersion.timeInMillis,
                                     startTime = newStartDate,
@@ -434,7 +445,7 @@ enum class AccentColor(val value:Color) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable fun TimeBox(label: String, time: Calendar, accentColor: Color, onNewTimeSelected: (Calendar) -> Unit) {
-    var calendar by remember { mutableStateOf(time) }
+    var calendar by remember(time) { mutableStateOf(time) }
     var showTimePicker by remember { mutableStateOf(false) }
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
