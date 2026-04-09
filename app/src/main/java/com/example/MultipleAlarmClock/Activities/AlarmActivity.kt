@@ -46,6 +46,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.IntentCompat
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
@@ -114,7 +115,7 @@ class AlarmActivity : ComponentActivity() {
 
     /** this  function will get the message form the intent and will set it on the mutable State  that is  passed in */
     private fun parseTheIntent(): AlarmActivityIntentData?{
-        val parsedIntentData =intent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java)
+        val parsedIntentData = IntentCompat.getParcelableExtra(intent, "intentData", AlarmActivityIntentData::class.java)
         logD("the message present in the intent is $parsedIntentData")
         return parsedIntentData
     }

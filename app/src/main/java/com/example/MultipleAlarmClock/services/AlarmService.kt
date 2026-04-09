@@ -82,7 +82,7 @@ class AlarmService: Service() {
     }
 
     private  fun handleStartAlarm(intent:Intent):Int{
-        val intentData = intent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService("intentData parsed is null")
+        val intentData = IntentCompat.getParcelableExtra(intent, "intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService("intentData parsed is null")
         val isFirstAlarm = intentHashMap.isEmpty()
         intentHashMap.putIfAbsent(intentData.alarmIdInDb, intent)
 

@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.core.content.IntentCompat
 import androidx.room.Room
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
@@ -15,7 +16,6 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmDatabase
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
-import com.coolApps.MultipleAlarmClock.utils.Result.Error
 import com.coolApps.MultipleAlarmClock.utils.Result.Result
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,11 +25,10 @@ import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.jvm.java
 
-sealed interface NextAlarmReceiverError: Error {
-    data class GenericError(override val messageToDisplayUser: String): NextAlarmReceiverError
-}
+//sealed interface NextAlarmReceiverError: Error {
+//    data class GenericError(override val messageToDisplayUser: String): NextAlarmReceiverError
+//}
 
 class NextAlarmReceiver: BroadcastReceiver() {
     private lateinit var context: Context
@@ -64,7 +63,7 @@ class NextAlarmReceiver: BroadcastReceiver() {
         }
 
     private suspend fun scheduleFutureAlarm(activityContext: Context, alarmManager: AlarmManager, oldIntent: Intent) {
-        val parsedIntentData = oldIntent.getParcelableExtra("intentData", AlarmActivityIntentData::class.java) ?: return
+        val parsedIntentData = IntentCompat.getParcelableExtra(oldIntent,"intentData", AlarmActivityIntentData::class.java) ?: return
         val currentTimeAlarmFired = parsedIntentData.startTime
         val startTimeForAlarmSeries = parsedIntentData.startTimeForDb
         val originalDbEndTime = parsedIntentData.endTime
