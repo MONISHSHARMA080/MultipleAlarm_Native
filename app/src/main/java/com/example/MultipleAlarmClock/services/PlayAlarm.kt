@@ -56,9 +56,22 @@ class PlayAlarm (private val context: Context, val analytics: Analytics){
             when(result){
                 AudioManager.AUDIOFOCUS_REQUEST_GRANTED , AudioManager.AUDIOFOCUS_REQUEST_DELAYED ->{
                     mediaPlayer?.start()
+                    coroutineScope.launch {
+                        analytics.captureEvent("AudioFocusRequest result arrived", mapOf(
+                            "className" to this@PlayAlarm.toString(),
+                            "result" to if (result ==1) "AUDIOFOCUS_REQUEST_GRANTED" else "AUDIOFOCUS_REQUEST_DELAYED"
+                        ))
+                    }
+
                 }
                 AudioManager.AUDIOFOCUS_REQUEST_FAILED ->{
                         mediaPlayer?.start()
+                    coroutineScope.launch {
+                        analytics.captureEvent("AudioFocusRequest result arrived", mapOf(
+                            "className" to this@PlayAlarm.toString(),
+                            "result" to "AUDIOFOCUS_REQUEST_FAILED"
+                        ))
+                    }
                 }
                 else -> {}
             }
@@ -121,7 +134,7 @@ class PlayAlarm (private val context: Context, val analytics: Analytics){
         val len = ringtoneCursor.count
         val randomIndex = Random.nextInt(len)
         coroutineScope.launch {
-            analytics.captureEvent("fetched alarms on device", mapOf(
+            analytics.captureEvent("alarm sounds fetched", mapOf(
                 "random_index_selected" to randomIndex,
                 "total_alarms" to len
             ))
