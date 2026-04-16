@@ -309,8 +309,8 @@ enum class AccentColor(val value:Color) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Row(
                                     modifier = Modifier
-                                        .fillMaxWidth()
                                         .height(48.dp)
+                                        .fillMaxWidth()
                                         .clip(RoundedCornerShape(25.dp))
                                         .background(if (currentError != null && currentError.field == AlarmErrorField.FREQUENCY) AccentColor.Problem.value else AccentColor.Ok.value),
                                     verticalAlignment = Alignment.CenterVertically,
@@ -332,7 +332,8 @@ enum class AccentColor(val value:Color) {
                                                 }
                                             }
                                         },
-                                        modifier = Modifier.width(226.dp)
+                                        modifier = Modifier
+                                            .weight(1f)
                                             .bringIntoViewRequester(bringIntoViewRequester)
                                             .onFocusEvent {
                                                 if (it.isFocused) {

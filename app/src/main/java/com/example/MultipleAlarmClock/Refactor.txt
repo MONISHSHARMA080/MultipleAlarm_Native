@@ -40,6 +40,7 @@ c)  later :--
         * (Later after design and impl is done)haptic feedback
         * include tests on the main  branch and build only if it passes
         * integrate with Gemini or assistant, such that you can ask the LLM to schedule you an alarm
+        * alarmPicker we can keep the bg black and then the accent colour could be our app's (for eg add alarm buttons) accent colour
 
 
 
