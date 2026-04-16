@@ -1,5 +1,7 @@
 package com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.text.format.DateFormat
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -71,6 +73,7 @@ import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -78,6 +81,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmErrorField
@@ -98,6 +102,7 @@ enum class AccentColor(val value:Color) {
 /**[onAlarmSet] - here [AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
 @Composable fun AlarmPickerScreen(alarm: AlarmData? , onAlarmSet: (AlarmObject, AlarmData?) -> Unit , alarmSetGoBack: () -> Unit, analytics: Analytics){
     // if the alarm is null then it's for a new alarm else we are editing an alarm
+    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val now = Calendar.getInstance()
     var alarmObject by remember { mutableStateOf(
@@ -165,11 +170,13 @@ enum class AccentColor(val value:Color) {
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
 
     LaunchedEffect(weGood) {
+        val isNotificationsEnabled = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
         analytics.captureEvent("is alarmObject value valid changed", mapOf(
             "weGood" to weGood,
             "alarmObject" to alarmObject.toString(),
             "validation error message" to validationErrorMessage,
-            "alarmData" to alarm.toString()
+            "alarmData" to alarm.toString(),
+            "notification permission granted" to isNotificationsEnabled
         ))
     }
 

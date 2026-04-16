@@ -230,6 +230,9 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = if (message.isEmpty()) Arrangement.Center else Arrangement.Top
         ) {
+            // ------
+            // animate the state change so it won't be jarring
+            // ------
             if (message.isEmpty()) {
                 // Centered time when no message
                 Text(
@@ -285,6 +288,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                             )
                     )
                 }
+
             }
         }
     }
