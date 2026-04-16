@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -209,7 +210,9 @@ enum class AccentColor(val value:Color) {
                 Spacer(modifier = Modifier.height(10.dp))
                 // --- Time Range Selector ---
                 CardContainer {
-                    Column (modifier = Modifier.padding( bottom = 11.dp, start = 18.dp, end = 6.dp, top = 5.dp ) ){
+                    Column (
+                        modifier = Modifier.padding(16.dp)
+                    ){
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Default.AccessTimeFilled,
@@ -220,24 +223,37 @@ enum class AccentColor(val value:Color) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Time", color = Color.White, fontWeight = FontWeight.Bold)
                         }
-                        Spacer(modifier = Modifier.width(15.dp))
+                        Spacer(modifier = Modifier.height(13.dp))
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(0.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp), // Consistent spacing
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            TimeBox("Start time", alarmObject.startTime,
-                                if (currentError != null && currentError.field == AlarmErrorField.Time) AccentColor.Problem.value else AccentColor.Ok.value,
-                                onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(startTime = newSelectedTime) })
-                            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null,
+                            TimeBox(
+                                label = "Start time",
+                                time = alarmObject.startTime,
+                                modifier = Modifier.weight(1f),
+                                accentColor = if (currentError?.field == AlarmErrorField.Time) AccentColor.Problem.value else AccentColor.Ok.value,
+                                onNewTimeSelected = { newTime -> alarmObject = alarmObject.copy(startTime = newTime) }
+                            )
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
                                 tint = Color.Gray,
-                                modifier = Modifier.size(24.dp))
-                            TimeBox("End time", alarmObject.endTime,
-                                 if (currentError != null && currentError.field == AlarmErrorField.Time) AccentColor.Problem.value else AccentColor.Ok.value,
-                                onNewTimeSelected = {newSelectedTime-> alarmObject = alarmObject.copy(endTime = newSelectedTime) })
+                                modifier = Modifier.size(24.dp)
+                            )
+
+                            TimeBox(
+                                label = "End time",
+                                time = alarmObject.endTime,
+                                modifier = Modifier.weight(1f),
+                                accentColor = if (currentError?.field == AlarmErrorField.Time) AccentColor.Problem.value else AccentColor.Ok.value,
+                                onNewTimeSelected = { newTime -> alarmObject = alarmObject.copy(endTime = newTime) }
+                            )
                         }
                         ShowErrorMessageIfError(currentError, AlarmErrorField.Time)
                     }
                 }
-                // --- Repeats / Day Picker ---
                 CardContainer {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -256,14 +272,6 @@ enum class AccentColor(val value:Color) {
                             weGood = !(currentError != null && currentError.field == AlarmErrorField.DATE),
                             onSelect = {calVersion ->
                                 logD(" updated date is :${getTimeFormatted(calVersion, "hh:mm dd/MM/yyyy")}")
-//                                val newStartDate = (alarmObject.startTime.clone() as Calendar).apply {
-//                                    set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR))
-//                                    set(Calendar.YEAR, calVersion.get(Calendar.YEAR))
-//                                }
-//                                val newEndDate = (alarmObject.endTime.clone() as Calendar).apply {
-//                                    set(Calendar.DAY_OF_YEAR, calVersion.get(Calendar.DAY_OF_YEAR))
-//                                    set(Calendar.YEAR, calVersion.get(Calendar.YEAR))
-//                                }
                                 val newStartDate = (alarmObject.startTime.clone() as Calendar).apply {
                                     set(Calendar.YEAR, calVersion.get(Calendar.YEAR))
                                     set(Calendar.MONTH, calVersion.get(Calendar.MONTH))
@@ -286,7 +294,6 @@ enum class AccentColor(val value:Color) {
                         ShowErrorMessageIfError(currentError, AlarmErrorField.DATE)
                     }
                 }
-                // --- frequency Section ---
                 CardContainer {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -451,14 +458,16 @@ enum class AccentColor(val value:Color) {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable fun TimeBox(label: String, time: Calendar, accentColor: Color, onNewTimeSelected: (Calendar) -> Unit) {
+@Composable fun TimeBox(label: String, time: Calendar, accentColor: Color, modifier: Modifier = Modifier, onNewTimeSelected: (Calendar) -> Unit) {
     var calendar by remember(time) { mutableStateOf(time) }
     var showTimePicker by remember { mutableStateOf(false) }
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
         Box(
             modifier = Modifier
-                .size(width = 149.dp, height = 100.dp)
+                .fillMaxWidth()
+                .aspectRatio(1.5f) // Keeps the box height relative to its width
                 .border(2.dp, accentColor, RoundedCornerShape(24.dp))
+//                .size(width = 149.dp, height = 100.dp)
                 .background(Color(0xFF0F131A), RoundedCornerShape(24.dp))
                 .clickable { showTimePicker = true },
             contentAlignment = Alignment.Center,
@@ -498,7 +507,7 @@ enum class AccentColor(val value:Color) {
                 }
 
                 Text(label, color = Color.Gray, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                Text(getTimeFormatted(calendar), color = Color.White, fontSize = 35.sp, fontWeight = FontWeight.Bold)
+                Text(getTimeFormatted(calendar), color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
                 Text(getTimeFormatted(calendar, "a"), color = Color.Gray, fontSize = 12.sp)
             }
         }

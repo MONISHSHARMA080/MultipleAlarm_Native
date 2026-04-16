@@ -21,17 +21,14 @@ class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     val splashScreen = installSplashScreen()
-
     super.onCreate(savedInstanceState)
     val coroutineScope = CoroutineScope( Dispatchers.IO)
-
     coroutineScope.launch {
       launch {
         runCatching {
           NotificationHandler(this@MainActivity).createNotificationChannels()
           logD("created notification Channels")
         }
-
       }
       launch {
         FirstLaunchAskForPermission(this@MainActivity).checkIfWeHaveNotificationPermissionElseMarkitFalse()
@@ -51,7 +48,6 @@ class MainActivity : ComponentActivity() {
       analytics.captureEvent("main activity class got error", mapOf(
         "error Exception" to e.toString()
       ))
-
     }
   }
 }
