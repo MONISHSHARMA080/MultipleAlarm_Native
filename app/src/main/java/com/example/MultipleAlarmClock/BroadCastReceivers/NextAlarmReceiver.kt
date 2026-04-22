@@ -21,6 +21,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -43,13 +45,28 @@ class NextAlarmReceiver: BroadcastReceiver() {
 
      override  fun onReceive(context: Context, intent: Intent) {
         logD("in the NextAlarmReceiver class and here is the intent --> $intent")
+         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
          this.context = context
          when (this.doWeWantToGoAsync) {
              true -> {
                  val pendingResult = goAsync() // Extends execution time
-                 runBlocking {
-                     scheduleFutureAlarm(context, alarmManager, intent)
-                     pendingResult.finish()
+                 try {
+                     scope.launch {
+                         scheduleFutureAlarm(context, alarmManager, intent)
+                         pendingResult.finish()
+                     }
+                 }catch (e: Exception){
+                     analytics.captureEvent("Error occurred", mapOf(
+                         "exception occurred" to e.toString(),
+                         "stack trace" to e.stackTraceToString(),
+                         "cause" to (e.cause?.toString() ?: "No cause" ) ,
+                         "exception" to e,
+                         "class" to "NextAlarmReceiver"
+
+                     ))
+                 }finally {
+                 	pendingResult.finish()
+                     scope.cancel()
                  }
              }
              false ->{

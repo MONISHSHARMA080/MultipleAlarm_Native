@@ -7,10 +7,13 @@ plugins {
     id("kotlin-kapt")
     id("com.google.devtools.ksp") version "2.3.5"
     id ("kotlin-parcelize")
-    id("com.posthog.android") version "1.0.4"
-    alias(libs.plugins.jetbrains.kotlin.serialization)
+    id("com.posthog.android") version "1.1.0"
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.baselineprofile)
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.3.20"
+//    id("com.google.devtools.ksp")
+    id("com.google.dagger.hilt.android")
+
 }
 
 val myAppName="Multiple alarms"
@@ -119,6 +122,7 @@ fun Project.configureAndroid() {
 kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+        freeCompilerArgs.add("-Xannotation-default-target=param-property")
     }
 }
 
@@ -127,6 +131,11 @@ dependencies {
 
     // For Kotlin users also import the Kotlin extensions library for Play In-App Review:
     implementation("com.google.android.play:review-ktx:2.0.2")
+    implementation("com.google.dagger:hilt-android:2.59.2")
+    ksp("com.google.dagger:hilt-android-compiler:2.59.2")
+
+    implementation("androidx.datastore:datastore-preferences:1.2.1")
+    implementation("androidx.datastore:datastore:1.2.1")
 
 
     implementation("com.google.android.play:app-update:2.1.0")
@@ -139,6 +148,8 @@ dependencies {
 
     implementation("androidx.datastore:datastore-preferences:1.2.1")
     implementation("androidx.datastore:datastore:1.2.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+
 
     implementation(libs.androidx.espresso.contrib)
     implementation(libs.androidx.ui.test.junit4.android)

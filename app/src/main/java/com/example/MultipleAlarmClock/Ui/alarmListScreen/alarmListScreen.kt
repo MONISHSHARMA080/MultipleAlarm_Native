@@ -1,9 +1,6 @@
 package com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmListScreen
 
-import android.app.AlarmManager
 import android.content.ClipData
-import android.content.Context
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -52,29 +49,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coolApps.MultipleAlarmClock.FirstLaunchAskForPermission.FirstLaunchAskForPermission
-import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
+import com.example.MultipleAlarmClock.Ui.alarmListScreen.AlarmContainerViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 
-@Composable fun AlarmListScreen(
-	 alarmDao: AlarmDao, alarmsController: AlarmsController = AlarmsController(), alarmManager: AlarmManager, onAlarmDelete:(AlarmData) -> Unit, onAlarmStop:(AlarmData) -> Unit,
-	 onAlarmReset:(AlarmData) -> Unit, uncancellableScope: CoroutineScope, activityContext: ComponentActivity,onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit
+@Composable fun AlarmContainer(
+//	 activityContext: ComponentActivity,
+	 onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit
 ){
+	val alarmContainerViewModel :AlarmContainerViewModel = viewModel()
+	val uncancellableScope = CoroutineScope(NonCancellable + Dispatchers.Default)
+
 	val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 	val snackBarHostState = remember { SnackbarHostState() }
 	val clipBoard =LocalClipboard.current
-	val alarmsFlow = remember { alarmDao.getAllAlarmsFlow().flowOn(Dispatchers.IO) }
-	val alarms by alarmsFlow.collectAsStateWithLifecycle(initialValue = null  )
+	val alarms by alarmContainerViewModel.alarms.collectAsStateWithLifecycle()
 	ReportDrawnWhen { alarms != null }	// for the startUp profile
 	val accentColor = Color.Blue
 	val coroutineScope = rememberCoroutineScope()
-	val analytics by lazy{ Analytics(activityContext) }
 	Scaffold(contentWindowInsets = WindowInsets.safeContent) { edgeToEdgePadding ->
 		Box(
 			modifier = Modifier
@@ -113,11 +110,11 @@ import kotlinx.coroutines.launch
 						key = { _, alarm -> alarm.id }
 					) { _, individualAlarm ->
 						AlarmCard(
-							individualAlarm, onEdit = {alarmData -> onNavigateToEdit(alarmData)}, onStop = { alarmData -> onAlarmStop(alarmData) },
-							onDelete = {alarmData -> onAlarmDelete(alarmData)}, onReset = {alarmData -> onAlarmReset(alarmData)}, onLongPress = { alarmData ->
+							individualAlarm, onEdit = {alarmData -> onNavigateToEdit(alarmData)}, onStop = { alarmData -> alarmContainerViewModel.stopAlarm(alarmData) },
+							onDelete = {alarmData ->alarmContainerViewModel.deleteAlarm(alarmData)}, onReset = {alarmData -> alarmContainerViewModel.resetAlarm(alarmData)}, onLongPress = { alarmData ->
 								uncancellableScope.launch {
 									launch {
-										analytics.captureEvent("user long pressed the alarm", mapOf(
+										alarmContainerViewModel.captureEvent("user long pressed the alarm", mapOf(
 											"copying the alarm message" to true,
 											"is message empty" to alarmData.message.isEmpty(),
 											"showing snackBar" to alarmData.message.isNotEmpty()
@@ -141,22 +138,21 @@ import kotlinx.coroutines.launch
 				modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = screenHeight / 15)
 			) {
 				AddAlarmButton(
-					context = activityContext,
-					analytics = analytics,
 					backgroundColor = accentColor,
 					onClick = {
 						onNavigateToCreate()
 						coroutineScope.launch {
-							analytics.captureEvent("Plus Icon clicked", mapOf("round plus icon " to "new alarm"))
+							alarmContainerViewModel.captureEvent("Plus Icon clicked", mapOf("round plus icon " to "new alarm"))
 						}
 				  },
+					viewModel = alarmContainerViewModel
 				)
 			}
 		}
 	}
 }
 
-@Composable fun AddAlarmButton(modifier: Modifier = Modifier,  backgroundColor: Color, onClick: () -> Unit, context:Context, analytics: Analytics) {
+@Composable fun AddAlarmButton(modifier: Modifier = Modifier,  backgroundColor: Color, onClick: () -> Unit, viewModel: AlarmContainerViewModel) {
 	val coroutineScope = rememberCoroutineScope()
 	val interactionSource = remember { MutableInteractionSource() }
 	val isPressed by interactionSource.collectIsPressedAsState()
@@ -167,7 +163,7 @@ import kotlinx.coroutines.launch
 	ExtendedFloatingActionButton(
 		onClick = {
 			coroutineScope.launch {
-				FirstLaunchAskForPermission(context).checkAndRequestPermissions(analytics, coroutineScope)
+				FirstLaunchAskForPermission(viewModel.context).checkAndRequestPermissions(viewModel.analytics, coroutineScope)
 			}
 			coroutineScope.launch {
 				onClick()

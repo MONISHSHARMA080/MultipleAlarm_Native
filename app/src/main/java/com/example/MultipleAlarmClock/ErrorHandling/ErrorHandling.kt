@@ -27,6 +27,7 @@ class ErrorHandler(val notificationHandler: NotificationHandler, val analytics: 
 			"exception occurred" to error.internalException.toString(),
 			"stack trace" to error.internalException.stackTraceToString(),
 			"cause" to (error.internalException.cause?.toString() ?: "No cause" ) ,
+			"error class name" to error.errorMessageToDisplayUser.javaClass.name,
 			"exception" to error.internalException
 		))
 	}

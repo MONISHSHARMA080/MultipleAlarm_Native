@@ -67,6 +67,7 @@ fun getCurrentTime(): String {
 }
 
 
+
 class AlarmActivity : ComponentActivity() {
     private var wakeLock: PowerManager.WakeLock? = null
     private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)

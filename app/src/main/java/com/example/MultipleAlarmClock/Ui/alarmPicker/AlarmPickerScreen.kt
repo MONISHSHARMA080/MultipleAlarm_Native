@@ -61,7 +61,6 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -83,12 +82,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import com.coolApps.MultipleAlarmClock.analytics.Analytics
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmErrorField
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmObject
 import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
-import com.coolApps.MultipleAlarmClock.logD
+import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -100,79 +100,41 @@ enum class AccentColor(val value:Color) {
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-/**[onAlarmSet] - here [AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
-@Composable fun AlarmPickerScreen(alarm: AlarmData? , onAlarmSet: (AlarmObject, AlarmData?) -> Unit , alarmSetGoBack: () -> Unit, analytics: Analytics){
-    // if the alarm is null then it's for a new alarm else we are editing an alarm
+@Composable
+fun AlarmPickerScreen(
+    alarm: AlarmData?,
+    alarmSetGoBack: () -> Unit,
+    viewModel: AlarmPickerViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val now = Calendar.getInstance()
-    var alarmObject by remember { mutableStateOf(
-        alarm?.toAlarmObject() ?: AlarmObject(
-            startTime = (now.clone() as Calendar).apply {
-                add(Calendar.MINUTE, 1)
-                // If adding 1 min pushed us to tomorrow, cap at 23:59 today
-                if (get(Calendar.DAY_OF_YEAR) != now.get(Calendar.DAY_OF_YEAR)) {
-                    set(Calendar.DAY_OF_YEAR, now.get(Calendar.DAY_OF_YEAR)) // Reset to today
-                    set(Calendar.HOUR_OF_DAY, 23)
-                    set(Calendar.MINUTE, 59)
-                }
-                set(Calendar.SECOND, 0)
-            },
-            endTime = (now.clone() as Calendar).apply {
-                add(Calendar.MINUTE, 45)
-                // If adding 45 mins pushed us to tomorrow, cap at 23:59 today
-                if (get(Calendar.DAY_OF_YEAR) != now.get(Calendar.DAY_OF_YEAR)) {
-                    set(Calendar.DAY_OF_YEAR, now.get(Calendar.DAY_OF_YEAR)) // Reset to today
-                    set(Calendar.HOUR_OF_DAY, 23)
-                    set(Calendar.MINUTE, 59)
-                }
-                set(Calendar.SECOND, 0)
-            },
-            date = Calendar.getInstance().timeInMillis,
-            message = alarm?.message ?: "",
-            freqGottenAfterCallback = alarm?.frequencyInMin ?: 1
-        )
-    )
+
+    LaunchedEffect(alarm) {
+        viewModel.initialize(alarm)
     }
 
-    val validationResult by remember { derivedStateOf {
-        alarmObject.validate(alarm)
-    } }
-
-    val weGood: Boolean by remember { derivedStateOf {
-        when(validationResult){
-            is ValidationResult.Success -> true
-            is ValidationResult.Failure -> false
-        }
-    } }
-
-    val validationErrorMessage by remember { derivedStateOf {
-        when(val res = validationResult){
-            is ValidationResult.Success -> ""
-            is ValidationResult.Failure -> res.message
-        }
-    } }
-
+    val alarmObject = uiState.alarmObject
+    val validationResult = uiState.validationResult
+    val weGood = validationResult is ValidationResult.Success
     val currentError = validationResult as? ValidationResult.Failure
+    val validationErrorMessage = viewModel.getValidationErrorMessage()
 
-    val freqText by remember { derivedStateOf {
-        if (weGood) "your alarm will ring on "+getPreviewAlarms(alarmObject, 4) else {
-            if (currentError?.field == AlarmErrorField.FREQUENCY){
-                currentError.message
-            }else ""
-        }
-    } }
-//    val accentColor by remember { derivedStateOf { logD("weGood: $weGood"); if (weGood) AccentColor.Ok.value else AccentColor.Problem.value  } }
+    val freqText = if (alarmObject.freqGottenAfterCallback < 1) "" else viewModel.getFrequencyPreviewText()
+
+
     val accentColor by animateColorAsState(
-        targetValue = if (weGood) AccentColor.Ok.value else AccentColor.Problem.value ,
+        targetValue = if (weGood) AccentColor.Ok.value else AccentColor.Problem.value,
         animationSpec = tween(durationMillis = 180),
         label = "accent_color_animation"
     )
+
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
 
     LaunchedEffect(weGood) {
         val isNotificationsEnabled = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-        analytics.captureEvent("is alarmObject value valid changed", mapOf(
+
+        viewModel.captureEvent("is alarmObject value valid changed", mapOf(
             "weGood" to weGood,
             "alarmObject" to alarmObject.toString(),
             "validation error message" to validationErrorMessage,
@@ -184,7 +146,7 @@ enum class AccentColor(val value:Color) {
     Scaffold(
         contentWindowInsets = WindowInsets.safeContent,
         modifier = Modifier.fillMaxSize()
-    ) { contentPadding->
+    ) { contentPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -192,32 +154,44 @@ enum class AccentColor(val value:Color) {
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth().background(Color(0xFF0F131A)).verticalScroll(rememberScrollState())
-                    .fillMaxSize().navigationBarsPadding().animateContentSize()
+                    .fillMaxWidth()
+                    .background(Color(0xFF0F131A))
+                    .verticalScroll(rememberScrollState())
+                    .fillMaxSize()
+                    .navigationBarsPadding()
+                    .animateContentSize()
                     .padding(horizontal = 20.dp)
-                    .padding(top = contentPadding.calculateTopPadding() )
-                    .padding(bottom = contentPadding.calculateBottomPadding() + 10.dp),
+                    .padding(top = contentPadding.calculateTopPadding())
+                    .padding(bottom = contentPadding.calculateBottomPadding() + 25.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // --- Header ---
+                // Header
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp).padding(start = 16.dp, end = 16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp)
+                        .padding(start = 16.dp, end = 16.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(if (alarm == null)"New alarm" else "Edit Alarm" , color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text(
+                        if (alarm == null) "New alarm" else "Edit Alarm",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
                 }
                 Spacer(modifier = Modifier.height(10.dp))
-                // --- Time Range Selector ---
+
+                // Time Range Card
                 CardContainer {
-                    Column (
-                        modifier = Modifier.padding(16.dp)
-                    ){
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Default.AccessTimeFilled,
                                 contentDescription = null,
-                                tint = if (currentError != null && currentError.field == AlarmErrorField.Time) AccentColor.Problem.value else AccentColor.Ok.value,
+                                tint = if (currentError?.field == AlarmErrorField.Time)
+                                    AccentColor.Problem.value else AccentColor.Ok.value,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -226,15 +200,16 @@ enum class AccentColor(val value:Color) {
                         Spacer(modifier = Modifier.height(13.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp), // Consistent spacing
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             TimeBox(
                                 label = "Start time",
                                 time = alarmObject.startTime,
                                 modifier = Modifier.weight(1f),
-                                accentColor = if (currentError?.field == AlarmErrorField.Time) AccentColor.Problem.value else AccentColor.Ok.value,
-                                onNewTimeSelected = { newTime -> alarmObject = alarmObject.copy(startTime = newTime) }
+                                accentColor = if (currentError?.field == AlarmErrorField.Time)
+                                    AccentColor.Problem.value else AccentColor.Ok.value,
+                                onNewTimeSelected = { viewModel.updateStartTime(it) }
                             )
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
@@ -242,25 +217,28 @@ enum class AccentColor(val value:Color) {
                                 tint = Color.Gray,
                                 modifier = Modifier.size(24.dp)
                             )
-
                             TimeBox(
                                 label = "End time",
                                 time = alarmObject.endTime,
                                 modifier = Modifier.weight(1f),
-                                accentColor = if (currentError?.field == AlarmErrorField.Time) AccentColor.Problem.value else AccentColor.Ok.value,
-                                onNewTimeSelected = { newTime -> alarmObject = alarmObject.copy(endTime = newTime) }
+                                accentColor = if (currentError?.field == AlarmErrorField.Time)
+                                    AccentColor.Problem.value else AccentColor.Ok.value,
+                                onNewTimeSelected = { viewModel.updateEndTime(it) }
                             )
                         }
                         ShowErrorMessageIfError(currentError, AlarmErrorField.Time)
                     }
                 }
+
+                // Date Card
                 CardContainer {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Default.CalendarMonth,
                                 contentDescription = null,
-                                tint = if (currentError != null && currentError.field == AlarmErrorField.DATE) AccentColor.Problem.value else AccentColor.Ok.value,
+                                tint = if (currentError?.field == AlarmErrorField.DATE)
+                                    AccentColor.Problem.value else AccentColor.Ok.value,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -268,67 +246,60 @@ enum class AccentColor(val value:Color) {
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         DateList(
-                            startDateIndex =alarm?.startTime,
-                            weGood = !(currentError != null && currentError.field == AlarmErrorField.DATE),
-                            onSelect = {calVersion ->
-                                logD(" updated date is :${getTimeFormatted(calVersion, "hh:mm dd/MM/yyyy")}")
-                                val newStartDate = (alarmObject.startTime.clone() as Calendar).apply {
-                                    set(Calendar.YEAR, calVersion.get(Calendar.YEAR))
-                                    set(Calendar.MONTH, calVersion.get(Calendar.MONTH))
-                                    set(Calendar.DAY_OF_MONTH, calVersion.get(Calendar.DAY_OF_MONTH))
-                                }
-                                val newEndDate = (alarmObject.endTime.clone() as Calendar).apply {
-                                    set(Calendar.YEAR, calVersion.get(Calendar.YEAR))
-                                    set(Calendar.MONTH, calVersion.get(Calendar.MONTH))
-                                    set(Calendar.DAY_OF_MONTH, calVersion.get(Calendar.DAY_OF_MONTH))
-                                }
-
-                                alarmObject = alarmObject.copy(
-                                    date = calVersion.timeInMillis,
-                                    startTime = newStartDate,
-                                    endTime = newEndDate
-                                )
-                                logD("updated the alarmObject for new date and it is $alarmObject")
-                            }
+                            startDateIndex = alarm?.startTime,
+                            weGood = !(currentError?.field == AlarmErrorField.DATE),
+                            onSelect = { viewModel.updateDate(it) }
                         )
                         ShowErrorMessageIfError(currentError, AlarmErrorField.DATE)
                     }
                 }
+
+                // Frequency Card
                 CardContainer {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Schedule, contentDescription = null,
-                                tint = if (currentError != null && currentError.field == AlarmErrorField.FREQUENCY) AccentColor.Problem.value else AccentColor.Ok.value,
-                                modifier = Modifier.size(20.dp))
+                            Icon(
+                                Icons.Default.Schedule,
+                                contentDescription = null,
+                                tint = if (currentError?.field == AlarmErrorField.FREQUENCY)
+                                    AccentColor.Problem.value else AccentColor.Ok.value,
+                                modifier = Modifier.size(20.dp)
+                            )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Frequency", color = Color.White, fontWeight = FontWeight.Bold)
                         }
                         Spacer(modifier = Modifier.height(16.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            // Interval Value Stepper
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Row(
                                     modifier = Modifier
                                         .height(48.dp)
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(25.dp))
-                                        .background(if (currentError != null && currentError.field == AlarmErrorField.FREQUENCY) AccentColor.Problem.value else AccentColor.Ok.value),
+                                        .background(
+                                            if (currentError?.field == AlarmErrorField.FREQUENCY)
+                                                AccentColor.Problem.value else AccentColor.Ok.value
+                                        ),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    IconButton(onClick = { alarmObject = alarmObject.copy(freqGottenAfterCallback = alarmObject.freqGottenAfterCallback - 1) }) {
+                                    IconButton(onClick = { viewModel.decrementFrequency() }) {
                                         Icon(Icons.Default.Remove, contentDescription = null, tint = Color.White)
                                     }
                                     BasicTextField(
-                                        value = if (alarmObject.freqGottenAfterCallback !in 1..710) "" else alarmObject.freqGottenAfterCallback.toString() ,
+                                        value = if (alarmObject.freqGottenAfterCallback !in 1..710) ""
+                                        else alarmObject.freqGottenAfterCallback.toString(),
                                         onValueChange = { newValue ->
                                             val filteredValue = newValue.filter { it.isDigit() }
                                             if (filteredValue.isEmpty()) {
-                                                alarmObject = alarmObject.copy(freqGottenAfterCallback = 0)
+                                                viewModel.updateFrequency(0)
                                             } else {
                                                 val intValue = filteredValue.toLongOrNull()
                                                 if (intValue != null && intValue in 1..709) {
-                                                    alarmObject = alarmObject.copy(freqGottenAfterCallback = intValue)
+                                                    viewModel.updateFrequency(intValue)
                                                 }
                                             }
                                         },
@@ -351,35 +322,30 @@ enum class AccentColor(val value:Color) {
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                         singleLine = true
                                     )
-                                    IconButton(onClick = {
-                                        val freqTmp = alarmObject.freqGottenAfterCallback
-                                        val finalFreq= if (freqTmp >= 1) freqTmp + 1 else 1
-                                        alarmObject = alarmObject.copy( freqGottenAfterCallback = finalFreq)
-                                    }) {
+                                    IconButton(onClick = { viewModel.incrementFrequency() }) {
                                         Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
                                     }
                                 }
                             }
                         }
                         Spacer(modifier = Modifier.height(12.dp))
-                        if ( alarmObject.freqGottenAfterCallback < 1){
+                        if (alarmObject.freqGottenAfterCallback < 1) {
                             Text("Please enter the frequency value", color = Color.White, fontSize = 12.sp)
-                        } else{
-                            Text(
-                                freqText,
-                                color = Color.Gray,
-                                fontSize = 12.sp
-                            )
+                        } else {
+                            Text(freqText, color = Color.Gray, fontSize = 12.sp)
                         }
-                        // we want to show user the error message and also ask them to enter the freq value
                         ShowErrorMessageIfError(currentError, AlarmErrorField.FREQUENCY)
                     }
                 }
+
+                // Message Card
                 CardContainer {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.AutoMirrored.Filled.Message, contentDescription = null,
-                                tint = if (currentError != null && currentError.field == AlarmErrorField.FREQUENCY) AccentColor.Problem.value else AccentColor.Ok.value
+                            Icon(
+                                Icons.AutoMirrored.Filled.Message,
+                                contentDescription = null,
+                                tint = AccentColor.Ok.value
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Message", color = Color.White, fontWeight = FontWeight.Bold)
@@ -387,7 +353,7 @@ enum class AccentColor(val value:Color) {
                         Spacer(modifier = Modifier.height(8.dp))
                         BasicTextField(
                             value = alarmObject.message,
-                            onValueChange = { alarmObject= alarmObject.copy(message = it) },
+                            onValueChange = { viewModel.updateMessage(it) },
                             cursorBrush = SolidColor(Color.White),
                             modifier = Modifier
                                 .bringIntoViewRequester(bringIntoViewRequester)
@@ -401,18 +367,11 @@ enum class AccentColor(val value:Color) {
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(Color(0xFF0F131A))
                                 .padding(12.dp),
-                            textStyle = TextStyle(
-                                color = Color.White,
-                                fontSize = 14.sp
-                            ),
+                            textStyle = TextStyle(color = Color.White, fontSize = 14.sp),
                             decorationBox = { innerTextField ->
                                 Box {
                                     if (alarmObject.message.isEmpty()) {
-                                        Text(
-                                            "Alarm message......",
-                                            color = Color.DarkGray,
-                                            fontSize = 14.sp
-                                        )
+                                        Text("Alarm message......", color = Color.DarkGray, fontSize = 14.sp)
                                     }
                                     innerTextField()
                                 }
@@ -420,13 +379,12 @@ enum class AccentColor(val value:Color) {
                         )
                     }
                 }
+
+                // Set Alarm Button
                 Button(
                     onClick = {
-
-                        if (weGood && alarmObject.validate(alarm) == ValidationResult.Success) {
-                            alarmObject.startTime.set(Calendar.SECOND, 0)
-                            alarmObject.endTime.set(Calendar.SECOND, 0)
-                            onAlarmSet(alarmObject, alarm)
+                        if (weGood && viewModel.isValid()) {
+                            viewModel.setAlarm(viewModel.getCurrentAlarmObject(), alarm)
                             alarmSetGoBack()
                         }
                     },
@@ -441,8 +399,7 @@ enum class AccentColor(val value:Color) {
                                     Icon(Icons.Default.AlarmAdd, contentDescription = null, tint = Color.White)
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text("Set Alarm", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
-
-                                }else if(currentError?.field == AlarmErrorField.AlarmIsNotDiff){
+                                } else if (currentError?.field == AlarmErrorField.AlarmIsNotDiff) {
                                     ShowErrorMessageIfError(currentError, AlarmErrorField.AlarmIsNotDiff)
                                 } else {
                                     Icon(Icons.Default.AlarmOff, contentDescription = null, tint = Color.White)
