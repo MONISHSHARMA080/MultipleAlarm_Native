@@ -28,9 +28,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-//sealed interface NextAlarmReceiverError: Error {
-//    data class GenericError(override val messageToDisplayUser: String): NextAlarmReceiverError
-//}
 
 class NextAlarmReceiver: BroadcastReceiver() {
     private lateinit var context: Context

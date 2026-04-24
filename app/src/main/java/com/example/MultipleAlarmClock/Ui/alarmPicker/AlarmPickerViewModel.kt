@@ -1,6 +1,7 @@
 package com.example.MultipleAlarmClock.Ui.alarmPicker
 
 import android.app.AlarmManager
+import android.app.Application
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,12 +18,20 @@ import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.coolApps.MultipleAlarmClock.logD
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.utils.Result.Result
+import com.example.MultipleAlarmClock.Data.dataStore.dataStore
+import com.example.MultipleAlarmClock.Ui.Permissions.PermissionUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -32,11 +41,24 @@ class AlarmPickerViewModel @Inject constructor(
 	val analytics: Analytics,
 	private val alarmManager: AlarmManager,
 	private val alarmDao: AlarmDao,
+	private val application: Application,
 	@ApplicationContext  val context: Context
 ) : ViewModel() {
 
 	private val _uiState = MutableStateFlow(AlarmPickerUiState())
 	val uiState: StateFlow<AlarmPickerUiState> = _uiState.asStateFlow()
+
+	private val _events = MutableSharedFlow<AlarmPickerEvent>(extraBufferCapacity = 1)
+	val events: SharedFlow<AlarmPickerEvent> = _events.asSharedFlow()
+
+
+	val allPermissionsGranted: StateFlow<Boolean> = application.dataStore.data
+		.map { it.allPermissionsGranted }
+		.stateIn(
+			scope = viewModelScope,
+			started = SharingStarted.WhileSubscribed(5_000),
+			initialValue = true
+		)
 
 	private var initialAlarm: AlarmData? = null
 	private val errorHandler = ErrorHandler(notificationHandler = NotificationHandler(context),analytics)
@@ -76,6 +98,81 @@ class AlarmPickerViewModel @Inject constructor(
 			freqGottenAfterCallback = alarm?.frequencyInMin ?: 1
 		)
 	}
+
+	fun checkPermissions(context: Context) {
+		viewModelScope.launch {
+			val liveCheck = PermissionUtils.allCriticalPermissionsGranted(context)
+
+			// Update UI state so the button/colors change instantly
+			_uiState.update { it.copy(areAllPermissionsGranted = liveCheck) }
+
+			// Sync with DataStore silently
+			context.dataStore.updateData { it.copy(allPermissionsGranted = liveCheck) }
+		}
+	}
+
+	// Update your onSetAlarmClicked to be even simpler
+	fun onSetAlarmClicked(currentAlarm: AlarmData?) {
+		// We don't need to check permissions here anymore because the button
+		// is only clickable (or behaves differently) based on uiState.isPermissionGranted
+		viewModelScope.launch {
+			if (!_uiState.value.areAllPermissionsGranted) {
+				val missing = PermissionUtils.getRequiredPermissionSteps(context)
+				_events.emit(AlarmPickerEvent.ShowPermissionDialog(missing))
+			} else {
+				setAlarm(getCurrentAlarmObject(), currentAlarm)
+				_events.emit(AlarmPickerEvent.NavigateBack)
+			}
+		}
+	}
+
+	/**
+	 * Called by the composable on button tap.
+	 * Context is needed only for permission checks — acceptable in ViewModel
+	 * when scoped to a use-case like this. Alternative: pass results in from UI.
+	 */
+//	fun onSetAlarmClicked(
+//		context: Context,
+//		currentAlarm: AlarmData?,
+//		allPermissionsGrantedInStore: Boolean
+//	) {
+//		viewModelScope.launch {
+//			val liveCheck = PermissionUtils.allCriticalPermissionsGranted(context)
+//
+//			if (!liveCheck) {
+//				if (allPermissionsGrantedInStore) {
+//					context.dataStore.updateData { it.copy(allPermissionsGranted = false) }
+//				}
+//				val missing = PermissionUtils.getRequiredPermissionSteps(context)
+//				_events.emit(AlarmPickerEvent.ShowPermissionDialog(missing))
+//				return@launch
+//			}
+//
+//			if (!allPermissionsGrantedInStore) {
+//				context.dataStore.updateData { it.copy(allPermissionsGranted = true) }
+//			}
+//			setAlarm(getCurrentAlarmObject(), currentAlarm)
+//			_events.emit(AlarmPickerEvent.NavigateBack)
+//			}
+//		}
+//
+//	fun onPermissionsGranted(
+//		context: Context,
+//		currentAlarm: AlarmData?
+//	) {
+//		viewModelScope.launch {
+//			context.dataStore.updateData { it.copy(allPermissionsGranted = true) }
+//			setAlarm(getCurrentAlarmObject(), currentAlarm)
+//			_events.emit(AlarmPickerEvent.NavigateBack)
+//		}
+//	}
+//
+//	fun onResumePermissionCheck(context: Context) {
+//		viewModelScope.launch {
+//			val allGranted = PermissionUtils.allCriticalPermissionsGranted(context)
+//			context.dataStore.updateData { it.copy(allPermissionsGranted = allGranted) }
+//		}
+//	}
 
 	fun updateStartTime(newTime: Calendar) {
 		_uiState.update { it.copy(alarmObject = it.alarmObject.copy(startTime = newTime)) }

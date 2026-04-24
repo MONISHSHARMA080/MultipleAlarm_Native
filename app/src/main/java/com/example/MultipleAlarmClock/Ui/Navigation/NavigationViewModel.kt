@@ -5,17 +5,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.example.MultipleAlarmClock.Data.dataStore.dataStore
-import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-//class NavigationViewModel(application: Application, deepLinkIntent: Intent?) : AndroidViewModel(application) {
 @HiltViewModel()
-class NavigationViewModel @AssistedInject constructor(
+class NavigationViewModel @Inject constructor(
 	private val application: Application,
 	val analytics: Analytics,
 ) : ViewModel() {
@@ -38,7 +37,6 @@ class NavigationViewModel @AssistedInject constructor(
 			analytics.screen(screenName, properties)
 		}
 	}
-
 
 	suspend fun onOnboardingComplete() {
 		viewModelScope.launch {

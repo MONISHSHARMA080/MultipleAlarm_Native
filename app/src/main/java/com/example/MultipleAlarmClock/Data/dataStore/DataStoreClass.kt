@@ -4,5 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Settings(
-	val isFirstLaunch: Boolean
+	val isFirstLaunch: Boolean,
+	var allPermissionsGranted: Boolean
 )

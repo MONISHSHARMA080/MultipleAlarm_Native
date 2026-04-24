@@ -14,9 +14,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.NavigationStack
 import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.Screen
-import com.coolApps.MultipleAlarmClock.FirstLaunchAskForPermission.FirstLaunchAskForPermission
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.example.MultipleAlarmClock.Ui.Navigation.NavigationViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
@@ -33,7 +31,7 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     val splashScreen = installSplashScreen()
     super.onCreate(savedInstanceState)
-    splashScreen.setKeepOnScreenCondition {  navViewModel.isFirstLaunch.value == null}
+//    splashScreen.setKeepOnScreenCondition{  navViewModel.isFirstLaunch.value == null}
     val coroutineScope = CoroutineScope( Dispatchers.IO)
     val deepLinkScreen: Screen? = parseDeepLinkIntent(intent)
 
@@ -41,12 +39,12 @@ class MainActivity : ComponentActivity() {
     coroutineScope.launch {
       launch {
         runCatching {
-          NotificationHandler(this@MainActivity).createNotificationChannels()
+//          NotificationHandler(this@MainActivity).createNotificationChannels()
           logD("created notification Channels")
         }
       }
       launch {
-        FirstLaunchAskForPermission(this@MainActivity).checkIfWeHaveNotificationPermissionElseMarkitFalse()
+//        FirstLaunchAskForPermission(this@MainActivity).checkIfWeHaveNotificationPermissionElseMarkitFalse()
       }
     }
     try {

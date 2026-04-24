@@ -50,21 +50,14 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.coolApps.MultipleAlarmClock.FirstLaunchAskForPermission.FirstLaunchAskForPermission
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
-import com.example.MultipleAlarmClock.Ui.alarmListScreen.AlarmContainerViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.NonCancellable
+import com.example.MultipleAlarmClock.Ui.alarmContainer.AlarmContainerViewModel
 import kotlinx.coroutines.launch
 
 @Composable fun AlarmContainer(
-//	 activityContext: ComponentActivity,
 	 onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit
 ){
 	val alarmContainerViewModel :AlarmContainerViewModel = viewModel()
-	val uncancellableScope = CoroutineScope(NonCancellable + Dispatchers.Default)
-
 	val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 	val snackBarHostState = remember { SnackbarHostState() }
 	val clipBoard =LocalClipboard.current
@@ -72,6 +65,7 @@ import kotlinx.coroutines.launch
 	ReportDrawnWhen { alarms != null }	// for the startUp profile
 	val accentColor = Color.Blue
 	val coroutineScope = rememberCoroutineScope()
+
 	Scaffold(contentWindowInsets = WindowInsets.safeContent) { edgeToEdgePadding ->
 		Box(
 			modifier = Modifier
@@ -112,7 +106,7 @@ import kotlinx.coroutines.launch
 						AlarmCard(
 							individualAlarm, onEdit = {alarmData -> onNavigateToEdit(alarmData)}, onStop = { alarmData -> alarmContainerViewModel.stopAlarm(alarmData) },
 							onDelete = {alarmData ->alarmContainerViewModel.deleteAlarm(alarmData)}, onReset = {alarmData -> alarmContainerViewModel.resetAlarm(alarmData)}, onLongPress = { alarmData ->
-								uncancellableScope.launch {
+								coroutineScope.launch {
 									launch {
 										alarmContainerViewModel.captureEvent("user long pressed the alarm", mapOf(
 											"copying the alarm message" to true,
@@ -163,7 +157,7 @@ import kotlinx.coroutines.launch
 	ExtendedFloatingActionButton(
 		onClick = {
 			coroutineScope.launch {
-				FirstLaunchAskForPermission(viewModel.context).checkAndRequestPermissions(viewModel.analytics, coroutineScope)
+//				FirstLaunchAskForPermission(viewModel.context).checkAndRequestPermissions(viewModel.analytics, coroutineScope)
 			}
 			coroutineScope.launch {
 				onClick()

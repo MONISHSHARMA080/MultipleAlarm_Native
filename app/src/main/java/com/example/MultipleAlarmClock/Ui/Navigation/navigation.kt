@@ -1,8 +1,5 @@
 package com.coolApps.MultipleAlarmClock.Components_for_ui_compose
 
-import android.app.AlarmManager
-import android.content.Context
-import androidx.activity.ComponentActivity
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -15,7 +12,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,24 +22,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController.AlarmValueForAlarmSeries
 import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmListScreen.AlarmContainer
 import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.AlarmPickerScreen
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmDatabase
 import com.coolApps.MultipleAlarmClock.logD
-import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
-import com.coolApps.MultipleAlarmClock.utils.Result.Result
 import com.example.MultipleAlarmClock.Ui.Navigation.NavigationViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-
 
 sealed interface Screen : NavKey {
 	@Serializable
@@ -62,23 +51,16 @@ val HomeScreenValue = Screen.AlarmContainer
 	// 1.) if it's the first launch then I want to go to the app onboarding;
 	// 2.) if the deppLink intent is there then I want to ignore isFirstLaunch and go straight to that screen
 	// -----------------------------------------------------------------------------------------------------------
-
-	val isFirstLaunch by navViewModel.isFirstLaunch.collectAsStateWithLifecycle()
-
-	// Still loading DataStore — show nothing (splash is still up)
-	if (isFirstLaunch == null) return
+//	val isFirstLaunch by navViewModel.isFirstLaunch.collectAsStateWithLifecycle()
+//	if (isFirstLaunch == null) return
+	logD("meow")
+	val isFirstLaunch = false
 	val startKey = remember(deepLinkScreen, isFirstLaunch) {
-		deepLinkScreen
-			?: if (isFirstLaunch == true) Screen.OnboardingScreen
-			else Screen.AlarmContainer
+		deepLinkScreen ?: if (isFirstLaunch == true) Screen.OnboardingScreen else Screen.AlarmContainer
 	}
-
+	logD("the startKey screen is $startKey")
 	val backStack = rememberNavBackStack(startKey)
-
-	val context = LocalContext.current
 	val coroutineScope = rememberCoroutineScope()
-
-
 
 	Scaffold(
 		contentWindowInsets = WindowInsets.safeContent,

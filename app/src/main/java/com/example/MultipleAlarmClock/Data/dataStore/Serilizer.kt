@@ -10,7 +10,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 object SettingsSerializer : Serializer<Settings> {
-	override val defaultValue: Settings = Settings(isFirstLaunch = true)
+	override val defaultValue: Settings = Settings(isFirstLaunch = true, allPermissionsGranted = false)
 
 	/**
 	 * @throws SerializationException in case of any decoding-specific error

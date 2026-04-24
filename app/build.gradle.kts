@@ -137,9 +137,12 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.2.1")
     implementation("androidx.datastore:datastore:1.2.1")
 
+    implementation("com.google.accompanist:accompanist-permissions:0.37.3")
 
-    implementation("com.google.android.play:app-update:2.1.0")
-    implementation("com.google.android.play:app-update-ktx:2.1.0")
+
+
+//    implementation("com.google.android.play:app-update:2.1.0")
+//    implementation("com.google.android.play:app-update-ktx:2.1.0")
 
     implementation ("com.posthog:posthog-android:3.38.2")
     implementation("androidx.core:core-splashscreen:1.2.0")

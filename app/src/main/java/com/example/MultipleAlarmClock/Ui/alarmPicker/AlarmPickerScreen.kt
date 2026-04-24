@@ -46,6 +46,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AlarmAdd
 import androidx.compose.material.icons.filled.AlarmOff
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
@@ -60,6 +61,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -82,13 +84,21 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmErrorField
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmObject
 import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
+import com.coolApps.MultipleAlarmClock.logD
+import com.example.MultipleAlarmClock.Ui.Permissions.AlarmPermissionDialog
+import com.example.MultipleAlarmClock.Ui.Permissions.PermissionStep
+import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerEvent
 import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -99,7 +109,7 @@ enum class AccentColor(val value:Color) {
     Problem(Color(0xFFde0707))
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalPermissionsApi::class)
 @Composable
 fun AlarmPickerScreen(
     alarm: AlarmData?,
@@ -110,30 +120,46 @@ fun AlarmPickerScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
+    val allPermissionsGrantedInStore by viewModel.allPermissionsGranted.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
     LaunchedEffect(alarm) {
         viewModel.initialize(alarm)
     }
 
+
+
+    var showPermissionDialog by remember { mutableStateOf(false) }
+    var missingSteps by remember { mutableStateOf<List<PermissionStep>>(emptyList()) }
+
+
     val alarmObject = uiState.alarmObject
     val validationResult = uiState.validationResult
-    val weGood = validationResult is ValidationResult.Success
+//    val weGood = validationResult is ValidationResult.Success && notificationPermGranted
     val currentError = validationResult as? ValidationResult.Failure
-    val validationErrorMessage = viewModel.getValidationErrorMessage()
 
+    val validationOk = validationResult is ValidationResult.Success        // purely form validation
+//    val allPermissionsLive = PermissionUtils.allCriticalPermissionsGranted(context) // live check
+
+    val isPermissionsOk = uiState.areAllPermissionsGranted
+    val weGood = validationOk && isPermissionsOk
+    val validationErrorMessage = viewModel.getValidationErrorMessage()
     val freqText = if (alarmObject.freqGottenAfterCallback < 1) "" else viewModel.getFrequencyPreviewText()
 
 
     val accentColor by animateColorAsState(
         targetValue = if (weGood) AccentColor.Ok.value else AccentColor.Problem.value,
-        animationSpec = tween(durationMillis = 180),
+        animationSpec = tween(durationMillis = 190),
         label = "accent_color_animation"
     )
 
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
 
+    LaunchedEffect(Unit) {
+        viewModel.checkPermissions(context)
+    }
     LaunchedEffect(weGood) {
         val isNotificationsEnabled = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-
         viewModel.captureEvent("is alarmObject value valid changed", mapOf(
             "weGood" to weGood,
             "alarmObject" to alarmObject.toString(),
@@ -142,6 +168,47 @@ fun AlarmPickerScreen(
             "notification permission granted" to isNotificationsEnabled
         ))
     }
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            logD("got event: $event")
+            when (event) {
+                is AlarmPickerEvent.NavigateBack -> alarmSetGoBack()
+                is AlarmPickerEvent.ShowPermissionDialog -> {
+                    missingSteps = event.missingSteps
+                    showPermissionDialog = true
+                }
+                AlarmPickerEvent.UpdateDataStoreGranted -> { /* handled in VM */ }
+            }
+        }
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.checkPermissions(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    logD("showPermissionDialog:$showPermissionDialog  missingStep.isNotEmpty():${missingSteps.isNotEmpty()}")
+    if (showPermissionDialog) {
+        AlarmPermissionDialog(
+            missingSteps ,
+            onAllCriticalGranted = {
+                showPermissionDialog = false
+                viewModel.checkPermissions(context) // Re-verify immediately
+            },
+            onDismiss = {
+                showPermissionDialog = false
+                viewModel.checkPermissions(context) // Update UI state even if they said no
+            }
+        )
+    }
+
+    // btw I want to see the dataStore.allPermissionsGranted = true if it is then check and if the check results in false then update it and update it too after writing to it
 
     Scaffold(
         contentWindowInsets = WindowInsets.safeContent,
@@ -266,7 +333,7 @@ fun AlarmPickerScreen(
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Frequency", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("Repeat every", color = Color.White, fontWeight = FontWeight.Bold)
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         Row(
@@ -379,32 +446,67 @@ fun AlarmPickerScreen(
                         )
                     }
                 }
-
                 // Set Alarm Button
                 Button(
                     onClick = {
-                        if (weGood && viewModel.isValid()) {
-                            viewModel.setAlarm(viewModel.getCurrentAlarmObject(), alarm)
-                            alarmSetGoBack()
+                        if (validationOk) {
+                            // All business logic is now inside the ViewModel
+                            viewModel.onSetAlarmClicked(alarm)
                         }
+
+//                        when{
+//                            !notificationPermGranted && shouldShowRationale -> showPermissionRationaleDialog = true
+//                            !notificationPermGranted && !shouldShowRationale ->  notificationPermissionState.launchPermissionRequest()
+//                            !weGood ->{
+//                                showPermissionDialog = true
+//                            }
+//                            weGood ->{
+//                                viewModel.onSetAlarmClicked(
+//                                    context = context,
+//                                    currentAlarm = alarm,
+//                                    allPermissionsGrantedInStore = allPermissionsGrantedInStore
+//                                )
+//
+////                                viewModel.setAlarm(viewModel.getCurrentAlarmObject(), alarm)
+////                                alarmSetGoBack()
+//                            }
+//                        }
                     },
-                    modifier = Modifier.fillMaxWidth().height(64.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp),
                     shape = RoundedCornerShape(33.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = accentColor)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        AnimatedContent(targetState = weGood) { isGood ->
+                        AnimatedContent(
+                            targetState = Triple(validationOk, isPermissionsOk, currentError?.field),
+                        ) { (isValid, hasPermissions, errorField )->
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                if (isGood) {
-                                    Icon(Icons.Default.AlarmAdd, contentDescription = null, tint = Color.White)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Set Alarm", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                } else if (currentError?.field == AlarmErrorField.AlarmIsNotDiff) {
-                                    ShowErrorMessageIfError(currentError, AlarmErrorField.AlarmIsNotDiff)
-                                } else {
-                                    Icon(Icons.Default.AlarmOff, contentDescription = null, tint = Color.White)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Fix the input to set alarm", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                when{
+                                    !isValid -> {
+                                        Icon(Icons.Default.AlarmOff, contentDescription = null, tint = Color.White)
+                                        Spacer(Modifier.width(8.dp))
+                                        val errorText =
+                                            if (errorField == AlarmErrorField.AlarmIsNotDiff) {
+                                                "Alarm times must be different"
+                                            } else {
+                                                "Fix the input to set alarm"
+                                            }
+                                        Text(errorText, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                    }
+                                    // Scenario 2: Form is valid, but system permissions are missing (Priority 2) \
+                                    !hasPermissions -> {
+                                        Icon(Icons.Default.NotificationsOff, contentDescription = null, tint = Color.White)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Grant required permissions", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                    }
+                                    // Scenario 3: Everything is ready (Success state)
+                                    else -> {
+                                        Icon(Icons.Default.AlarmAdd, contentDescription = null, tint = Color.White)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Set Alarm", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                    }
                                 }
                             }
                         }

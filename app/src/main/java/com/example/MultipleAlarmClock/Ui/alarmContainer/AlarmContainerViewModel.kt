@@ -1,4 +1,4 @@
-package com.example.MultipleAlarmClock.Ui.alarmListScreen
+package com.example.MultipleAlarmClock.Ui.alarmContainer
 
 import android.app.AlarmManager
 import android.content.Context
@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class AlarmContainerViewModel @Inject constructor(
-	 val analytics: Analytics,
+	val analytics: Analytics,
 	private val alarmDao: AlarmDao,
 	private val alarmManager: AlarmManager,
 	@ApplicationContext  val context: Context // Use this if you need Context for AlarmsController
