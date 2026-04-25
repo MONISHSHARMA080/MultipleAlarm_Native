@@ -135,11 +135,9 @@ fun AlarmPickerScreen(
 
     val alarmObject = uiState.alarmObject
     val validationResult = uiState.validationResult
-//    val weGood = validationResult is ValidationResult.Success && notificationPermGranted
     val currentError = validationResult as? ValidationResult.Failure
 
     val validationOk = validationResult is ValidationResult.Success        // purely form validation
-//    val allPermissionsLive = PermissionUtils.allCriticalPermissionsGranted(context) // live check
 
     val isPermissionsOk = uiState.areAllPermissionsGranted
     val weGood = validationOk && isPermissionsOk
@@ -471,7 +469,7 @@ fun AlarmPickerScreen(
                                         Spacer(Modifier.width(8.dp))
                                         val errorText =
                                             if (errorField == AlarmErrorField.AlarmIsNotDiff) {
-                                                "Alarm times must be different"
+                                                "New alarm must be different"
                                             } else {
                                                 "Fix the input to set alarm"
                                             }

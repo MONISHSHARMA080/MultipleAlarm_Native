@@ -126,54 +126,6 @@ class AlarmPickerViewModel @Inject constructor(
 		}
 	}
 
-	/**
-	 * Called by the composable on button tap.
-	 * Context is needed only for permission checks — acceptable in ViewModel
-	 * when scoped to a use-case like this. Alternative: pass results in from UI.
-	 */
-//	fun onSetAlarmClicked(
-//		context: Context,
-//		currentAlarm: AlarmData?,
-//		allPermissionsGrantedInStore: Boolean
-//	) {
-//		viewModelScope.launch {
-//			val liveCheck = PermissionUtils.allCriticalPermissionsGranted(context)
-//
-//			if (!liveCheck) {
-//				if (allPermissionsGrantedInStore) {
-//					context.dataStore.updateData { it.copy(allPermissionsGranted = false) }
-//				}
-//				val missing = PermissionUtils.getRequiredPermissionSteps(context)
-//				_events.emit(AlarmPickerEvent.ShowPermissionDialog(missing))
-//				return@launch
-//			}
-//
-//			if (!allPermissionsGrantedInStore) {
-//				context.dataStore.updateData { it.copy(allPermissionsGranted = true) }
-//			}
-//			setAlarm(getCurrentAlarmObject(), currentAlarm)
-//			_events.emit(AlarmPickerEvent.NavigateBack)
-//			}
-//		}
-//
-//	fun onPermissionsGranted(
-//		context: Context,
-//		currentAlarm: AlarmData?
-//	) {
-//		viewModelScope.launch {
-//			context.dataStore.updateData { it.copy(allPermissionsGranted = true) }
-//			setAlarm(getCurrentAlarmObject(), currentAlarm)
-//			_events.emit(AlarmPickerEvent.NavigateBack)
-//		}
-//	}
-//
-//	fun onResumePermissionCheck(context: Context) {
-//		viewModelScope.launch {
-//			val allGranted = PermissionUtils.allCriticalPermissionsGranted(context)
-//			context.dataStore.updateData { it.copy(allPermissionsGranted = allGranted) }
-//		}
-//	}
-
 	fun updateStartTime(newTime: Calendar) {
 		_uiState.update { it.copy(alarmObject = it.alarmObject.copy(startTime = newTime)) }
 		validateAlarm()
@@ -218,6 +170,7 @@ class AlarmPickerViewModel @Inject constructor(
 
 	fun updateMessage(newMessage: String) {
 		_uiState.update { it.copy(alarmObject = it.alarmObject.copy(message = newMessage)) }
+		validateAlarm()
 	}
 
 	fun incrementFrequency() {
@@ -235,17 +188,6 @@ class AlarmPickerViewModel @Inject constructor(
 		val result = _uiState.value.alarmObject.validate(initialAlarm)
 		_uiState.update { it.copy(validationResult = result) }
 	}
-
-	fun isValid(): Boolean {
-		return _uiState.value.validationResult is ValidationResult.Success
-	}
-
-//	fun getCurrentAlarmObject(): AlarmObject {
-//		return _uiState.value.alarmObject.apply {
-//			startTime.set(Calendar.SECOND, 0)
-//			endTime.set(Calendar.SECOND, 0)
-//		}
-//	}
 
 	fun getFrequencyPreviewText(): String {
 		val state = _uiState.value
