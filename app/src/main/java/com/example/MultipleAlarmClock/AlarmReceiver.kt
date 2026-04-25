@@ -4,12 +4,12 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.coolApps.MultipleAlarmClock.services.AlarmService
-import kotlin.jvm.java
 
 class AlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         try {
+            logD("in the alarmReceiver")
             logD("\n\n\n ------- +++ in the alarm receiver func and here is the intent --> $intent")
             logD("\n\n trying to launch the alarm activity +++++++++ \n\n")
             val newIntent = Intent(context, AlarmService::class.java).apply {
@@ -25,7 +25,7 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
     private fun logD(message:String){
-        Log.d("AAAAA", "[AlarmReceiver]$message")
+        Log.d("AAAAA", "[AlarmReceiver] $message")
     }
 
 }

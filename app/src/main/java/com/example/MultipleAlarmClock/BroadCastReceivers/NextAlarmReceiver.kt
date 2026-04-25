@@ -21,7 +21,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
@@ -47,23 +46,25 @@ class NextAlarmReceiver: BroadcastReceiver() {
          when (this.doWeWantToGoAsync) {
              true -> {
                  val pendingResult = goAsync() // Extends execution time
-                 try {
-                     scope.launch {
+                 scope.launch {
+                     try {
                          scheduleFutureAlarm(context, alarmManager, intent)
+                     } catch (e: Exception) {
+                         analytics.captureEvent("Error occurred", mapOf(
+                             "exception occurred" to e.toString(),
+                             "stack trace" to e.stackTraceToString(),
+                             "cause" to (e.cause?.toString() ?: "No cause" ) ,
+                             "exception" to e,
+                             "class" to "NextAlarmReceiver"
+
+                         ))
+
+                     } finally {
+                         // ALWAYS finish the pendingResult inside the coroutine
+                         // so the process stays alive until the work is done.
                          pendingResult.finish()
                      }
-                 }catch (e: Exception){
-                     analytics.captureEvent("Error occurred", mapOf(
-                         "exception occurred" to e.toString(),
-                         "stack trace" to e.stackTraceToString(),
-                         "cause" to (e.cause?.toString() ?: "No cause" ) ,
-                         "exception" to e,
-                         "class" to "NextAlarmReceiver"
 
-                     ))
-                 }finally {
-                 	pendingResult.finish()
-                     scope.cancel()
                  }
              }
              false ->{

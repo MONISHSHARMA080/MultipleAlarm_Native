@@ -112,7 +112,7 @@ class AlarmPickerViewModel @Inject constructor(
 	}
 
 	// Update your onSetAlarmClicked to be even simpler
-	fun onSetAlarmClicked(currentAlarm: AlarmData?) {
+	fun onSetAlarmClicked(currentAlarm: AlarmData?, alarmObject: AlarmObject) {
 		// We don't need to check permissions here anymore because the button
 		// is only clickable (or behaves differently) based on uiState.isPermissionGranted
 		viewModelScope.launch {
@@ -120,7 +120,7 @@ class AlarmPickerViewModel @Inject constructor(
 				val missing = PermissionUtils.getRequiredPermissionSteps(context)
 				_events.emit(AlarmPickerEvent.ShowPermissionDialog(missing))
 			} else {
-				setAlarm(getCurrentAlarmObject(), currentAlarm)
+				setAlarm(alarmObject, currentAlarm)
 				_events.emit(AlarmPickerEvent.NavigateBack)
 			}
 		}
@@ -240,12 +240,12 @@ class AlarmPickerViewModel @Inject constructor(
 		return _uiState.value.validationResult is ValidationResult.Success
 	}
 
-	fun getCurrentAlarmObject(): AlarmObject {
-		return _uiState.value.alarmObject.apply {
-			startTime.set(Calendar.SECOND, 0)
-			endTime.set(Calendar.SECOND, 0)
-		}
-	}
+//	fun getCurrentAlarmObject(): AlarmObject {
+//		return _uiState.value.alarmObject.apply {
+//			startTime.set(Calendar.SECOND, 0)
+//			endTime.set(Calendar.SECOND, 0)
+//		}
+//	}
 
 	fun getFrequencyPreviewText(): String {
 		val state = _uiState.value

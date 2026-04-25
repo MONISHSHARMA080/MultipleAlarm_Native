@@ -199,11 +199,11 @@ fun AlarmPickerScreen(
             missingSteps ,
             onAllCriticalGranted = {
                 showPermissionDialog = false
-                viewModel.checkPermissions(context) // Re-verify immediately
+                viewModel.checkPermissions(context)
             },
             onDismiss = {
                 showPermissionDialog = false
-                viewModel.checkPermissions(context) // Update UI state even if they said no
+                viewModel.checkPermissions(context)
             }
         )
     }
@@ -451,26 +451,8 @@ fun AlarmPickerScreen(
                     onClick = {
                         if (validationOk) {
                             // All business logic is now inside the ViewModel
-                            viewModel.onSetAlarmClicked(alarm)
+                            viewModel.onSetAlarmClicked(alarm, alarmObject)
                         }
-
-//                        when{
-//                            !notificationPermGranted && shouldShowRationale -> showPermissionRationaleDialog = true
-//                            !notificationPermGranted && !shouldShowRationale ->  notificationPermissionState.launchPermissionRequest()
-//                            !weGood ->{
-//                                showPermissionDialog = true
-//                            }
-//                            weGood ->{
-//                                viewModel.onSetAlarmClicked(
-//                                    context = context,
-//                                    currentAlarm = alarm,
-//                                    allPermissionsGrantedInStore = allPermissionsGrantedInStore
-//                                )
-//
-////                                viewModel.setAlarm(viewModel.getCurrentAlarmObject(), alarm)
-////                                alarmSetGoBack()
-//                            }
-//                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
