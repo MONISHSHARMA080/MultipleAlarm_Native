@@ -62,30 +62,14 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          # 1. Start capturing logcat in the background
-           # We use -s to filter by tag 'AAAAA' and 'V' (verbose/all)
-           # We ignore everything else with *:S (silent)
-           adb logcat AAAAA:V *:S > custom_logs.txt &
-           LOGCAT_PID=$!
-          
-           # 2. Run the actual profile generation
-           ./gradlew :app:generateReleaseBaselineProfile \
-             -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
-             -PskipPostHog=true \
-             --stacktrace
-          
-           # 3. Kill the background logcat process
-           kill $LOGCAT_PID
-          
-           # 4. Display the logs clearly in the GitHub Actions console
+            ./gradlew :app:generateReleaseBaselineProfile \
+            -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
+            -PskipPostHog=true \
+            --stacktrace 2>&1 | tee gradle_output.txt 
            echo "**************************************************"
            echo "         DISPLAYING CUSTOM AAAAA LOGS             "
            echo "**************************************************"
-           if [ -f custom_logs.txt ]; then
-             cat custom_logs.txt
-           else
-             echo "No logs found."
-           fi
+           grep "AAAAA" gradle_output.txt || echo "No AAAAA logs found."
            echo "**************************************************" 
 
       - name: Build Release APK
