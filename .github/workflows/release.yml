@@ -62,6 +62,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
+          export PATH=$PATH:$ANDROID_HOME/platform-tools 
           (
           echo "Waiting for device..."
           adb wait-for-device
