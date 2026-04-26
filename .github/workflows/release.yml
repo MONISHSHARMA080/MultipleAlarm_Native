@@ -62,15 +62,45 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-            ./gradlew :app:generateReleaseBaselineProfile \
-            -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
-            -PskipPostHog=true \
-            --stacktrace 2>&1 | tee gradle_output.txt 
-           echo "**************************************************"
-           echo "         DISPLAYING CUSTOM AAAAA LOGS             "
-           echo "**************************************************"
-           grep "AAAAA" gradle_output.txt || echo "No AAAAA logs found."
-           echo "**************************************************" 
+          # 1. Add Android platform-tools (adb) to PATH
+               export PATH=$PATH:$ANDROID_HOME/platform-tools
+
+          # 2. Start logcat in the background. 
+          # We use a loop to keep it alive because GMD emulators 
+          # can take a moment to be 'visible' to ADB.
+               (
+               echo "Waiting for device to capture logs..."
+          # This waits until any device/emulator is detected
+               adb wait-for-device
+               echo "Device detected. Starting AAAAA log capture."
+               adb logcat AAAAA:V *:S > custom_logs.txt
+               ) &
+               LOGCAT_PID=$!
+
+          # 3. Run the profile generation
+          # We wrap this in a subshell or use 'set +e' if we want to ensure 
+          # logs show even if the build fails, but here we keep it standard.
+               ./gradlew :app:generateReleaseBaselineProfile \
+               -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
+               -PskipPostHog=true \
+               --stacktrace
+
+          # 4. Wait a few seconds for logs to flush, then kill the process
+               sleep 5
+               kill $LOGCAT_PID || true
+
+          # 5. Print the logs to the GitHub console with clear separators
+               echo ""
+               echo "===================================================="
+               echo "            APP LOGS (TAG: AAAAA)                   "
+               echo "===================================================="
+               if [ -f custom_logs.txt ]; then
+               cat custom_logs.txt
+               else
+               echo "No custom_logs.txt was generated. Check if Log.d was called."
+               fi
+               echo "===================================================="
+               echo ""
 
       - name: Build Release APK
         env:
