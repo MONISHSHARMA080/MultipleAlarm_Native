@@ -62,34 +62,8 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          export PATH=$PATH:$ANDROID_HOME/platform-tools 
-          (
-          echo "Waiting for device..."
-          adb wait-for-device
-            echo "Device found! Capturing AAAAA logs..."
-          # Filter for your tag specifically and ignore everything else with *:S
-          adb logcat AAAAA:I *:S > custom_logs.txt
-          ) &
-          LOG_PID=$!
-
-          # 2. Run the generation task
           ./gradlew :app:generateReleaseBaselineProfile \
           -Pandroid.testoptions.manageddevices.emulator.gpu="swiftshader_indirect"
-
-          # 3. Give adb a moment to flush the last logs before killing the process
-          sleep 5
-          kill $LOG_PID || true
-          
-          if [ -f custom_logs.txt ] && [ -s custom_logs.txt ]; then
-          echo "**************************************************"
-          echo "         DISPLAYING CUSTOM AAAAA LOGS             "
-          echo "**************************************************"
-          cat custom_logs.txt
-          else
-          echo "No AAAAA logs found. Checking full logcat summary..."
-          adb logcat -d | grep "AAAAA" || echo "Still no logs found in dump."
-          fi 
-
 
       - name: Build Release APK
         env:
