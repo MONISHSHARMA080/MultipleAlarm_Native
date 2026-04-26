@@ -62,41 +62,32 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-            # Background watcher: poll until emulator appears, then capture logcat
-            (
-            echo "[logcat-watcher] Waiting for GMD emulator to boot..."
-            for i in $(seq 1 60); do
-            EMULATOR=$(adb devices 2>/dev/null | grep -w "device" | grep "emulator" | awk '{print $1}' | head -1)
-            if [ -n "$EMULATOR" ]; then
-            echo "[logcat-watcher] Found emulator: $EMULATOR — starting logcat capture"
-            adb -s "$EMULATOR" logcat -v time > /tmp/emulator_logcat.txt 2>&1
-            echo "[logcat-watcher] logcat ended"
-            break
-            fi
-            sleep 10
-            done
-            ) &
-            WATCHER_PID=$!
+          (
+          echo "Waiting for device..."
+          adb wait-for-device
+            echo "Device found! Capturing AAAAA logs..."
+          # Filter for your tag specifically and ignore everything else with *:S
+          adb logcat AAAAA:I *:S > custom_logs.txt
+          ) &
+          LOG_PID=$!
 
-            # Run the actual profile generation
-            ./gradlew :app:generateReleaseBaselineProfile \
-            -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect \
-            -PskipPostHog=true \
-            --stacktrace
+          # 2. Run the generation task
+          ./gradlew :app:generateReleaseBaselineProfile \
+          -Pandroid.testoptions.manageddevices.emulator.gpu="swiftshader_indirect"
 
-            # Stop the watcher (ignore error if already dead)
-            kill $WATCHER_PID 2>/dev/null || true
-            wait $WATCHER_PID 2>/dev/null || true
-
-            echo "================================================"
-            echo "       YOUR APP LOGS (tag: AAAAA)               "
-            echo "================================================"
-            if [ -f /tmp/emulator_logcat.txt ]; then
-            grep "AAAAA" /tmp/emulator_logcat.txt || echo "No AAAAA logs found in logcat."
-            else
-            echo "Logcat file was never created — emulator may have booted too fast or too slow."
-            fi
-            echo "================================================"
+          # 3. Give adb a moment to flush the last logs before killing the process
+          sleep 5
+          kill $LOG_PID || true
+          
+          if [ -f custom_logs.txt ] && [ -s custom_logs.txt ]; then
+          echo "**************************************************"
+          echo "         DISPLAYING CUSTOM AAAAA LOGS             "
+          echo "**************************************************"
+          cat custom_logs.txt
+          else
+          echo "No AAAAA logs found. Checking full logcat summary..."
+          adb logcat -d | grep "AAAAA" || echo "Still no logs found in dump."
+          fi 
 
 
       - name: Build Release APK
