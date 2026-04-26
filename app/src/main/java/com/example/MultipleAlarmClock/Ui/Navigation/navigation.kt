@@ -44,8 +44,6 @@ sealed interface Screen : NavKey {
 	data class AlarmPicker(val alarmData: AlarmData? = null) : Screen
 }
 
-val HomeScreenValue = Screen.AlarmContainer
-
 @Composable fun NavigationStack( navViewModel: NavigationViewModel ,  deepLinkScreen: Screen? ) {
 	// -----------------------------------------------------------------------------------------------------------
 	// 1.) if it's the first launch then I want to go to the app onboarding;

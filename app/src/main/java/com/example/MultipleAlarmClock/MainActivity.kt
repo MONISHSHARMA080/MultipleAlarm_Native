@@ -20,7 +20,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -35,18 +34,6 @@ class MainActivity : ComponentActivity() {
     val coroutineScope = CoroutineScope( Dispatchers.IO)
     val deepLinkScreen: Screen? = parseDeepLinkIntent(intent)
 
-
-    coroutineScope.launch {
-      launch {
-        runCatching {
-//          NotificationHandler(this@MainActivity).createNotificationChannels()
-          logD("created notification Channels")
-        }
-      }
-      launch {
-//        FirstLaunchAskForPermission(this@MainActivity).checkIfWeHaveNotificationPermissionElseMarkitFalse()
-      }
-    }
     try {
       enableEdgeToEdge()
       setContent {
@@ -73,6 +60,7 @@ class MainActivity : ComponentActivity() {
   fun parseDeepLinkIntent(intent: Intent?): Screen?{
     if (intent == null || intent.action != Intent.ACTION_VIEW) return null
     val data: Uri = intent.data ?: return null
+    logD("Deep link is data:$data and  intent.data:${intent.data} intent.action: ${intent.action} and intent:$intent ")
     return when {
       data.scheme == "alarmapp" && data.host == "home" -> Screen.AlarmContainer
       else -> null
