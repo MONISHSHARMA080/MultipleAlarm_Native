@@ -19,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +33,9 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 
@@ -48,24 +52,41 @@ import com.google.accompanist.permissions.rememberPermissionState
 fun AlarmPermissionDialog(
 	missingSteps: List<PermissionStep>,
 	onAllCriticalGranted: () -> Unit,
-	onDismiss: () -> Unit
+	onDismiss: () -> Unit,
+	onTrackEvent: (String, Map<String, Any>) -> Unit
 ) {
 	val context = LocalContext.current
 
-	// Only POST_NOTIFICATIONS is a runtime permission; the rest are settings deep-links
 	val notificationPermState = if (missingSteps.contains(PermissionStep.PostNotification)) {
 		rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
 	} else null
 
-	// Track which steps user has acted on (so we can show "✓ Done" feedback)
 	var actedSteps by remember { mutableStateOf(setOf<PermissionStep>()) }
 
-	// Re-check on every recomposition triggered by returning from settings
-	val criticalMissing = missingSteps.filter { it != PermissionStep.XiaomiAutostart }
-	val allCriticalNowGranted = PermissionUtils.allCriticalPermissionsGranted(context)
+
+	var allCriticalNowGranted by remember {
+		mutableStateOf(PermissionUtils.allCriticalPermissionsGranted(context))
+	}
 
 	LaunchedEffect(allCriticalNowGranted) {
-		if (allCriticalNowGranted) onAllCriticalGranted()
+		onTrackEvent(
+			"permission_dialog_shown",
+			mapOf(
+				"permission name" to missingSteps.map { it.title },
+				"permission count" to missingSteps.size,
+			)
+		)
+	}
+
+	val lifecycleOwner =LocalLifecycleOwner.current
+	DisposableEffect(lifecycleOwner) {
+		val observer = LifecycleEventObserver { _, event ->
+			if (event == Lifecycle.Event.ON_RESUME) {
+				allCriticalNowGranted = PermissionUtils.allCriticalPermissionsGranted(context)
+			}
+		}
+		lifecycleOwner.lifecycle.addObserver(observer)
+		onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
 	}
 
 	AlertDialog(
@@ -82,18 +103,16 @@ fun AlarmPermissionDialog(
 		text = {
 			Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
 				Text(
-					"To ensure your alarm works reliably, please grant the following:",
+					"To ensure your alarm works, following permissions are needed:",
 					color = Color.Gray,
 					fontSize = 13.sp
 				)
 
 				missingSteps.forEach { step ->
-					val isAdvisory = step == PermissionStep.XiaomiAutostart
 					val isActedOn = actedSteps.contains(step)
 
 					PermissionStepRow(
 						step = step,
-						isAdvisory = isAdvisory,
 						isActedOn = isActedOn,
 						onAction = {
 							when (step) {
@@ -128,8 +147,7 @@ fun AlarmPermissionDialog(
 					)
 				}
 
-				if (missingSteps.any { it == PermissionStep.XiaomiAutostart } &&
-					missingSteps.size == 1) {
+				if ( missingSteps.any { it == PermissionStep.XiaomiAutostart } && missingSteps.size == 1 ) {
 					// Only autostart missing — it's advisory, allow skip
 					Text(
 						"Autostart is advisory. Your alarm will still work, but may not survive a reboot on Xiaomi devices.",
@@ -141,32 +159,21 @@ fun AlarmPermissionDialog(
 			}
 		},
 		confirmButton = {
-			// Only show "Done" if all critical permissions are granted
-			// or all that's left is the advisory Xiaomi step
-			val canProceed = allCriticalNowGranted
 			TextButton(
-				onClick = { if (canProceed) onAllCriticalGranted() else onDismiss() },
+				onClick = { if (allCriticalNowGranted) onAllCriticalGranted() else onDismiss() },
 			) {
 				Text(
-					if (canProceed) "Done" else "Cancel",
-					color = if (canProceed) Color(0xFF1A73E8) else Color.Gray
+					if (allCriticalNowGranted) "Done" else "Cancel",
+					color = if (allCriticalNowGranted) Color(0xFF1A73E8) else Color.Gray
 				)
 			}
 		},
-		dismissButton = {
-			if (!allCriticalNowGranted) {
-				TextButton(onClick = onDismiss) {
-					Text("Not now", color = Color.Gray)
-				}
-			}
-		}
 	)
 }
 
 @Composable
 private fun PermissionStepRow(
 	step: PermissionStep,
-	isAdvisory: Boolean,
 	isActedOn: Boolean,
 	onAction: () -> Unit
 ) {
@@ -183,14 +190,6 @@ private fun PermissionStepRow(
 					fontWeight = FontWeight.SemiBold,
 					fontSize = 14.sp
 				)
-				if (isAdvisory) {
-					Spacer(Modifier.width(6.dp))
-					Text(
-						"(optional)",
-						color = Color.Gray,
-						fontSize = 11.sp
-					)
-				}
 			}
 			Text(
 				step.rationale,

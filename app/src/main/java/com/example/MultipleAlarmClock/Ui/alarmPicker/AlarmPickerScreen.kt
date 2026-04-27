@@ -137,12 +137,10 @@ fun AlarmPickerScreen(
     val validationResult = uiState.validationResult
     val currentError = validationResult as? ValidationResult.Failure
 
-    val validationOk = validationResult is ValidationResult.Success        // purely form validation
-
+    val validationOk = validationResult is ValidationResult.Success
     val isPermissionsOk = uiState.areAllPermissionsGranted
     val weGood = validationOk && isPermissionsOk
-    val validationErrorMessage = viewModel.getValidationErrorMessage()
-    val freqText = if (alarmObject.freqGottenAfterCallback < 1) "" else viewModel.getFrequencyPreviewText()
+	val freqText = if (alarmObject.freqGottenAfterCallback < 1) "" else viewModel.getFrequencyPreviewText()
 
 
     val accentColor by animateColorAsState(
@@ -156,13 +154,15 @@ fun AlarmPickerScreen(
     LaunchedEffect(Unit) {
         viewModel.checkPermissions(context)
     }
-    LaunchedEffect(weGood) {
+    LaunchedEffect(weGood,uiState ) {
         val isNotificationsEnabled = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
         viewModel.captureEvent("is alarmObject value valid changed", mapOf(
             "weGood" to weGood,
             "alarmObject" to alarmObject.toString(),
-            "validation error message" to validationErrorMessage,
+            "are all permission granted" to uiState.areAllPermissionsGranted,
+            "validation error message" to (currentError?.message ?: ""),
             "alarmData" to alarm.toString(),
+            "ui_state" to uiState,
             "notification permission granted" to isNotificationsEnabled
         ))
     }
@@ -191,6 +191,10 @@ fun AlarmPickerScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    LaunchedEffect(showPermissionDialog) {
+        viewModel.captureEvent("ask for permission dialog opened", mapOf())
+    }
+
     logD("showPermissionDialog:$showPermissionDialog  missingStep.isNotEmpty():${missingSteps.isNotEmpty()}")
     if (showPermissionDialog) {
         AlarmPermissionDialog(
@@ -202,7 +206,8 @@ fun AlarmPickerScreen(
             onDismiss = {
                 showPermissionDialog = false
                 viewModel.checkPermissions(context)
-            }
+            },
+            onTrackEvent = {event, prop -> viewModel.captureEvent(event, prop)}
         )
     }
 
@@ -507,7 +512,6 @@ fun AlarmPickerScreen(
                 .fillMaxWidth()
                 .aspectRatio(1.5f) // Keeps the box height relative to its width
                 .border(2.dp, accentColor, RoundedCornerShape(24.dp))
-//                .size(width = 149.dp, height = 100.dp)
                 .background(Color(0xFF0F131A), RoundedCornerShape(24.dp))
                 .clickable { showTimePicker = true },
             contentAlignment = Alignment.Center,

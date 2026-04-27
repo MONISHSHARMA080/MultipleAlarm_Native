@@ -210,7 +210,9 @@ class AlarmPickerViewModel @Inject constructor(
 	}
 
 	fun captureEvent(name:String, properties: Map<String, Any>){
-		analytics.captureEvent(name, properties)
+		viewModelScope.launch {
+			analytics.captureEvent(name, properties)
+		}
 	}
 
 	/**[setAlarm] - here [AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
