@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -77,14 +78,14 @@ class AlarmActivity : ComponentActivity() {
     val analytics by lazy {Analytics(this)}
 
     override fun onCreate(savedInstanceState: Bundle?) {
-         logD("about to create a new alarm")
+        logD("about to create a new alarm")
         this.intentReceived = intent
         window.isNavigationBarContrastEnforced = false
         WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MaterialTheme(colorScheme = dynamicDarkColorScheme(this)) {
+            MaterialTheme(colorScheme = dynamicDarkColorScheme(LocalContext.current)) {
                 var messageVarToSet by remember { mutableStateOf("") }
                 var intentData by remember { mutableStateOf<AlarmActivityIntentData?>(null)  }
 
@@ -187,6 +188,7 @@ class AlarmActivity : ComponentActivity() {
 fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modifier) {
     var currentTime by remember { mutableStateOf(getCurrentTime()) }
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val colors = MaterialTheme.colorScheme
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -198,7 +200,9 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets.safeContent,
-        containerColor = Color.Black,
+//        containerColor = Color.Black,
+        containerColor = colors.background,
+
         bottomBar = {
             Box(
                 modifier = Modifier
@@ -208,7 +212,11 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
             ) {
                 Button(
                     onClick = { onFinish() },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Cyan, contentColor = Color.Black),
+                    colors = ButtonDefaults.buttonColors(
+//                        containerColor = Color.Cyan, contentColor = Color.Black
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
                     shape = RoundedCornerShape(49.dp),
                     modifier = Modifier.height(94.dp).width(327.dp)
                 ) {
@@ -238,7 +246,9 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                 // Centered time when no message
                 Text(
                     text = currentTime,
-                    color = Color.Cyan,
+//                    color = Color.Cyan,
+                    // Primary is the most vibrant color from the user's wallpaper
+                    color = colors.primary,
                     fontSize = 53.sp,
                     softWrap = false,
                     maxLines = 1,
@@ -249,7 +259,9 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                 Spacer(modifier = Modifier.height(20.dp))
                 Text(
                     text = currentTime,
-                    color = Color.Cyan,
+//                    color = Color.Cyan,
+                    // Primary is the most vibrant color from the user's wallpaper
+                    color = colors.primary,
                     fontSize = 53.sp,
                     softWrap = false,
                     maxLines = 1,
@@ -270,10 +282,10 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                     ) {
                         Text(
                             text = message,
-                            color = Color.White,
+//                            color = Color.White,
+                            color = colors.onSurface,
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Normal,
-//                            textAlign = TextAlign.Start,
                             lineHeight = 28.sp
                         )
                         Spacer(modifier = Modifier.height(20.dp))

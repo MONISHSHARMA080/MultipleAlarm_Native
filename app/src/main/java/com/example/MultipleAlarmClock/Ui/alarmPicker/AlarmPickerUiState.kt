@@ -23,7 +23,11 @@ data class AlarmPickerUiState(
 	val validationResult: ValidationResult = ValidationResult.Success,
 	val isLoading: Boolean = false,
 	val areAllPermissionsGranted: Boolean = true
-)
+){
+	override fun toString(): String {
+		return "alarmObject:$alarmObject \n validationResult: $validationResult \n isLoading:$isLoading \n areAllPermissionsGranted:$areAllPermissionsGranted"
+	}
+}
 
 sealed interface AlarmPickerEvent {
 	data object NavigateBack : AlarmPickerEvent
