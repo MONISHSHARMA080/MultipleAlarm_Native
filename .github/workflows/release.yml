@@ -131,7 +131,6 @@ jobs:
           releaseFiles: Multiple-Alarms-${{ steps.version.outputs.version_name }}.aab
           track: internal
           status: completed                         # makes it available immediately
-          whatsNewDirectory: distribution/whatsnew  # optional release notes
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
