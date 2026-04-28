@@ -1,4 +1,5 @@
-package com.coolApps.MultipleAlarmClock
+package com.example.MultipleAlarmClock.BroadCastReceivers
+
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -14,7 +15,7 @@ class AlarmReceiver : BroadcastReceiver() {
             logD("\n\n trying to launch the alarm activity +++++++++ \n\n")
             val newIntent = Intent(context, AlarmService::class.java).apply {
                 putExtras(intent)
-                action = AlarmService.ACTION_START_ALARM
+                action = AlarmService.Companion.ACTION_START_ALARM
             }
             context.startForegroundService(newIntent)
         }catch (e: Exception){

@@ -10,7 +10,7 @@ import android.content.Intent
 import androidx.room.Room
 import androidx.test.platform.app.InstrumentationRegistry
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivity
-import com.coolApps.MultipleAlarmClock.AlarmReceiver
+import com.example.MultipleAlarmClock.BroadCastReceivers.AlarmReceiver
 import com.coolApps.MultipleAlarmClock.MainActivity
 import com.coolApps.MultipleAlarmClock.components_for_ui_compose.ALARM_ACTION
 import com.coolApps.MultipleAlarmClock.components_for_ui_compose.scheduleMultipleAlarms

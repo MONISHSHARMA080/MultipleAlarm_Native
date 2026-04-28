@@ -7,10 +7,10 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
-import com.coolApps.MultipleAlarmClock.AlarmReceiver
+import com.example.MultipleAlarmClock.BroadCastReceivers.AlarmReceiver
 import com.coolApps.MultipleAlarmClock.BroadCastReceivers.AlarmInfoNotification
 import com.coolApps.MultipleAlarmClock.BroadCastReceivers.NextAlarmReceiver
-import com.coolApps.MultipleAlarmClock.LastAlarmUpdateDBReceiver
+import com.example.MultipleAlarmClock.BroadCastReceivers.LastAlarmUpdateDBReceiver
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmObject

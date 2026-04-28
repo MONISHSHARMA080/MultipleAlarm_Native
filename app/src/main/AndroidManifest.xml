@@ -72,10 +72,10 @@
             android:excludeFromRecents="true"
             android:exported="true" />
 
-        <receiver android:name=".LastAlarmUpdateDBReceiver"
+        <receiver android:name="com.example.MultipleAlarmClock.BroadCastReceivers.LastAlarmUpdateDBReceiver"
             android:exported="false" />
         <receiver
-            android:name=".AlarmReceiver"
+            android:name="com.example.MultipleAlarmClock.BroadCastReceivers.AlarmReceiver"
             android:exported="false" >
             <intent-filter>
                 <action android:name="com.coolApps.trying_native.ALARM_TRIGGERED" />

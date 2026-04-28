@@ -9,7 +9,7 @@ import androidx.core.content.IntentCompat
 import androidx.room.Room
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
-import com.coolApps.MultipleAlarmClock.AlarmReceiver
+import com.example.MultipleAlarmClock.BroadCastReceivers.AlarmReceiver
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
