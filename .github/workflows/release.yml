@@ -122,6 +122,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+
+      - name: Upload to Play Store Internal Track
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.your.app.package        # ← your actual package name
+          releaseFiles: Multiple-Alarms-${{ steps.version.outputs.version_name }}.aab
+          track: internal
+          status: completed                         # makes it available immediately
+          whatsNewDirectory: distribution/whatsnew  # optional release notes
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
