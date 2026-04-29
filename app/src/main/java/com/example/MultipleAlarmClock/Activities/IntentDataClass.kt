@@ -9,7 +9,8 @@ data class AlarmActivityIntentData(
     val startTimeForDb: Long,
     val startTime: Long,
     val endTime: Long,
-    val message: String
+    val message: String,
+//    val ringtoneUri : String,
 ) : Parcelable {
     override fun toString(): String {
         return "AlarmActivityIntentData: alarmIdInDb=$alarmIdInDb, startTimeForDb=$startTimeForDb, startTime=$startTime, endTime=$endTime, message:$message"
