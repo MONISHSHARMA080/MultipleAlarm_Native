@@ -44,7 +44,7 @@ jobs:
           COMMITS=$(git log "$LAST_TAG"..HEAD --pretty=format:"%s %b" 2>/dev/null || git log --pretty=format:"%s %b")
 
           # Determine bump type by scanning commit messages
-          BUMP="none
+          BUMP="none"
 
           if echo "$COMMITS" | grep -qiE "BREAKING CHANGE:|^.+!:"; then
             BUMP="major"
