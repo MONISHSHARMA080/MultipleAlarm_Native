@@ -73,7 +73,7 @@ jobs:
           # Version code = unique integer for Play Store
           # Using commit count so it always increases
           VERSION_CODE=$(git rev-list --count HEAD)
-          BASE_OFFSET=300
+          BASE_OFFSET=3000
           COMMIT_COUNT=$(git rev-list --count HEAD)
           VERSION_CODE=$((BASE_OFFSET + COMMIT_COUNT))
           
@@ -184,7 +184,9 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.coolApps.MultipleAlarmClock
           releaseFiles: Multiple-Alarms-${{ steps.version.outputs.version_name }}.aab
-          track: internal
+          releaseName: ${{ steps.version.outputs.version_name }}
+          changesNotSentForReview: true
+          tracks: internal
           status: completed
 
       - name: Upload APK artifact
