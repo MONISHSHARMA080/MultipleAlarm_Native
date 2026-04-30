@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -82,7 +85,8 @@ class AlarmActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MaterialTheme(colorScheme = dynamicDarkColorScheme(this)) {
+			val colorScheme = if (isSystemInDarkTheme()) { dynamicDarkColorScheme(LocalContext.current) } else { dynamicLightColorScheme(LocalContext.current) }
+            MaterialTheme(colorScheme = colorScheme) {
                 var messageVarToSet by remember { mutableStateOf("") }
                 var intentData by remember { mutableStateOf<AlarmActivityIntentData?>(null)  }
 
@@ -185,6 +189,7 @@ class AlarmActivity : ComponentActivity() {
 fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modifier) {
     var currentTime by remember { mutableStateOf(getCurrentTime()) }
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+	val colorScheme = MaterialTheme.colorScheme
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -196,7 +201,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets.safeContent,
-        containerColor = Color.Black,
+        containerColor = colorScheme.background,
         bottomBar = {
             Box(
                 modifier = Modifier
@@ -206,7 +211,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
             ) {
                 Button(
                     onClick = { onFinish() },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Cyan, contentColor = Color.Black),
+                    colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary, contentColor = colorScheme.onPrimary),
                     shape = RoundedCornerShape(49.dp),
                     modifier = Modifier.height(94.dp).width(327.dp)
                 ) {
@@ -236,7 +241,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                 // Centered time when no message
                 Text(
                     text = currentTime,
-                    color = Color.Cyan,
+                    color = colorScheme.primary,
                     fontSize = 53.sp,
                     softWrap = false,
                     maxLines = 1,
@@ -247,7 +252,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                 Spacer(modifier = Modifier.height(20.dp))
                 Text(
                     text = currentTime,
-                    color = Color.Cyan,
+                    color = colorScheme.primary,
                     fontSize = 53.sp,
                     softWrap = false,
                     maxLines = 1,
@@ -268,7 +273,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                     ) {
                         Text(
                             text = message,
-                            color = Color.White,
+                            color = colorScheme.onSurface,
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Normal,
 //                            textAlign = TextAlign.Start,
@@ -283,11 +288,10 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                             .fillMaxWidth()
                             .height(40.dp)
                             .background(
-                                brush = Brush.verticalGradient(colors = listOf(Color.Transparent, Color.Black))
+                                brush = Brush.verticalGradient(colors = listOf(Color.Transparent, colorScheme.surface))
                             )
                     )
                 }
-
             }
         }
     }
