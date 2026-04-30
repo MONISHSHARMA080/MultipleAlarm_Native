@@ -201,7 +201,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets.safeContent,
-        containerColor = colorScheme.background,
+        containerColor = colorScheme.surface,
         bottomBar = {
             Box(
                 modifier = Modifier
@@ -211,8 +211,8 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
             ) {
                 Button(
                     onClick = { onFinish() },
-                    colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primary, contentColor = colorScheme.onPrimary),
-                    shape = RoundedCornerShape(49.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primaryContainer, contentColor = colorScheme.onPrimaryContainer),
+                    shape = RoundedCornerShape(45.dp),
                     modifier = Modifier.height(94.dp).width(327.dp)
                 ) {
                     Icon(
@@ -241,7 +241,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                 // Centered time when no message
                 Text(
                     text = currentTime,
-                    color = colorScheme.primary,
+                    color = colorScheme.secondary,
                     fontSize = 53.sp,
                     softWrap = false,
                     maxLines = 1,
@@ -252,7 +252,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                 Spacer(modifier = Modifier.height(20.dp))
                 Text(
                     text = currentTime,
-                    color = colorScheme.primary,
+                    color = colorScheme.secondary,
                     fontSize = 53.sp,
                     softWrap = false,
                     maxLines = 1,
