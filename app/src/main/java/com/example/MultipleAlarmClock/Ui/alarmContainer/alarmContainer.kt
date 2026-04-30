@@ -46,7 +46,6 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -157,9 +156,6 @@ import kotlinx.coroutines.launch
 	ExtendedFloatingActionButton(
 		onClick = {
 			coroutineScope.launch {
-//				FirstLaunchAskForPermission(viewModel.context).checkAndRequestPermissions(viewModel.analytics, coroutineScope)
-			}
-			coroutineScope.launch {
 				onClick()
 			}
 		},
@@ -170,8 +166,8 @@ import kotlinx.coroutines.launch
 			.zIndex(5f),
 		interactionSource = interactionSource,
 		shape = MaterialTheme.shapes.extraLarge,
-		containerColor = Color(0xFF0a446e),
-		contentColor = Color.White,
+		containerColor = MaterialTheme.colorScheme.secondaryContainer,
+		contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
 		elevation = FloatingActionButtonDefaults.elevation(
 			defaultElevation = 6.dp,
 			pressedElevation = 6.dp
@@ -186,7 +182,7 @@ import kotlinx.coroutines.launch
 			Text(
 				text = "Add alarm",
 				style = MaterialTheme.typography.labelLarge,
-				fontSize = 17.sp,
+//				fontSize = 17.sp,
 				fontWeight = FontWeight.SemiBold
 			)
 		}
