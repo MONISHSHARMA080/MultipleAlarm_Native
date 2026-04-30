@@ -100,10 +100,19 @@ jobs:
 
       - name: Push Git Tag
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag v${{ steps.version.outputs.version_code }}
-          git push origin v${{ steps.version.outputs.version_code }}          
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            TAG="v${{ steps.version.outputs.version_code }}"
+            
+            # Delete local tag if it exists
+            git tag -d "$TAG" 2>/dev/null || true
+            
+            # Delete remote tag if it exists
+            git push origin --delete "$TAG" 2>/dev/null || true
+            
+            # Create and push new tag
+            git tag "$TAG"
+            git push origin "$TAG"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1

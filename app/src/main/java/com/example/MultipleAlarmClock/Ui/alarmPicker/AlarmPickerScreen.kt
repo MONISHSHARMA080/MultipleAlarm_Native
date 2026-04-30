@@ -128,7 +128,6 @@ fun AlarmPickerScreen(
     }
 
 
-
     var showPermissionDialog by remember { mutableStateOf(false) }
     var missingSteps by remember { mutableStateOf<List<PermissionStep>>(emptyList()) }
 
