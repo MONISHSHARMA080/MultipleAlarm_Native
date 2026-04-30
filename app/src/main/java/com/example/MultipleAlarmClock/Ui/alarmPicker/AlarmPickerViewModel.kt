@@ -51,7 +51,6 @@ class AlarmPickerViewModel @Inject constructor(
 	private val _events = MutableSharedFlow<AlarmPickerEvent>(extraBufferCapacity = 1)
 	val events: SharedFlow<AlarmPickerEvent> = _events.asSharedFlow()
 
-
 	val allPermissionsGranted: StateFlow<Boolean> = application.dataStore.data
 		.map { it.allPermissionsGranted }
 		.stateIn(
