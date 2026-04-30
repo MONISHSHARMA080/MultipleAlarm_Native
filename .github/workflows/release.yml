@@ -33,19 +33,15 @@ jobs:
           LAST_TAG=$(git tag --list 'v*.*.*' --sort=-version:refname | head -n1)
           LAST_TAG=${LAST_TAG:-v0.0.0}
           echo "Last tag: $LAST_TAG"
-
           # Strip the 'v' prefix and split into parts
           VERSION=${LAST_TAG#v}
           MAJOR=$(echo $VERSION | cut -d. -f1)
           MINOR=$(echo $VERSION | cut -d. -f2)
           PATCH=$(echo $VERSION | cut -d. -f3)
-
           # Look at all commits since the last tag
           COMMITS=$(git log "$LAST_TAG"..HEAD --pretty=format:"%s %b" 2>/dev/null || git log --pretty=format:"%s %b")
-
           # Determine bump type by scanning commit messages
           BUMP="none"
-
           if echo "$COMMITS" | grep -qiE "BREAKING CHANGE:|^.+!:"; then
             BUMP="major"
           elif echo "$COMMITS" | grep -qiE "^feat(\(.+\))?:"; then
@@ -53,9 +49,7 @@ jobs:
           elif echo "$COMMITS" | grep -qiE "^fix(\(.+\))?:|^perf(\(.+\))?:"; then
             BUMP="patch"
           fi
-
           echo "Bump type: $BUMP"
-
           # Apply the bump
           if [ "$BUMP" = "major" ]; then
             MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0
@@ -67,9 +61,7 @@ jobs:
             # No conventional commits found — default to patch bump
             PATCH=$((PATCH + 1))
           fi
-
           NEW_VERSION="$MAJOR.$MINOR.$PATCH"
-
           # Version code = unique integer for Play Store
           # Using commit count so it always increases
           VERSION_CODE=$(git rev-list --count HEAD)
@@ -77,15 +69,12 @@ jobs:
           COMMIT_COUNT=$(git rev-list --count HEAD)
           VERSION_CODE=$((BASE_OFFSET + COMMIT_COUNT))
           
-
           echo "version_name=v$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
           echo "New version: v$NEW_VERSION (code: $VERSION_CODE)"
-
       - name: Decode keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/release.keystore
-
       - name: Enable KVM group perms
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
@@ -93,12 +82,10 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
           sudo usermod -aG kvm $USER
-
       - name: Install PostHog CLI
         run: |
           npm install -g @posthog/cli
           posthog-cli --version
-
       - name: Generate Baseline Profile
         if: github.ref == 'refs/heads/main'
         env:
@@ -110,7 +97,6 @@ jobs:
           -Pandroid.testoptions.manageddevices.emulator.gpu="swiftshader_indirect" \
           -PskipPostHog=true \
           --stacktrace
-
       - name: Build Release APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -128,23 +114,19 @@ jobs:
             "-Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD" \
             "-Pandroid.injected.signing.key.alias=$KEY_ALIAS" \
             "-Pandroid.injected.signing.key.password=$KEY_PASSWORD"
-
       - name: Rename APK
         run: |
           cp app/build/outputs/apk/release/app-release.apk \
              "Multiple-Alarms-${{ steps.version.outputs.version_name }}.apk"
-
       - name: Rename AAB
         run: |
           cp app/build/outputs/bundle/release/app-release.aab \
              "Multiple-Alarms-${{ steps.version.outputs.version_name }}.aab"
-
       - name: Push Git Tag
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           TAG="${{ steps.version.outputs.version_name }}"
-
           # Only push if tag doesn't exist yet
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             echo "Tag $TAG already exists, skipping"
@@ -152,7 +134,6 @@ jobs:
             git tag "$TAG"
             git push origin "$TAG"
           fi
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -160,12 +141,10 @@ jobs:
           name: Release ${{ steps.version.outputs.version_name }}
           body: |
             ## Release ${{ steps.version.outputs.version_name }}
-
             ### Info
             - Version Name: ${{ steps.version.outputs.version_name }}
             - Version Code: ${{ steps.version.outputs.version_code }}
             - Commit: ${{ github.sha }}
-
             ### Downloads
             - **APK**: For direct installation on Android devices
             - **AAB**: For Google Play Store distribution
