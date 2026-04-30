@@ -4,7 +4,6 @@ import android.content.ClipData
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
@@ -38,12 +37,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -62,17 +59,11 @@ import kotlinx.coroutines.launch
 	val clipBoard =LocalClipboard.current
 	val alarms by alarmContainerViewModel.alarms.collectAsStateWithLifecycle()
 	ReportDrawnWhen { alarms != null }
-	val accentColor = Color.Blue
 	val coroutineScope = rememberCoroutineScope()
-	val colorSch = MaterialTheme.colorScheme
+	val colorScheme = MaterialTheme.colorScheme
 
-	Scaffold(contentWindowInsets = WindowInsets.safeContent) { edgeToEdgePadding ->
-		Box(
-			modifier = Modifier
-				.testTag("AlarmContainer")
-				.fillMaxSize()
-				.background(color = colorSch.primary)
-		) {
+	Scaffold(contentWindowInsets = WindowInsets.safeContent, containerColor = colorScheme.surface ) { edgeToEdgePadding ->
+		Box(modifier = Modifier.fillMaxSize()) {
 			SnackbarHost(
 				hostState = snackBarHostState,
 				modifier = Modifier
@@ -83,8 +74,8 @@ import kotlinx.coroutines.launch
 				Snackbar(
 					snackbarData = snackBarData,
 					shape = RoundedCornerShape(45.dp),
-					containerColor = Color.Blue,
-					contentColor = Color.White,
+					containerColor = colorScheme.inverseSurface,
+					contentColor = colorScheme.inverseOnSurface,
 					modifier = Modifier.fillMaxWidth()
 				)
 			}
@@ -150,9 +141,10 @@ import kotlinx.coroutines.launch
 	val interactionSource = remember { MutableInteractionSource() }
 	val isPressed by interactionSource.collectIsPressedAsState()
 	val scale by animateFloatAsState(
-		targetValue = if (isPressed) 0.94f else 1f,
+		targetValue = if (isPressed) 0.93f else 1f,
 		animationSpec = spring(),
 	)
+	val colorScheme = MaterialTheme.colorScheme
 	ExtendedFloatingActionButton(
 		onClick = {
 			coroutineScope.launch {
@@ -166,8 +158,8 @@ import kotlinx.coroutines.launch
 			.zIndex(5f),
 		interactionSource = interactionSource,
 		shape = MaterialTheme.shapes.extraLarge,
-		containerColor = MaterialTheme.colorScheme.primaryContainer,
-		contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+		containerColor = colorScheme.tertiaryContainer,
+		contentColor = colorScheme.onTertiaryContainer,
 		elevation = FloatingActionButtonDefaults.elevation(
 			defaultElevation = 6.dp,
 			pressedElevation = 6.dp
