@@ -96,6 +96,14 @@ jobs:
         run: |
           cp app/build/outputs/bundle/release/app-release.aab \
              "Multiple-Alarms-${{ steps.version.outputs.version_name }}.aab"
+          
+
+      - name: Push Git Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag v${{ steps.version.outputs.version_code }}
+          git push origin v${{ steps.version.outputs.version_code }}          
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1

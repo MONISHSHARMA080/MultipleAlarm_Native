@@ -66,8 +66,6 @@ fun getCurrentTime(): String {
     return SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date())
 }
 
-
-
 class AlarmActivity : ComponentActivity() {
     private var wakeLock: PowerManager.WakeLock? = null
     private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
