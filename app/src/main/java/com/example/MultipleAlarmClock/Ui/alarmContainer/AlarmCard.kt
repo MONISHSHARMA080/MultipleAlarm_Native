@@ -183,7 +183,7 @@ import com.posthog.android.replay.PostHogMaskModifier.postHogMask
                     modifier = Modifier.size(64.dp),
                     shape = RoundedCornerShape(24.dp),
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.93f),
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {

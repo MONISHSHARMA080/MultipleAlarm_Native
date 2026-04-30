@@ -193,18 +193,11 @@ class AlarmPickerViewModel @Inject constructor(
 		val currentError = state.validationResult as? ValidationResult.Failure
 
 		return if (state.validationResult is ValidationResult.Success) {
-			"your alarm will ring on " + getPreviewAlarms(state.alarmObject, 4)
+			"your alarm will ring on ${getPreviewAlarms(state.alarmObject, 4)}"
 		} else {
 			if (currentError?.field == AlarmErrorField.FREQUENCY) {
 				currentError.message
 			} else ""
-		}
-	}
-
-	fun getValidationErrorMessage(): String {
-		return when (val res = _uiState.value.validationResult) {
-			is ValidationResult.Success -> ""
-			is ValidationResult.Failure -> res.message
 		}
 	}
 

@@ -73,7 +73,7 @@ jobs:
           # Version code = unique integer for Play Store
           # Using commit count so it always increases
           VERSION_CODE=$(git rev-list --count HEAD)
-          BASE_OFFSET=30
+          BASE_OFFSET=300
           COMMIT_COUNT=$(git rev-list --count HEAD)
           VERSION_CODE=$((BASE_OFFSET + COMMIT_COUNT))
           

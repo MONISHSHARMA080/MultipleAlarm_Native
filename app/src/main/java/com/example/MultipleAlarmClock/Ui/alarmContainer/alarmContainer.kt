@@ -92,7 +92,7 @@ import kotlinx.coroutines.launch
 				modifier = Modifier.fillMaxSize(),
 				contentPadding = PaddingValues(
 					start = edgeToEdgePadding.calculateStartPadding(LocalLayoutDirection.current),
-					top = edgeToEdgePadding.calculateTopPadding(),
+					top = edgeToEdgePadding.calculateTopPadding() ,
 					end = edgeToEdgePadding.calculateEndPadding(LocalLayoutDirection.current),
 					bottom = edgeToEdgePadding.calculateBottomPadding() + 145.dp
 				)

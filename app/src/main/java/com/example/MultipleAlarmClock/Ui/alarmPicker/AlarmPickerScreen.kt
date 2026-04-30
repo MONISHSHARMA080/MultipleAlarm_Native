@@ -134,7 +134,7 @@ fun AlarmPickerScreen(
     val validationOk = validationResult is ValidationResult.Success
     val isPermissionsOk = uiState.areAllPermissionsGranted
     val weGood = validationOk && isPermissionsOk
-	val freqText = if (alarmObject.freqGottenAfterCallback < 1) "" else viewModel.getFrequencyPreviewText()
+    val freqText = if (alarmObject.freqGottenAfterCallback < 1) "" else viewModel.getFrequencyPreviewText()
 
 
     val accentColor by animateColorAsState(
