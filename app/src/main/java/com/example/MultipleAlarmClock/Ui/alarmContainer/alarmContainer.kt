@@ -61,7 +61,7 @@ import kotlinx.coroutines.launch
 	val snackBarHostState = remember { SnackbarHostState() }
 	val clipBoard =LocalClipboard.current
 	val alarms by alarmContainerViewModel.alarms.collectAsStateWithLifecycle()
-	ReportDrawnWhen { alarms != null }	// for the startUp profile
+	ReportDrawnWhen { alarms != null }
 	val accentColor = Color.Blue
 	val coroutineScope = rememberCoroutineScope()
 

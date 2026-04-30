@@ -185,7 +185,6 @@ jobs:
           packageName: com.coolApps.MultipleAlarmClock
           releaseFiles: Multiple-Alarms-${{ steps.version.outputs.version_name }}.aab
           releaseName: ${{ steps.version.outputs.version_name }}
-          changesNotSentForReview: true
           tracks: internal
           status: completed
 

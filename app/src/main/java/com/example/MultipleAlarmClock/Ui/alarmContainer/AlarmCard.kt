@@ -60,7 +60,8 @@ import com.posthog.android.replay.PostHogMaskModifier.postHogMask
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     val buttonColor by animateColorAsState(
-        targetValue = if (alarmData.isReadyToUse) Color(0xFF00E5FF) else MaterialTheme.colorScheme.secondary,
+        targetValue = if (alarmData.isReadyToUse) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+//        targetValue = if (alarmData.isReadyToUse) Color(0xFF00E5FF) else MaterialTheme.colorScheme.secondary,
         animationSpec = tween(durationMillis = 300),
         label = "buttonColor"
     )
