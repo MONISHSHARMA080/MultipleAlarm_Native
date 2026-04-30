@@ -147,7 +147,7 @@ import com.posthog.android.replay.PostHogMaskModifier.postHogMask
             // The Hidden Message (Revealed on Tap)
             AnimatedVisibility(visible = isExpanded) {
                 Text(
-                    text = alarmData.message.ifEmpty { "No message added" },
+                    text = alarmData.message.ifEmpty { "No message" },
                     modifier = Modifier.padding(bottom = 16.dp),
                     style = MaterialTheme.typography.bodyLarge,
                     fontStyle = if(alarmData.message.isEmpty()) FontStyle.Italic else FontStyle.Normal

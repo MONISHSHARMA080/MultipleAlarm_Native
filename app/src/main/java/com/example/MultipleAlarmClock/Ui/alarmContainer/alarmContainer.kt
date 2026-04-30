@@ -64,13 +64,14 @@ import kotlinx.coroutines.launch
 	ReportDrawnWhen { alarms != null }
 	val accentColor = Color.Blue
 	val coroutineScope = rememberCoroutineScope()
+	val colorSch = MaterialTheme.colorScheme
 
 	Scaffold(contentWindowInsets = WindowInsets.safeContent) { edgeToEdgePadding ->
 		Box(
 			modifier = Modifier
 				.testTag("AlarmContainer")
 				.fillMaxSize()
-				.background(color = Color.Black)
+				.background(color = colorSch.primary)
 		) {
 			SnackbarHost(
 				hostState = snackBarHostState,
@@ -131,21 +132,19 @@ import kotlinx.coroutines.launch
 				modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = screenHeight / 15)
 			) {
 				AddAlarmButton(
-					backgroundColor = accentColor,
 					onClick = {
 						onNavigateToCreate()
 						coroutineScope.launch {
 							alarmContainerViewModel.captureEvent("Plus Icon clicked", mapOf("round plus icon " to "new alarm"))
 						}
 				  },
-					viewModel = alarmContainerViewModel
 				)
 			}
 		}
 	}
 }
 
-@Composable fun AddAlarmButton(modifier: Modifier = Modifier,  backgroundColor: Color, onClick: () -> Unit, viewModel: AlarmContainerViewModel) {
+@Composable fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 	val coroutineScope = rememberCoroutineScope()
 	val interactionSource = remember { MutableInteractionSource() }
 	val isPressed by interactionSource.collectIsPressedAsState()
@@ -166,8 +165,8 @@ import kotlinx.coroutines.launch
 			.zIndex(5f),
 		interactionSource = interactionSource,
 		shape = MaterialTheme.shapes.extraLarge,
-		containerColor = MaterialTheme.colorScheme.secondaryContainer,
-		contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+		containerColor = MaterialTheme.colorScheme.primaryContainer,
+		contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
 		elevation = FloatingActionButtonDefaults.elevation(
 			defaultElevation = 6.dp,
 			pressedElevation = 6.dp
@@ -182,7 +181,6 @@ import kotlinx.coroutines.launch
 			Text(
 				text = "Add alarm",
 				style = MaterialTheme.typography.labelLarge,
-//				fontSize = 17.sp,
 				fontWeight = FontWeight.SemiBold
 			)
 		}
