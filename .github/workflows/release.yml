@@ -29,14 +29,54 @@ jobs:
       - name: Determine version
         id: version
         run: |
-          # Get the last tag, default to v0 if none exists
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0")
-          LAST_VERSION=${LAST_TAG#v}
-          NEW_VERSION=$((LAST_VERSION + 1))
-          
-          echo "version_code=$NEW_VERSION" >> $GITHUB_OUTPUT
+          # Get the last semver tag, default to v0.0.0 if none
+          LAST_TAG=$(git tag --list 'v*.*.*' --sort=-version:refname | head -n1)
+          LAST_TAG=${LAST_TAG:-v0.0.0}
+          echo "Last tag: $LAST_TAG"
+
+          # Strip the 'v' prefix and split into parts
+          VERSION=${LAST_TAG#v}
+          MAJOR=$(echo $VERSION | cut -d. -f1)
+          MINOR=$(echo $VERSION | cut -d. -f2)
+          PATCH=$(echo $VERSION | cut -d. -f3)
+
+          # Look at all commits since the last tag
+          COMMITS=$(git log "$LAST_TAG"..HEAD --pretty=format:"%s %b" 2>/dev/null || git log --pretty=format:"%s %b")
+
+          # Determine bump type by scanning commit messages
+          BUMP="none"
+
+          if echo "$COMMITS" | grep -qiE "BREAKING CHANGE:|^.+!:"; then
+            BUMP="major"
+          elif echo "$COMMITS" | grep -qiE "^feat(\(.+\))?:"; then
+            BUMP="minor"
+          elif echo "$COMMITS" | grep -qiE "^fix(\(.+\))?:|^perf(\(.+\))?:"; then
+            BUMP="patch"
+          fi
+
+          echo "Bump type: $BUMP"
+
+          # Apply the bump
+          if [ "$BUMP" = "major" ]; then
+            MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0
+          elif [ "$BUMP" = "minor" ]; then
+            MINOR=$((MINOR + 1)); PATCH=0
+          elif [ "$BUMP" = "patch" ]; then
+            PATCH=$((PATCH + 1))
+          else
+            # No conventional commits found — default to patch bump
+            PATCH=$((PATCH + 1))
+          fi
+
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+
+          # Version code = unique integer for Play Store
+          # Using commit count so it always increases
+          VERSION_CODE=$(git rev-list --count HEAD)
+
           echo "version_name=v$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "New version: v$NEW_VERSION (code: $NEW_VERSION)"
+          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "New version: v$NEW_VERSION (code: $VERSION_CODE)"
 
       - name: Decode keystore
         run: |
@@ -52,7 +92,7 @@ jobs:
 
       - name: Install PostHog CLI
         run: |
-          npm install -g @posthog/cli;
+          npm install -g @posthog/cli
           posthog-cli --version
 
       - name: Generate Baseline Profile
@@ -66,8 +106,6 @@ jobs:
           -Pandroid.testoptions.manageddevices.emulator.gpu="swiftshader_indirect" \
           -PskipPostHog=true \
           --stacktrace
-          
-          
 
       - name: Build Release APK
         env:
@@ -96,23 +134,20 @@ jobs:
         run: |
           cp app/build/outputs/bundle/release/app-release.aab \
              "Multiple-Alarms-${{ steps.version.outputs.version_name }}.aab"
-          
 
       - name: Push Git Tag
         run: |
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            TAG="v${{ steps.version.outputs.version_code }}"
-            
-            # Delete local tag if it exists
-            git tag -d "$TAG" 2>/dev/null || true
-            
-            # Delete remote tag if it exists
-            git push origin --delete "$TAG" 2>/dev/null || true
-            
-            # Create and push new tag
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          TAG="${{ steps.version.outputs.version_name }}"
+
+          # Only push if tag doesn't exist yet
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, skipping"
+          else
             git tag "$TAG"
             git push origin "$TAG"
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -121,16 +156,15 @@ jobs:
           name: Release ${{ steps.version.outputs.version_name }}
           body: |
             ## Release ${{ steps.version.outputs.version_name }}
-            
-            ### What's Changed
-            - Version Code: ${{ steps.version.outputs.version_code }}
+
+            ### Info
             - Version Name: ${{ steps.version.outputs.version_name }}
-            
+            - Version Code: ${{ steps.version.outputs.version_code }}
+            - Commit: ${{ github.sha }}
+
             ### Downloads
             - **APK**: For direct installation on Android devices
             - **AAB**: For Google Play Store distribution
-            
-            Built with baseline and startup profiles for optimal performance.
           files: |
             Multiple-Alarms-${{ steps.version.outputs.version_name }}.apk
             Multiple-Alarms-${{ steps.version.outputs.version_name }}.aab
@@ -139,8 +173,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-
       - name: Upload to Play Store Internal Track
+        if: github.ref == 'refs/heads/main'
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
