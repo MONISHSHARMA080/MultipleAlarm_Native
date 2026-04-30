@@ -120,22 +120,17 @@ fun AlarmPickerScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    val allPermissionsGrantedInStore by viewModel.allPermissionsGranted.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(alarm) {
         viewModel.initialize(alarm)
     }
 
-
     var showPermissionDialog by remember { mutableStateOf(false) }
     var missingSteps by remember { mutableStateOf<List<PermissionStep>>(emptyList()) }
-
-
     val alarmObject = uiState.alarmObject
     val validationResult = uiState.validationResult
     val currentError = validationResult as? ValidationResult.Failure
-
     val validationOk = validationResult is ValidationResult.Success
     val isPermissionsOk = uiState.areAllPermissionsGranted
     val weGood = validationOk && isPermissionsOk
@@ -145,7 +140,6 @@ fun AlarmPickerScreen(
     val accentColor by animateColorAsState(
         targetValue = if (weGood) AccentColor.Ok.value else AccentColor.Problem.value,
         animationSpec = tween(durationMillis = 190),
-        label = "accent_color_animation"
     )
 
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
