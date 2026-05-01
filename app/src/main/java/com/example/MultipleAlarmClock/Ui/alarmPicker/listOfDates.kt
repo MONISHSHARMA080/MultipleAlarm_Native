@@ -189,7 +189,7 @@ fun AddMoreDatesCard(onClick: () -> Unit) {
 				style = TextStyle(
 					fontSize = 10.sp,
 					fontWeight = FontWeight.Bold,
-					color = if (isSelected) colorScheme.onPrimary else colorScheme.onSurface
+					color = if (isSelected) colorScheme.onPrimary else contentColor
 				)
 			)
 			Spacer(modifier = Modifier.height(4.dp))
@@ -198,7 +198,7 @@ fun AddMoreDatesCard(onClick: () -> Unit) {
 				style = TextStyle(
 					fontSize = 20.sp,
 					fontWeight = FontWeight.Bold,
-					color = if (isSelected) colorScheme.onPrimary else colorScheme.onSurface
+					color = if (isSelected) colorScheme.onPrimary else contentColor
 				)
 			)
 			Text(
