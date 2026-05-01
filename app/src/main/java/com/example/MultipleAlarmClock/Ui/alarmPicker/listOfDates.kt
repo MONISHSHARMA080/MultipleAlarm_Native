@@ -85,7 +85,7 @@ data class DayInWeek(
 		) { itemsIndexed(weekDates) { index, date ->
 			val isSelectable = if (allowSelectingPastDate) true else index >= currentDateIndex
 			DateCard(
-				date = date.date, isSelected = index == selectedDateIndex, weGood = weGood,
+				date = date.date, isSelected = index == selectedDateIndex, weGood = weGood, isSelectable,
 				onClick = {
 					logD("clicked on a date component and index:$index and isSelectable:$isSelectable")
 					if (isSelectable){
@@ -151,7 +151,7 @@ fun AddMoreDatesCard(onClick: () -> Unit) {
 	}
 }
 
-@Composable fun DateCard(date: LocalDate, isSelected: Boolean, weGood: Boolean, onClick: () -> Unit) {
+@Composable fun DateCard(date: LocalDate, isSelected: Boolean, weGood: Boolean, isEnabled: Boolean , onClick: () -> Unit) {
 //	val backgroundColor = if (isSelected) Color(0xFF152A46) else Color(0xFF1C1F26)
 //	val backgroundColorIfErrorState = Color( 0xFFde0707)
 //	val borderColor = if (isSelected) Color(0xFF1E88E5) else Color(0xFF2C313A)
@@ -162,11 +162,11 @@ fun AddMoreDatesCard(onClick: () -> Unit) {
 		isSelected -> colorScheme.primary
 		else -> colorScheme.surfaceContainer
 	}
-
+	val baseContentColor = if (isEnabled) colorScheme.onSurface else colorScheme.onSurface.copy(alpha = 0.38f)
 	val contentColor = when {
 		!weGood && isSelected -> colorScheme.onError
 		isSelected -> colorScheme.onPrimary
-		else -> colorScheme.onSurfaceVariant
+		else -> baseContentColor
 	}
 	val dayName =  date.dayOfWeek.name.take(3)
 	val borderColor = if (isSelected) colorScheme.outline else colorScheme.outlineVariant
