@@ -241,7 +241,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                 // Centered time when no message
                 Text(
                     text = currentTime,
-                    color = colorScheme.secondary,
+                    color = colorScheme.onSurface,
                     fontSize = 53.sp,
                     softWrap = false,
                     maxLines = 1,
@@ -252,7 +252,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
                 Spacer(modifier = Modifier.height(20.dp))
                 Text(
                     text = currentTime,
-                    color = colorScheme.secondary,
+                    color = colorScheme.onSurface,
                     fontSize = 53.sp,
                     softWrap = false,
                     maxLines = 1,

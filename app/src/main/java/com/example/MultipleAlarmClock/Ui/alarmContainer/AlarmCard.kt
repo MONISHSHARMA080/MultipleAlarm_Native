@@ -61,11 +61,11 @@ import com.posthog.android.replay.PostHogMaskModifier.postHogMask
 
     var isExpanded by remember { mutableStateOf(false) }
     val buttonColor by animateColorAsState(
-        targetValue = if (alarmData.isReadyToUse) colorScheme.primary else colorScheme.secondary,
+        targetValue = if (alarmData.isReadyToUse) colorScheme.primaryContainer else colorScheme.surfaceVariant,
         animationSpec = tween(durationMillis = 155),
     )
 	val buttonContentColor by animateColorAsState(
-		targetValue = if (alarmData.isReadyToUse) colorScheme.onPrimary else colorScheme.onSecondary,
+		targetValue = if (alarmData.isReadyToUse) colorScheme.onPrimaryContainer else colorScheme.onSurfaceVariant,
 		animationSpec = tween(durationMillis = 155),
 	)
 
@@ -78,9 +78,7 @@ import com.posthog.android.replay.PostHogMaskModifier.postHogMask
                 onClick = { isExpanded = !isExpanded },
                 onLongClick = { onLongPress(alarmData) }
             ),
-        colors = CardDefaults.cardColors(
-            containerColor = colorScheme.surfaceContainerHigh
-        )
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surfaceContainerHigh)
     ) {
         Column(modifier = Modifier.padding(24.dp)) {
             Row(
@@ -106,7 +104,7 @@ import com.posthog.android.replay.PostHogMaskModifier.postHogMask
                     onClick = { onEdit(alarmData) },
                     modifier = Modifier
                         .postHogMask()
-                        .background(colorScheme.secondaryContainer, CircleShape)
+                        .background(colorScheme.surfaceVariant, CircleShape)
                         .size(43.dp)
                 ) {
                     Icon(
@@ -132,7 +130,7 @@ import com.posthog.android.replay.PostHogMaskModifier.postHogMask
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
                         modifier = Modifier.padding(horizontal = 12.dp).size(30.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = colorScheme.outlineVariant
                     )
                     Text(
                         text = formatTime12h(alarmData.endTime),
@@ -140,7 +138,7 @@ import com.posthog.android.replay.PostHogMaskModifier.postHogMask
                             fontWeight = FontWeight.Black,
                             fontSize = timeSize
                         ),
-						color =  colorScheme.onSurface,
+						color =  colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         softWrap = false
                     )
@@ -149,8 +147,9 @@ import com.posthog.android.replay.PostHogMaskModifier.postHogMask
             }
             AnimatedVisibility(visible = isExpanded) {
                 Text(
-                    text = alarmData.message.ifEmpty { "No message" },
+                    text = alarmData.message,
                     modifier = Modifier.padding(bottom = 16.dp),
+					color = colorScheme.onSurface,
                     style = MaterialTheme.typography.bodyLarge,
                     fontStyle = if(alarmData.message.isEmpty()) FontStyle.Italic else FontStyle.Normal
                 )
@@ -167,7 +166,7 @@ import com.posthog.android.replay.PostHogMaskModifier.postHogMask
                         transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) },
                     ) { text ->
                         Text(
-                            text = text, color =  buttonContentColor,
+                            text = text,
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold)
                         )
                     }
@@ -190,12 +189,13 @@ import com.posthog.android.replay.PostHogMaskModifier.postHogMask
 
 @Composable
 fun TimeRow(label: String, time: String, isDimmed: Boolean = false) {
+	val colorScheme = MaterialTheme.colorScheme
 	Row(verticalAlignment = Alignment.CenterVertically) {
 		Text(
 			text = label,
 			style = MaterialTheme.typography.labelSmall,
 			modifier = Modifier.width(45.dp),
-			color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+			color = colorScheme.onSurfaceVariant
 		)
 		Text(
 			text = time,
@@ -203,7 +203,7 @@ fun TimeRow(label: String, time: String, isDimmed: Boolean = false) {
 				fontWeight = FontWeight.Black,
 				fontSize = 32.sp
 			),
-			color = if (isDimmed) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface
+			color = if (isDimmed) colorScheme.onSurfaceVariant else colorScheme.onSurface
 		)
 	}
 }
