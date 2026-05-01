@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -41,9 +42,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coolApps.MultipleAlarmClock.logD
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.time.DayOfWeek
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.TemporalAdjusters
 import java.util.Calendar
@@ -126,11 +127,12 @@ data class DayInWeek(
 }
 @Composable
 fun AddMoreDatesCard(onClick: () -> Unit) {
+	val colorScheme = MaterialTheme.colorScheme
 	Surface(
 		onClick = onClick,
 		shape = RoundedCornerShape(12.dp),
 		color = Color(0xFF1C1F26),
-		border = BorderStroke(2.dp, Color(0xFF1E88E5).copy(alpha = 0.3f)),
+		border = BorderStroke(2.dp, colorScheme.primary),
 		modifier = Modifier
 			.width(64.dp)
 			.height(80.dp)
@@ -142,7 +144,7 @@ fun AddMoreDatesCard(onClick: () -> Unit) {
 			Icon(
 				imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
 				contentDescription = "Load more dates",
-				tint = Color(0xFF1E88E5),
+				tint = colorScheme.primary,
 				modifier = Modifier.size(32.dp)
 			)
 		}
@@ -150,16 +152,28 @@ fun AddMoreDatesCard(onClick: () -> Unit) {
 }
 
 @Composable fun DateCard(date: LocalDate, isSelected: Boolean, weGood: Boolean, onClick: () -> Unit) {
-	val backgroundColor = if (isSelected) Color(0xFF152A46) else Color(0xFF1C1F26)
-	val backgroundColorIfErrorState = Color( 0xFFde0707)
-	val borderColor = if (isSelected) Color(0xFF1E88E5) else Color(0xFF2C313A)
-	val textColor = if (isSelected) Color.White else Color(0xFF7D8592)
-	val dayName =  date.dayOfWeek.name.take(3)
+//	val backgroundColor = if (isSelected) Color(0xFF152A46) else Color(0xFF1C1F26)
+//	val backgroundColorIfErrorState = Color( 0xFFde0707)
+//	val borderColor = if (isSelected) Color(0xFF1E88E5) else Color(0xFF2C313A)
+//	val textColor = if (isSelected) Color.White else Color(0xFF7D8592)
+	val colorScheme = MaterialTheme.colorScheme
+	val containerColor = when {
+		!weGood && isSelected -> colorScheme.error
+		isSelected -> colorScheme.primary
+		else -> colorScheme.surfaceContainer
+	}
 
+	val contentColor = when {
+		!weGood && isSelected -> colorScheme.onError
+		isSelected -> colorScheme.onPrimary
+		else -> colorScheme.onSurfaceVariant
+	}
+	val dayName =  date.dayOfWeek.name.take(3)
+	val borderColor = if (isSelected) colorScheme.outline else colorScheme.outlineVariant
 	Surface(
 		onClick = onClick,
 		shape = RoundedCornerShape(12.dp),
-		color = if (!weGood && isSelected) backgroundColorIfErrorState else backgroundColor,
+		color = containerColor,
 		border = BorderStroke(2.dp, borderColor),
 		modifier = Modifier
 			.width(64.dp)
@@ -175,7 +189,7 @@ fun AddMoreDatesCard(onClick: () -> Unit) {
 				style = TextStyle(
 					fontSize = 10.sp,
 					fontWeight = FontWeight.Bold,
-					color = textColor
+					color = if (isSelected) colorScheme.onPrimary else colorScheme.onSurface
 				)
 			)
 			Spacer(modifier = Modifier.height(4.dp))
@@ -184,7 +198,7 @@ fun AddMoreDatesCard(onClick: () -> Unit) {
 				style = TextStyle(
 					fontSize = 20.sp,
 					fontWeight = FontWeight.Bold,
-					color = Color.White
+					color = if (isSelected) colorScheme.onPrimary else colorScheme.onSurface
 				)
 			)
 			Text(
@@ -192,7 +206,7 @@ fun AddMoreDatesCard(onClick: () -> Unit) {
 				style = TextStyle(
 					fontSize = 10.sp,
 					fontWeight = FontWeight.Medium,
-					color = textColor
+					color = contentColor
 				)
 			)
 		}
