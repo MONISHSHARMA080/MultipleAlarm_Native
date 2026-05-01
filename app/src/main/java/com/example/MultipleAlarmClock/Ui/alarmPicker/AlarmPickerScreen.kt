@@ -55,6 +55,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -104,9 +105,14 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-enum class AccentColor(val value:Color) {
-     Ok(Color(0xFF1A73E8)),
-    Problem(Color(0xFFde0707))
+sealed class AccentColor {
+	object Ok : AccentColor()
+	object Problem : AccentColor()
+
+	@Composable fun resolve(): Color = when (this) {
+		is Ok -> MaterialTheme.colorScheme.primary
+		is Problem -> MaterialTheme.colorScheme.error
+	}
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalPermissionsApi::class)
@@ -136,9 +142,13 @@ fun AlarmPickerScreen(
     val weGood = validationOk && isPermissionsOk
     val freqText = if (alarmObject.freqGottenAfterCallback < 1) "" else viewModel.getFrequencyPreviewText()
 
+	val okColor      = AccentColor.Ok.resolve()
+	val problemColor = AccentColor.Problem.resolve()
+	val colorScheme = MaterialTheme.colorScheme
+
 
     val accentColor by animateColorAsState(
-        targetValue = if (weGood) AccentColor.Ok.value else AccentColor.Problem.value,
+        targetValue = if (weGood) AccentColor.Ok.resolve() else AccentColor.Problem.resolve(),
         animationSpec = tween(durationMillis = 190),
     )
 
@@ -213,12 +223,12 @@ fun AlarmPickerScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF0F131A))
+                .background(colorScheme.background)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF0F131A))
+                    .background(colorScheme.background)
                     .verticalScroll(rememberScrollState())
                     .fillMaxSize()
                     .navigationBarsPadding()
@@ -239,7 +249,7 @@ fun AlarmPickerScreen(
                 ) {
                     Text(
                         if (alarm == null) "New alarm" else "Edit Alarm",
-                        color = Color.White,
+                        color = colorScheme.onBackground,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     )
@@ -253,12 +263,11 @@ fun AlarmPickerScreen(
                             Icon(
                                 Icons.Default.AccessTimeFilled,
                                 contentDescription = null,
-                                tint = if (currentError?.field == AlarmErrorField.Time)
-                                    AccentColor.Problem.value else AccentColor.Ok.value,
+                                tint = if (currentError?.field == AlarmErrorField.Time) problemColor else okColor,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Time", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("Time", color = colorScheme.onSurface, fontWeight = FontWeight.Bold)
                         }
                         Spacer(modifier = Modifier.height(13.dp))
                         Row(
@@ -270,22 +279,20 @@ fun AlarmPickerScreen(
                                 label = "Start time",
                                 time = alarmObject.startTime,
                                 modifier = Modifier.weight(1f),
-                                accentColor = if (currentError?.field == AlarmErrorField.Time)
-                                    AccentColor.Problem.value else AccentColor.Ok.value,
+                                accentColor = if (currentError?.field == AlarmErrorField.Time) problemColor else okColor,
                                 onNewTimeSelected = { viewModel.updateStartTime(it) }
                             )
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = null,
-                                tint = Color.Gray,
+                                tint = colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(24.dp)
                             )
                             TimeBox(
                                 label = "End time",
                                 time = alarmObject.endTime,
                                 modifier = Modifier.weight(1f),
-                                accentColor = if (currentError?.field == AlarmErrorField.Time)
-                                    AccentColor.Problem.value else AccentColor.Ok.value,
+                                accentColor = if (currentError?.field == AlarmErrorField.Time) problemColor else okColor,
                                 onNewTimeSelected = { viewModel.updateEndTime(it) }
                             )
                         }
@@ -300,12 +307,11 @@ fun AlarmPickerScreen(
                             Icon(
                                 Icons.Default.CalendarMonth,
                                 contentDescription = null,
-                                tint = if (currentError?.field == AlarmErrorField.DATE)
-                                    AccentColor.Problem.value else AccentColor.Ok.value,
+                                tint = if (currentError?.field == AlarmErrorField.DATE) problemColor else okColor,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Date", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("Date", color = colorScheme.onSurface, fontWeight = FontWeight.Bold)
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         DateList(
@@ -324,12 +330,11 @@ fun AlarmPickerScreen(
                             Icon(
                                 Icons.Default.Schedule,
                                 contentDescription = null,
-                                tint = if (currentError?.field == AlarmErrorField.FREQUENCY)
-                                    AccentColor.Problem.value else AccentColor.Ok.value,
+                                tint = if (currentError?.field == AlarmErrorField.FREQUENCY) problemColor else okColor,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Repeat every", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("Repeat every", color = colorScheme.onSurface, fontWeight = FontWeight.Bold)
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         Row(
@@ -342,15 +347,12 @@ fun AlarmPickerScreen(
                                         .height(48.dp)
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(25.dp))
-                                        .background(
-                                            if (currentError?.field == AlarmErrorField.FREQUENCY)
-                                                AccentColor.Problem.value else AccentColor.Ok.value
-                                        ),
+                                        .background(if (currentError?.field == AlarmErrorField.FREQUENCY) problemColor else okColor),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     IconButton(onClick = { viewModel.decrementFrequency() }) {
-                                        Icon(Icons.Default.Remove, contentDescription = null, tint = Color.White)
+                                        Icon(Icons.Default.Remove, contentDescription = null, tint = colorScheme.onPrimary)
                                     }
                                     BasicTextField(
                                         value = if (alarmObject.freqGottenAfterCallback !in 1..710) ""
@@ -377,7 +379,7 @@ fun AlarmPickerScreen(
                                                 }
                                             },
                                         textStyle = TextStyle(
-                                            color = Color.White,
+                                            color = colorScheme.onPrimary,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 16.sp,
                                             textAlign = TextAlign.Center
@@ -386,16 +388,16 @@ fun AlarmPickerScreen(
                                         singleLine = true
                                     )
                                     IconButton(onClick = { viewModel.incrementFrequency() }) {
-                                        Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
+                                        Icon(Icons.Default.Add, contentDescription = null, tint = colorScheme.onPrimary)
                                     }
                                 }
                             }
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         if (alarmObject.freqGottenAfterCallback < 1) {
-                            Text("Please enter the frequency value", color = Color.White, fontSize = 12.sp)
+                            Text("Please enter the frequency value", color = colorScheme.onSurface, fontSize = 12.sp)
                         } else {
-                            Text(freqText, color = Color.Gray, fontSize = 12.sp)
+                            Text(freqText, color = colorScheme.onSurfaceVariant, fontSize = 12.sp)
                         }
                         ShowErrorMessageIfError(currentError, AlarmErrorField.FREQUENCY)
                     }
@@ -408,16 +410,16 @@ fun AlarmPickerScreen(
                             Icon(
                                 Icons.AutoMirrored.Filled.Message,
                                 contentDescription = null,
-                                tint = AccentColor.Ok.value
+                                tint = okColor
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Message", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("Message", color = colorScheme.onSurface, fontWeight = FontWeight.Bold)
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         BasicTextField(
                             value = alarmObject.message,
                             onValueChange = { viewModel.updateMessage(it) },
-                            cursorBrush = SolidColor(Color.White),
+                            cursorBrush = SolidColor(colorScheme.primary),
                             modifier = Modifier
                                 .bringIntoViewRequester(bringIntoViewRequester)
                                 .onFocusEvent {
@@ -428,13 +430,13 @@ fun AlarmPickerScreen(
                                 .fillMaxWidth()
                                 .height(80.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0xFF0F131A))
+                                .background(colorScheme.surfaceVariant)
                                 .padding(12.dp),
-                            textStyle = TextStyle(color = Color.White, fontSize = 14.sp),
+                            textStyle = TextStyle(color = colorScheme.onSurfaceVariant, fontSize = 14.sp),
                             decorationBox = { innerTextField ->
                                 Box {
                                     if (alarmObject.message.isEmpty()) {
-                                        Text("Alarm message......", color = Color.DarkGray, fontSize = 14.sp)
+                                        Text("Alarm message......", color = colorScheme.onSurfaceVariant, fontSize = 14.sp)
                                     }
                                     innerTextField()
                                 }
@@ -463,7 +465,7 @@ fun AlarmPickerScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 when{
                                     !isValid -> {
-                                        Icon(Icons.Default.AlarmOff, contentDescription = null, tint = Color.White)
+                                        Icon(Icons.Default.AlarmOff, contentDescription = null, tint = colorScheme.onError)
                                         Spacer(Modifier.width(8.dp))
                                         val errorText =
                                             if (errorField == AlarmErrorField.AlarmIsNotDiff) {
@@ -471,19 +473,19 @@ fun AlarmPickerScreen(
                                             } else {
                                                 "Fix the input to set alarm"
                                             }
-                                        Text(errorText, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                        Text(errorText, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = colorScheme.onError)
                                     }
                                     // Scenario 2: Form is valid, but system permissions are missing (Priority 2) \
                                     !hasPermissions -> {
-                                        Icon(Icons.Default.NotificationsOff, contentDescription = null, tint = Color.White)
+                                        Icon(Icons.Default.NotificationsOff, contentDescription = null, tint = colorScheme.onError)
                                         Spacer(Modifier.width(8.dp))
-                                        Text("Grant required permissions", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                        Text("Grant required permissions", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = colorScheme.onError)
                                     }
                                     // Scenario 3: Everything is ready (Success state)
                                     else -> {
-                                        Icon(Icons.Default.AlarmAdd, contentDescription = null, tint = Color.White)
+                                        Icon(Icons.Default.AlarmAdd, contentDescription = null, tint = colorScheme.onPrimary)
                                         Spacer(Modifier.width(8.dp))
-                                        Text("Set Alarm", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                        Text("Set Alarm", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = colorScheme.onPrimary)
                                     }
                                 }
                             }
@@ -499,13 +501,14 @@ fun AlarmPickerScreen(
 @Composable fun TimeBox(label: String, time: Calendar, accentColor: Color, modifier: Modifier = Modifier, onNewTimeSelected: (Calendar) -> Unit) {
     var calendar by remember(time) { mutableStateOf(time) }
     var showTimePicker by remember { mutableStateOf(false) }
+	val colorScheme = MaterialTheme.colorScheme
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1.5f) // Keeps the box height relative to its width
                 .border(2.dp, accentColor, RoundedCornerShape(24.dp))
-                .background(Color(0xFF0F131A), RoundedCornerShape(24.dp))
+                .background(colorScheme.surfaceContainer, RoundedCornerShape(24.dp))
                 .clickable { showTimePicker = true },
             contentAlignment = Alignment.Center,
         ) {
@@ -543,15 +546,15 @@ fun AlarmPickerScreen(
                     )
                 }
 
-                Text(label, color = Color.Gray, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                Text(getTimeFormatted(calendar), color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
-                Text(getTimeFormatted(calendar, "a"), color = Color.Gray, fontSize = 12.sp)
+                Text(label, color = colorScheme.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(getTimeFormatted(calendar), color = colorScheme.onSurface, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                Text(getTimeFormatted(calendar, "a"), color = colorScheme.onSurfaceVariant, fontSize = 12.sp)
             }
         }
     }
 }
 
-@Composable fun CardContainer(modifier: Modifier = Modifier, endSpaceHeight: Dp = 16.dp, shape: Shape = RoundedCornerShape(26.dp), color: Color = Color(0xFF1C222B), content: @Composable (() -> Unit)) {
+@Composable fun CardContainer(modifier: Modifier = Modifier, endSpaceHeight: Dp = 16.dp, shape: Shape = RoundedCornerShape(26.dp), color: Color = MaterialTheme.colorScheme.surfaceContainer, content: @Composable (() -> Unit)) {
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = shape,
@@ -568,7 +571,7 @@ fun AlarmPickerScreen(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Spacer(modifier = Modifier.width(7.dp))
-            Text(currentError?.message ?: "",color = Color.White, fontSize = 12.sp )
+            Text(currentError?.message ?: "",color = MaterialTheme.colorScheme.onSurface, fontSize = 12.sp )
         }
     }
 
