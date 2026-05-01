@@ -62,7 +62,15 @@ data class DayInWeek(
 	}
 }
 @Composable fun DateList(onSelect: (Calendar) -> Unit, startDateIndex:Long?, weGood: Boolean, allowSelectingPastDate:Boolean= false ) {
-	var weekDates: List<DayInWeek>  by remember { mutableStateOf(getListOfDatesInThisWeek()) }
+	val today = remember { LocalDate.now() }
+	val alarmDate = remember(startDateIndex) {
+		startDateIndex
+			?.let { Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate() }
+			?.takeIf { !it.isBefore(today) }  // only use if not in the past
+			?: today
+	}
+
+	var weekDates: List<DayInWeek> by remember { mutableStateOf(getListOfDatesInThisWeek(alarmDate)) }
 	var currentDateIndex by remember { mutableIntStateOf(weekDates.indexOfFirst { it.isToday  }) }
 	val initialIndex = remember (startDateIndex){
 		val foundIndex = weekDates.indexOfFirst {
@@ -83,7 +91,8 @@ data class DayInWeek(
 			horizontalArrangement = Arrangement.spacedBy(10.dp),
 			modifier = Modifier.fillMaxWidth()
 		) { itemsIndexed(weekDates) { index, date ->
-			val isSelectable = if (allowSelectingPastDate) true else index >= currentDateIndex
+			val isPast = date.date.isBefore(today)
+			val isSelectable = allowSelectingPastDate || !isPast
 			DateCard(
 				date = date.date, isSelected = index == selectedDateIndex, weGood = weGood, isSelectable,
 				onClick = {
