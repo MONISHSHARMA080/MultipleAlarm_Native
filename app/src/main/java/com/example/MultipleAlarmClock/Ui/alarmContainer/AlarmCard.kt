@@ -117,44 +117,51 @@ import com.posthog.android.replay.PostHogMaskModifier.postHogMask
             }
             Column(modifier = Modifier.padding(vertical = 16.dp)) {
 				Row(
-					// Change verticalAlignment to Bottom so all elements sit on the same baseline
-					verticalAlignment = Alignment.CenterVertically,
-					modifier = Modifier.fillMaxWidth()
+					modifier = Modifier.fillMaxWidth(),
+					// We remove verticalAlignment = Alignment.Bottom and use baseline alignment instead
 				) {
+					// START TIME
 					Text(
 						text = formatTime12h(alarmData.startTime),
 						color = colorScheme.onSurface,
 						fontWeight = FontWeight.Medium,
 						letterSpacing = (-2).sp,
-						style = MaterialTheme.typography.displaySmall
+						style = MaterialTheme.typography.displaySmall,
+						modifier = Modifier.alignByBaseline() // Anchors the "floor"
 					)
 					Text(
 						text = formatTime12h(alarmData.startTime, "a"),
 						color = colorScheme.onSurface,
 						fontWeight = FontWeight.Medium,
 						style = MaterialTheme.typography.bodySmall,
+						modifier = Modifier.padding(start = 2.dp).alignByBaseline()
 					)
+
 					Icon(
 						imageVector = Icons.AutoMirrored.Filled.ArrowForward,
 						contentDescription = null,
-						modifier = Modifier.padding(horizontal = 10.dp).size(25.dp),
+						modifier = Modifier.padding(horizontal = 10.dp).size(24.dp).align(Alignment.CenterVertically),
 						tint = colorScheme.outlineVariant
 					)
+
+					// END TIME (Repeat the logic)
 					Text(
-						text = formatTime12h(alarmData.startTime),
+						text = formatTime12h(alarmData.startTime), // Assuming this is your end time logic
 						color = colorScheme.onSurface,
 						fontWeight = FontWeight.Medium,
 						letterSpacing = (-2).sp,
-						style = MaterialTheme.typography.displaySmall
+						style = MaterialTheme.typography.displaySmall,
+						modifier = Modifier.alignByBaseline()
 					)
 					Text(
 						text = formatTime12h(alarmData.startTime, "a"),
 						color = colorScheme.onSurface,
 						fontWeight = FontWeight.Medium,
 						style = MaterialTheme.typography.bodySmall,
+						modifier = Modifier.padding(start = 2.dp).alignByBaseline()
 					)
 				}
-            }
+			}
             AnimatedVisibility(visible = isExpanded) {
                 Text(
                     text = alarmData.message,
