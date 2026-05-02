@@ -287,22 +287,18 @@ class AlarmActivity : ComponentActivity() {
 						Spacer(modifier = Modifier.height(40.dp))
 						// Scrollable Message Area
 						Box(
-							modifier = Modifier
-								.weight(1f)
-								.fillMaxWidth()
+							modifier = Modifier.weight(1f).fillMaxWidth()
 						) {
 							Column(
-								modifier = Modifier
-									.fillMaxSize()
-									.verticalScroll(rememberScrollState()),
+								modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
 								horizontalAlignment = Alignment.CenterHorizontally
 							) {
 								Text(
 									text = message,
 									color = colorScheme.onSurface,
-									style = MaterialTheme.typography.displayMedium,
+									style = MaterialTheme.typography.displaySmall,
 									fontWeight = FontWeight.Normal,
-									lineHeight = 28.sp
+									lineHeight = 35.sp
 								)
 								Spacer(modifier = Modifier.height(20.dp))
 							}

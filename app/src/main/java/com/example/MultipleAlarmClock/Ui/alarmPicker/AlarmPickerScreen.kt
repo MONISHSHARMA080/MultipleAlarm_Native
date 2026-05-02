@@ -141,7 +141,6 @@ fun AlarmPickerScreen(
     val isPermissionsOk = uiState.areAllPermissionsGranted
     val weGood = validationOk && isPermissionsOk
     val freqText = if (alarmObject.freqGottenAfterCallback < 1) "" else viewModel.getFrequencyPreviewText()
-
 	val okColor      = AccentColor.Ok.resolve()
 	val problemColor = AccentColor.Problem.resolve()
 	val colorScheme = MaterialTheme.colorScheme
@@ -165,7 +164,7 @@ fun AlarmPickerScreen(
             "are all permission granted" to uiState.areAllPermissionsGranted,
             "validation error message" to (currentError?.message ?: ""),
             "alarmData" to alarm.toString(),
-            "ui_state" to uiState,
+            "ui_state" to uiState.toString(),
             "notification permission granted" to isNotificationsEnabled
         ))
     }
@@ -248,14 +247,14 @@ fun AlarmPickerScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        if (alarm == null) "New alarm" else "Edit Alarm",
-                        color = colorScheme.onBackground,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
+                        if (alarm == null) "New alarm" else "Edit alarm",
+						color = colorScheme.onSurface,
+						fontWeight = FontWeight.Medium,
+						letterSpacing = (-2).sp,
+						style = MaterialTheme.typography.headlineLarge
                     )
                 }
                 Spacer(modifier = Modifier.height(10.dp))
-
                 // Time Range Card
                 CardContainer {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -321,7 +320,6 @@ fun AlarmPickerScreen(
                         ShowErrorMessageIfError(currentError, AlarmErrorField.DATE)
                     }
                 }
-
                 // Frequency Card
                 CardContainer {
                     Column(modifier = Modifier.padding(16.dp)) {

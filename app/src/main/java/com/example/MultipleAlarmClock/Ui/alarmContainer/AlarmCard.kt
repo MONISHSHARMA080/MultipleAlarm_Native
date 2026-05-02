@@ -50,158 +50,195 @@ import com.posthog.android.replay.PostHogMaskModifier.postHogMask
 
 @Composable fun AlarmCard(
 	alarmData: AlarmData,
-	onEdit: (AlarmData) -> Unit ,
-	onStop: (AlarmData) -> Unit ,
-	onReset: (AlarmData) -> Unit ,
+	onEdit: (AlarmData) -> Unit,
+	onStop: (AlarmData) -> Unit,
+	onReset: (AlarmData) -> Unit,
 	onDelete: (AlarmData) -> Unit,
-    modifier: Modifier,
-    onLongPress: (AlarmData) -> Unit
+	modifier: Modifier,
+	onLongPress: (AlarmData) -> Unit
 ) {
 	val colorScheme = MaterialTheme.colorScheme
 
-    var isExpanded by remember { mutableStateOf(false) }
-    val buttonColor by animateColorAsState(
-        targetValue = if (alarmData.isReadyToUse) colorScheme.primaryContainer else colorScheme.surfaceVariant,
-        animationSpec = tween(durationMillis = 155),
-    )
+	var isExpanded by remember { mutableStateOf(false) }
+	val buttonColor by animateColorAsState(
+		targetValue = if (alarmData.isReadyToUse) colorScheme.primaryContainer else colorScheme.surfaceVariant,
+		animationSpec = tween(durationMillis = 155),
+	)
 	val buttonContentColor by animateColorAsState(
 		targetValue = if (alarmData.isReadyToUse) colorScheme.onPrimaryContainer else colorScheme.onSurfaceVariant,
 		animationSpec = tween(durationMillis = 155),
 	)
 
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(32.dp))
-            .combinedClickable(
-                onClick = { isExpanded = !isExpanded },
-                onLongClick = { onLongPress(alarmData) }
-            ),
-        colors = CardDefaults.cardColors(containerColor = colorScheme.surfaceContainerHigh)
-    ) {
-        Column(modifier = Modifier.padding(24.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text =formatDate(alarmData.startTime) ,
-                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-						fontSize = 18.sp,
-                        color = colorScheme.primary
-                    )
-                    Text(
-                        text = "Every ${alarmData.frequencyInMin} mins",
-                        style = MaterialTheme.typography.bodySmall,
-						fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                IconButton(
-                    onClick = { onEdit(alarmData) },
-                    modifier = Modifier
-                        .postHogMask()
-                        .background(colorScheme.surfaceVariant, CircleShape)
-                        .size(43.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit Alarm",
-                        modifier = Modifier.size(20.dp),
-                        tint = colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            Column(modifier = Modifier.padding(vertical = 16.dp)) {
-				Row(
-					modifier = Modifier.fillMaxWidth(),
-					// We remove verticalAlignment = Alignment.Bottom and use baseline alignment instead
+	Card(
+		modifier = modifier
+			.fillMaxWidth()
+			.padding(horizontal = 16.dp, vertical = 8.dp)
+			// M3 Expressive: cards use ExtraLarge shape (28.dp) at the container level;
+			// the clip is needed to honour the shape on combinedClickable ripple
+			.clip(RoundedCornerShape(28.dp))
+			.combinedClickable(
+				onClick = { if (alarmData.message.isNotEmpty()) isExpanded = !isExpanded },
+				onLongClick = { onLongPress(alarmData) }
+			),
+		shape = RoundedCornerShape(28.dp),
+		// M3: surfaceContainerHigh is correct for elevated cards — keep as-is
+		colors = CardDefaults.cardColors(containerColor = colorScheme.surfaceContainerHigh),
+		// M3 Expressive: cards carry a subtle tonal elevation to lift them from the background
+		elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+	) {
+		Column(modifier = Modifier.padding(24.dp)) {
+
+			// ── Header row ────────────────────────────────────────────────
+			Row(
+				modifier = Modifier.fillMaxWidth(),
+				horizontalArrangement = Arrangement.SpaceBetween,
+				verticalAlignment = Alignment.CenterVertically
+			) {
+				Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+					Text(
+						text = formatDate(alarmData.startTime),
+						// M3: date label → titleSmall. Avoid hardcoded sp overrides;
+						// titleSmall is already ~14 sp and semibold in the M3 type scale.
+						style = MaterialTheme.typography.titleSmall,
+						color = colorScheme.primary
+					)
+					Text(
+						text = "Every ${alarmData.frequencyInMin} mins",
+						// bodySmall is correct per M3 for supporting/secondary labels
+						style = MaterialTheme.typography.bodySmall,
+						color = colorScheme.onSurfaceVariant
+					)
+				}
+
+				// M3: icon-only action on a card → use surfaceContainerHighest tonal fill,
+				// NOT surfaceVariant (deprecated in M3 colour system)
+				IconButton(
+					onClick = { onEdit(alarmData) },
+					modifier = Modifier
+						.postHogMask()
+						.background(colorScheme.surfaceContainerHighest, CircleShape)
+						.size(40.dp)  // M3 standard touch-target for icon buttons
 				) {
-					// START TIME
+					Icon(
+						imageVector = Icons.Default.Edit,
+						contentDescription = "Edit Alarm",
+						// Keep icon intrinsic size — avoid hardcoding dp here
+						tint = colorScheme.onSurfaceVariant
+					)
+				}
+			}
+
+			// ── Time range display ─────────────────────────────────────────
+			// M3 / Google Clock: large time display sits in its own visual block
+			// with generous breathing room above the action row
+			Column(modifier = Modifier.padding(vertical = 20.dp)) {
+				Row(modifier = Modifier.fillMaxWidth()) {
+
+					// START TIME — hour:minute
 					Text(
 						text = formatTime12h(alarmData.startTime),
 						color = colorScheme.onSurface,
 						fontWeight = FontWeight.Medium,
 						letterSpacing = (-2).sp,
-						style = MaterialTheme.typography.displaySmall,
-						modifier = Modifier.alignByBaseline() // Anchors the "floor"
+						style = MaterialTheme.typography.displayMedium,
+						modifier = Modifier.alignByBaseline()
 					)
+					// AM/PM — M3 Clock pairs this with titleMedium, not bodySmall,
+					// so the suffix feels intentional alongside displayMedium numerals
 					Text(
 						text = formatTime12h(alarmData.startTime, "a"),
-						color = colorScheme.onSurface,
-						fontWeight = FontWeight.Medium,
-						style = MaterialTheme.typography.bodySmall,
-						modifier = Modifier.padding(start = 2.dp).alignByBaseline()
+						color = colorScheme.onSurfaceVariant,   // dimmed per M3 Clock pattern
+						style = MaterialTheme.typography.titleMedium,
+						modifier = Modifier
+							.padding(start = 4.dp, end = 4.dp)
+							.alignByBaseline()
 					)
 
+					// M3: use outline (not outlineVariant) for directional icons between
+					// two content blocks — outlineVariant is for decorative dividers only
 					Icon(
 						imageVector = Icons.AutoMirrored.Filled.ArrowForward,
 						contentDescription = null,
-						modifier = Modifier.padding(horizontal = 10.dp).size(24.dp).align(Alignment.CenterVertically),
-						tint = colorScheme.outlineVariant
+						modifier = Modifier
+							.padding(horizontal = 8.dp)
+							.align(Alignment.CenterVertically),
+						tint = colorScheme.outline
 					)
 
-					// END TIME (Repeat the logic)
+					// END TIME — hour:minute
 					Text(
-						text = formatTime12h(alarmData.startTime), // Assuming this is your end time logic
+						text = formatTime12h(alarmData.endTime),
 						color = colorScheme.onSurface,
 						fontWeight = FontWeight.Medium,
 						letterSpacing = (-2).sp,
-						style = MaterialTheme.typography.displaySmall,
+						style = MaterialTheme.typography.displayMedium,
 						modifier = Modifier.alignByBaseline()
 					)
 					Text(
-						text = formatTime12h(alarmData.startTime, "a"),
-						color = colorScheme.onSurface,
-						fontWeight = FontWeight.Medium,
-						style = MaterialTheme.typography.bodySmall,
-						modifier = Modifier.padding(start = 2.dp).alignByBaseline()
+						text = formatTime12h(alarmData.endTime, "a"),
+						color = colorScheme.onSurfaceVariant,   // consistent with start AM/PM
+						style = MaterialTheme.typography.titleMedium,
+						modifier = Modifier
+							.padding(start = 4.dp)
+							.alignByBaseline()
 					)
 				}
 			}
-            AnimatedVisibility(visible = isExpanded) {
-                Text(
-                    text = alarmData.message,
-                    modifier = Modifier.padding(bottom = 16.dp),
-					color = colorScheme.onSurface,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontStyle = if(alarmData.message.isEmpty()) FontStyle.Italic else FontStyle.Normal
-                )
-            }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Button(
-                    onClick = { if (alarmData.isReadyToUse) onStop(alarmData) else onReset(alarmData) },
-                    modifier = Modifier.weight(1f).height(64.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = buttonColor, contentColor = buttonContentColor)
-                ) {
-                    AnimatedContent(
-                        targetState = if (alarmData.isReadyToUse) "Stop" else "Reset",
-                        transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) },
-                    ) { text ->
-                        Text(
-                            text = text,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold)
-                        )
-                    }
-                }
-                FilledIconButton(
-                    onClick = { onDelete(alarmData) },
-                    modifier = Modifier.size(64.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer
-                    )
-                ) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete")
-                }
-            }
-        }
-    }
+
+			// ── Expandable message ─────────────────────────────────────────
+			AnimatedVisibility(visible = isExpanded) {
+				Text(
+					text = alarmData.message,
+					modifier = Modifier.padding(bottom = 16.dp),
+					color = colorScheme.onSurfaceVariant, // M3: secondary content → onSurfaceVariant
+					style = MaterialTheme.typography.bodyLarge,
+					fontStyle = if (alarmData.message.isEmpty()) FontStyle.Italic else FontStyle.Normal
+				)
+			}
+
+			// ── Action row ────────────────────────────────────────────────
+			Row(
+				modifier = Modifier.fillMaxWidth(),
+				horizontalArrangement = Arrangement.spacedBy(12.dp)
+			) {
+				Button(
+					onClick = { if (alarmData.isReadyToUse) onStop(alarmData) else onReset(alarmData) },
+					modifier = Modifier
+						.weight(1f)
+						.height(56.dp),   // M3 standard button height (48–56 dp range)
+					shape = RoundedCornerShape(16.dp), // M3 Expressive: buttons inside cards use Medium shape
+					colors = ButtonDefaults.buttonColors(
+						containerColor = buttonColor,
+						contentColor = buttonContentColor
+					)
+				) {
+					AnimatedContent(
+						targetState = if (alarmData.isReadyToUse) "Stop" else "Reset",
+						transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) },
+					) { text ->
+						Text(
+							text = text,
+							// M3: primary button label → labelLarge (not titleMedium + manual weight)
+							style = MaterialTheme.typography.labelLarge
+						)
+					}
+				}
+
+				// Delete — errorContainer fill is correct per M3 colour roles
+				FilledIconButton(
+					onClick = { onDelete(alarmData) },
+					modifier = Modifier.size(56.dp),  // matched to button height above
+					shape = RoundedCornerShape(16.dp),
+					colors = IconButtonDefaults.filledIconButtonColors(
+						containerColor = colorScheme.errorContainer,
+						contentColor = colorScheme.onErrorContainer
+					)
+				) {
+					Icon(Icons.Default.Delete, contentDescription = "Delete")
+				}
+			}
+		}
+	}
 }
 
 @Composable
