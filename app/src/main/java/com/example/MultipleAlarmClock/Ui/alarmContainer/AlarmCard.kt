@@ -45,7 +45,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
-import com.posthog.android.replay.PostHogMaskModifier.postHogMask
 
 @Composable fun AlarmCard(
 	alarmData: AlarmData,
@@ -103,7 +102,6 @@ import com.posthog.android.replay.PostHogMaskModifier.postHogMask
 				IconButton(
 					onClick = { onEdit(alarmData) },
 					modifier = Modifier
-						.postHogMask()
 						.background(colorScheme.secondaryContainer, CircleShape)
 						.size(43.dp)
 				) {
@@ -200,23 +198,6 @@ import com.posthog.android.replay.PostHogMaskModifier.postHogMask
 		}
 	}
 }
-
-//@Composable fun TimeRow(label: String, time: String, isDimmed: Boolean = false) {
-//	val colorScheme = MaterialTheme.colorScheme
-//	Row(verticalAlignment = Alignment.CenterVertically) {
-//		Text(
-//			text = label,
-//			style = MaterialTheme.typography.labelSmall,
-//			modifier = Modifier.width(45.dp),
-//			color = colorScheme.onSurfaceVariant
-//		)
-//		Text(
-//			text = time,
-//			style = MaterialTheme.typography.displaySmall,
-//			color = if (isDimmed) colorScheme.onSurfaceVariant else colorScheme.onSurface
-//		)
-//	}
-//}
 
 fun formatTime12h(millis: Long, pattern: String ="h:mm " ): String {
 	val formatter = java.text.SimpleDateFormat(pattern, java.util.Locale.getDefault())
