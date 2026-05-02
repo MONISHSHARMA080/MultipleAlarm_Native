@@ -299,7 +299,6 @@ fun AlarmPickerScreen(
                         ShowErrorMessageIfError(currentError, AlarmErrorField.Time)
                     }
                 }
-
                 // Date Card
                 CardContainer {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -545,11 +544,10 @@ fun AlarmPickerScreen(
                         }
                     )
                 }
-
-                Text(label, color = colorScheme.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                Text(getTimeFormatted(calendar), color = colorScheme.onSurface, fontSize = 32.sp, fontWeight = FontWeight.Bold)
-                Text(getTimeFormatted(calendar, "a"), color = colorScheme.onSurfaceVariant, fontSize = 12.sp)
-            }
+				Text(label, color = colorScheme.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+				Text(getTimeFormatted(calendar), color = colorScheme.onSurface, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+				Text(getTimeFormatted(calendar, "a"), color = colorScheme.onSurfaceVariant, fontSize = 12.sp)
+			}
         }
     }
 }

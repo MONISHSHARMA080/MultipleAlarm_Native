@@ -30,7 +30,6 @@ import java.util.Locale
 
 class NextAlarmReceiver: BroadcastReceiver() {
     private lateinit var context: Context
-    private val coroutineScopeThatDoesNotCancel = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val coroutineScope = CoroutineScope( Dispatchers.Default)
     private val alarmManager by lazy { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
     var alarmsController = AlarmsController()

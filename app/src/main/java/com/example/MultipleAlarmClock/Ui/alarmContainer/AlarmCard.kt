@@ -116,34 +116,44 @@ import com.posthog.android.replay.PostHogMaskModifier.postHogMask
                 }
             }
             Column(modifier = Modifier.padding(vertical = 16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
-                ) {
-                    val timeSize = 27.sp
-                    Text(
-                        text = formatTime12h(alarmData.startTime),
-                        style = MaterialTheme.typography.displaySmall.copy(
-                            fontWeight = FontWeight.Black, fontSize = timeSize
-                        ),
-						color =  colorScheme.onSurface
-                    )
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        modifier = Modifier.padding(horizontal = 12.dp).size(30.dp),
-                        tint = colorScheme.outlineVariant
-                    )
-                    Text(
-                        text = formatTime12h(alarmData.endTime),
-                        style = MaterialTheme.typography.displaySmall.copy(
-                            fontWeight = FontWeight.Black,
-                            fontSize = timeSize
-                        ),
-						color =  colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        softWrap = false
-                    )
-
-                }
+				Row(
+					// Change verticalAlignment to Bottom so all elements sit on the same baseline
+					verticalAlignment = Alignment.CenterVertically,
+					modifier = Modifier.fillMaxWidth()
+				) {
+					Text(
+						text = formatTime12h(alarmData.startTime),
+						color = colorScheme.onSurface,
+						fontWeight = FontWeight.Medium,
+						letterSpacing = (-2).sp,
+						style = MaterialTheme.typography.displaySmall
+					)
+					Text(
+						text = formatTime12h(alarmData.startTime, "a"),
+						color = colorScheme.onSurface,
+						fontWeight = FontWeight.Medium,
+						style = MaterialTheme.typography.bodySmall,
+					)
+					Icon(
+						imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+						contentDescription = null,
+						modifier = Modifier.padding(horizontal = 10.dp).size(25.dp),
+						tint = colorScheme.outlineVariant
+					)
+					Text(
+						text = formatTime12h(alarmData.startTime),
+						color = colorScheme.onSurface,
+						fontWeight = FontWeight.Medium,
+						letterSpacing = (-2).sp,
+						style = MaterialTheme.typography.displaySmall
+					)
+					Text(
+						text = formatTime12h(alarmData.startTime, "a"),
+						color = colorScheme.onSurface,
+						fontWeight = FontWeight.Medium,
+						style = MaterialTheme.typography.bodySmall,
+					)
+				}
             }
             AnimatedVisibility(visible = isExpanded) {
                 Text(
@@ -208,8 +218,8 @@ fun TimeRow(label: String, time: String, isDimmed: Boolean = false) {
 	}
 }
 
-fun formatTime12h(millis: Long): String {
-	val formatter = java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault())
+fun formatTime12h(millis: Long, pattern: String ="h:mm " ): String {
+	val formatter = java.text.SimpleDateFormat(pattern, java.util.Locale.getDefault())
 	return formatter.format(java.util.Date(millis))
 }
 

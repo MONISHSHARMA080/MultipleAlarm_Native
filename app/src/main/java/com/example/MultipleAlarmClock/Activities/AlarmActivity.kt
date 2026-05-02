@@ -7,11 +7,13 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -46,6 +48,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,10 +67,8 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.time.Duration.Companion.seconds
 
-fun getCurrentTime(): String {
-    return SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date())
-}
 
 class AlarmActivity : ComponentActivity() {
     private var wakeLock: PowerManager.WakeLock? = null
@@ -185,9 +186,9 @@ class AlarmActivity : ComponentActivity() {
 }
 
 
-@Composable
-fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modifier) {
+@Composable fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modifier) {
     var currentTime by remember { mutableStateOf(getCurrentTime()) }
+    var amPm by remember { mutableStateOf(getAmPm()) }
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 	val colorScheme = MaterialTheme.colorScheme
 
@@ -197,6 +198,21 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
             delay(720)
         }
     }
+	LaunchedEffect(Unit) {
+		while (true) {
+			amPm = getAmPm()
+			delay(2.seconds)
+		}
+	}
+
+	val configuration = LocalWindowInfo.current.containerSize
+
+	// Responsive scaling factors
+	val screenWidth = configuration.width.dp
+	val timeFontSize = (screenWidth * 0.085f).value.sp // 25% of screen width
+	val amPmFontSize = (screenWidth * 0.03f).value.sp // 7% of screen width
+	logD("timeFontSize:$timeFontSize.sp and amPmFontSize:$amPmFontSize.sp")
+
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -230,6 +246,7 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
             modifier = modifier
                 .fillMaxSize()
                 .padding(edgeToEdgePadding)
+				.padding(top = edgeToEdgePadding.calculateTopPadding()+20.dp)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = if (message.isEmpty()) Arrangement.Center else Arrangement.Top
@@ -237,61 +254,87 @@ fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modi
             // ------
             // animate the state change so it won't be jarring
             // ------
-            if (message.isEmpty()) {
-                // Centered time when no message
-                Text(
-                    text = currentTime,
-                    color = colorScheme.onSurface,
-                    fontSize = 53.sp,
-                    softWrap = false,
-                    maxLines = 1,
-                    fontWeight = FontWeight.Bold
-                )
-            } else {
-                // Original layout with message
-                Spacer(modifier = Modifier.height(20.dp))
-                Text(
-                    text = currentTime,
-                    color = colorScheme.onSurface,
-                    fontSize = 53.sp,
-                    softWrap = false,
-                    maxLines = 1,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(40.dp))
-                // Scrollable Message Area
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState()),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = message,
-                            color = colorScheme.onSurface,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Normal,
-                            lineHeight = 28.sp
-                        )
-                        Spacer(modifier = Modifier.height(20.dp))
-                    }
+			AnimatedContent(targetState = message.isEmpty()) { messageIsEmpty ->
+				if (!messageIsEmpty) Spacer(modifier = Modifier.height(60.dp))
+				Column(
+					modifier = modifier.fillMaxSize(),
+					horizontalAlignment = Alignment.CenterHorizontally,
+					verticalArrangement = Arrangement.Center
+				) {
+					Row(
+						verticalAlignment = Alignment.Bottom // Aligns bottom of text
+					) {
+						Text(
+							text = currentTime,
+							color = colorScheme.onSurface,
+							fontWeight = FontWeight.Medium,
+							letterSpacing = (-2).sp,
+							style = MaterialTheme.typography.displayLarge
+						)
 
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .height(40.dp)
-                            .background(
-                                brush = Brush.verticalGradient(colors = listOf(Color.Transparent, colorScheme.surface))
-                            )
-                    )
-                }
-            }
+						Spacer(modifier = Modifier.width(8.dp))
+
+						Text(
+							text = amPm,
+							color = colorScheme.onSurfaceVariant,
+							fontWeight = FontWeight.Medium,
+							modifier = Modifier.padding(bottom = 12.dp),
+							style = MaterialTheme.typography.headlineSmall,
+						)
+					}
+
+					if (!messageIsEmpty) {
+						Spacer(modifier = Modifier.height(40.dp))
+						// Scrollable Message Area
+						Box(
+							modifier = Modifier
+								.weight(1f)
+								.fillMaxWidth()
+						) {
+							Column(
+								modifier = Modifier
+									.fillMaxSize()
+									.verticalScroll(rememberScrollState()),
+								horizontalAlignment = Alignment.CenterHorizontally
+							) {
+								Text(
+									text = message,
+									color = colorScheme.onSurface,
+									style = MaterialTheme.typography.displayMedium,
+									fontWeight = FontWeight.Normal,
+									lineHeight = 28.sp
+								)
+								Spacer(modifier = Modifier.height(20.dp))
+							}
+
+							Box(
+								modifier = Modifier
+									.align(Alignment.BottomCenter)
+									.fillMaxWidth()
+									.height(40.dp)
+									.background(
+										brush = Brush.verticalGradient(
+											colors = listOf(
+												Color.Transparent,
+												colorScheme.surface
+											)
+										)
+									)
+							)
+						}
+
+					}
+				}
+
+			}
         }
     }
+}
+
+fun getCurrentTime(): String {
+	return SimpleDateFormat("h:mm:ss", Locale.getDefault()).format(Date())
+}
+
+fun getAmPm(): String {
+	return SimpleDateFormat("a", Locale.getDefault()).format(Date())
 }
