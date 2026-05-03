@@ -266,7 +266,7 @@ class AlarmActivity : ComponentActivity() {
 					) {
 						Text(
 							text = currentTime,
-							color = colorScheme.onSurface,
+							color = colorScheme.primary,
 							fontWeight = FontWeight.Medium,
 							letterSpacing = (-2).sp,
 							style = MaterialTheme.typography.displayLarge
@@ -276,7 +276,7 @@ class AlarmActivity : ComponentActivity() {
 
 						Text(
 							text = amPm,
-							color = colorScheme.onSurfaceVariant,
+							color = colorScheme.secondary,
 							fontWeight = FontWeight.Medium,
 							modifier = Modifier.padding(bottom = 12.dp),
 							style = MaterialTheme.typography.headlineSmall,

@@ -251,7 +251,7 @@ fun AlarmPickerScreen(
 						color = colorScheme.onSurface,
 						fontWeight = FontWeight.Medium,
 						letterSpacing = (-2).sp,
-						style = MaterialTheme.typography.headlineLarge
+						style = MaterialTheme.typography.headlineMedium
                     )
                 }
                 Spacer(modifier = Modifier.height(10.dp))
