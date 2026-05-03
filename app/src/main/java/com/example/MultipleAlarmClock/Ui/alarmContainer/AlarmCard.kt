@@ -141,7 +141,7 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 					)
 					// END TIME (Repeat the logic)
 					Text(
-						text = formatTime12h(alarmData.startTime), // Assuming this is your end time logic
+						text = formatTime12h(alarmData.endTime), // Assuming this is your end time logic
 						color = colorScheme.onSurface,
 						fontWeight = FontWeight.Medium,
 						letterSpacing = (-2).sp,
@@ -149,7 +149,7 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 						modifier = Modifier.alignByBaseline()
 					)
 					Text(
-						text = formatTime12h(alarmData.startTime, "a"),
+						text = formatTime12h(alarmData.endTime, "a"),
 						color = colorScheme.onSurface,
 						fontWeight = FontWeight.Medium,
 						style = MaterialTheme.typography.bodyMedium,
