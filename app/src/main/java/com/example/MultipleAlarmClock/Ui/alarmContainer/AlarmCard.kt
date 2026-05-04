@@ -121,8 +121,8 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 						text = formatTime12h(alarmData.startTime),
 						color = colorScheme.onSurface,
 						fontWeight = FontWeight.Medium,
-						letterSpacing = (-2).sp,
-						style = MaterialTheme.typography.displayMedium,
+//						letterSpacing = (-2).sp,
+						style = MaterialTheme.typography.displaySmall,
 						modifier = Modifier.alignByBaseline() // Anchors the "floor"
 					)
 					Text(
@@ -130,7 +130,8 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 						color = colorScheme.onSurface,
 						fontWeight = FontWeight.Medium,
 						style = MaterialTheme.typography.bodyMedium,
-						modifier = Modifier.padding(start = 1.dp).alignByBaseline()
+						modifier = Modifier.alignByBaseline()
+//						modifier = Modifier.padding(start = 1.dp).alignByBaseline()
 					)
 
 					Icon(
@@ -144,8 +145,8 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 						text = formatTime12h(alarmData.endTime), // Assuming this is your end time logic
 						color = colorScheme.onSurface,
 						fontWeight = FontWeight.Medium,
-						letterSpacing = (-2).sp,
-						style = MaterialTheme.typography.displayMedium,
+//						letterSpacing = (-2).sp,
+						style = MaterialTheme.typography.displaySmall,
 						modifier = Modifier.alignByBaseline()
 					)
 					Text(
@@ -153,7 +154,7 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 						color = colorScheme.onSurface,
 						fontWeight = FontWeight.Medium,
 						style = MaterialTheme.typography.bodyMedium,
-						modifier = Modifier.padding(start = 1.dp).alignByBaseline()
+						modifier = Modifier.alignByBaseline()
 					)
 				}
 			}
