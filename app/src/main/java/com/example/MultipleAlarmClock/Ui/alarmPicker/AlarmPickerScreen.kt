@@ -107,13 +107,26 @@ import java.util.Locale
 
 sealed class AccentColor {
 	object Ok : AccentColor()
-	object Problem : AccentColor()
+	object Problem: AccentColor()
 
 	@Composable fun resolve(): Color = when (this) {
 		is Ok -> MaterialTheme.colorScheme.primary
 		is Problem -> MaterialTheme.colorScheme.error
 	}
 }
+
+//sealed class AccentColor {
+//	class Ok : AccentColor()
+//	class Problem(
+//		val containerColor : Color= MaterialTheme.colorScheme.errorContainer,
+//		val contentColor: Color = MaterialTheme.colorScheme.errorContainer
+//	): AccentColor()
+//
+//	@Composable fun resolve(): Color = when (this) {
+//		is Ok -> MaterialTheme.colorScheme.primary
+//		is Problem -> MaterialTheme.colorScheme.error
+//	}
+//}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalPermissionsApi::class)
 @Composable

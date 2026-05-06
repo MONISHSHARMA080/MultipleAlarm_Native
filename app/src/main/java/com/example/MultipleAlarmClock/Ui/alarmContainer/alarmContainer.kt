@@ -13,14 +13,12 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AlarmAdd
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -39,7 +37,6 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -134,46 +131,77 @@ import kotlinx.coroutines.launch
 	}
 }
 
-@Composable fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
-	val coroutineScope = rememberCoroutineScope()
+//@Composable fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
+//	val coroutineScope = rememberCoroutineScope()
+//	val interactionSource = remember { MutableInteractionSource() }
+//	val isPressed by interactionSource.collectIsPressedAsState()
+//	val scale by animateFloatAsState(
+//		targetValue = if (isPressed) 0.93f else 1f,
+//		animationSpec = spring(),
+//	)
+//	val colorScheme = MaterialTheme.colorScheme
+//	ExtendedFloatingActionButton(
+//		onClick = {
+//			coroutineScope.launch {
+//				onClick()
+//			}
+//		},
+//		modifier = modifier
+//			.padding(bottom = 29.dp, end = 16.dp)
+//			.scale(scale)
+////			.size(width = 180.dp, height = 74.dp)
+//			.zIndex(5f),
+//		interactionSource = interactionSource,
+//		shape = MaterialTheme.shapes.extraLarge,
+//		containerColor = colorScheme.tertiaryContainer,
+//		contentColor = colorScheme.onTertiaryContainer,
+//		elevation = FloatingActionButtonDefaults.elevation(
+//			defaultElevation = 6.dp,
+//			pressedElevation = 6.dp
+//		),
+//		icon = {
+//			Icon(
+//				imageVector = Icons.Default.AlarmAdd, contentDescription = null,
+//				modifier = Modifier.size(28.dp)
+//			)
+//		},
+//		text = {
+//			Text(
+//				text = "Add alarm",
+//				style = MaterialTheme.typography.labelLarge,
+//				fontWeight = FontWeight.SemiBold
+//			)
+//		}
+//	)
+//}
+
+@Composable
+fun AddAlarmButton(
+	modifier: Modifier = Modifier,
+	onClick: () -> Unit
+) {
 	val interactionSource = remember { MutableInteractionSource() }
 	val isPressed by interactionSource.collectIsPressedAsState()
+
 	val scale by animateFloatAsState(
 		targetValue = if (isPressed) 0.93f else 1f,
-		animationSpec = spring(),
+		animationSpec = spring()
 	)
-	val colorScheme = MaterialTheme.colorScheme
-	ExtendedFloatingActionButton(
-		onClick = {
-			coroutineScope.launch {
-				onClick()
-			}
-		},
+	ExtendedFloatingActionButton (
+		onClick = onClick,
 		modifier = modifier
-			.padding(bottom = 29.dp, end = 16.dp)
-			.scale(scale)
-			.size(width = 180.dp, height = 74.dp)
-			.zIndex(5f),
+			.padding(16.dp)
+			.scale(scale),
 		interactionSource = interactionSource,
-		shape = MaterialTheme.shapes.extraLarge,
-		containerColor = colorScheme.tertiaryContainer,
-		contentColor = colorScheme.onTertiaryContainer,
-		elevation = FloatingActionButtonDefaults.elevation(
-			defaultElevation = 6.dp,
-			pressedElevation = 6.dp
-		),
+		shape = RoundedCornerShape(70),
 		icon = {
 			Icon(
-				imageVector = Icons.Default.AlarmAdd, contentDescription = null,
-				modifier = Modifier.size(28.dp)
+				imageVector = Icons.Default.AlarmAdd,
+				contentDescription = null
 			)
 		},
 		text = {
-			Text(
-				text = "Add alarm",
-				style = MaterialTheme.typography.labelLarge,
-				fontWeight = FontWeight.SemiBold
-			)
+			Text("Add alarm")
 		}
 	)
 }
