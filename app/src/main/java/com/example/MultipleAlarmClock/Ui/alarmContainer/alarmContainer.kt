@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,6 +29,7 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -180,57 +182,59 @@ import kotlinx.coroutines.launch
 //	)
 //}
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun AddAlarmButton(
 	modifier: Modifier = Modifier,
 	onClick: () -> Unit,
 	expanded: Boolean = true
 ) {
-	// ✅ Get window size — NOT screen height/15
 	val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
 
-	// Drive visual weight from window size, not hardcoded numbers
-	val iconSize = when {
-		windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) -> 32.dp
-		else -> 26.dp  // compact phones
-	}
-	val textStyle = when {
-		windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) ->
-			MaterialTheme.typography.titleMedium  // bigger on tablets/foldables
-		else ->
-			MaterialTheme.typography.labelLarge   // your current phone size
+	val isMediumOrLarger = windowSizeClass.isWidthAtLeastBreakpoint(
+		WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND
+	)
+	// Token-like sizes: same design language, stepped by breakpoint
+	val buttonMinHeight = if (isMediumOrLarger) 68.dp else 60.dp
+	val iconSize = if (isMediumOrLarger) 30.dp else 28.dp
+	val textStyle = if (isMediumOrLarger) {
+		MaterialTheme.typography.titleSmall
+	} else {
+		MaterialTheme.typography.labelLarge
 	}
 
 	val interactionSource = remember { MutableInteractionSource() }
 	val isPressed by interactionSource.collectIsPressedAsState()
 	val scale by animateFloatAsState(
-		targetValue = if (isPressed) 0.93f else 1f,
+		targetValue = if (isPressed) 0.97f else 1f,
 		animationSpec = spring()
 	)
 
 	ExtendedFloatingActionButton(
 		onClick = onClick,
-		modifier = modifier.scale(scale),  // ✅ NO .size() — let content drive it
 		expanded = expanded,
 		interactionSource = interactionSource,
+		modifier = modifier
+			.heightIn(min = buttonMinHeight)
+			.scale(scale),
 		shape = MaterialTheme.shapes.extraLarge,
 		containerColor = MaterialTheme.colorScheme.tertiaryContainer,
 		contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
 		elevation = FloatingActionButtonDefaults.elevation(
 			defaultElevation = 6.dp,
-			pressedElevation = 6.dp
+			pressedElevation = 8.dp
 		),
 		icon = {
 			Icon(
 				imageVector = Icons.Default.AlarmAdd,
 				contentDescription = null,
-				modifier = Modifier.size(iconSize)  // ✅ scales with device
+				modifier = Modifier.size(iconSize)
 			)
 		},
 		text = {
 			Text(
 				text = "Add alarm",
-				style = textStyle,             // ✅ scales with device
+				style = textStyle,
 				fontWeight = FontWeight.SemiBold
 			)
 		}
