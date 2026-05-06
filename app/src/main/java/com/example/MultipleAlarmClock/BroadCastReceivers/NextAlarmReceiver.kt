@@ -9,7 +9,6 @@ import androidx.core.content.IntentCompat
 import androidx.room.Room
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
-import com.example.MultipleAlarmClock.BroadCastReceivers.AlarmReceiver
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
@@ -17,6 +16,7 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmDatabase
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.utils.Result.Result
+import com.example.MultipleAlarmClock.BroadCastReceivers.AlarmReceiver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -81,12 +81,9 @@ class NextAlarmReceiver: BroadcastReceiver() {
         val currentTimeAlarmFired = parsedIntentData.startTime
         val startTimeForAlarmSeries = parsedIntentData.startTimeForDb
         val originalDbEndTime = parsedIntentData.endTime
-
-        if ((currentTimeAlarmFired <= 0L) || (startTimeForAlarmSeries <= 0L) || (originalDbEndTime <= 0L)) { // Added check for originalDbStartTime/EndTime too
-//            logSoundPlay(alarmData = null, alarmSeriesStartTime= startTimeForAlarmSeries, alarmStartTime = currentTimeAlarmFired, alarmEndTime = originalDbEndTime, alarmScheduleMessage = "---- Invalid time values received in AlarmReceiver. currentAlarmTime: $currentTimeAlarmFired, originalDbStartTime: $startTimeForAlarmSeries, originalDbEndTime: $originalDbEndTime. Crashing. ----- ")
-        }
         val alarmDaoImpl = this.alarmDao?:getAlarmDao(activityContext )
         val alarmData: AlarmData? = alarmDaoImpl.getAlarmByValues(startTimeForAlarmSeries, originalDbEndTime)
+
         if (alarmData == null) {
             analytics.captureEvent("alarmData delivered from intent not found in DB", mapOf(
                 "alarmData parsed from intent" to parsedIntentData.toString(),

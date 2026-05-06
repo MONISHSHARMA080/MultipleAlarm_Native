@@ -19,7 +19,7 @@ class ErrorHandler(val notificationHandler: NotificationHandler, val analytics: 
 		notifyUserAboutError(error, title)
 	}
 	fun <E: Error> notifyUserAboutError(error: Result.Failure<E>, title: String ): Unit {
-		val notification = notificationHandler.build( notificationChannel = NotificationChannelType.ErrorChannel, notificationTitle = "Sorry an error occurred, Please try again", notificationText = error.errorMessageToDisplayUser.messageToDisplayUser )
+		val notification = notificationHandler.build( notificationChannel = NotificationChannelType.ErrorChannel, notificationTitle =title, notificationText = error.errorMessageToDisplayUser.messageToDisplayUser )
 		notificationHandler.show(notification)
 
 		analytics.captureEvent("Error occurred", mapOf(
