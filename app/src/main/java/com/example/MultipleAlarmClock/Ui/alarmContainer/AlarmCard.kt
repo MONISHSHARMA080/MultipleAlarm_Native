@@ -16,8 +16,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Delete
@@ -73,7 +75,7 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 			.clip(RoundedCornerShape(32.dp))
 			.combinedClickable(
 				onClick = {
-					if (alarmData.message.isNotEmpty())isExpanded = !isExpanded
+					if (alarmData.message.isNotEmpty()) isExpanded = !isExpanded
 				},
 				onLongClick = { onLongPress(alarmData) }
 			),
@@ -86,17 +88,19 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 				verticalAlignment = Alignment.CenterVertically
 			) {
 				Column {
+					// CHANGE: Removed conflicting `fontSize = 18.sp` override.
+					// The style already defines size — mixing both is incorrect.
+					// If you need a custom size, use .copy(fontSize = 18.sp) on the style instead.
 					Text(
-						text =formatDate(alarmData.startTime) ,
+						text = formatDate(alarmData.startTime),
 						style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-						fontSize = 18.sp,
 						color = colorScheme.primary
 					)
 					Text(
 						text = "Every ${alarmData.frequencyInMin} mins",
 						style = MaterialTheme.typography.bodySmall,
-						fontSize = 11.sp,
-						color = MaterialTheme.colorScheme.onSurfaceVariant
+						// CHANGE: Removed conflicting `fontSize = 11.sp` override. Same reason as above.
+						color = colorScheme.onSurfaceVariant
 					)
 				}
 				IconButton(
@@ -113,60 +117,104 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 					)
 				}
 			}
+
+			// CHANGE: Replaced the single flat Row with two sub-Rows (start time group + end time group).
+			// The old flat Row had no width constraints on children, causing the end time
+			// to overflow and wrap vertically (the "5: 4 0" bug in your screenshot).
+			// Now each time group is self-contained and won't bleed into each other.
 			Column(modifier = Modifier.padding(vertical = 16.dp)) {
 				Row(
 					modifier = Modifier.fillMaxWidth(),
+					verticalAlignment = Alignment.CenterVertically
 				) {
-					Text(
-						text = formatTime12h(alarmData.startTime),
-						color = colorScheme.onSurface,
-						fontWeight = FontWeight.Medium,
-//						letterSpacing = (-2).sp,
-						style = MaterialTheme.typography.displaySmall,
-						modifier = Modifier.alignByBaseline() // Anchors the "floor"
-					)
-					Text(
-						text = formatTime12h(alarmData.startTime, "a"),
-						color = colorScheme.onSurface,
-						fontWeight = FontWeight.Medium,
-						style = MaterialTheme.typography.bodyMedium,
-						modifier = Modifier.alignByBaseline()
-//						modifier = Modifier.padding(start = 1.dp).alignByBaseline()
-					)
+					// START TIME GROUP
+					// CHANGE: Added weight(1f) so this group gets 50% of the row width,
+					// giving the Text a bounded width for autoSize to work against.
+					Row(
+						modifier = Modifier.weight(1f),
+						verticalAlignment = Alignment.Bottom
+					) {
+						Text(
+							text = formatTime12h(alarmData.startTime),
+							color = colorScheme.onSurface,
+							fontWeight = FontWeight.Medium,
+							style = MaterialTheme.typography.displaySmall,
+							maxLines = 1,
+							autoSize = TextAutoSize.StepBased(
+								minFontSize = 20.sp,
+								maxFontSize = 45.sp,
+								stepSize = 1.sp
+							),
+							modifier = Modifier
+								.weight(1f) // CHANGE: weight(1f) here lets the time text shrink/grow
+								.alignByBaseline()
+						)
+						// CHANGE: wrapContentWidth so AM/PM never gets squished
+						Text(
+							text = formatTime12h(alarmData.startTime, "a"),
+							color = colorScheme.onSurface,
+							fontWeight = FontWeight.Medium,
+							style = MaterialTheme.typography.bodyMedium,
+							modifier = Modifier
+								.wrapContentWidth()
+								.alignByBaseline()
+						)
+					}
 
+					// Arrow — fixed width, not weighted, so it never stretches
 					Icon(
 						imageVector = Icons.AutoMirrored.Filled.ArrowForward,
 						contentDescription = "next icon",
-						modifier = Modifier.padding(horizontal = 10.dp).size(35.dp).align(Alignment.CenterVertically),
+						modifier = Modifier
+							.padding(horizontal = 8.dp)
+							.size(24.dp)
+							.align(Alignment.CenterVertically),
 						tint = colorScheme.onSurfaceVariant
 					)
-					// END TIME (Repeat the logic)
-					Text(
-						text = formatTime12h(alarmData.endTime), // Assuming this is your end time logic
-						color = colorScheme.onSurface,
-						fontWeight = FontWeight.Medium,
-//						letterSpacing = (-2).sp,
-						style = MaterialTheme.typography.displaySmall,
-						modifier = Modifier.alignByBaseline()
-					)
-					Text(
-						text = formatTime12h(alarmData.endTime, "a"),
-						color = colorScheme.onSurface,
-						fontWeight = FontWeight.Medium,
-						style = MaterialTheme.typography.bodyMedium,
-						modifier = Modifier.alignByBaseline()
-					)
+
+					// END TIME GROUP — same pattern
+					Row(
+						modifier = Modifier.weight(1f), // CHANGE: weight(1f) mirrors start group
+						verticalAlignment = Alignment.Bottom
+					) {
+						Text(
+							text = formatTime12h(alarmData.endTime),
+							color = colorScheme.onSurface,
+							fontWeight = FontWeight.Medium,
+							style = MaterialTheme.typography.displaySmall,
+							maxLines = 1,
+							autoSize = TextAutoSize.StepBased(
+								minFontSize = 20.sp,
+								maxFontSize = 45.sp,
+								stepSize = 1.sp
+							),
+							modifier = Modifier
+								.weight(1f) // CHANGE: same as start time text
+								.alignByBaseline()
+						)
+						Text(
+							text = formatTime12h(alarmData.endTime, "a"),
+							color = colorScheme.onSurface,
+							fontWeight = FontWeight.Medium,
+							style = MaterialTheme.typography.bodyMedium,
+							modifier = Modifier
+								.wrapContentWidth() // CHANGE: AM/PM always wraps to its content
+								.alignByBaseline()
+						)
+					}
 				}
 			}
+
 			AnimatedVisibility(visible = isExpanded) {
 				Text(
 					text = alarmData.message,
 					modifier = Modifier.padding(bottom = 16.dp),
 					color = colorScheme.onSurface,
 					style = MaterialTheme.typography.bodyLarge,
-					fontStyle = if(alarmData.message.isEmpty()) FontStyle.Italic else FontStyle.Normal
+					fontStyle = if (alarmData.message.isEmpty()) FontStyle.Italic else FontStyle.Normal
 				)
 			}
+
 			Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
 				Button(
 					onClick = { if (alarmData.isReadyToUse) onStop(alarmData) else onReset(alarmData) },
@@ -189,8 +237,10 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 					modifier = Modifier.size(64.dp),
 					shape = RoundedCornerShape(24.dp),
 					colors = IconButtonDefaults.filledIconButtonColors(
-						containerColor = MaterialTheme.colorScheme.errorContainer,
-						contentColor = MaterialTheme.colorScheme.onErrorContainer
+						containerColor = colorScheme.errorContainer,
+						// CHANGE: Was referencing MaterialTheme.colorScheme directly instead of
+						// the already-destructured `colorScheme` val. Minor consistency fix.
+						contentColor = colorScheme.onErrorContainer
 					)
 				) {
 					Icon(Icons.Default.Delete, contentDescription = "Delete")
