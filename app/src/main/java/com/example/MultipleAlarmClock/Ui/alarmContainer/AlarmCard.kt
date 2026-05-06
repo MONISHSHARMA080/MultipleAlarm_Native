@@ -71,7 +71,7 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 	Card(
 		modifier = modifier
 			.fillMaxWidth()
-			.padding(horizontal = 16.dp, vertical = 8.dp)
+			.padding(horizontal = 18.dp, vertical = 9.dp)
 			.clip(RoundedCornerShape(32.dp))
 			.combinedClickable(
 				onClick = {
@@ -141,7 +141,7 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 							style = MaterialTheme.typography.displaySmall,
 							maxLines = 1,
 							autoSize = TextAutoSize.StepBased(
-								minFontSize = 20.sp,
+								minFontSize = 16.sp,
 								maxFontSize = 45.sp,
 								stepSize = 1.sp
 							),
@@ -166,7 +166,7 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 						imageVector = Icons.AutoMirrored.Filled.ArrowForward,
 						contentDescription = "next icon",
 						modifier = Modifier
-							.padding(horizontal = 8.dp)
+							.padding(horizontal = 24.dp)
 							.size(24.dp)
 							.align(Alignment.CenterVertically),
 						tint = colorScheme.onSurfaceVariant
@@ -184,7 +184,7 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 							style = MaterialTheme.typography.displaySmall,
 							maxLines = 1,
 							autoSize = TextAutoSize.StepBased(
-								minFontSize = 20.sp,
+								minFontSize = 16.sp,
 								maxFontSize = 45.sp,
 								stepSize = 1.sp
 							),
