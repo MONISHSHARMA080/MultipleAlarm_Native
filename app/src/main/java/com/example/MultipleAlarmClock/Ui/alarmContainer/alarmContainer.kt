@@ -178,30 +178,56 @@ import kotlinx.coroutines.launch
 @Composable
 fun AddAlarmButton(
 	modifier: Modifier = Modifier,
-	onClick: () -> Unit
+	onClick: () -> Unit,
+	expanded: Boolean = true
 ) {
+	// ✅ Get window size — NOT screen height/15
+	val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+
+	// Drive visual weight from window size, not hardcoded numbers
+	val iconSize = when {
+		windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) -> 32.dp
+		else -> 26.dp  // compact phones
+	}
+	val textStyle = when {
+		windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) ->
+			MaterialTheme.typography.titleMedium  // bigger on tablets/foldables
+		else ->
+			MaterialTheme.typography.labelLarge   // your current phone size
+	}
+
 	val interactionSource = remember { MutableInteractionSource() }
 	val isPressed by interactionSource.collectIsPressedAsState()
-
 	val scale by animateFloatAsState(
 		targetValue = if (isPressed) 0.93f else 1f,
 		animationSpec = spring()
 	)
-	ExtendedFloatingActionButton (
+
+	ExtendedFloatingActionButton(
 		onClick = onClick,
-		modifier = modifier
-			.padding(16.dp)
-			.scale(scale),
+		modifier = modifier.scale(scale),  // ✅ NO .size() — let content drive it
+		expanded = expanded,
 		interactionSource = interactionSource,
-		shape = RoundedCornerShape(70),
+		shape = MaterialTheme.shapes.extraLarge,
+		containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+		contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+		elevation = FloatingActionButtonDefaults.elevation(
+			defaultElevation = 6.dp,
+			pressedElevation = 6.dp
+		),
 		icon = {
 			Icon(
 				imageVector = Icons.Default.AlarmAdd,
-				contentDescription = null
+				contentDescription = null,
+				modifier = Modifier.size(iconSize)  // ✅ scales with device
 			)
 		},
 		text = {
-			Text("Add alarm")
+			Text(
+				text = "Add alarm",
+				style = textStyle,             // ✅ scales with device
+				fontWeight = FontWeight.SemiBold
+			)
 		}
 	)
 }
