@@ -222,7 +222,7 @@ class AlarmActivity : ComponentActivity() {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = if (message.isEmpty()) screenHeight / 8 else 40.dp),
+                    .padding(bottom = if (message.isEmpty()) screenHeight / 12 else 40.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Button(

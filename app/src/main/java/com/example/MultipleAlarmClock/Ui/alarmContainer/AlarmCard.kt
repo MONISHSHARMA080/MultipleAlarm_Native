@@ -136,9 +136,9 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 
 					Icon(
 						imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-						contentDescription = null,
-						modifier = Modifier.padding(horizontal = 10.dp).size(34.dp).align(Alignment.CenterVertically),
-						tint = colorScheme.outlineVariant
+						contentDescription = "next icon",
+						modifier = Modifier.padding(horizontal = 10.dp).size(35.dp).align(Alignment.CenterVertically),
+						tint = colorScheme.onSurfaceVariant
 					)
 					// END TIME (Repeat the logic)
 					Text(

@@ -217,7 +217,9 @@ fun AlarmPickerScreen(
 
     Scaffold(
         contentWindowInsets = WindowInsets.safeContent,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
+		floatingActionButton = {
+		}
     ) { contentPadding ->
         Box(
             modifier = Modifier
@@ -234,7 +236,7 @@ fun AlarmPickerScreen(
                     .animateContentSize()
                     .padding(horizontal = 20.dp)
                     .padding(top = contentPadding.calculateTopPadding())
-                    .padding(bottom = contentPadding.calculateBottomPadding() + 25.dp),
+                    .padding(bottom = contentPadding.calculateBottomPadding() + 35.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Header

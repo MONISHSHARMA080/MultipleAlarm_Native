@@ -8,13 +8,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -62,7 +60,7 @@ import kotlinx.coroutines.launch
 	val coroutineScope = rememberCoroutineScope()
 	val colorScheme = MaterialTheme.colorScheme
 
-	Scaffold(contentWindowInsets = WindowInsets.safeContent, containerColor = colorScheme.surface ) { edgeToEdgePadding ->
+	Scaffold( containerColor = colorScheme.surface ) { edgeToEdgePadding ->
 		Box(modifier = Modifier.fillMaxSize()) {
 			SnackbarHost(
 				hostState = snackBarHostState,
