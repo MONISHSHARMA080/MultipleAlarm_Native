@@ -154,6 +154,7 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 							text = formatTime12h(alarmData.startTime, "a"),
 							color = colorScheme.onSurface,
 							fontWeight = FontWeight.Medium,
+							maxLines = 1,
 							style = MaterialTheme.typography.bodyMedium,
 							modifier = Modifier
 								.wrapContentWidth()
@@ -196,6 +197,7 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 							text = formatTime12h(alarmData.endTime, "a"),
 							color = colorScheme.onSurface,
 							fontWeight = FontWeight.Medium,
+							maxLines = 1,
 							style = MaterialTheme.typography.bodyMedium,
 							modifier = Modifier
 								.wrapContentWidth() // CHANGE: AM/PM always wraps to its content

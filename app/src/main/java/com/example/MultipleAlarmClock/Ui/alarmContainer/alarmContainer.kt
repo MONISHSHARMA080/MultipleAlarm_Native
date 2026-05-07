@@ -12,9 +12,10 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,9 +30,8 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -41,13 +41,15 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.window.core.layout.WindowSizeClass
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.example.MultipleAlarmClock.Ui.alarmContainer.AlarmContainerViewModel
 import kotlinx.coroutines.launch
@@ -182,61 +184,60 @@ import kotlinx.coroutines.launch
 //	)
 //}
 
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
-fun AddAlarmButton(
-	modifier: Modifier = Modifier,
-	onClick: () -> Unit,
-	expanded: Boolean = true
-) {
-	val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-
-	val isMediumOrLarger = windowSizeClass.isWidthAtLeastBreakpoint(
-		WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND
-	)
-	// Token-like sizes: same design language, stepped by breakpoint
-	val buttonMinHeight = if (isMediumOrLarger) 68.dp else 60.dp
-	val iconSize = if (isMediumOrLarger) 30.dp else 28.dp
-	val textStyle = if (isMediumOrLarger) {
-		MaterialTheme.typography.titleSmall
-	} else {
-		MaterialTheme.typography.labelLarge
-	}
-
+fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
+	val coroutineScope = rememberCoroutineScope()
 	val interactionSource = remember { MutableInteractionSource() }
 	val isPressed by interactionSource.collectIsPressedAsState()
 	val scale by animateFloatAsState(
-		targetValue = if (isPressed) 0.97f else 1f,
-		animationSpec = spring()
+		targetValue = if (isPressed) 0.93f else 1f,
+		animationSpec = spring(),
 	)
+	val colorScheme = MaterialTheme.colorScheme
 
-	ExtendedFloatingActionButton(
-		onClick = onClick,
-		expanded = expanded,
-		interactionSource = interactionSource,
-		modifier = modifier
-			.heightIn(min = buttonMinHeight)
-			.scale(scale),
-		shape = MaterialTheme.shapes.extraLarge,
-		containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-		contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-		elevation = FloatingActionButtonDefaults.elevation(
-			defaultElevation = 6.dp,
-			pressedElevation = 8.dp
-		),
-		icon = {
-			Icon(
-				imageVector = Icons.Default.AlarmAdd,
-				contentDescription = null,
-				modifier = Modifier.size(iconSize)
-			)
-		},
-		text = {
-			Text(
-				text = "Add alarm",
-				style = textStyle,
-				fontWeight = FontWeight.SemiBold
-			)
-		}
-	)
+	// 🔑 Lock font scale so button looks identical on every device
+	CompositionLocalProvider(
+		LocalDensity provides Density(
+			density = LocalDensity.current.density,
+			fontScale = 1f
+		)
+	) {
+		ExtendedFloatingActionButton(
+			onClick = {
+				coroutineScope.launch { onClick() }
+			},
+			modifier = modifier
+				.padding(bottom = 29.dp, end = 16.dp)
+				.scale(scale)
+				.height(75.dp)          // 🔑 Fixed height in dp
+				.widthIn(min = 178.dp)  // 🔑 Minimum width, grows if needed
+				.zIndex(5f),
+			interactionSource = interactionSource,
+			shape = MaterialTheme.shapes.extraLarge,
+			containerColor = colorScheme.tertiaryContainer,
+			contentColor = colorScheme.onTertiaryContainer,
+			elevation = FloatingActionButtonDefaults.elevation(
+				defaultElevation = 6.dp,
+				pressedElevation = 6.dp
+			),
+			icon = {
+				Icon(
+					imageVector = Icons.Default.AlarmAdd,
+					contentDescription = null,
+					modifier = Modifier.size(28.dp) // 🔑 Fixed dp, not sp
+				)
+			},
+			text = {
+				Text(
+					text = "Add alarm",
+					// 🔑 Replace typography reference with hardcoded sp
+					// typography.labelLarge is typically 14.sp but varies by theme
+					fontSize = 14.sp,
+					fontWeight = FontWeight.SemiBold,
+					letterSpacing = 0.1.sp,
+					maxLines = 1  // 🔑 Prevent wrapping on small screens
+				)
+			}
+		)
+	}
 }
