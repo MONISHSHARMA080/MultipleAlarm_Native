@@ -4,12 +4,7 @@ import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import com.example.MultipleAlarmClock.Data.dataStore.dataStore
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -19,13 +14,13 @@ class NavigationViewModel @Inject constructor(
 	val analytics: Analytics,
 ) : ViewModel() {
 
-	val isFirstLaunch: StateFlow<Boolean?> = application.dataStore.data
-		.map { it.isFirstLaunch }
-		.stateIn(
-			scope = viewModelScope,
-			started = SharingStarted.WhileSubscribed(5_000),
-			initialValue = null
-		)
+//	val isFirstLaunch: StateFlow<Boolean?> = application.dataStore.data
+//		.map { it.isFirstLaunch }
+//		.stateIn(
+//			scope = viewModelScope,
+//			started = SharingStarted.WhileSubscribed(5_000),
+//			initialValue = null
+//		)
 
 	fun captureEvent(eventName:String, properties: Map<String, Any>): Unit {
 		viewModelScope.launch {
@@ -38,9 +33,9 @@ class NavigationViewModel @Inject constructor(
 		}
 	}
 
-	suspend fun onOnboardingComplete() {
-		viewModelScope.launch {
-			application.dataStore.updateData { it.copy(isFirstLaunch = false) }
-		}
-	}
+//	suspend fun onOnboardingComplete() {
+//		viewModelScope.launch {
+//			application.dataStore.updateData { it.copy(isFirstLaunch = false) }
+//		}
+//	}
 }

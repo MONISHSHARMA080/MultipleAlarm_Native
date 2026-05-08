@@ -18,6 +18,7 @@ import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.coolApps.MultipleAlarmClock.logD
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.utils.Result.Result
+import com.example.MultipleAlarmClock.Data.dataStore.copy
 import com.example.MultipleAlarmClock.Data.dataStore.dataStore
 import com.example.MultipleAlarmClock.Ui.Permissions.PermissionUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,12 +27,9 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -51,13 +49,13 @@ class AlarmPickerViewModel @Inject constructor(
 	private val _events = MutableSharedFlow<AlarmPickerEvent>(extraBufferCapacity = 1)
 	val events: SharedFlow<AlarmPickerEvent> = _events.asSharedFlow()
 
-	val allPermissionsGranted: StateFlow<Boolean> = application.dataStore.data
-		.map { it.allPermissionsGranted }
-		.stateIn(
-			scope = viewModelScope,
-			started = SharingStarted.WhileSubscribed(5_000),
-			initialValue = true
-		)
+//	val allPermissionsGranted: StateFlow<Boolean> = application.dataStore.data
+//		.map { it.allPermissionsGranted }
+//		.stateIn(
+//			scope = viewModelScope,
+//			started = SharingStarted.WhileSubscribed(5_000),
+//			initialValue = true
+//		)
 
 	private var initialAlarm: AlarmData? = null
 	private val errorHandler = ErrorHandler(notificationHandler = NotificationHandler(context),analytics)
@@ -106,7 +104,7 @@ class AlarmPickerViewModel @Inject constructor(
 			_uiState.update { it.copy(areAllPermissionsGranted = liveCheck) }
 
 			// Sync with DataStore silently
-			context.dataStore.updateData { it.copy(allPermissionsGranted = liveCheck) }
+			context.dataStore.updateData {  it.copy {  allPermissionsGranted = true }}
 		}
 	}
 
