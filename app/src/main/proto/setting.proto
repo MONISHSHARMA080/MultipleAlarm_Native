@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+option java_package = "com.example.MultipleAlarmClock.Data.dataStore";
+option java_multiple_files = true;
+
+message Settings {
+  bool is_first_launch = 1;
+  bool all_permissions_granted = 2;
+  bool first_alarm_set = 3;
+  bool first_alarm_notification_received = 4;
+}

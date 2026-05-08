@@ -11,7 +11,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.baselineprofile)
     id("org.jetbrains.kotlin.plugin.serialization") version "2.3.20"
-//    id("com.google.devtools.ksp")
+	id("com.google.protobuf") version "0.9.5"
     id("com.google.dagger.hilt.android")
 
 }
@@ -126,6 +126,24 @@ kotlin {
     }
 }
 
+protobuf {
+	protoc {
+		artifact = "com.google.protobuf:protoc:4.32.1"
+	}
+	generateProtoTasks {
+		all().forEach { task ->
+			task.builtins {
+				create("java") {
+					option("lite")
+				}
+				create("kotlin")
+			}
+		}
+	}
+}
+
+
+
 dependencies {
     implementation("com.google.android.play:review:2.0.2")
 
@@ -136,15 +154,12 @@ dependencies {
 
     implementation("androidx.datastore:datastore-preferences:1.2.1")
     implementation("androidx.datastore:datastore:1.2.1")
+	implementation("com.google.protobuf:protobuf-kotlin-lite:4.34.1")
 
     implementation("com.google.accompanist:accompanist-permissions:0.37.3")
 
 
-
-//    implementation("com.google.android.play:app-update:2.1.0")
-//    implementation("com.google.android.play:app-update-ktx:2.1.0")
-
-    implementation ("com.posthog:posthog-android:3.38.2")
+    implementation ("com.posthog:posthog-android:3.44.1")
     implementation("androidx.core:core-splashscreen:1.2.0")
 
     implementation("com.google.android.gms:play-services-appset:16.1.0")

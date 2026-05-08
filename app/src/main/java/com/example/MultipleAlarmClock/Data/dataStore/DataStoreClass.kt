@@ -1,10 +1,10 @@
 package com.example.MultipleAlarmClock.Data.dataStore
 
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class Settings(
-	val isFirstLaunch: Boolean,
-	var allPermissionsGranted: Boolean,
-//	var showReviewPopUpNextTime:Boolean,
-)
+//@Serializable
+//data class Settings(
+//	val isFirstLaunch: Boolean,
+//	val allPermissionsGranted: Boolean,
+//	val firstAlarmSet: Boolean,
+//	val firstAlarmNotificationReceived: Boolean,
+////	var showReviewPopUpNextTime:Boolean,
+//)
