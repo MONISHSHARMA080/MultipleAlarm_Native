@@ -3,6 +3,7 @@ package com.example.MultipleAlarmClock.Ui.alarmPicker
 import android.app.AlarmManager
 import android.app.Application
 import android.content.Context
+import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
@@ -18,8 +19,8 @@ import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.coolApps.MultipleAlarmClock.logD
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.utils.Result.Result
+import com.example.MultipleAlarmClock.Data.dataStore.Settings
 import com.example.MultipleAlarmClock.Data.dataStore.copy
-import com.example.MultipleAlarmClock.Data.dataStore.dataStore
 import com.example.MultipleAlarmClock.Ui.Permissions.PermissionUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -40,6 +41,7 @@ class AlarmPickerViewModel @Inject constructor(
 	private val alarmManager: AlarmManager,
 	private val alarmDao: AlarmDao,
 	private val application: Application,
+	private val dataStore: DataStore<Settings>,
 	@ApplicationContext  val context: Context
 ) : ViewModel() {
 
@@ -99,12 +101,8 @@ class AlarmPickerViewModel @Inject constructor(
 	fun checkPermissions(context: Context) {
 		viewModelScope.launch {
 			val liveCheck = PermissionUtils.allCriticalPermissionsGranted(context)
-
-			// Update UI state so the button/colors change instantly
 			_uiState.update { it.copy(areAllPermissionsGranted = liveCheck) }
-
-			// Sync with DataStore silently
-			context.dataStore.updateData {  it.copy {  allPermissionsGranted = true }}
+			dataStore.updateData {  it.copy {  allPermissionsGranted = true }}
 		}
 	}
 
@@ -252,7 +250,16 @@ class AlarmPickerViewModel @Inject constructor(
 					)
 					// now the error case is handled there
 					alarmScheduledResult.fold(
-						onSuccess = { },
+						onSuccess = {
+							launch {
+								analytics.captureEvent("alarm(old) successfully edited",
+									mapOf(
+										"alarmObject" to newAlarmObject.toString(),
+										"oldAlarm" to oldAlarm.toString(),
+									)
+								)
+							}
+						},
 						onError = { messageToDisplayUser, exception ->
 							errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while editing alarm, Please try again" )
 							logD("there is a error/Exception in editing new alarm-->${exception.message}")

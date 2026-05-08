@@ -7,11 +7,11 @@ plugins {
     id("kotlin-kapt")
     id("com.google.devtools.ksp") version "2.3.5"
     id ("kotlin-parcelize")
-    id("com.posthog.android") version "1.1.0"
+    id("com.posthog.android") version "1.2.0"
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.baselineprofile)
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.3.20"
-	id("com.google.protobuf") version "0.9.5"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.3.21"
+	id("com.google.protobuf") version "0.10.0"
     id("com.google.dagger.hilt.android")
 
 }
@@ -152,12 +152,9 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.59.2")
     ksp("com.google.dagger:hilt-android-compiler:2.59.2")
 
-    implementation("androidx.datastore:datastore-preferences:1.2.1")
-    implementation("androidx.datastore:datastore:1.2.1")
 	implementation("com.google.protobuf:protobuf-kotlin-lite:4.34.1")
 
     implementation("com.google.accompanist:accompanist-permissions:0.37.3")
-
 
     implementation ("com.posthog:posthog-android:3.44.1")
     implementation("androidx.core:core-splashscreen:1.2.0")

@@ -1,9 +1,11 @@
 package com.example.MultipleAlarmClock.Ui.Navigation
 
 import android.app.Application
+import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
+import com.example.MultipleAlarmClock.Data.dataStore.Settings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -11,6 +13,7 @@ import javax.inject.Inject
 @HiltViewModel()
 class NavigationViewModel @Inject constructor(
 	private val application: Application,
+	private val dataStore: DataStore<Settings>,
 	val analytics: Analytics,
 ) : ViewModel() {
 
