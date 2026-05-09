@@ -145,10 +145,10 @@ protobuf {
 
 
 dependencies {
-    implementation("com.google.android.play:review:2.0.2")
+//    implementation("com.google.android.play:review:2.0.2")
 
     // For Kotlin users also import the Kotlin extensions library for Play In-App Review:
-    implementation("com.google.android.play:review-ktx:2.0.2")
+//    implementation("com.google.android.play:review-ktx:2.0.2")
     implementation("com.google.dagger:hilt-android:2.59.2")
     ksp("com.google.dagger:hilt-android-compiler:2.59.2")
 
