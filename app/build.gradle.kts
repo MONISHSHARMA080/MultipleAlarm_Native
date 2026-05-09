@@ -39,29 +39,29 @@ fun Project.configureAndroid() {
             }
         }
 
+		signingConfigs {
+			create("release") {
+				val keystoreFile = file("release.keystore")
+				if (keystoreFile.exists()) {
+					storeFile = keystoreFile
+					storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+						?: project.findProperty("android.injected.signing.store.password")?.toString()
+					keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+						?: project.findProperty("android.injected.signing.key.alias")?.toString()
+					keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+						?: project.findProperty("android.injected.signing.key.password")?.toString()
+				} else {
+					// Local development - use debug keystore
+					storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
+					storePassword = "android"
+					keyAlias = "androiddebugkey"
+					keyPassword = "android"
+				}
+			}
+		}
 
-        signingConfigs {
-            create("release") {
-                val keystoreFile = file("release.keystore")
-                if (keystoreFile.exists()) {
-                    storeFile = keystoreFile
-                    storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-                        ?: project.findProperty("android.injected.signing.store.password")?.toString()
-                    keyAlias = System.getenv("ANDROID_KEY_ALIAS")
-                        ?: project.findProperty("android.injected.signing.key.alias")?.toString()
-                    keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
-                        ?: project.findProperty("android.injected.signing.key.password")?.toString()
-                } else {
-                    // Local development - use debug keystore
-                    storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
-                    storePassword = "android"
-                    keyAlias = "androiddebugkey"
-                    keyPassword = "android"
-                }
-            }
-        }
 
-        buildTypes {
+		buildTypes {
             release {
                 val isProductionBuild = file("release.keystore").exists()
                 val appName = if (isProductionBuild) {
