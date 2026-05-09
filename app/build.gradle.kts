@@ -157,9 +157,12 @@ dependencies {
 
     implementation("com.google.android.gms:play-services-appset:16.1.0")
 
-    implementation("androidx.datastore:datastore-preferences:1.2.1")
-    implementation("androidx.datastore:datastore:1.2.1")
+//    implementation("androidx.datastore:datastore-preferences:1.2.1")
+//    implementation("androidx.datastore:datastore:1.2.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+	implementation(libs.androidx.datastore)
+	implementation(libs.androidx.datastore.core)
+	implementation(libs.androidx.datastore.preferences)
 
 
     implementation(libs.androidx.espresso.contrib)
@@ -172,9 +175,9 @@ dependencies {
 	implementation(libs.androidx.ui.text)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.profileinstaller)
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    androidTestImplementation("androidx.test:runner:1.6.1")
-    androidTestImplementation("androidx.test:rules:1.6.1")
+//    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+//    androidTestImplementation("androidx.test:runner:1.6.1")
+//    androidTestImplementation("androidx.test:rules:1.6.1")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.1")
     "baselineProfile"(project(":baselineprofile"))
     debugImplementation("androidx.compose.ui:ui-test-manifest")
@@ -215,12 +218,12 @@ dependencies {
 
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.material.icons.extended)
-    implementation(libs.androidx.datastore.preferences)
-    implementation(libs.androidx.datastore.core)
-    implementation(libs.androidx.datastore)
-    implementation(libs.androidx.datastore.rxjava3)
-    implementation(libs.androidx.datastore)
-    implementation(libs.androidx.datastore.preferences)
+//    implementation(libs.androidx.datastore.preferences)
+//    implementation(libs.androidx.datastore.core)
+//    implementation(libs.androidx.datastore)
+//    implementation(libs.androidx.datastore.rxjava3)
+//    implementation(libs.androidx.datastore)
+//    implementation(libs.androidx.datastore.preferences)
 
     // notification
     implementation("androidx.core:core-ktx:1.15.0")
