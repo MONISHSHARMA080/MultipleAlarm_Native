@@ -9,7 +9,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
 import com.coolApps.MultipleAlarmClock.logD
-import com.example.MultipleAlarmClock.Data.dataStore.dataStore
 
 object PermissionUtils {
 
@@ -33,14 +32,6 @@ object PermissionUtils {
 	 * advisory and intentionally excluded from this check.
 	 */
 	fun allCriticalPermissionsGranted(context: Context): Boolean = isPostNotificationsGranted(context) && isFullScreenIntentGranted(context)
-
-	suspend fun checkAllPermissionAndUpdateDataStoreIfNotThere(context: Context, ): Boolean{
-		val res = allCriticalPermissionsGranted(context)
-		if (!res){
-			context.dataStore.updateData { it.copy(allPermissionsGranted = false)}
-		}
-		return res
-	}
 
 	fun getRequiredPermissionSteps(context: Context): List<PermissionStep> {
 		val missingSteps = mutableListOf<PermissionStep>()

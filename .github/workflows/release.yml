@@ -93,10 +93,9 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          ./gradlew :app:generateReleaseBaselineProfile \
+          ./gradlew :app:generateReleaseBaselineProfile --stacktrace --info \
           -Pandroid.testoptions.manageddevices.emulator.gpu="swiftshader_indirect" \
           -PskipPostHog=true \
-          --stacktrace
       - name: Build Release APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}

@@ -115,19 +115,6 @@ sealed class AccentColor {
 	}
 }
 
-//sealed class AccentColor {
-//	class Ok : AccentColor()
-//	class Problem(
-//		val containerColor : Color= MaterialTheme.colorScheme.errorContainer,
-//		val contentColor: Color = MaterialTheme.colorScheme.errorContainer
-//	): AccentColor()
-//
-//	@Composable fun resolve(): Color = when (this) {
-//		is Ok -> MaterialTheme.colorScheme.primary
-//		is Problem -> MaterialTheme.colorScheme.error
-//	}
-//}
-
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalPermissionsApi::class)
 @Composable
 fun AlarmPickerScreen(
