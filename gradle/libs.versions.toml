@@ -1,6 +1,8 @@
 [versions]
 agp = "9.1.0"
+androidxCoreKtx = "1.15.0"
 datastore = "1.2.1"
+googleProtobufKotlinLite = "4.32.1"
 kotlin = "2.3.21"
 coreKtx = "1.18.0"
 junit = "4.13.2"
@@ -37,6 +39,7 @@ profileinstaller = "1.3.1"
 coreKtxVersion = "1.18.0"
 
 [libraries]
+androidx-core-ktx-v1150 = { module = "androidx.core:core-ktx", version.ref = "androidxCoreKtx" }
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3Core" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "nav3Core" }
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycleViewmodelNav3" }
@@ -81,6 +84,7 @@ androidx-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomato
 androidx-benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmarkMacroJunit4" }
 androidx-profileinstaller = { group = "androidx.profileinstaller", name = "profileinstaller", version.ref = "profileinstaller" }
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtxVersion" }
+protobuf-kotlin-lite-v4321 = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "googleProtobufKotlinLite" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

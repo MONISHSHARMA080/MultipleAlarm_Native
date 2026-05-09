@@ -158,11 +158,13 @@ dependencies {
     implementation("com.google.android.gms:play-services-appset:16.1.0")
 
 //    implementation("androidx.datastore:datastore-preferences:1.2.1")
-//    implementation("androidx.datastore:datastore:1.2.1")
+    implementation(libs.androidx.datastore)
+	implementation(libs.protobuf.kotlin.lite.v4321)
+
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
-	implementation(libs.androidx.datastore)
-	implementation(libs.androidx.datastore.core)
-	implementation(libs.androidx.datastore.preferences)
+//	implementation(libs.androidx.datastore)
+//	implementation(libs.androidx.datastore.core)
+//	implementation(libs.androidx.datastore.preferences)
 
 
     implementation(libs.androidx.espresso.contrib)
@@ -218,15 +220,9 @@ dependencies {
 
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.material.icons.extended)
-//    implementation(libs.androidx.datastore.preferences)
-//    implementation(libs.androidx.datastore.core)
-//    implementation(libs.androidx.datastore)
-//    implementation(libs.androidx.datastore.rxjava3)
-//    implementation(libs.androidx.datastore)
-//    implementation(libs.androidx.datastore.preferences)
 
     // notification
-    implementation("androidx.core:core-ktx:1.15.0")
+    implementation(libs.androidx.core.ktx.v1150)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
