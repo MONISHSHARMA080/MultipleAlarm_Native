@@ -26,7 +26,7 @@ android {
 	testOptions {
 		managedDevices {
 			localDevices {
-				create("pixel6Api31") {
+				create("pixel8Api31") {
 					device = "Pixel 8a"
 					apiLevel = 34
 					systemImageSource = "google"
