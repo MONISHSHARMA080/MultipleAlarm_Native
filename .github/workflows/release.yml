@@ -89,19 +89,20 @@ jobs:
       - name: Generate Baseline Profile
         if: github.ref == 'refs/heads/main'
         env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}  # ← renamed
+          ANDROID_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}                  # ← renamed
+          ANDROID_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}            # ← renamed
         run: |
           ./gradlew :app:generateReleaseBaselineProfile \
           -Pandroid.testoptions.manageddevices.emulator.gpu="swiftshader_indirect" \
           -PskipPostHog=true \
           --stacktrace
+
       - name: Build Release APK
         env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}  # ← renamed
+          ANDROID_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}                  # ← renamed
+          ANDROID_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}            # ← renamed
           POSTHOG_CLI_HOST: https://us.posthog.com
           POSTHOG_CLI_PROJECT_ID: ${{ secrets.POSTHOG_PROJECT_ID }}
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
@@ -111,9 +112,9 @@ jobs:
             -PversionCode=${{ steps.version.outputs.version_code }} \
             -PversionName=${{ steps.version.outputs.version_name }} \
             "-Pandroid.injected.signing.store.file=$PWD/app/release.keystore" \
-            "-Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD" \
-            "-Pandroid.injected.signing.key.alias=$KEY_ALIAS" \
-            "-Pandroid.injected.signing.key.password=$KEY_PASSWORD"
+            "-Pandroid.injected.signing.store.password=$ANDROID_KEYSTORE_PASSWORD" \
+            "-Pandroid.injected.signing.key.alias=$ANDROID_KEY_ALIAS" \
+            "-Pandroid.injected.signing.key.password=$ANDROID_KEY_PASSWORD"
       - name: Rename APK
         run: |
           cp app/build/outputs/apk/release/app-release.apk \
