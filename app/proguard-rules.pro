@@ -17,3 +17,6 @@
 -keep public class * extends java.lang.Exception  # Optional: Keep custom exceptions.
 
 
+-keepclassmembers class * extends com.google.protobuf.GeneratedMessageLite {
+    <fields>;
+}
