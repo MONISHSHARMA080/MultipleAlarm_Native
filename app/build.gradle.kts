@@ -155,15 +155,10 @@ dependencies {
 
     implementation("com.google.android.gms:play-services-appset:16.1.0")
 
-//    implementation("androidx.datastore:datastore-preferences:1.2.1")
     implementation(libs.androidx.datastore)
 	implementation(libs.protobuf.kotlin.lite.v4321)
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
-//	implementation(libs.androidx.datastore)
-//	implementation(libs.androidx.datastore.core)
-//	implementation(libs.androidx.datastore.preferences)
-
 
     implementation(libs.androidx.espresso.contrib)
     implementation(libs.androidx.ui.test.junit4.android)
@@ -175,9 +170,6 @@ dependencies {
 	implementation(libs.androidx.ui.text)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.profileinstaller)
-//    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-//    androidTestImplementation("androidx.test:runner:1.6.1")
-//    androidTestImplementation("androidx.test:rules:1.6.1")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.1")
     "baselineProfile"(project(":baselineprofile"))
     debugImplementation("androidx.compose.ui:ui-test-manifest")
@@ -191,10 +183,7 @@ dependencies {
     testImplementation("org.robolectric:robolectric:4.16")
     testImplementation("io.mockk:mockk:1.13.8")
     testImplementation("com.google.truth:truth:1.4.5")
-//    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
 
-    implementation(libs.androidx.navigation3.ui)
-    implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.androidx.material3.adaptive.navigation3)
     implementation(libs.kotlinx.serialization.core)
@@ -207,7 +196,6 @@ dependencies {
     val roomVersion = "2.8.4"
     implementation("androidx.room:room-runtime:$roomVersion")
     annotationProcessor("androidx.room:room-compiler:$roomVersion")
-//    kapt("androidx.room:room-compiler:$room_version")
     ksp("androidx.room:room-compiler:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     implementation("androidx.room:room-rxjava2:$roomVersion")
@@ -217,11 +205,6 @@ dependencies {
     implementation("androidx.room:room-paging:$roomVersion")
 
     implementation(libs.androidx.material.icons.core)
-    implementation(libs.androidx.material.icons.extended)
-
-    // notification
-    implementation(libs.androidx.core.ktx.v1150)
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
