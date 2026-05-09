@@ -209,8 +209,8 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 			modifier = modifier
 				.padding(bottom = 29.dp, end = 16.dp)
 				.scale(scale)
-				.height(75.dp)          // 🔑 Fixed height in dp
-				.widthIn(min = 178.dp)  // 🔑 Minimum width, grows if needed
+				.height(75.dp)
+				.widthIn(min = 178.dp)
 				.zIndex(5f),
 			interactionSource = interactionSource,
 			shape = MaterialTheme.shapes.extraLarge,
