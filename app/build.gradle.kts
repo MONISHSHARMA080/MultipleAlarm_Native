@@ -148,8 +148,6 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.59.2")
     ksp("com.google.dagger:hilt-android-compiler:2.59.2")
 
-	implementation("com.google.protobuf:protobuf-kotlin-lite:4.29.1") // match protoc version
-
     implementation("com.google.accompanist:accompanist-permissions:0.37.3")
 
     implementation ("com.posthog:posthog-android:3.44.1")
