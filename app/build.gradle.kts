@@ -5,8 +5,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
-//    id("com.google.devtools.ksp") version "2.3.5"
-	id("com.google.devtools.ksp") version "2.3.21"
+    id("com.google.devtools.ksp") version "2.3.5"
     id ("kotlin-parcelize")
     id("com.posthog.android") version "1.2.0"
     alias(libs.plugins.kotlin.compose)
