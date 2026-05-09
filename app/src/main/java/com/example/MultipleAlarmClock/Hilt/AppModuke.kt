@@ -2,6 +2,7 @@ package com.example.MultipleAlarmClock.Hilt
 
 import android.app.AlarmManager
 import android.content.Context
+import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
@@ -17,6 +18,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import jakarta.inject.Singleton
+import java.io.File
 
 
 @Module
@@ -38,7 +40,21 @@ object AppModule {
 	fun provideProtoDataStore(@ApplicationContext context: Context): DataStore<Settings> {
 		return DataStoreFactory.create(
 			serializer = SettingsSerializer,
-			produceFile = { context.dataStoreFile("settings.pb") }
+			produceFile = { context.dataStoreFile("settings.pb") },
+			migrations = listOf(
+					object : DataMigration<Settings> {
+						private val oldFile = File(context.filesDir, "datastore/settings.pb")
+
+						override suspend fun shouldMigrate(currentData: Settings) = oldFile.exists()
+
+						// just return whatever currentData already is (which will be defaultValue
+						// since the old JSON bytes couldn't be parsed into proto)
+						override suspend fun migrate(currentData: Settings) = currentData
+
+						override suspend fun cleanUp() { oldFile.delete() }
+					}
+			)
+
 		)
 	}
 
