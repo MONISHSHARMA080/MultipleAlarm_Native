@@ -47,8 +47,6 @@ object AppModule {
 
 						override suspend fun shouldMigrate(currentData: Settings) = oldFile.exists()
 
-						// just return whatever currentData already is (which will be defaultValue
-						// since the old JSON bytes couldn't be parsed into proto)
 						override suspend fun migrate(currentData: Settings) = currentData
 
 						override suspend fun cleanUp() { oldFile.delete() }
