@@ -152,7 +152,7 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.59.2")
     ksp("com.google.dagger:hilt-android-compiler:2.59.2")
 
-	implementation("com.google.protobuf:protobuf-kotlin-lite:4.34.1")
+//	implementation("com.google.protobuf:protobuf-kotlin-lite:4.34.1")
 
     implementation("com.google.accompanist:accompanist-permissions:0.37.3")
 
