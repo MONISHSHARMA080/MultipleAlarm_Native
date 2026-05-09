@@ -128,7 +128,7 @@ kotlin {
 
 protobuf {
 	protoc {
-		artifact = "com.google.protobuf:protoc:4.29.1"
+		artifact = "com.google.protobuf:protoc:4.32.1"
 	}
 	generateProtoTasks {
 		all().forEach { task ->
