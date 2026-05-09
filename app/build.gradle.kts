@@ -128,7 +128,7 @@ kotlin {
 
 protobuf {
 	protoc {
-		artifact = "com.google.protobuf:protoc:4.32.1"
+		artifact = "com.google.protobuf:protoc:4.34.1"
 	}
 	generateProtoTasks {
 		all().forEach { task ->
@@ -174,7 +174,6 @@ dependencies {
     "baselineProfile"(project(":baselineprofile"))
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation(libs.androidx.junit.ktx)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("androidx.navigation:navigation-compose:2.9.7")
     implementation("androidx.work:work-runtime-ktx:2.11.1")
 
@@ -212,7 +211,6 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
