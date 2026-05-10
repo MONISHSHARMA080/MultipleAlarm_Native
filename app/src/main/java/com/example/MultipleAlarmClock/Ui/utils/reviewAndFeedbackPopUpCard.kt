@@ -235,11 +235,10 @@ import kotlin.time.Duration.Companion.milliseconds
 							Text(
 								text = "Maybe later",
 								style = MaterialTheme.typography.labelLarge,
-								color = MaterialTheme.colorScheme.primary,
+								color = MaterialTheme.colorScheme.onSurface,
 							)
 						}
 
-						// Submit — filled button (high emphasis)
 						Button(
 							onClick = {
 								if (isSubmitEnabled) {
@@ -251,8 +250,8 @@ import kotlin.time.Duration.Companion.milliseconds
 							colors = ButtonDefaults.buttonColors(
 								containerColor = MaterialTheme.colorScheme.primary,
 								contentColor = MaterialTheme.colorScheme.onPrimary,
-								disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-								disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+								disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f),
+								disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.66f),
 							),
 						) {
 							Text(
