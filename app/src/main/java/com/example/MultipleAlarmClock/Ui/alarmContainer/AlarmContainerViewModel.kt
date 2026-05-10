@@ -2,6 +2,7 @@ package com.example.MultipleAlarmClock.Ui.alarmContainer
 
 import android.app.AlarmManager
 import android.content.Context
+import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
@@ -12,13 +13,19 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.logD
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.utils.Result.Result
+import com.example.MultipleAlarmClock.Data.dataStore.Settings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -28,11 +35,52 @@ class AlarmContainerViewModel @Inject constructor(
 	val analytics: Analytics,
 	private val alarmDao: AlarmDao,
 	private val alarmManager: AlarmManager,
-	@ApplicationContext  val context: Context // Use this if you need Context for AlarmsController
+	private val dataStore: DataStore<Settings>,
+	@ApplicationContext  val context: Context
 ) : ViewModel(){
 
 	private val alarmsController = AlarmsController()
 	private val errorHandler = ErrorHandler(notificationHandler = NotificationHandler(context),analytics)
+	val showFeedbackPopup: StateFlow<Boolean> = dataStore.data
+		.map { it.firstAlarmSet }
+		.distinctUntilChanged()
+		.scan(Pair(null as Boolean?, false)) { accumulator, isSet ->
+			val prev = accumulator.first
+			// Trigger only if we explicitly transitioned from false to true
+			val trigger = (prev == false && isSet)
+			Pair(isSet, trigger)
+		}
+		.map { it.second } // Extract the trigger boolean
+		.stateIn(
+			scope = viewModelScope,
+			started = SharingStarted.WhileSubscribed(5000),
+			initialValue = false
+		)
+	private val _isFeedbackDismissed = MutableStateFlow(false)
+
+	// 2. Combine the transition trigger with the dismissal state
+	val showFeedbackUIState: StateFlow<Boolean> = combine(
+		showFeedbackPopup, // The flow from Step 1
+		_isFeedbackDismissed
+	) { triggered, dismissed ->
+		triggered && !dismissed
+	}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+	fun dismissFeedback() {
+		viewModelScope.launch {
+			analytics.captureEvent("feedback board dismissed", mapOf())
+		}
+		_isFeedbackDismissed.value = true
+	}
+	fun captureFeedback(feedback: String) {
+		viewModelScope.launch {
+			analytics.captureEvent("feedback given", mapOf(
+					"feedback" to feedback
+			))
+		}
+		_isFeedbackDismissed.value = true
+	}
+
 
 	val alarms: StateFlow<List<AlarmData>?> = alarmDao.getAllAlarmsFlow()
 		.flowOn(Dispatchers.IO)

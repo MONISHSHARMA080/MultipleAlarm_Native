@@ -302,7 +302,6 @@ class AlarmActivity : ComponentActivity() {
 								)
 								Spacer(modifier = Modifier.height(20.dp))
 							}
-
 							Box(
 								modifier = Modifier
 									.align(Alignment.BottomCenter)
@@ -318,10 +317,8 @@ class AlarmActivity : ComponentActivity() {
 									)
 							)
 						}
-
 					}
 				}
-
 			}
         }
     }

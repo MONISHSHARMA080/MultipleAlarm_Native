@@ -52,10 +52,7 @@ data class AlarmData(
      fun getFreqInMillisecond(): Long {
         return this.frequencyInMin * 60000
     }
-    /** converts the freq that we got in min to millisecond for same time, eg 6 min to 6 min in millisecond*/
-     fun getFreqInMillisecond(freqInMin:Long): Long {
-        return freqInMin * 60000
-    }
+
     fun getDateTimeFormatted(time:Long):String{
         return SimpleDateFormat("hh:mm a dd/MM/yyyy ", Locale.getDefault()).format(time)
     }

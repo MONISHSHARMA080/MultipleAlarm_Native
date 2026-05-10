@@ -125,7 +125,6 @@ fun AlarmPickerScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-
     val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(alarm) {

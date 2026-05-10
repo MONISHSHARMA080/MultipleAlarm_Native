@@ -51,14 +51,6 @@ class AlarmPickerViewModel @Inject constructor(
 	private val _events = MutableSharedFlow<AlarmPickerEvent>(extraBufferCapacity = 1)
 	val events: SharedFlow<AlarmPickerEvent> = _events.asSharedFlow()
 
-//	val allPermissionsGranted: StateFlow<Boolean> = application.dataStore.data
-//		.map { it.allPermissionsGranted }
-//		.stateIn(
-//			scope = viewModelScope,
-//			started = SharingStarted.WhileSubscribed(5_000),
-//			initialValue = true
-//		)
-
 	private var initialAlarm: AlarmData? = null
 	private val errorHandler = ErrorHandler(notificationHandler = NotificationHandler(context),analytics)
 	private val alarmsController = AlarmsController()
@@ -205,7 +197,7 @@ class AlarmPickerViewModel @Inject constructor(
 
 	/**[setAlarm] - here [AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
 	fun setAlarm(newAlarmObject: AlarmObject, oldAlarm: AlarmData? ){
-		when ( oldAlarm) {
+		when (oldAlarm) {
 			null -> {
 				//  oldAlarm was not there so setting a new alarm
 				viewModelScope.launch {
@@ -223,6 +215,9 @@ class AlarmPickerViewModel @Inject constructor(
 					)
 					exception.fold(
 						onSuccess = {
+							launch {
+								dataStore.updateData { it.copy { firstAlarmSet = true } }
+							}
 							launch {
 								analytics.captureEvent("new alarm successfully set", mapOf("alarmObject" to newAlarmObject.toString()))
 							}
@@ -251,6 +246,10 @@ class AlarmPickerViewModel @Inject constructor(
 					// now the error case is handled there
 					alarmScheduledResult.fold(
 						onSuccess = {
+							launch {
+								// update it just to be safe even this is an edit
+								dataStore.updateData { it.copy { firstAlarmSet = true } }
+							}
 							launch {
 								analytics.captureEvent("alarm(old) successfully edited",
 									mapOf(

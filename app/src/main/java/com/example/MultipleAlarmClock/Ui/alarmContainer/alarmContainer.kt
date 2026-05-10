@@ -51,7 +51,9 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
+import com.coolApps.MultipleAlarmClock.logD
 import com.example.MultipleAlarmClock.Ui.alarmContainer.AlarmContainerViewModel
+import com.example.MultipleAlarmClock.Ui.utils.FeedbackPopUpCard
 import kotlinx.coroutines.launch
 
 @Composable fun AlarmContainer(
@@ -65,6 +67,8 @@ import kotlinx.coroutines.launch
 	ReportDrawnWhen { alarms != null }
 	val coroutineScope = rememberCoroutineScope()
 	val colorScheme = MaterialTheme.colorScheme
+	val showFeedbackCard by alarmContainerViewModel.showFeedbackUIState.collectAsStateWithLifecycle()
+	logD(" showFeedbackCard:$showFeedbackCard   ")
 
 	Scaffold( containerColor = colorScheme.surface ) { edgeToEdgePadding ->
 		Box(modifier = Modifier.fillMaxSize()) {
@@ -83,6 +87,15 @@ import kotlinx.coroutines.launch
 					modifier = Modifier.fillMaxWidth()
 				)
 			}
+			if (showFeedbackCard){
+				FeedbackPopUpCard({review->
+					logD("Feedback given is $review");
+					alarmContainerViewModel.captureFeedback(review)
+				},
+					onDismiss = { alarmContainerViewModel.dismissFeedback() }
+				)
+			}
+
 			LazyColumn(
 				modifier = Modifier.fillMaxSize(),
 				contentPadding = PaddingValues(
