@@ -98,9 +98,6 @@ sealed interface Screen : NavKey {
 					//		etc. func to the respective viewModel, that we we clean
 					// --------------------------------------------------------
 
-					is Screen.SettingsScreen ->NavEntry(key)	{
-						SettingsScreen(onNavigateBack = {backStack.removeLastOrNull()}, {})
-					}
 
 					is Screen.OnboardingScreen -> NavEntry(key)	{
 						Scaffold(contentWindowInsets = WindowInsets.safeContent) { edgeToEdgePadding ->
@@ -108,6 +105,10 @@ sealed interface Screen : NavKey {
 								Text("Hi from onboarding screen")
 							}
 						}
+					}
+
+					is Screen.SettingsScreen ->NavEntry(key)	{
+						SettingsScreen(onNavigateBack = {backStack.removeLastOrNull()})
 					}
 
 					is Screen.AlarmContainer -> NavEntry(key) {

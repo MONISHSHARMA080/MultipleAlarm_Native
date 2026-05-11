@@ -21,14 +21,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
 	onNavigateBack: () -> Unit,
-	onSubmitFeedback: (String) -> Unit
 ) {
 	var feedbackText by rememberSaveable { mutableStateOf("") }
+	val settingsViewModel :SettingsViewModel = viewModel()
+
 
 	Scaffold(
 		topBar = {
@@ -53,7 +55,7 @@ fun SettingsScreen(
 				feedbackText = feedbackText,
 				onFeedbackChange = { feedbackText = it },
 				onSubmit = {
-					onSubmitFeedback(feedbackText.trim())
+					settingsViewModel.submitFeedback(feedbackText)
 					feedbackText = "" // Clear after submit
 				},
 				onDismiss = { feedbackText = "" }, // Let's use dismiss to clear it here
