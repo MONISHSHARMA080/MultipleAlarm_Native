@@ -6,8 +6,10 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,7 +23,9 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AlarmAdd
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -58,7 +62,7 @@ import com.example.MultipleAlarmClock.Ui.utils.FeedbackPopUpCard
 import kotlinx.coroutines.launch
 
 @Composable fun AlarmContainer(
-	 onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit
+	 onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit, onNavigateToSettings:()->Unit
 ){
 	val alarmContainerViewModel :AlarmContainerViewModel = viewModel()
 	val screenHeight = LocalConfiguration.current.screenHeightDp.dp
@@ -106,9 +110,31 @@ import kotlinx.coroutines.launch
 					start = edgeToEdgePadding.calculateStartPadding(LocalLayoutDirection.current),
 					top = edgeToEdgePadding.calculateTopPadding() ,
 					end = edgeToEdgePadding.calculateEndPadding(LocalLayoutDirection.current),
-					bottom = edgeToEdgePadding.calculateBottomPadding() + 145.dp
+					bottom = edgeToEdgePadding.calculateBottomPadding() + 155.dp
 				)
 			) {
+				item {
+					Row(
+						modifier = Modifier
+							.fillMaxWidth()
+							.padding(bottom = 23.dp, end = edgeToEdgePadding.calculateEndPadding(LocalLayoutDirection.current) + 10.dp),
+						horizontalArrangement = Arrangement.End,
+						verticalAlignment = Alignment.CenterVertically
+					) {
+						FilledTonalIconButton(
+							onClick = onNavigateToSettings,
+							modifier = Modifier.size(45.dp),
+							shape = RoundedCornerShape(18.dp)
+						) {
+							Icon(
+								imageVector = Icons.Outlined.Settings,
+								contentDescription = "Settings",
+								modifier = Modifier.size(24.dp)
+							)
+						}
+					}
+				}
+
 				val alarmList = alarms
 				if (alarmList != null){
 					itemsIndexed(
@@ -157,49 +183,6 @@ import kotlinx.coroutines.launch
 	}
 }
 
-//@Composable fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
-//	val coroutineScope = rememberCoroutineScope()
-//	val interactionSource = remember { MutableInteractionSource() }
-//	val isPressed by interactionSource.collectIsPressedAsState()
-//	val scale by animateFloatAsState(
-//		targetValue = if (isPressed) 0.93f else 1f,
-//		animationSpec = spring(),
-//	)
-//	val colorScheme = MaterialTheme.colorScheme
-//	ExtendedFloatingActionButton(
-//		onClick = {
-//			coroutineScope.launch {
-//				onClick()
-//			}
-//		},
-//		modifier = modifier
-//			.padding(bottom = 29.dp, end = 16.dp)
-//			.scale(scale)
-////			.size(width = 180.dp, height = 74.dp)
-//			.zIndex(5f),
-//		interactionSource = interactionSource,
-//		shape = MaterialTheme.shapes.extraLarge,
-//		containerColor = colorScheme.tertiaryContainer,
-//		contentColor = colorScheme.onTertiaryContainer,
-//		elevation = FloatingActionButtonDefaults.elevation(
-//			defaultElevation = 6.dp,
-//			pressedElevation = 6.dp
-//		),
-//		icon = {
-//			Icon(
-//				imageVector = Icons.Default.AlarmAdd, contentDescription = null,
-//				modifier = Modifier.size(28.dp)
-//			)
-//		},
-//		text = {
-//			Text(
-//				text = "Add alarm",
-//				style = MaterialTheme.typography.labelLarge,
-//				fontWeight = FontWeight.SemiBold
-//			)
-//		}
-//	)
-//}
 
 @Composable
 fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {

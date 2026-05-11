@@ -31,6 +31,7 @@ import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.Ala
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.logD
 import com.example.MultipleAlarmClock.Ui.Navigation.NavigationViewModel
+import com.example.MultipleAlarmClock.Ui.utils.SettingsScreen
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -42,6 +43,9 @@ sealed interface Screen : NavKey {
 	data object AlarmContainer : Screen
 	@Serializable
 	data class AlarmPicker(val alarmData: AlarmData? = null) : Screen
+	@Serializable
+	data object SettingsScreen: Screen
+
 }
 
 @Composable fun NavigationStack( navViewModel: NavigationViewModel ,  deepLinkScreen: Screen? ) {
@@ -94,6 +98,10 @@ sealed interface Screen : NavKey {
 					//		etc. func to the respective viewModel, that we we clean
 					// --------------------------------------------------------
 
+					is Screen.SettingsScreen ->NavEntry(key)	{
+						SettingsScreen(onNavigateBack = {backStack.removeLastOrNull()}, {})
+					}
+
 					is Screen.OnboardingScreen -> NavEntry(key)	{
 						Scaffold(contentWindowInsets = WindowInsets.safeContent) { edgeToEdgePadding ->
 							Column(Modifier.padding(edgeToEdgePadding )) {
@@ -115,7 +123,9 @@ sealed interface Screen : NavKey {
 									coroutineScope.launch {
 										navViewModel.screen("AlarmPicker", mapOf("is_to_create_new_alarm" to true) )
 									}
-								 },
+								 }, onNavigateToSettings = {
+									 backStack.add(Screen.SettingsScreen)
+								}
 							)
 							LaunchedEffect(Unit) {
 								navViewModel.screen("AlarmContainer")
@@ -142,7 +152,9 @@ sealed interface Screen : NavKey {
 									coroutineScope.launch {
 										navViewModel.screen("AlarmPicker", mapOf("is_to_create_new_alarm" to true) )
 									}
-								},
+								}, onNavigateToSettings = {
+									backStack.add(Screen.SettingsScreen)
+								}
 							)
 							LaunchedEffect(Unit) {
 								navViewModel.screen("AlarmContainer", mapOf("from_else_branch_in_navigation" to true))
