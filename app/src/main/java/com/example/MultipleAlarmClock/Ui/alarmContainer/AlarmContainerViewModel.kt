@@ -14,6 +14,7 @@ import com.coolApps.MultipleAlarmClock.logD
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.utils.Result.Result
 import com.example.MultipleAlarmClock.Data.dataStore.Settings
+import com.example.MultipleAlarmClock.Data.dataStore.copy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
@@ -69,6 +70,9 @@ class AlarmContainerViewModel @Inject constructor(
 	fun dismissFeedback() {
 		viewModelScope.launch {
 			analytics.captureEvent("feedback board dismissed", mapOf())
+			dataStore.updateData {
+				it.copy {  firstAlarmSet = true}
+			}
 		}
 		_isFeedbackDismissed.value = true
 	}
@@ -77,6 +81,9 @@ class AlarmContainerViewModel @Inject constructor(
 			analytics.captureEvent("feedback given", mapOf(
 					"feedback" to feedback
 			))
+			dataStore.updateData {
+				it.copy {  firstAlarmSet = true}
+			}
 		}
 		_isFeedbackDismissed.value = true
 	}
