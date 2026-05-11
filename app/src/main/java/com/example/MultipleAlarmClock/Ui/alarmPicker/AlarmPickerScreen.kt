@@ -217,7 +217,54 @@ fun AlarmPickerScreen(
     Scaffold(
         contentWindowInsets = WindowInsets.safeContent,
         modifier = Modifier.fillMaxSize(),
-		floatingActionButton = {
+		bottomBar = {
+			Box(
+				modifier = Modifier
+					.fillMaxWidth()
+					.navigationBarsPadding()
+					.padding(horizontal = 20.dp, vertical = 12.dp)
+			) {
+				Button(
+					onClick = {
+						if (validationOk) {
+							viewModel.onSetAlarmClicked(alarm, alarmObject)
+						}
+					},
+					modifier = Modifier
+						.fillMaxWidth()
+						.height(64.dp),
+					shape = RoundedCornerShape(33.dp),
+					colors = ButtonDefaults.buttonColors(containerColor = accentColor)
+				) {
+					AnimatedContent(
+						targetState = Triple(validationOk, isPermissionsOk, currentError?.field),
+					) { (isValid, hasPermissions, errorField) ->
+						Row(verticalAlignment = Alignment.CenterVertically) {
+							when {
+								!isValid -> {
+									Icon(Icons.Default.AlarmOff, contentDescription = null, tint = colorScheme.onError)
+									Spacer(Modifier.width(8.dp))
+									val errorText = if (errorField == AlarmErrorField.AlarmIsNotDiff)
+										"New alarm must be different"
+									else
+										"Fix the input to set alarm"
+									Text(errorText, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = colorScheme.onError)
+								}
+								!hasPermissions -> {
+									Icon(Icons.Default.NotificationsOff, contentDescription = null, tint = colorScheme.onError)
+									Spacer(Modifier.width(8.dp))
+									Text("Grant required permissions", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = colorScheme.onError)
+								}
+								else -> {
+									Icon(Icons.Default.AlarmAdd, contentDescription = null, tint = colorScheme.onPrimary)
+									Spacer(Modifier.width(8.dp))
+									Text("Set Alarm", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = colorScheme.onPrimary)
+								}
+							}
+						}
+					}
+				}
+			}
 		}
     ) { contentPadding ->
         Box(
@@ -440,54 +487,6 @@ fun AlarmPickerScreen(
                                 }
                             }
                         )
-                    }
-                }
-                // Set Alarm Button
-                Button(
-                    onClick = {
-                        if (validationOk) {
-                            // All business logic is now inside the ViewModel
-                            viewModel.onSetAlarmClicked(alarm, alarmObject)
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(64.dp),
-                    shape = RoundedCornerShape(33.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = accentColor)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        AnimatedContent(
-                            targetState = Triple(validationOk, isPermissionsOk, currentError?.field),
-                        ) { (isValid, hasPermissions, errorField )->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                when{
-                                    !isValid -> {
-                                        Icon(Icons.Default.AlarmOff, contentDescription = null, tint = colorScheme.onError)
-                                        Spacer(Modifier.width(8.dp))
-                                        val errorText =
-                                            if (errorField == AlarmErrorField.AlarmIsNotDiff) {
-                                                "New alarm must be different"
-                                            } else {
-                                                "Fix the input to set alarm"
-                                            }
-                                        Text(errorText, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = colorScheme.onError)
-                                    }
-                                    // Scenario 2: Form is valid, but system permissions are missing (Priority 2) \
-                                    !hasPermissions -> {
-                                        Icon(Icons.Default.NotificationsOff, contentDescription = null, tint = colorScheme.onError)
-                                        Spacer(Modifier.width(8.dp))
-                                        Text("Grant required permissions", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = colorScheme.onError)
-                                    }
-                                    // Scenario 3: Everything is ready (Success state)
-                                    else -> {
-                                        Icon(Icons.Default.AlarmAdd, contentDescription = null, tint = colorScheme.onPrimary)
-                                        Spacer(Modifier.width(8.dp))
-                                        Text("Set Alarm", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = colorScheme.onPrimary)
-                                    }
-                                }
-                            }
-                        }
                     }
                 }
             }
