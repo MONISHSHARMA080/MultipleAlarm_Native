@@ -1,16 +1,15 @@
 package com.example.MultipleAlarmClock.Ui.utils
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.launch
 
+@HiltViewModel
 class SettingsViewModel @Inject constructor(
 	private val analytics: Analytics,
-	@ApplicationContext  val context: Context
 )  : ViewModel() {
 	fun submitFeedback(feedback: String): Unit {
 		viewModelScope.launch {

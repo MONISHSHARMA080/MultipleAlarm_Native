@@ -98,7 +98,6 @@ sealed interface Screen : NavKey {
 					//		etc. func to the respective viewModel, that we we clean
 					// --------------------------------------------------------
 
-
 					is Screen.OnboardingScreen -> NavEntry(key)	{
 						Scaffold(contentWindowInsets = WindowInsets.safeContent) { edgeToEdgePadding ->
 							Column(Modifier.padding(edgeToEdgePadding )) {
