@@ -15,6 +15,7 @@ object SettingsSerializer : Serializer<Settings> {
 		allPermissionsGranted = false
 		firstAlarmSet = false
 		firstAlarmNotificationReceived = false
+		feedbackShown = false
 	}
 	override suspend fun readFrom(input: InputStream): Settings {
 		try {

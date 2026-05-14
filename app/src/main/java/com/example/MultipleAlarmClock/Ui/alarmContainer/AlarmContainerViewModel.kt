@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.scan
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -40,21 +39,6 @@ class AlarmContainerViewModel @Inject constructor(
 
 	private val alarmsController = AlarmsController()
 	private val errorHandler = ErrorHandler(notificationHandler = NotificationHandler(context),analytics)
-	val showFeedbackPopup: StateFlow<Boolean> = dataStore.data
-		.map { it.firstAlarmSet }
-		.distinctUntilChanged()
-		.scan(Pair(null as Boolean?, false)) { accumulator, isSet ->
-			val prev = accumulator.first
-			// Trigger only if we explicitly transitioned from false to true
-			val trigger = (prev == false && isSet)
-			Pair(isSet, trigger)
-		}
-		.map { it.second } // Extract the trigger boolean
-		.stateIn(
-			scope = viewModelScope,
-			started = SharingStarted.WhileSubscribed(5000),
-			initialValue = false
-		)
 
 	val showFeedbackUIState: StateFlow<Boolean> = dataStore.data
 		.map { settings -> settings.firstAlarmSet && !settings.feedbackShown }
