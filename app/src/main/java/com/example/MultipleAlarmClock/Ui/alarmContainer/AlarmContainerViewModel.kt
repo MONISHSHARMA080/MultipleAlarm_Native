@@ -19,10 +19,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -57,37 +55,25 @@ class AlarmContainerViewModel @Inject constructor(
 			started = SharingStarted.WhileSubscribed(5000),
 			initialValue = false
 		)
-	private val _isFeedbackDismissed = MutableStateFlow(false)
 
-	// 2. Combine the transition trigger with the dismissal state
-	val showFeedbackUIState: StateFlow<Boolean> = combine(
-		showFeedbackPopup, // The flow from Step 1
-		_isFeedbackDismissed
-	) { triggered, dismissed ->
-		triggered && !dismissed
-	}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+	val showFeedbackUIState: StateFlow<Boolean> = dataStore.data
+		.map { settings -> settings.firstAlarmSet && !settings.feedbackShown }
+		.distinctUntilChanged()
+		.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
 	fun dismissFeedback() {
 		viewModelScope.launch {
 			analytics.captureEvent("feedback board dismissed", mapOf())
-			dataStore.updateData {
-				it.copy {  firstAlarmSet = true}
-			}
+			dataStore.updateData { it.copy { feedbackShown = true } }
 		}
-		_isFeedbackDismissed.value = true
-	}
-	fun captureFeedback(feedback: String) {
-		viewModelScope.launch {
-			analytics.captureEvent("feedback given", mapOf(
-					"feedback" to feedback
-			))
-			dataStore.updateData {
-				it.copy {  firstAlarmSet = true}
-			}
-		}
-		_isFeedbackDismissed.value = true
 	}
 
+	fun captureFeedback(feedback: String) {
+		viewModelScope.launch {
+			analytics.captureEvent("feedback given", mapOf("feedback" to feedback))
+			dataStore.updateData { it.copy { feedbackShown = true } } // ← actually persists!
+		}
+	}
 
 	val alarms: StateFlow<List<AlarmData>?> = alarmDao.getAllAlarmsFlow()
 		.flowOn(Dispatchers.IO)
