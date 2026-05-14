@@ -1,7 +1,6 @@
 package com.example.MultipleAlarmClock.Ui.alarmPicker
 
 import android.app.AlarmManager
-import android.app.Application
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
@@ -40,7 +39,6 @@ class AlarmPickerViewModel @Inject constructor(
 	val analytics: Analytics,
 	private val alarmManager: AlarmManager,
 	private val alarmDao: AlarmDao,
-	private val application: Application,
 	private val dataStore: DataStore<Settings>,
 	@ApplicationContext  val context: Context
 ) : ViewModel() {
@@ -94,7 +92,7 @@ class AlarmPickerViewModel @Inject constructor(
 		viewModelScope.launch {
 			val liveCheck = PermissionUtils.allCriticalPermissionsGranted(context)
 			_uiState.update { it.copy(areAllPermissionsGranted = liveCheck) }
-			dataStore.updateData {  it.copy {  allPermissionsGranted = true }}
+			dataStore.updateData { currentVal ->  currentVal.copy {  allPermissionsGranted = true }}
 		}
 	}
 
@@ -216,7 +214,7 @@ class AlarmPickerViewModel @Inject constructor(
 					exception.fold(
 						onSuccess = {
 							launch {
-								dataStore.updateData { it.copy { firstAlarmSet = true } }
+								dataStore.updateData { data ->data.copy { firstAlarmSet = true } }
 							}
 							launch {
 								analytics.captureEvent("new alarm successfully set", mapOf("alarmObject" to newAlarmObject.toString()))
@@ -248,7 +246,7 @@ class AlarmPickerViewModel @Inject constructor(
 						onSuccess = {
 							launch {
 								// update it just to be safe even this is an edit
-								dataStore.updateData { it.copy { firstAlarmSet = true } }
+								dataStore.updateData { data ->data.copy { firstAlarmSet = true } }
 							}
 							launch {
 								analytics.captureEvent("alarm(old) successfully edited",

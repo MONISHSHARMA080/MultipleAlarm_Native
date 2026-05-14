@@ -9,7 +9,6 @@ import java.io.OutputStream
 
 object SettingsSerializer : Serializer<Settings> {
 	// this will run on the first run, like default values
-//	override val defaultValue: Settings = Settings.newBuilder().setFirstAlarmSet(false).build()
 	override val defaultValue: Settings = settings {
 		isFirstLaunch = true
 		allPermissionsGranted = false
@@ -28,4 +27,13 @@ object SettingsSerializer : Serializer<Settings> {
 	override suspend fun writeTo(t: Settings, output: OutputStream) {
 		return t.writeTo(output)
 	}
+
+//	override fun toString(): String {
+//
+//		return "    isFirstLaunch = true\n" +
+//				"\t\tallPermissionsGranted = false\n" +
+//				"\t\tfirstAlarmSet = false\n" +
+//				"\t\tfirstAlarmNotificationReceived = false\n" +
+//				"\t\tfeedbackShown = false"
+//	}
 }

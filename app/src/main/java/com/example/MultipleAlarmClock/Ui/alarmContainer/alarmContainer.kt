@@ -73,6 +73,10 @@ import kotlinx.coroutines.launch
 	val coroutineScope = rememberCoroutineScope()
 	val colorScheme = MaterialTheme.colorScheme
 	val showFeedbackCard by alarmContainerViewModel.showFeedbackUIState.collectAsStateWithLifecycle()
+	LaunchedEffect(showFeedbackCard) {
+		logD("showFeedbackCard: $showFeedbackCard ")
+	}
+
 	logD(" showFeedbackCard:$showFeedbackCard   ")
 
 	Scaffold( containerColor = colorScheme.surface ) { edgeToEdgePadding ->

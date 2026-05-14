@@ -41,7 +41,9 @@ class AlarmContainerViewModel @Inject constructor(
 	private val errorHandler = ErrorHandler(notificationHandler = NotificationHandler(context),analytics)
 
 	val showFeedbackUIState: StateFlow<Boolean> = dataStore.data
-		.map { settings -> settings.firstAlarmSet && !settings.feedbackShown }
+		.map { settings ->
+			logD("data from datastore, feedbackShown: ${settings.feedbackShown} firstAlarmSet: ${settings.firstAlarmSet}")
+			settings.firstAlarmSet && !settings.feedbackShown }
 		.distinctUntilChanged()
 		.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
