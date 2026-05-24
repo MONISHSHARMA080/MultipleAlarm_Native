@@ -28,12 +28,4 @@ object SettingsSerializer : Serializer<Settings> {
 		return t.writeTo(output)
 	}
 
-//	override fun toString(): String {
-//
-//		return "    isFirstLaunch = true\n" +
-//				"\t\tallPermissionsGranted = false\n" +
-//				"\t\tfirstAlarmSet = false\n" +
-//				"\t\tfirstAlarmNotificationReceived = false\n" +
-//				"\t\tfeedbackShown = false"
-//	}
 }

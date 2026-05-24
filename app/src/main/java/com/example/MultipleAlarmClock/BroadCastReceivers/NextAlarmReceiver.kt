@@ -123,7 +123,6 @@ class NextAlarmReceiver: BroadcastReceiver() {
             AlarmDatabase::class.java, "alarm-database"
         ).build()
         return db.alarmDao()
-
     }
     private  fun getTimeInHumanReadableFormat(t:Long): String{
         if (t == 0L) return "--the time here(probablyFromTheIntent) is 0--"

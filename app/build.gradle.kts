@@ -153,7 +153,7 @@ dependencies {
 
     implementation("com.google.accompanist:accompanist-permissions:0.37.3")
 
-    implementation ("com.posthog:posthog-android:3.44.1")
+    implementation ("com.posthog:posthog-android:3.45.1")
     implementation("androidx.core:core-splashscreen:1.2.0")
 
     implementation("com.google.android.gms:play-services-appset:16.1.0")
