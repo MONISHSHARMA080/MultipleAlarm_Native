@@ -1,8 +1,8 @@
 package com.example.MultipleAlarmClock
 
 import android.app.Application
-import android.content.res.Configuration
 import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
 import jakarta.inject.Inject
 
