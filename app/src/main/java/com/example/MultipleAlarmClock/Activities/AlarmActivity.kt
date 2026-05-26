@@ -58,6 +58,8 @@ import androidx.lifecycle.lifecycleScope
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.logD
 import com.coolApps.MultipleAlarmClock.services.AlarmService
+import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -69,14 +71,15 @@ import java.util.Date
 import java.util.Locale
 import kotlin.time.Duration.Companion.seconds
 
-
+@AndroidEntryPoint
 class AlarmActivity : ComponentActivity() {
     private var wakeLock: PowerManager.WakeLock? = null
     private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var intentReceived: Intent
     private  val AUTO_FINISH_DELAY = 120000L // 2 sec is 120000
     private var dismissIntent : Intent? = null
-    val analytics by lazy {Analytics(this)}
+	@Inject lateinit var analytics: Analytics
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
          logD("about to create a new alarm")
@@ -125,25 +128,14 @@ class AlarmActivity : ComponentActivity() {
     }
 
     override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        logD("New Intent received in AlarmActivity")
-        try {
-            wakeLock?.let {
-                if (it.isHeld) {
-                    it.release()
-                }
-            }
-        } catch (e: Exception) {
-            logD("Error releasing WakeLock: ${e.message}")
-        }
-        analytics.captureEvent("receiver new intent in AlarmActivity", mapOf(
-            "newIntent" to intent.toString(),
-            "class" to "AlarmActivity"
-        ))
-
-        onDestroy()
-        finish()
-        startActivity(intent)
+		super.onNewIntent(intent)
+		setIntent(intent)  // update the intent
+		logD("New Intent received in AlarmActivity")
+		// release wakelock if needed
+		wakeLock?.let { if (it.isHeld) it.release() }
+		// just finish and restart cleanly
+		finish()
+		startActivity(intent)
     }
 
     override fun onDestroy() {
@@ -166,10 +158,9 @@ class AlarmActivity : ComponentActivity() {
         })
     }
     private fun makeDismissIntent(): Intent{
-        return this.intentReceived.apply {
-            action = AlarmService.ACTION_DISMISS_ALARM
-            setClass(this@AlarmActivity,AlarmService::class.java)
-        }
+		return Intent(this, AlarmService::class.java).apply {
+			action = AlarmService.ACTION_DISMISS_ALARM
+		}
     }
     private fun dismissTheAlarm(){
         if (dismissIntent == null) dismissIntent = makeDismissIntent()

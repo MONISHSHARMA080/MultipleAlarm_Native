@@ -15,15 +15,18 @@ import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlin.collections.filter
-import kotlin.collections.map
-import kotlin.jvm.java
 import com.coolApps.MultipleAlarmClock.utils.Result.Result as ResultsCustom
 
-class ResetAlarmAfterBoot(appContext: Context, workerParams: WorkerParameters): CoroutineWorker(appContext, workerParams) {
-	val alarmsController = AlarmsController()
+//class ResetAlarmAfterBoot(appContext: Context, workerParams: WorkerParameters): CoroutineWorker(appContext, workerParams) {
+@HiltWorker
+class ResetAlarmAfterBoot @AssistedInject constructor(
+	@Assisted appContext: Context,
+	@Assisted workerParams: WorkerParameters,
+	private val analytics: Analytics,           // injected
+	private val alarmsController: AlarmsController // injected
+) : CoroutineWorker(appContext, workerParams) {
+
 	val alarmManager = applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-	val analytics = Analytics(appContext)
 
 	override suspend fun doWork(): Result {
 		// Do the work here--in this case, upload the images.
