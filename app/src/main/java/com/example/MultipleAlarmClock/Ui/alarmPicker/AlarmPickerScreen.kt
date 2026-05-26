@@ -439,11 +439,11 @@ fun AlarmPickerScreen(
                             }
                         }
                         Spacer(modifier = Modifier.height(12.dp))
-                        if (alarmObject.freqGottenAfterCallback < 1) {
-                            Text("Please enter the frequency value", color = colorScheme.onSurface, fontSize = 12.sp)
-                        } else {
+//                        if (alarmObject.freqGottenAfterCallback < 1) {
+//                            Text("Please enter the frequency value", color = colorScheme.onSurface, fontSize = 12.sp)
+//                        } else {
                             Text(freqText, color = colorScheme.onSurfaceVariant, fontSize = 12.sp)
-                        }
+//                        }
                         ShowErrorMessageIfError(currentError, AlarmErrorField.FREQUENCY)
                     }
                 }
