@@ -21,3 +21,5 @@
     <fields>;
 }
 
+-keepnames class com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
+
