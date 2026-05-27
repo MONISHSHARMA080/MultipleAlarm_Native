@@ -1,8 +1,10 @@
 package com.coolApps.MultipleAlarmClock.Activities
 
 import android.os.Parcelable
+import androidx.annotation.Keep
 import kotlinx.parcelize.Parcelize
 
+@Keep
 @Parcelize
 data class AlarmActivityIntentData(
     val alarmIdInDb: Int,
@@ -10,7 +12,6 @@ data class AlarmActivityIntentData(
     val startTime: Long,
     val endTime: Long,
     val message: String,
-//    val ringtoneUri : String,
 ) : Parcelable {
     override fun toString(): String {
         return "AlarmActivityIntentData: alarmIdInDb=$alarmIdInDb, startTimeForDb=$startTimeForDb, startTime=$startTime, endTime=$endTime, message:$message"
