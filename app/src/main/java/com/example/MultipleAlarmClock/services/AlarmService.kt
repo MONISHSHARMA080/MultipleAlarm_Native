@@ -71,7 +71,7 @@ class AlarmService: Service() {
             //      log the error
             // ----------------------
             logD(" Error building notification: ${exception.message} ")
-            return problemSoStopTheService(" Error building notification: ${exception.message} ")
+            return problemSoStopTheService(" Error building notification: ${exception.message} ", mapOf("function" to "startPlayingAlarm"))
         }
         val notification: Notification = res.first
         val alarmIntentData: AlarmActivityIntentData = res.second
@@ -82,7 +82,7 @@ class AlarmService: Service() {
     }
 
     private  fun handleStartAlarm(intent:Intent):Int{
-        val intentData = IntentCompat.getParcelableExtra(intent, "intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService("intentData parsed is null")
+        val intentData = IntentCompat.getParcelableExtra(intent, "intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService("intentData parsed is null", mapOf("fun" to "handleStartAlarm() "))
         val isFirstAlarm = intentHashMap.isEmpty()
         intentHashMap.putIfAbsent(intentData.alarmIdInDb, intent)
 
@@ -110,7 +110,7 @@ class AlarmService: Service() {
         // remove this intent from the hashmap, and then if we have other in the hashMap then start playing those
         // assert that this intent is in the hashMap if not then we have a problem
         // 1. Remove the dismissed alarm from the queue
-        val intentData = IntentCompat.getParcelableExtra(intent,"intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService("intentData parsed is null")
+        val intentData = IntentCompat.getParcelableExtra(intent,"intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService("intentData parsed is null, in handleStartAlarm  ",mapOf("fun" to "handleDismissAlarm() ") )
         intentHashMap.remove(intentData.alarmIdInDb)
         coroutineScope.launch {
             analytics.captureEvent("handling dismiss of alarm", mapOf(
@@ -137,10 +137,11 @@ class AlarmService: Service() {
         }
     }
 
-    private  fun problemSoStopTheService(errorMessage: String):Int{
+    private  fun problemSoStopTheService(errorMessage: String, properties: Map<String, Any> ):Int{
             analytics.captureEvent("error occurred, so we are stopping the alarm(s)", mapOf(
-                "error" to errorMessage
-            ))
+                "error" to errorMessage,
+            ) + properties
+			)
         stopSelf()
         return  START_NOT_STICKY
     }

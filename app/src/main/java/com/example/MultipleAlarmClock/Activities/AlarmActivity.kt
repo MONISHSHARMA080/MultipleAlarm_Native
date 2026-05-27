@@ -83,10 +83,10 @@ class AlarmActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
          logD("about to create a new alarm")
-        this.intentReceived = intent
         window.isNavigationBarContrastEnforced = false
         WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
+		this.intentReceived = intent
         enableEdgeToEdge()
         setContent {
 			val colorScheme = if (isSystemInDarkTheme()) { dynamicDarkColorScheme(LocalContext.current) } else { dynamicLightColorScheme(LocalContext.current) }
@@ -128,9 +128,11 @@ class AlarmActivity : ComponentActivity() {
     }
 
     override fun onNewIntent(intent: Intent) {
-		super.onNewIntent(intent)
-		setIntent(intent)  // update the intent
 		logD("New Intent received in AlarmActivity")
+		super.onNewIntent(intent)
+		setIntent(intent)
+		this.intentReceived = intent
+		dismissIntent = null
 		// release wakelock if needed
 		wakeLock?.let { if (it.isHeld) it.release() }
 		// just finish and restart cleanly
@@ -157,11 +159,12 @@ class AlarmActivity : ComponentActivity() {
             logD("there is a exception while destroying the AlarmActivity ->  ${exception.message}\n-->$exception")
         })
     }
-    private fun makeDismissIntent(): Intent{
-		return Intent(this, AlarmService::class.java).apply {
+	private fun makeDismissIntent(): Intent {
+		return Intent(this.intentReceived).apply {
 			action = AlarmService.ACTION_DISMISS_ALARM
+			setClass(this@AlarmActivity, AlarmService::class.java)
 		}
-    }
+	}
     private fun dismissTheAlarm(){
         if (dismissIntent == null) dismissIntent = makeDismissIntent()
         startService(dismissIntent)
