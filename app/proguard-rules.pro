@@ -21,7 +21,8 @@
     <fields>;
 }
 
--keep class * implements android.os.Parcelable {
-    public static final android.os.Parcelable$Creator *;
+
+-keep class com.coolApps.MultipleAlarmClock.** implements android.os.Parcelable {
+    static ** CREATOR;
 }
 
