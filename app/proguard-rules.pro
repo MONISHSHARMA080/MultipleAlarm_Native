@@ -1,12 +1,3 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
-
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
 -keepattributes SourceFile,LineNumberTable        # Keep file names and line numbers.
 
 # If you keep the line number information, uncomment this to
@@ -21,5 +12,6 @@
     <fields>;
 }
 
--keepnames class com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
+-keep class com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData { *; }
+
 
