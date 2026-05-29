@@ -21,7 +21,7 @@ class BootReceiver : BroadcastReceiver(){
 			val workRequest = OneTimeWorkRequestBuilder<ResetAlarmAfterBoot>()
 				.setInputData(inputData)
 				.build()
-			WorkManager.getInstance(context).enqueue(workRequest)
+			WorkManager.getInstance(context.applicationContext).enqueue(workRequest)
 			logD("scheduled the alarm reset work and exiting")
 		}
 	}
