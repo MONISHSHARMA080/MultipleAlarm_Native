@@ -3,7 +3,6 @@ package com.coolApps.MultipleAlarmClock.workManager
 import android.app.AlarmManager
 import android.content.Context
 import androidx.hilt.work.HiltWorker
-import androidx.room.Room
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
@@ -11,7 +10,6 @@ import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmDatabase
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -20,20 +18,19 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import com.coolApps.MultipleAlarmClock.utils.Result.Result as ResultsCustom
 
-//class ResetAlarmAfterBoot(appContext: Context, workerParams: WorkerParameters): CoroutineWorker(appContext, workerParams) {
 @HiltWorker
 class ResetAlarmAfterBoot @AssistedInject constructor(
 	@Assisted appContext: Context,
 	@Assisted workerParams: WorkerParameters,
 	private val analytics: Analytics,           // injected
-	private val alarmsController: AlarmsController // injected
+	private val alarmsController: AlarmsController ,// injected
+	private val alarmDao: AlarmDao
 ) : CoroutineWorker(appContext, workerParams) {
 
 	val alarmManager = applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
 	override suspend fun doWork(): Result {
 		// Do the work here--in this case, upload the images.
-		val alarmDao = Room.databaseBuilder(applicationContext, AlarmDatabase::class.java, "alarm-database").build().alarmDao()
 		val allAlarmsInDb =getAllAlarms(alarmDao)
 		val enabledAlarms: List<AlarmData> = allAlarmsInDb.filter { it.isReadyToUse }
 
