@@ -25,5 +25,4 @@ class BootReceiver : BroadcastReceiver(){
 			logD("scheduled the alarm reset work and exiting")
 		}
 	}
-
 }
