@@ -16,13 +16,11 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.NavigationStack
-import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.Screen
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.example.MultipleAlarmClock.Ui.Navigation.NavigationViewModel
+import com.example.MultipleAlarmClock.Ui.Navigation.Screen
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -34,7 +32,6 @@ class MainActivity : ComponentActivity() {
     val splashScreen = installSplashScreen()
     super.onCreate(savedInstanceState)
 //    splashScreen.setKeepOnScreenCondition{  navViewModel.isFirstLaunch.value == null}
-    val coroutineScope = CoroutineScope( Dispatchers.IO)
     val deepLinkScreen: Screen? = parseDeepLinkIntent(intent)
 
     try {

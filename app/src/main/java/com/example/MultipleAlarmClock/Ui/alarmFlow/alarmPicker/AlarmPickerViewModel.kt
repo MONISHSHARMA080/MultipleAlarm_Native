@@ -2,6 +2,8 @@ package com.example.MultipleAlarmClock.Ui.alarmPicker
 
 import android.app.AlarmManager
 import android.content.Context
+import android.media.RingtoneManager
+import androidx.core.net.toUri
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,9 +23,11 @@ import com.coolApps.MultipleAlarmClock.utils.Result.Result
 import com.example.MultipleAlarmClock.Data.dataStore.Settings
 import com.example.MultipleAlarmClock.Data.dataStore.copy
 import com.example.MultipleAlarmClock.Ui.Permissions.PermissionUtils
+import com.example.MultipleAlarmClock.Ui.alarmPicker.data.AlarmSound
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -46,6 +50,14 @@ class AlarmPickerViewModel @Inject constructor(
 	private val _uiState = MutableStateFlow(AlarmPickerUiState())
 	val uiState: StateFlow<AlarmPickerUiState> = _uiState.asStateFlow()
 
+	private val _alarmSoundName = MutableStateFlow<List<AlarmSound>>(emptyList())
+	val alarms = _alarmSoundName.asStateFlow()
+
+	private val _selectedAlarmSound = MutableStateFlow<AlarmSound?>(null)
+	val selectedAlarmSound = _selectedAlarmSound.asStateFlow()
+
+
+
 	private val _events = MutableSharedFlow<AlarmPickerEvent>(extraBufferCapacity = 1)
 	val events: SharedFlow<AlarmPickerEvent> = _events.asSharedFlow()
 
@@ -59,6 +71,49 @@ class AlarmPickerViewModel @Inject constructor(
 			it.copy(alarmObject = alarm?.toAlarmObject() ?: createDefaultAlarmObject(alarm))
 		}
 		validateAlarm()
+		// probably move the whole function inside the coroutine
+		viewModelScope.launch(Dispatchers.IO) {
+			_alarmSoundName.value = getAlarmSounds(alarm)
+			_selectedAlarmSound.value = getAlarmSoundFromAlarmData(alarm)
+		}
+	}
+
+	fun onAlarmSoundSelected(sound: AlarmSound?){
+		_selectedAlarmSound.update { sound }
+	}
+
+	fun getAlarmSounds(alarm: AlarmData?): List<AlarmSound> {
+		val ringtoneManager = RingtoneManager(context).apply {
+			setType(RingtoneManager.TYPE_ALARM)
+		}
+		val cursor = ringtoneManager.cursor
+		val sounds = mutableListOf<AlarmSound>()
+		while (cursor.moveToNext()) {
+			val position = cursor.position
+			val title = ringtoneManager.getRingtone(position)
+				?.getTitle(context)
+				?: "Unknown"
+			val uri = ringtoneManager.getRingtoneUri(position)
+			sounds += AlarmSound(
+				title = title,
+				soundUri = uri,
+			)
+		}
+		cursor.close()
+		return sounds
+	}
+
+	private fun getAlarmSoundFromAlarmData(alarm: AlarmData?): AlarmSound? {
+		return  if (alarm != null && alarm.sound != null){
+			try {
+				AlarmSound(
+					title = RingtoneManager.getRingtone(context, alarm.sound.toUri())?.getTitle(context)  ?: return null,
+					soundUri = alarm.sound.toUri()
+				)
+			} catch (_: Exception) {
+				null
+			}
+		}else null
 	}
 
 	private fun createDefaultAlarmObject(alarm: AlarmData?): AlarmObject {
@@ -84,7 +139,8 @@ class AlarmPickerViewModel @Inject constructor(
 			},
 			date = Calendar.getInstance().timeInMillis,
 			message = alarm?.message ?: "",
-			freqGottenAfterCallback = alarm?.frequencyInMin ?: 1
+			freqGottenAfterCallback = alarm?.frequencyInMin ?: 1,
+			alarmSoundUri = alarm?.sound?.toUri() ,
 		)
 	}
 
@@ -222,7 +278,7 @@ class AlarmPickerViewModel @Inject constructor(
 						},
 						onError = {messageToDisplayUser, exception ->
 							logD("there is a error in making new alarm  that is $exception ")
-							errorHandler.handleError(com.coolApps.MultipleAlarmClock.utils.Result.Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while making new alarm, Please try again" )
+							errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while making new alarm, Please try again" )
 						}
 					)
 				}
@@ -234,7 +290,7 @@ class AlarmPickerViewModel @Inject constructor(
 					alarmsController.updateAlarmStateInDb( oldAlarm, alarmDao).fold(onSuccess = {}, onError = { messageToDisplayUser, exception  ->
 						// no such alarm exist in DB so can't update it
 						logD("there is a error while editing the alarm and updating it's state in DB and  that is ${exception.message} ")
-						errorHandler.handleError(com.coolApps.MultipleAlarmClock.utils.Result.Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while editing alarm, Please try again" )
+						errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while editing alarm, Please try again" )
 					}
 					)
 					val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(

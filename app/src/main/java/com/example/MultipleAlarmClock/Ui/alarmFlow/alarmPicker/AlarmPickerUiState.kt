@@ -18,7 +18,8 @@ data class AlarmPickerUiState(
 		},
 		date = Calendar.getInstance().timeInMillis,
 		message = "",
-		freqGottenAfterCallback = 1
+		freqGottenAfterCallback = 1,
+		alarmSoundUri = null
 	),
 	val validationResult: ValidationResult = ValidationResult.Success,
 	val isLoading: Boolean = false,

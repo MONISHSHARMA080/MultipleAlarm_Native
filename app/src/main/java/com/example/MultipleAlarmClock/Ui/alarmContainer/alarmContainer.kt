@@ -53,8 +53,8 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.logD
 import com.example.MultipleAlarmClock.Ui.alarmContainer.AlarmContainerViewModel
@@ -64,7 +64,7 @@ import kotlinx.coroutines.launch
 @Composable fun AlarmContainer(
 	 onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit, onNavigateToSettings:()->Unit
 ){
-	val alarmContainerViewModel :AlarmContainerViewModel = viewModel()
+	val alarmContainerViewModel :AlarmContainerViewModel = hiltViewModel()
 	val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 	val snackBarHostState = remember { SnackbarHostState() }
 	val clipBoard =LocalClipboard.current

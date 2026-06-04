@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -41,6 +42,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Message
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AccessTimeFilled
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AlarmAdd
@@ -49,6 +51,8 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -85,11 +89,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmErrorField
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmObject
@@ -120,9 +124,11 @@ sealed class AccentColor {
 fun AlarmPickerScreen(
     alarm: AlarmData?,
     alarmSetGoBack: () -> Unit,
-    viewModel: AlarmPickerViewModel = viewModel()
+    onNavigateToSoundList: ()-> Unit,
+    viewModel: AlarmPickerViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+	val selectedAlarmSoundTitle by viewModel.selectedAlarmSound.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -140,6 +146,7 @@ fun AlarmPickerScreen(
     val isPermissionsOk = uiState.areAllPermissionsGranted
     val weGood = validationOk && isPermissionsOk
     val freqText = if (alarmObject.freqGottenAfterCallback < 1) "" else viewModel.getFrequencyPreviewText()
+
 	val okColor      = AccentColor.Ok.resolve()
 	val problemColor = AccentColor.Problem.resolve()
 	val colorScheme = MaterialTheme.colorScheme
@@ -444,6 +451,92 @@ fun AlarmPickerScreen(
                     }
                 }
 
+				// Alarm Sound or ringtone
+				CardContainer {
+					Column(
+						modifier = Modifier.padding(16.dp)
+					) {
+
+						Row(
+							verticalAlignment = Alignment.CenterVertically
+						) {
+
+							Icon(
+								Icons.Rounded.MusicNote,
+								contentDescription = null,
+								tint = okColor
+							)
+
+							Spacer(Modifier.width(8.dp))
+
+							Text(
+								text = "Alarm sound",
+								color = colorScheme.onSurface,
+								fontWeight = FontWeight.Bold
+							)
+						}
+
+						Spacer(Modifier.height(14.dp))
+
+						Surface(
+							onClick = {onNavigateToSoundList()},
+							shape = RoundedCornerShape(20.dp),
+							color = colorScheme.surfaceContainerHigh,
+						) {
+
+							Row(
+								modifier = Modifier
+									.fillMaxWidth()
+									.padding(
+										horizontal = 18.dp,
+										vertical = 16.dp
+									),
+								verticalAlignment = Alignment.CenterVertically
+							) {
+
+								Surface(
+									shape = CircleShape,
+									color = colorScheme.secondaryContainer
+								) {
+									Icon(
+										Icons.Rounded.GraphicEq,
+										contentDescription = null,
+										modifier = Modifier.padding(10.dp),
+										tint = colorScheme.onSecondaryContainer
+									)
+								}
+
+								Spacer(Modifier.width(14.dp))
+
+								Column(
+									modifier = Modifier.weight(1f)
+								) {
+
+									Text(
+										text = selectedAlarmSoundTitle?.title ?: "Random",
+										style = MaterialTheme.typography.titleMedium,
+										color = colorScheme.onSurface
+									)
+
+									Text(
+										text = if (selectedAlarmSoundTitle == null)
+											"A random alarm sound will be chosen"
+										else
+											"Tap to change",
+										style = MaterialTheme.typography.bodyMedium,
+										color = colorScheme.onSurfaceVariant
+									)
+								}
+
+								Icon(
+									imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+									contentDescription = null,
+									tint = colorScheme.onSurfaceVariant
+								)
+							}
+						}
+					}
+				}
 
                 // Message Card
                 CardContainer {
@@ -490,6 +583,7 @@ fun AlarmPickerScreen(
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable fun TimeBox(label: String, time: Calendar, accentColor: Color, modifier: Modifier = Modifier, onNewTimeSelected: (Calendar) -> Unit) {

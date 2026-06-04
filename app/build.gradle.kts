@@ -10,7 +10,7 @@ plugins {
     id("com.posthog.android") version "1.2.0"
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.baselineprofile)
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.3.21"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.4.0"
 	id("com.google.protobuf") version "0.10.0"
     id("com.google.dagger.hilt.android")
 
@@ -151,6 +151,7 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.59.2")
 	implementation(libs.androidx.hilt.work)
 	ksp("com.google.dagger:hilt-android-compiler:2.59.2")
+	implementation("androidx.hilt:hilt-navigation-compose:1.3.0")
 
     implementation("com.google.accompanist:accompanist-permissions:0.37.3")
 
@@ -162,11 +163,10 @@ dependencies {
     implementation(libs.androidx.datastore)
 	implementation(libs.protobuf.kotlin.lite.v4321)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 
     implementation(libs.androidx.espresso.contrib)
     implementation(libs.androidx.ui.test.junit4.android)
-    implementation(libs.androidx.compose.ui.text)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.foundation.layout)
 	implementation(libs.androidx.navigation3.runtime)
@@ -176,7 +176,6 @@ dependencies {
     implementation(libs.androidx.profileinstaller)
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.1")
     "baselineProfile"(project(":baselineprofile"))
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation(libs.androidx.junit.ktx)
     implementation("androidx.navigation:navigation-compose:2.9.7")
     implementation("androidx.work:work-runtime-ktx:2.11.1")
@@ -194,7 +193,7 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.media3.common)
     implementation(libs.androidx.ui.test.android)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 
     val roomVersion = "2.8.4"
     implementation("androidx.room:room-runtime:$roomVersion")

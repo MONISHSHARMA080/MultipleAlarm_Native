@@ -1,5 +1,7 @@
 package com.coolApps.MultipleAlarmClock.dataBase
 
+import android.net.Uri
+import androidx.core.net.toUri
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
@@ -10,6 +12,7 @@ import androidx.room.Insert
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverter
 import androidx.room.Update
 import androidx.room.Upsert
 import com.coolApps.MultipleAlarmClock.utils.Result.GenericDataIterator
@@ -29,11 +32,19 @@ data class AlarmData(
     @ColumnInfo(name = "message") val message:String,
     /** this is the freq enter by the user */
     @ColumnInfo(name = "freq_used_to_skip_start_alarm") val frequencyInMin: Long,
+	val sound:String?,
     @ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean
-){
+
+) {	@TypeConverter
+	fun uriToString(uri: Uri?): String? = uri?.toString()
+
+	@TypeConverter
+	fun stringToUri(value: String?): Uri? = value?.toUri()
+
     override fun toString(): String {
         return "alarmData: id:$id, startTime:${getDateTimeFormatted(startTime)}, endTime:${getDateTimeFormatted(endTime)}, date:${getDateFormatted(startTime)}, message:$message, freqGottenAfterCallback:$frequencyInMin, isReadyToUse:$isReadyToUse"
     }
+
     fun iterator():AlarmDataIterator  {
         return AlarmDataIterator(this)
     }
@@ -60,7 +71,10 @@ data class AlarmData(
         return SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(time).trim()
     }
     fun  toAlarmObject():AlarmObject{
-        return AlarmObject(startTime = Calendar.getInstance().apply { timeInMillis = startTime }, endTime=Calendar.getInstance().apply { timeInMillis = endTime }, message=message, freqGottenAfterCallback=frequencyInMin, date = startTime)
+        return AlarmObject(
+			startTime = Calendar.getInstance().apply { timeInMillis = startTime }, endTime=Calendar.getInstance().apply { timeInMillis = endTime }, message=message,
+			freqGottenAfterCallback=frequencyInMin, date = startTime, alarmSoundUri = stringToUri(sound)
+		)
     }
 
     fun isValid(): ValidationResultAlarmData {
@@ -76,7 +90,7 @@ data class AlarmData(
 
 }
 
-@Database(entities = [AlarmData::class], version = 1, )
+@Database(entities = [AlarmData::class], version = 1)
 abstract class AlarmDatabase : RoomDatabase() {
     abstract fun alarmDao(): AlarmDao
 }
@@ -164,7 +178,8 @@ data class AlarmObject(
     val date: Long,
     val message:String,
     /** this is same as the oen used to skip the time just provide it and will just skip it */
-    val freqGottenAfterCallback: Long
+    val freqGottenAfterCallback: Long,
+	val alarmSoundUri: Uri?
 ){
 
     fun getFreqInMillisecond(): Long {
@@ -185,7 +200,8 @@ data class AlarmObject(
             message = message,
             id = id,
             frequencyInMin = freqGottenAfterCallback,
-            isReadyToUse = isReadyToUse
+            isReadyToUse = isReadyToUse,
+			sound = alarmSoundUri?.toString()
         )
     }
     // when we get a weGood == false then we can call this function to see what value produced an error and then display it
