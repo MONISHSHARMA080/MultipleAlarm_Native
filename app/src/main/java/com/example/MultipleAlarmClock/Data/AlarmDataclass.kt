@@ -90,7 +90,7 @@ data class AlarmData(
 
 }
 
-@Database(entities = [AlarmData::class], version = 1)
+@Database(entities = [AlarmData::class], version = 2)
 abstract class AlarmDatabase : RoomDatabase() {
     abstract fun alarmDao(): AlarmDao
 }
