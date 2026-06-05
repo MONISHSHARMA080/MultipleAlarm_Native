@@ -84,8 +84,9 @@ fun AlarmFlowScreen(
 			}
 
 			entry<AlarmFlowRoute.AlarmSoundListScreen> {
-				val sounds by viewModel.listOfAlarms.collectAsStateWithLifecycle()
 				val selected by viewModel.selectedAlarmSound.collectAsStateWithLifecycle()
+				val previewing by viewModel.previewingSound.collectAsStateWithLifecycle()
+
 
 				DisposableEffect(Unit) {
 					onDispose {
@@ -94,7 +95,8 @@ fun AlarmFlowScreen(
 				}
 
 				ListAlarmScreen(
-					sounds = sounds,
+					viewModel,
+					previewingUri = previewing?.soundUri,
 					selectedUri = selected?.soundUri,
 					onBack = {
 						flowBackStack.removeLastOrNull()

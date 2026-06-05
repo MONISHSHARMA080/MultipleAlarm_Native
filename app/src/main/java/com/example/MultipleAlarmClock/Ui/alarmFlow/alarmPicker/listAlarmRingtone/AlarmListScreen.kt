@@ -50,18 +50,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerViewModel
 import com.example.MultipleAlarmClock.Ui.alarmPicker.data.AlarmSound
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable fun ListAlarmScreen(
-	sounds: List<AlarmSound>,
+	vm: AlarmPickerViewModel,
 	selectedUri: Uri?,
+	previewingUri: Uri?,
 	onBack: () -> Unit,
 	onSelected: (AlarmSound?) -> Unit,
 	modifier: Modifier = Modifier,
 ) {
+	val listOfAlarms by vm.listOfAlarms.collectAsStateWithLifecycle()
 	var isRandomSelected by remember { mutableStateOf(selectedUri == null) }
+	var isRadomSoundPlaying by remember { mutableStateOf(( false ))}
 	Scaffold(
 		modifier = modifier,
 		topBar = {
@@ -91,18 +96,21 @@ import com.example.MultipleAlarmClock.Ui.alarmPicker.data.AlarmSound
 		) {
 
 			item {
-				SoundCard(null, isRandomSelected, onClick = {isRandomSelected = true; onSelected(null)} )
+				SoundCard(null, isRandomSelected, onClick = {isRandomSelected = true; onSelected(null);isRadomSoundPlaying = !isRadomSoundPlaying }, isPlaying = isRadomSoundPlaying)
 				Spacer(Modifier.padding(bottom = 25.dp))
 			}
 
 			items(
-				items = sounds,
+				items = listOfAlarms,
 				key = { it.soundUri}
 			) { sound ->
 				val selected = sound.soundUri == selectedUri
+				val isPlaying = previewingUri == sound.soundUri
+
 				SoundCard(
 					sound = sound,
 					selected = selected,
+					isPlaying = isPlaying, // 👈
 					onClick = {
 						onSelected(sound)
 						isRandomSelected = false
@@ -117,6 +125,7 @@ import com.example.MultipleAlarmClock.Ui.alarmPicker.data.AlarmSound
 private fun SoundCard(
 	sound: AlarmSound?,
 	selected: Boolean,
+	isPlaying: Boolean,
 	onClick: () -> Unit
 ) {
 	val containerColor = if (selected)
@@ -143,10 +152,7 @@ private fun SoundCard(
 			verticalAlignment = Alignment.CenterVertically
 		) {
 			Surface(
-				color = if (selected)
-					MaterialTheme.colorScheme.secondary
-				else
-					MaterialTheme.colorScheme.surfaceContainerHighest,
+				color = if (selected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surfaceContainerHighest,
 				shape = CircleShape
 			) {
 				Box(
@@ -154,7 +160,7 @@ private fun SoundCard(
 					contentAlignment = Alignment.Center
 				) {
 					Crossfade(
-						targetState = selected,
+						targetState = isPlaying,
 						animationSpec = tween(200),
 						label = "icon_swap"
 					) { isPlaying ->

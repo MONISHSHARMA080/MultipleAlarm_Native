@@ -63,8 +63,13 @@ class AlarmPickerViewModel @Inject constructor(
 	private val _selectedAlarmSound = MutableStateFlow<AlarmSound?>(null)
 	val selectedAlarmSound = _selectedAlarmSound.asStateFlow()
 
+	private val _previewingSound = MutableStateFlow<AlarmSound?>(null)
+	val previewingSound = _previewingSound.asStateFlow()
+
 	private val _events = MutableSharedFlow<AlarmPickerEvent>(extraBufferCapacity = 1)
 	val events: SharedFlow<AlarmPickerEvent> = _events.asSharedFlow()
+
+
 
 	private val errorHandler = ErrorHandler(notificationHandler = NotificationHandler(context),analytics)
 	private val alarmsController = AlarmsController()
@@ -80,11 +85,21 @@ class AlarmPickerViewModel @Inject constructor(
 
 	fun previewSound(sound: AlarmSound?) {
 		stopPreview()
+		// if the uri is same then the user tapped the sound again, and then we stop playing that sound
+		// if user clicked the random sound then we play some different
+		val soundToPlay = sound ?: listOfAlarms.value.randomOrNull() ?: return
+		logD("the sound to play is $soundToPlay and the previewing sound is ${_previewingSound.value} are they == ${_previewingSound.value?.soundUri == soundToPlay.soundUri}")
+
 		runCatching {
-			when(sound){
-				null ->	playAlarm.play(listOfAlarms.value.random().soundUri)
-				else -> playAlarm.play(sound.soundUri)
+			if (_previewingSound.value?.soundUri == soundToPlay.soundUri) {
+				logD("stopping the alarm")
+				stopPreview()
+			} else {
+				stopPreview()
+				runCatching { playAlarm.play(soundToPlay.soundUri) }
+				_previewingSound.value = soundToPlay
 			}
+			_previewingSound.value = sound
 		}
 	}
 
