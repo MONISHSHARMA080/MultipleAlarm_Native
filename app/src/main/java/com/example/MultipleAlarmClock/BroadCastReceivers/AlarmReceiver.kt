@@ -15,7 +15,7 @@ class AlarmReceiver : BroadcastReceiver() {
             logD("\n\n trying to launch the alarm activity +++++++++ \n\n")
             val newIntent = Intent(context, AlarmService::class.java).apply {
                 putExtras(intent)
-                action = AlarmService.Companion.ACTION_START_ALARM
+                action = AlarmService.ACTION_START_ALARM
             }
             context.startForegroundService(newIntent)
         }catch (e: Exception){

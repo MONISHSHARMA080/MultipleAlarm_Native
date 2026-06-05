@@ -41,8 +41,9 @@ class PlayAlarm (private val context: Context, val analytics: Analytics){
     }
 
 
-    /** play a new random alarm*/
-    fun play( ){
+    /** play a new random alarm
+	 * [soundUri] this will give me which alarmSound to play if this is a random alarm then give that in the uri*/
+    fun play( soundUri: Uri ){
         runCatching {
             if (mediaPlayer?.isPlaying == true) {
                 logD(" the mediaPlayer playing is ${mediaPlayer?.isPlaying} so we are returning ")
@@ -50,7 +51,7 @@ class PlayAlarm (private val context: Context, val analytics: Analytics){
             }
             val audioFocusReqTemp = audioFocusRequest ?: buildAudioFocusRequest()
             audioFocusRequest = audioFocusReqTemp
-            if (mediaPlayer == null ) mediaPlayer = buildMediaPLayer()
+            if (mediaPlayer == null ) mediaPlayer = buildMediaPLayer(soundUri)
             val result = audioManager.requestAudioFocus(audioFocusReqTemp)
             logD("Requested for audio focus and got it to be $result granted:${AudioManager.AUDIOFOCUS_REQUEST_GRANTED} , delayed:${AudioManager.AUDIOFOCUS_REQUEST_DELAYED} and failed:${AudioManager.AUDIOFOCUS_REQUEST_FAILED}")
             when(result){
@@ -59,13 +60,13 @@ class PlayAlarm (private val context: Context, val analytics: Analytics){
                     coroutineScope.launch {
                         analytics.captureEvent("AudioFocusRequest result arrived", mapOf(
                             "className" to this@PlayAlarm.toString(),
-                            "result" to if (result ==1) "AUDIOFOCUS_REQUEST_GRANTED" else "AUDIOFOCUS_REQUEST_DELAYED"
+                            "result" to if (result ==1) "AUDIOFOCUS_REQUEST_GRANTED" else "AUDIOFOCUS_REQUEST_DELAYED",
                         ))
                     }
 
                 }
                 AudioManager.AUDIOFOCUS_REQUEST_FAILED ->{
-                        mediaPlayer?.start()
+					mediaPlayer?.start()
                     coroutineScope.launch {
                         analytics.captureEvent("AudioFocusRequest result arrived", mapOf(
                             "className" to this@PlayAlarm.toString(),
@@ -110,8 +111,7 @@ class PlayAlarm (private val context: Context, val analytics: Analytics){
         return focusRequest
     }
 
-    private fun buildMediaPLayer(): MediaPlayer{
-        val randomAlarmToPlay = getRandomAlarm()
+    private fun buildMediaPLayer(uri: Uri): MediaPlayer{
         val mediaPLayerNew = MediaPlayer().apply {
             setAudioAttributes(
                 AudioAttributes.Builder()
@@ -119,7 +119,7 @@ class PlayAlarm (private val context: Context, val analytics: Analytics){
                     .setUsage(AudioAttributes.USAGE_ALARM)
                     .build()
             )
-            setDataSource(context, randomAlarmToPlay)
+            setDataSource(context, uri)
             isLooping = true
             prepare()
         }

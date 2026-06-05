@@ -128,9 +128,6 @@ fun AlarmPickerScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 	val selectedAlarmSoundTitle by viewModel.selectedAlarmSound.collectAsStateWithLifecycle()
-	LaunchedEffect(selectedAlarmSoundTitle) {
-		logD("the selected alarm sound title is $selectedAlarmSoundTitle")
-	}
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -171,6 +168,7 @@ fun AlarmPickerScreen(
             "validation error message" to (currentError?.message ?: ""),
             "alarmData" to alarm.toString(),
             "ui_state" to uiState.toString(),
+			"did user choose random alarmSound" to (uiState.alarmObject.alarmSoundUri == null),
             "notification permission granted" to isNotificationsEnabled
         ))
     }
