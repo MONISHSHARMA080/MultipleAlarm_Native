@@ -89,7 +89,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -125,17 +124,18 @@ fun AlarmPickerScreen(
     alarm: AlarmData?,
     alarmSetGoBack: () -> Unit,
     onNavigateToSoundList: ()-> Unit,
-    viewModel: AlarmPickerViewModel = hiltViewModel()
+    viewModel: AlarmPickerViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 	val selectedAlarmSoundTitle by viewModel.selectedAlarmSound.collectAsStateWithLifecycle()
+	LaunchedEffect(selectedAlarmSoundTitle) {
+		logD("the selected alarm sound title is $selectedAlarmSoundTitle")
+	}
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    LaunchedEffect(alarm) {
-        viewModel.initialize(alarm)
-    }
+
 
     var showPermissionDialog by remember { mutableStateOf(false) }
     var missingSteps by remember { mutableStateOf<List<PermissionStep>>(emptyList()) }

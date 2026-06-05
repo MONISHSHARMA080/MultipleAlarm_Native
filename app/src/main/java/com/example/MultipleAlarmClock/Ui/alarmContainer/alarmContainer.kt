@@ -234,10 +234,8 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 			text = {
 				Text(
 					text = "Add alarm",
-					// 🔑 Replace typography reference with hardcoded sp
-					// typography.labelLarge is typically 14.sp but varies by theme
 					fontSize = 14.sp,
-					fontWeight = FontWeight.SemiBold,
+					fontWeight = FontWeight.Bold,
 					letterSpacing = 0.1.sp,
 					maxLines = 1  // 🔑 Prevent wrapping on small screens
 				)

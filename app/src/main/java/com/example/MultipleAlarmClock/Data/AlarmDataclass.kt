@@ -157,7 +157,7 @@ data class ValidationResultAlarmData(
 enum class AlarmErrorField {
     Time,
 //    EndTime, // since not useful
-    DATE, FREQUENCY, MESSAGE, AlarmIsNotDiff
+    DATE, FREQUENCY, MESSAGE, AlarmIsNotDiff, SOUND
 }
 
 sealed class ValidationResult {
@@ -225,7 +225,8 @@ data class AlarmObject(
             val hasChanged = startTime.timeInMillis != alarmData.startTime ||
                     endTime.timeInMillis != alarmData.endTime ||
                     freqGottenAfterCallback != alarmData.frequencyInMin ||
-                    message != alarmData.message
+                    message != alarmData.message ||
+                    alarmSoundUri?.toString() != alarmData.sound
 
             if (!hasChanged) {
                 return ValidationResult.Failure(AlarmErrorField.AlarmIsNotDiff, "No changes made. Change something to update the alarm.")
@@ -254,5 +255,3 @@ class AlarmDataIterator(alarm: AlarmData) {
         return newAlarm
     }
 }
-
-

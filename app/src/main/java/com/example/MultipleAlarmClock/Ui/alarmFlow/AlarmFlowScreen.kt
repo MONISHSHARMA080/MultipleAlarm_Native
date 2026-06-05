@@ -9,7 +9,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -28,12 +28,9 @@ fun AlarmFlowScreen(
 	onCloseFlow: () -> Unit
 ) {
 	val viewModel: AlarmPickerViewModel = hiltViewModel()
-
+	viewModel.setInitialAlarmObject(alarmData)
 	val flowBackStack = rememberNavBackStack(AlarmFlowRoute.AlarmPicker)
 
-	LaunchedEffect(alarmData) {
-		viewModel.initialize(alarmData)
-	}
 
 	NavDisplay(
 		backStack = flowBackStack,
@@ -87,15 +84,23 @@ fun AlarmFlowScreen(
 			}
 
 			entry<AlarmFlowRoute.AlarmSoundListScreen> {
-				val sounds by viewModel.alarms.collectAsStateWithLifecycle()
+				val sounds by viewModel.listOfAlarms.collectAsStateWithLifecycle()
 				val selected by viewModel.selectedAlarmSound.collectAsStateWithLifecycle()
+
+				DisposableEffect(Unit) {
+					onDispose {
+						viewModel.stopPreview()
+					}
+				}
 
 				ListAlarmScreen(
 					sounds = sounds,
 					selectedUri = selected?.soundUri,
+					onBack = {
+						flowBackStack.removeLastOrNull()
+					},
 					onSelected = { sound ->
 						viewModel.onAlarmSoundSelected(sound)
-						flowBackStack.removeLastOrNull()
 					}
 				)
 			}

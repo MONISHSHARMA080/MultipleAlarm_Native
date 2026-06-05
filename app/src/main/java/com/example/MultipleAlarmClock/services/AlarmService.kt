@@ -66,13 +66,11 @@ class AlarmService: Service() {
     /** launches the notification with full screen intent, plays the alarm sound , and puts intent in the hashMap if required*/
     private fun startPlayingAlarm(intent: Intent):Int{
         val res = buildNotification(this, intent).getOrElse { exception ->
-            // log the error and then stop the service
-            // ----------------------
-            //      log the error
-            // ----------------------
             logD(" Error building notification: ${exception.message} ")
             return problemSoStopTheService(" Error building notification: ${exception.message} ", mapOf("function" to "startPlayingAlarm"))
         }
+		// get the alarmData from Db and then play the alarm or if error then play random
+
         val notification: Notification = res.first
         val alarmIntentData: AlarmActivityIntentData = res.second
         intentHashMap.putIfAbsent(alarmIntentData.alarmIdInDb, intent)

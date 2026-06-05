@@ -1,5 +1,6 @@
 package com.example.MultipleAlarmClock.Ui.alarmPicker
 
+import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmObject
 import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.example.MultipleAlarmClock.Ui.Permissions.PermissionStep
@@ -23,10 +24,12 @@ data class AlarmPickerUiState(
 	),
 	val validationResult: ValidationResult = ValidationResult.Success,
 	val isLoading: Boolean = false,
-	val areAllPermissionsGranted: Boolean = true
+	val areAllPermissionsGranted: Boolean = true,
+	// if this is null then we are creating a new alarm else if not null then we are editing an existing alarm
+	var initialAlarm: AlarmData? = null
 ){
 	override fun toString(): String {
-		return "AlarmPickerUiState: alarmObject:$alarmObject , \n  validationResult:$validationResult , \n isLoading:$isLoading , \n  areAllPermissionsGranted:$areAllPermissionsGranted \n   "
+		return "AlarmPickerUiState: alarmObject:$alarmObject , \n  validationResult:$validationResult , \n isLoading:$isLoading , \n  areAllPermissionsGranted:$areAllPermissionsGranted \n, initialAlarm:$initialAlarm \n   "
 	}
 }
 

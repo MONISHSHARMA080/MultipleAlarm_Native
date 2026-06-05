@@ -2,6 +2,7 @@ package com.example.MultipleAlarmClock.Ui.alarmPicker
 
 import android.app.AlarmManager
 import android.content.Context
+import android.media.Ringtone
 import android.media.RingtoneManager
 import androidx.core.net.toUri
 import androidx.datastore.core.DataStore
@@ -31,9 +32,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -48,41 +52,80 @@ class AlarmPickerViewModel @Inject constructor(
 ) : ViewModel() {
 
 	private val _uiState = MutableStateFlow(AlarmPickerUiState())
-	val uiState: StateFlow<AlarmPickerUiState> = _uiState.asStateFlow()
+	val uiState: StateFlow<AlarmPickerUiState> = _uiState.map { state->
+		state.copy(validationResult = state.alarmObject.validate(state.initialAlarm))
+	}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AlarmPickerUiState())
+
 
 	private val _alarmSoundName = MutableStateFlow<List<AlarmSound>>(emptyList())
-	val alarms = _alarmSoundName.asStateFlow()
+	val listOfAlarms = _alarmSoundName.asStateFlow()
 
 	private val _selectedAlarmSound = MutableStateFlow<AlarmSound?>(null)
 	val selectedAlarmSound = _selectedAlarmSound.asStateFlow()
 
-
-
 	private val _events = MutableSharedFlow<AlarmPickerEvent>(extraBufferCapacity = 1)
 	val events: SharedFlow<AlarmPickerEvent> = _events.asSharedFlow()
 
-	private var initialAlarm: AlarmData? = null
 	private val errorHandler = ErrorHandler(notificationHandler = NotificationHandler(context),analytics)
 	private val alarmsController = AlarmsController()
 
-	fun initialize(alarm: AlarmData?) {
-		initialAlarm = alarm
-		_uiState.update {
-			it.copy(alarmObject = alarm?.toAlarmObject() ?: createDefaultAlarmObject(alarm))
-		}
-		validateAlarm()
-		// probably move the whole function inside the coroutine
+	private var ringtone: Ringtone? = null
+
+	init {
 		viewModelScope.launch(Dispatchers.IO) {
-			_alarmSoundName.value = getAlarmSounds(alarm)
-			_selectedAlarmSound.value = getAlarmSoundFromAlarmData(alarm)
+			_alarmSoundName.value = getAlarmSounds()
+		}
+	}
+
+
+
+	fun previewSound(sound: AlarmSound?) {
+		stopPreview()  // always stop whatever is playing first
+		runCatching {
+			when{
+				sound == null ->{
+					ringtone = RingtoneManager.getRingtone(context, listOfAlarms.value.random().soundUri)?.also {
+						it.isLooping = true
+						it.play()
+					}
+				}else ->{
+					ringtone = RingtoneManager.getRingtone(context, sound.soundUri)?.also {
+						it.isLooping = true
+						it.play()
+					}
+				}
+			}
+
+		}
+	}
+
+	fun stopPreview() {
+		ringtone?.stop()
+		ringtone = null
+	}
+
+
+	fun setInitialAlarmObject(alarmData: AlarmData?) {
+		viewModelScope.launch {
+			_uiState.update {
+				it.copy(
+					alarmObject = alarmData?.toAlarmObject() ?: createDefaultAlarmObject(alarmData),
+					initialAlarm = alarmData
+				)
+			}
+			launch{
+				_selectedAlarmSound.value = getAlarmSoundFromAlarmData(alarmData)
+			}
 		}
 	}
 
 	fun onAlarmSoundSelected(sound: AlarmSound?){
 		_selectedAlarmSound.update { sound }
+		_uiState.update { it.copy(alarmObject = it.alarmObject.copy(alarmSoundUri = sound?.soundUri)) }
+		previewSound(sound)
 	}
 
-	fun getAlarmSounds(alarm: AlarmData?): List<AlarmSound> {
+	fun getAlarmSounds(): List<AlarmSound> {
 		val ringtoneManager = RingtoneManager(context).apply {
 			setType(RingtoneManager.TYPE_ALARM)
 		}
@@ -226,7 +269,7 @@ class AlarmPickerViewModel @Inject constructor(
 	}
 
 	private fun validateAlarm() {
-		val result = _uiState.value.alarmObject.validate(initialAlarm)
+		val result = _uiState.value.alarmObject.validate(_uiState.value.initialAlarm)
 		_uiState.update { it.copy(validationResult = result) }
 	}
 
@@ -323,5 +366,10 @@ class AlarmPickerViewModel @Inject constructor(
 			}
 		}
 
+	}
+
+	override fun onCleared() {
+		super.onCleared()
+		stopPreview()
 	}
 }
