@@ -5,14 +5,12 @@ import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaPlayer
-import android.media.RingtoneManager
 import android.net.Uri
 import android.util.Log
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlin.random.Random
 
 
 class PlayAlarm (private val context: Context, val analytics: Analytics){
@@ -40,6 +38,12 @@ class PlayAlarm (private val context: Context, val analytics: Analytics){
         }
     }
 
+	fun stop(){
+		runCatching {
+			mediaPlayer?.stop()
+		}
+	}
+
 
     /** play a new random alarm
 	 * [soundUri] this will give me which alarmSound to play if this is a random alarm then give that in the uri*/
@@ -47,7 +51,7 @@ class PlayAlarm (private val context: Context, val analytics: Analytics){
         runCatching {
             if (mediaPlayer?.isPlaying == true) {
                 logD(" the mediaPlayer playing is ${mediaPlayer?.isPlaying} so we are returning ")
-                return
+				mediaPlayer?.stop()
             }
             val audioFocusReqTemp = audioFocusRequest ?: buildAudioFocusRequest()
             audioFocusRequest = audioFocusReqTemp
@@ -125,35 +129,6 @@ class PlayAlarm (private val context: Context, val analytics: Analytics){
         }
         mediaPlayer = mediaPLayerNew
         return mediaPLayerNew
-    }
-
-    private fun getRandomAlarm(): Uri{
-        val ringtoneManager = RingtoneManager(context)
-        ringtoneManager.setType(RingtoneManager.TYPE_ALARM)
-        val ringtoneCursor = ringtoneManager.cursor
-        val len = ringtoneCursor.count
-        val randomIndex = Random.nextInt(len)
-        coroutineScope.launch {
-            analytics.captureEvent("alarm sounds fetched", mapOf(
-                "random_index_selected" to randomIndex,
-                "total_alarms" to len
-            ))
-        }
-        val ringtone = ringtoneManager.getRingtone(randomIndex)
-
-        ringtone.audioAttributes = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_ALARM)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-            .build()
-
-        ringtone.isLooping = true
-        val uri = if (len > 0) {
-            val randomIndex = Random.nextInt(len)
-            ringtoneManager.getRingtoneUri(randomIndex)
-        } else {
-            RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-        }
-        return uri
     }
 
     private fun logD(msg:String){

@@ -2,7 +2,6 @@ package com.example.MultipleAlarmClock.Ui.alarmPicker
 
 import android.app.AlarmManager
 import android.content.Context
-import android.media.Ringtone
 import android.media.RingtoneManager
 import androidx.core.net.toUri
 import androidx.datastore.core.DataStore
@@ -20,6 +19,7 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmObject
 import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.coolApps.MultipleAlarmClock.logD
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
+import com.coolApps.MultipleAlarmClock.services.PlayAlarm
 import com.coolApps.MultipleAlarmClock.utils.Result.Result
 import com.example.MultipleAlarmClock.Data.dataStore.Settings
 import com.example.MultipleAlarmClock.Data.dataStore.copy
@@ -69,7 +69,8 @@ class AlarmPickerViewModel @Inject constructor(
 	private val errorHandler = ErrorHandler(notificationHandler = NotificationHandler(context),analytics)
 	private val alarmsController = AlarmsController()
 
-	private var ringtone: Ringtone? = null
+	private val playAlarm = PlayAlarm(context, analytics)
+
 
 	init {
 		viewModelScope.launch(Dispatchers.IO) {
@@ -77,31 +78,18 @@ class AlarmPickerViewModel @Inject constructor(
 		}
 	}
 
-
-
 	fun previewSound(sound: AlarmSound?) {
-		stopPreview()  // always stop whatever is playing first
+		stopPreview()
 		runCatching {
-			when{
-				sound == null ->{
-					ringtone = RingtoneManager.getRingtone(context, listOfAlarms.value.random().soundUri)?.also {
-						it.isLooping = true
-						it.play()
-					}
-				}else ->{
-					ringtone = RingtoneManager.getRingtone(context, sound.soundUri)?.also {
-						it.isLooping = true
-						it.play()
-					}
-				}
+			when(sound){
+				null ->	playAlarm.play(listOfAlarms.value.random().soundUri)
+				else -> playAlarm.play(sound.soundUri)
 			}
-
 		}
 	}
 
 	fun stopPreview() {
-		ringtone?.stop()
-		ringtone = null
+		playAlarm.stop()
 	}
 
 
@@ -371,5 +359,6 @@ class AlarmPickerViewModel @Inject constructor(
 	override fun onCleared() {
 		super.onCleared()
 		stopPreview()
+		playAlarm.destroy()
 	}
 }
