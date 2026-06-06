@@ -21,7 +21,6 @@ import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,7 +40,7 @@ class AlarmService: Service() {
     val playAlarm by lazy { PlayAlarm(this, analytics) }
     val coroutineScope = CoroutineScope(Dispatchers.IO)
 	@Inject lateinit var alarmDao: AlarmDao
-	@ApplicationContext lateinit var context: Context
+	var context: Context = this
 
     override fun onBind(intent: Intent?) = null
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
