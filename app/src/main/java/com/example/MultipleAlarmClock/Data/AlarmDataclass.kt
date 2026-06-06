@@ -2,6 +2,7 @@ package com.coolApps.MultipleAlarmClock.dataBase
 
 import android.net.Uri
 import androidx.core.net.toUri
+import androidx.room.AutoMigration
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
@@ -90,7 +91,10 @@ data class AlarmData(
 
 }
 
-@Database(entities = [AlarmData::class], version = 1)
+@Database(
+	entities = [AlarmData::class], version = 2,
+	autoMigrations = [AutoMigration(from = 1, to = 2)]
+)
 abstract class AlarmDatabase : RoomDatabase() {
     abstract fun alarmDao(): AlarmDao
 }
