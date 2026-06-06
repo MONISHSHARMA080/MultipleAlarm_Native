@@ -17,126 +17,63 @@ class PlayAlarm(
 	private val context: Context,
 	private val analytics: Analytics,
 ) {
+
 	private var mediaPlayer: MediaPlayer? = null
 	private var hasAudioFocus = false
+	private var shouldResumeAfterTransientLoss = false
 
 	private val audioManager =
-		context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-
-	// Reuse the same request instance for request + abandon, per docs.
-	private val audioFocusRequest: AudioFocusRequest by lazy { buildAudioFocusRequest() }
+		context.applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
 	private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-	private val audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
-		scope.launch {
-			analytics.captureEvent(
-				"audio focus changed",
-				mapOf(
-					"focus_change" to focusChange,
-				)
-			)
-		}
+	private val audioFocusChangeListener =
+		AudioManager.OnAudioFocusChangeListener { focusChange ->
 
-		when (focusChange) {
-			AudioManager.AUDIOFOCUS_LOSS -> {
-				// Full loss: stop and release.
-				stop(abandonFocus = false)
-			}
-
-			AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-				// Pause only if you want resume behavior.
-				mediaPlayer?.pause()
-			}
-
-			AudioManager.AUDIOFOCUS_GAIN,
-			AudioManager.AUDIOFOCUS_GAIN_TRANSIENT,
-			AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE,
-			AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK -> {
-				mediaPlayer?.let { player ->
-					if (!player.isPlaying) player.start()
-				}
-			}
-		}
-	}
-
-	fun play(soundUri: Uri) {
-		// Always dispose the previous instance first.
-		stop(abandonFocus = true)
-
-		val player = try {
-			MediaPlayer().apply {
-				setAudioAttributes(
-					AudioAttributes.Builder()
-						.setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-						.setUsage(AudioAttributes.USAGE_ALARM)
-						.build()
-				)
-				setDataSource(context, soundUri)
-				isLooping = true
-
-				setOnErrorListener { mp, what, extra ->
-					scope.launch {
-						analytics.captureEvent(
-							"play alarm error",
-							mapOf(
-								"what" to what,
-								"extra" to extra,
-							)
-						)
-					}
-					runCatching { mp.release() }
-					if (mediaPlayer === mp) mediaPlayer = null
-					true
-				}
-
-				prepare()
-			}
-		} catch (t: Throwable) {
 			scope.launch {
 				analytics.captureEvent(
-					"play alarm create failed",
-					mapOf("message" to (t.message ?: "unknown"))
+					"audio_focus_changed",
+					mapOf("focus_change" to focusChange)
 				)
 			}
-			return
-		}
 
-		mediaPlayer = player
+			when (focusChange) {
 
-		val result = audioManager.requestAudioFocus(audioFocusRequest)
-		hasAudioFocus = result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+				AudioManager.AUDIOFOCUS_LOSS -> {
+					shouldResumeAfterTransientLoss = false
+					stop(abandonFocus = false)
+				}
 
-		if (hasAudioFocus) {
-			player.start()
-		} else {
-			// No focus, do not keep a live player around.
-			stop(abandonFocus = false)
-		}
-	}
+				AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+					shouldResumeAfterTransientLoss =
+						mediaPlayer?.isPlaying == true
 
-	fun stop(abandonFocus: Boolean = true) {
-		mediaPlayer?.let { player ->
-			runCatching {
-				if (player.isPlaying) player.stop()
+					mediaPlayer?.pause()
+				}
+
+				AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+					mediaPlayer?.setVolume(0.2f, 0.2f)
+				}
+
+				AudioManager.AUDIOFOCUS_GAIN -> {
+					mediaPlayer?.setVolume(1f, 1f)
+
+					if (
+						shouldResumeAfterTransientLoss &&
+						mediaPlayer?.isPlaying == false
+					) {
+						runCatching {
+							mediaPlayer?.start()
+						}
+					}
+
+					shouldResumeAfterTransientLoss = false
+				}
 			}
-			runCatching { player.release() }
 		}
-		mediaPlayer = null
 
-		if (abandonFocus && hasAudioFocus) {
-			runCatching { audioManager.abandonAudioFocusRequest(audioFocusRequest) }
-			hasAudioFocus = false
-		}
-	}
-
-	fun destroy() {
-		stop(abandonFocus = true)
-		scope.cancel()
-	}
-
-	private fun buildAudioFocusRequest(): AudioFocusRequest {
-		return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
+	private val audioFocusRequest: AudioFocusRequest by lazy {
+		AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
 			.setAudioAttributes(
 				AudioAttributes.Builder()
 					.setUsage(AudioAttributes.USAGE_ALARM)
@@ -146,5 +83,141 @@ class PlayAlarm(
 			.setAcceptsDelayedFocusGain(false)
 			.setOnAudioFocusChangeListener(audioFocusChangeListener)
 			.build()
+	}
+
+	fun play(soundUri: Uri) {
+		stop(abandonFocus = true)
+
+		val focusResult =
+			audioManager.requestAudioFocus(audioFocusRequest)
+
+		hasAudioFocus =
+			focusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+
+		if (!hasAudioFocus) {
+			scope.launch {
+				analytics.captureEvent(
+					"audio_focus_denied",
+					emptyMap()
+				)
+			}
+			return
+		}
+
+		try {
+			val player = MediaPlayer()
+
+			player.apply {
+				setAudioAttributes(
+					AudioAttributes.Builder()
+						.setUsage(AudioAttributes.USAGE_ALARM)
+						.setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+						.build()
+				)
+
+				isLooping = true
+
+				setDataSource(context, soundUri)
+
+				setOnPreparedListener {
+					runCatching {
+						it.start()
+					}
+				}
+
+				setOnCompletionListener {
+					// Probably never reached because looping=true,
+					// but harmless.
+				}
+
+				setOnErrorListener { mp, what, extra ->
+
+					scope.launch {
+						analytics.captureEvent(
+							"play_alarm_error",
+							mapOf(
+								"what" to what,
+								"extra" to extra
+							)
+						)
+					}
+
+					runCatching { mp.release() }
+
+					if (mediaPlayer === mp) {
+						mediaPlayer = null
+					}
+
+					if (hasAudioFocus) {
+						runCatching {
+							audioManager.abandonAudioFocusRequest(
+								audioFocusRequest
+							)
+						}
+						hasAudioFocus = false
+					}
+
+					true
+				}
+
+				prepareAsync()
+			}
+
+			mediaPlayer = player
+
+		} catch (t: Throwable) {
+
+			scope.launch {
+				analytics.captureEvent(
+					"play_alarm_create_failed",
+					mapOf(
+						"message" to (t.message ?: "unknown")
+					)
+				)
+			}
+
+			if (hasAudioFocus) {
+				runCatching {
+					audioManager.abandonAudioFocusRequest(
+						audioFocusRequest
+					)
+				}
+				hasAudioFocus = false
+			}
+		}
+	}
+
+	fun stop(abandonFocus: Boolean = true) {
+
+		mediaPlayer?.let { player ->
+
+			runCatching {
+				if (player.isPlaying) {
+					player.stop()
+				}
+			}
+
+			runCatching {
+				player.release()
+			}
+		}
+
+		mediaPlayer = null
+		shouldResumeAfterTransientLoss = false
+
+		if (abandonFocus && hasAudioFocus) {
+			runCatching {
+				audioManager.abandonAudioFocusRequest(
+					audioFocusRequest
+				)
+			}
+
+			hasAudioFocus = false
+		}
+	}
+
+	fun destroy() {
+		stop(abandonFocus = true)
+		scope.cancel()
 	}
 }
