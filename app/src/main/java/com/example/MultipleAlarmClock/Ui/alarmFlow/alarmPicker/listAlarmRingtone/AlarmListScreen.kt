@@ -67,6 +67,8 @@ import com.example.MultipleAlarmClock.Ui.alarmPicker.data.AlarmSound
 	val listOfAlarms by vm.listOfAlarms.collectAsStateWithLifecycle()
 	var isRandomSelected by remember { mutableStateOf(selectedUri == null) }
 	var isRadomSoundPlaying by remember { mutableStateOf(( false ))}
+	val randomPreviewing by vm.previewingRandom.collectAsStateWithLifecycle()
+
 	Scaffold(
 		modifier = modifier,
 		topBar = {
@@ -85,36 +87,30 @@ import com.example.MultipleAlarmClock.Ui.alarmPicker.data.AlarmSound
 			)
 		}
 	) { padding ->
-
 		LazyColumn(
 			modifier = Modifier.fillMaxSize().padding(padding),
-			contentPadding = PaddingValues(
-				horizontal = 24.dp,
-				vertical = 16.dp
-			),
+			contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
 			verticalArrangement = Arrangement.spacedBy(12.dp)
 		) {
-
 			item {
-				SoundCard(null, isRandomSelected, onClick = {isRandomSelected = true; onSelected(null);isRadomSoundPlaying = !isRadomSoundPlaying }, isPlaying = isRadomSoundPlaying)
+				SoundCard(
+					sound = null,
+					selected = selectedUri == null,
+					isPlaying = randomPreviewing,
+					onClick = { onSelected(null) }
+				)
 				Spacer(Modifier.padding(bottom = 25.dp))
 			}
 
 			items(
 				items = listOfAlarms,
-				key = { it.soundUri}
+				key = { it.soundUri }
 			) { sound ->
-				val selected = sound.soundUri == selectedUri
-				val isPlaying = previewingUri == sound.soundUri
-
 				SoundCard(
 					sound = sound,
-					selected = selected,
-					isPlaying = isPlaying, // 👈
-					onClick = {
-						onSelected(sound)
-						isRandomSelected = false
-					}
+					selected = sound.soundUri == selectedUri,
+					isPlaying = previewingUri == sound.soundUri,
+					onClick = { onSelected(sound) }
 				)
 			}
 		}

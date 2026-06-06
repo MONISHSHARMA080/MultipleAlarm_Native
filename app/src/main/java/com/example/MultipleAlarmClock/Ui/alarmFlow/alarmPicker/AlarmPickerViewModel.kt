@@ -63,8 +63,14 @@ class AlarmPickerViewModel @Inject constructor(
 	private val _selectedAlarmSound = MutableStateFlow<AlarmSound?>(null)
 	val selectedAlarmSound = _selectedAlarmSound.asStateFlow()
 
+	/** here null means it's empty*/
 	private val _previewingSound = MutableStateFlow<AlarmSound?>(null)
 	val previewingSound = _previewingSound.asStateFlow()
+
+
+	private val _previewingRandom = MutableStateFlow(false)
+	val previewingRandom = _previewingRandom.asStateFlow()
+
 
 	private val _events = MutableSharedFlow<AlarmPickerEvent>(extraBufferCapacity = 1)
 	val events: SharedFlow<AlarmPickerEvent> = _events.asSharedFlow()
@@ -84,27 +90,28 @@ class AlarmPickerViewModel @Inject constructor(
 	}
 
 	fun previewSound(sound: AlarmSound?) {
-		stopPreview()
-		// if the uri is same then the user tapped the sound again, and then we stop playing that sound
-		// if user clicked the random sound then we play some different
 		val soundToPlay = sound ?: listOfAlarms.value.randomOrNull() ?: return
-		logD("the sound to play is $soundToPlay and the previewing sound is ${_previewingSound.value} are they == ${_previewingSound.value?.soundUri == soundToPlay.soundUri}")
 
-		runCatching {
-			if (_previewingSound.value?.soundUri == soundToPlay.soundUri) {
-				logD("stopping the alarm")
-				stopPreview()
-			} else {
-				stopPreview()
-				runCatching { playAlarm.play(soundToPlay.soundUri) }
-				_previewingSound.value = soundToPlay
-			}
-			_previewingSound.value = sound
+		val sameItemTapped =
+			(sound == null && _previewingRandom.value) ||
+					(sound != null && _previewingSound.value?.soundUri == sound.soundUri)
+
+		if (sameItemTapped) {
+			stopPreview()
+			return
 		}
+
+		stopPreview()
+		playAlarm.play(soundToPlay.soundUri)
+
+		_previewingSound.value = soundToPlay
+		_previewingRandom.value = sound == null
 	}
 
 	fun stopPreview() {
 		playAlarm.stop()
+		_previewingSound.value = null
+		_previewingRandom.value = false
 	}
 
 
@@ -123,7 +130,7 @@ class AlarmPickerViewModel @Inject constructor(
 	}
 
 	fun onAlarmSoundSelected(sound: AlarmSound?){
-		_selectedAlarmSound.update { sound }
+		_selectedAlarmSound.value = sound
 		_uiState.update { it.copy(alarmObject = it.alarmObject.copy(alarmSoundUri = sound?.soundUri)) }
 		previewSound(sound)
 	}

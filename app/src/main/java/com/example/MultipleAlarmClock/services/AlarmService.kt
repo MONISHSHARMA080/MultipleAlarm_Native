@@ -170,7 +170,7 @@ class AlarmService: Service() {
                 // nothing in the hashMap so we can stop this activity
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
-                playAlarm.pause()
+                playAlarm.stop()
                 playAlarm.destroy()
                 return START_REDELIVER_INTENT
             }
