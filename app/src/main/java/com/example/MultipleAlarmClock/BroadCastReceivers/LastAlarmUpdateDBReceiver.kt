@@ -3,14 +3,19 @@ package com.example.MultipleAlarmClock.BroadCastReceivers
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.room.Room
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmDatabase
+import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
 import com.coolApps.MultipleAlarmClock.logD
+import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class LastAlarmUpdateDBReceiver : BroadcastReceiver() {
+
+	@Inject lateinit var alarmDao: AlarmDao
+
     override fun onReceive(context: Context, intent: Intent) {
 		logD(
 			"||||||+++||||||||In ----- the lastAlarmUpdateDBReceiver class and got intent extras: ${
@@ -27,10 +32,6 @@ class LastAlarmUpdateDBReceiver : BroadcastReceiver() {
         return
     }
         CoroutineScope(Dispatchers.Default).launch {
-            val alarmDao = Room.databaseBuilder(
-                context.applicationContext,
-                AlarmDatabase::class.java, "alarm-database"
-            ).build().alarmDao()
             try {
                 alarmDao.updateReadyToUseInAlarm(alarm_start_time_to_search_db, alarm_end_time_to_search_db, false)
             }

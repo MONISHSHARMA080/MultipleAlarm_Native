@@ -9,6 +9,7 @@ import androidx.room.Room
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmDatabase
+import com.example.MultipleAlarmClock.Data.MIGRATION_1_2
 import com.example.MultipleAlarmClock.Data.dataStore.Settings
 import com.example.MultipleAlarmClock.Data.dataStore.SettingsSerializer
 import dagger.Module
@@ -30,7 +31,7 @@ object AppModule {
 			context,
 			AlarmDatabase::class.java,
 			"alarm-database"
-		).build()
+		).addMigrations(MIGRATION_1_2).build()
 	}
 
 	@Provides

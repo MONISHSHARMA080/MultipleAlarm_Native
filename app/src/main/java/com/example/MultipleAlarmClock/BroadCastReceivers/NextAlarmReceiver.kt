@@ -6,28 +6,26 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.core.content.IntentCompat
-import androidx.room.Room
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmDatabase
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.utils.Result.Result
 import com.example.MultipleAlarmClock.BroadCastReceivers.AlarmReceiver
+import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 
+@AndroidEntryPoint
 class NextAlarmReceiver: BroadcastReceiver() {
     private lateinit var context: Context
     private val coroutineScope = CoroutineScope( Dispatchers.Default)
@@ -35,7 +33,8 @@ class NextAlarmReceiver: BroadcastReceiver() {
     var alarmsController = AlarmsController()
     val analytics by lazy {Analytics(context)}
     private  val receiverClass: Class<out BroadcastReceiver> = AlarmReceiver::class.java
-    var alarmDao: AlarmDao? = null
+	@Inject lateinit var alarmDao: AlarmDao
+
     val doWeWantToGoAsync =true
 
      override  fun onReceive(context: Context, intent: Intent) {
@@ -81,7 +80,7 @@ class NextAlarmReceiver: BroadcastReceiver() {
         val currentTimeAlarmFired = parsedIntentData.startTime
         val startTimeForAlarmSeries = parsedIntentData.startTimeForDb
         val originalDbEndTime = parsedIntentData.endTime
-        val alarmDaoImpl = this.alarmDao?:getAlarmDao(activityContext )
+        val alarmDaoImpl = alarmDao
         val alarmData: AlarmData? = alarmDaoImpl.getAlarmByValues(startTimeForAlarmSeries, originalDbEndTime)
 
         if (alarmData == null) {
@@ -115,18 +114,6 @@ class NextAlarmReceiver: BroadcastReceiver() {
                 alarmDaoImpl.updateAlarmForReset(alarmData.copy(isReadyToUse = false))
             })
         }
-    }
-
-    private  fun getAlarmDao(context: Context): AlarmDao{
-        val db = Room.databaseBuilder(
-            context,
-            AlarmDatabase::class.java, "alarm-database"
-        ).build()
-        return db.alarmDao()
-    }
-    private  fun getTimeInHumanReadableFormat(t:Long): String{
-        if (t == 0L) return "--the time here(probablyFromTheIntent) is 0--"
-        return SimpleDateFormat("yyyy-MM-dd h:mm:ss a", Locale.getDefault()).format(Date(t))
     }
     private  fun logD(msg:String):Unit{
         Log.d("AAAAA", "[NextAlarmReceiver] $msg")

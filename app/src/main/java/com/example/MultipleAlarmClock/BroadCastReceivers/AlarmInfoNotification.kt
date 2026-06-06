@@ -3,16 +3,16 @@ package com.coolApps.MultipleAlarmClock.BroadCastReceivers
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.room.Room
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmDatabase
 import com.coolApps.MultipleAlarmClock.notification.NotificationChannelType
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.utils.Result.Error
 import com.coolApps.MultipleAlarmClock.utils.Result.Result
+import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,17 +20,18 @@ import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.jvm.java
 
 sealed interface AlarmInfoNotificationError: Error{
     data class GenericError(override val messageToDisplayUser: String): AlarmInfoNotificationError
 }
 
-
+@AndroidEntryPoint
 class AlarmInfoNotification: BroadcastReceiver()  {
     private val coroutineScope = CoroutineScope( Dispatchers.IO)
     private lateinit var context: Context
     val analytics by lazy {Analytics(context)}
+	@Inject lateinit var alarmDao: AlarmDao
+
 
     private fun displayAlarmsMetadataInNotification(alarmData: AlarmData){
         val notificationHandler =NotificationHandler(context)
@@ -65,7 +66,6 @@ class AlarmInfoNotification: BroadcastReceiver()  {
          this.errorOccurred("the alarmId is -1 or not there in the intent so we can't fetch the alarmFrom the Db")
          return
      }
-        val alarmDao = this.getAlarmDao(context)
         val alarmData = runBlocking {alarmDao.getAlarmById(alarmId)}
         if (alarmData == null){
             // assertion failed as the intent does not have anything, logging it to a file and also displaying it in a notification
@@ -79,13 +79,5 @@ class AlarmInfoNotification: BroadcastReceiver()  {
     private  fun getTimeInHumanReadableFormatProtectFrom0Included(t:Long): String{
         if (t == 0L) return "--the time here(probablyFromTheIntent) is 0--"
         return SimpleDateFormat("yyyy-MM-dd h:mm:ss a", Locale.getDefault()).format(Date(t))
-    }
-
-    private  fun getAlarmDao(context: Context): AlarmDao {
-        val db = Room.databaseBuilder(
-            context,
-            AlarmDatabase::class.java, "alarm-database"
-        ).build()
-        return db.alarmDao()
     }
 }
