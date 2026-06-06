@@ -10,12 +10,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -27,12 +30,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -63,7 +64,6 @@ fun AlarmPermissionDialog(
 
 	var actedSteps by remember { mutableStateOf(setOf<PermissionStep>()) }
 
-
 	var allCriticalNowGranted by remember {
 		mutableStateOf(PermissionUtils.allCriticalPermissionsGranted(context))
 	}
@@ -78,7 +78,7 @@ fun AlarmPermissionDialog(
 		)
 	}
 
-	val lifecycleOwner =LocalLifecycleOwner.current
+	val lifecycleOwner = LocalLifecycleOwner.current
 	DisposableEffect(lifecycleOwner) {
 		val observer = LifecycleEventObserver { _, event ->
 			if (event == Lifecycle.Event.ON_RESUME) {
@@ -91,21 +91,27 @@ fun AlarmPermissionDialog(
 
 	AlertDialog(
 		onDismissRequest = onDismiss,
-		containerColor = Color(0xFF1C2333),
+		// Optional M3 Expressive touch: Adds an icon to the top of the dialog
+		icon = {
+			Icon(
+				imageVector = Icons.Default.Security,
+				contentDescription = null,
+				tint = MaterialTheme.colorScheme.primary
+			)
+		},
 		title = {
 			Text(
-				"Permissions needed",
-				color = Color.White,
-				fontWeight = FontWeight.Bold,
-				fontSize = 18.sp
+				text = "Permissions needed",
+				style = MaterialTheme.typography.headlineSmall,
+				color = MaterialTheme.colorScheme.onSurface
 			)
 		},
 		text = {
 			Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
 				Text(
-					"To ensure your alarm works, following permissions are needed:",
-					color = Color.Gray,
-					fontSize = 13.sp
+					text = "To ensure your alarm works, the following permissions are needed:",
+					style = MaterialTheme.typography.bodyMedium,
+					color = MaterialTheme.colorScheme.onSurfaceVariant
 				)
 
 				missingSteps.forEach { step ->
@@ -147,13 +153,13 @@ fun AlarmPermissionDialog(
 					)
 				}
 
-				if ( missingSteps.any { it == PermissionStep.XiaomiAutostart } && missingSteps.size == 1 ) {
-					// Only autostart missing — it's advisory, allow skip
+				if (missingSteps.any { it == PermissionStep.XiaomiAutostart } && missingSteps.size == 1) {
+					// Only autostart missing ? it's advisory, allow skip
 					Text(
-						"Autostart is advisory. Your alarm will still work, but may not survive a reboot on Xiaomi devices.",
-						color = Color.Gray,
-						fontSize = 11.sp,
-						fontStyle = FontStyle.Italic
+						text = "Autostart is advisory. Your alarm will still work, but may not survive a reboot on Xiaomi devices.",
+						style = MaterialTheme.typography.labelMedium,
+						fontStyle = FontStyle.Italic,
+						color = MaterialTheme.colorScheme.onSurfaceVariant
 					)
 				}
 			}
@@ -163,11 +169,13 @@ fun AlarmPermissionDialog(
 				onClick = { if (allCriticalNowGranted) onAllCriticalGranted() else onDismiss() },
 			) {
 				Text(
-					if (allCriticalNowGranted) "Done" else "Cancel",
-					color = if (allCriticalNowGranted) Color(0xFF1A73E8) else Color.Gray
+					text = if (allCriticalNowGranted) "Done" else "Cancel",
+					// Use primary for "Done", and secondary/outline color for "Cancel"
+					color = if (allCriticalNowGranted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
 				)
 			}
 		},
+		// M3 automatically handles container shape (ExtraLarge) and surface elevation colors.
 	)
 }
 
@@ -183,35 +191,34 @@ private fun PermissionStepRow(
 		horizontalArrangement = Arrangement.SpaceBetween
 	) {
 		Column(modifier = Modifier.weight(1f)) {
-			Row(verticalAlignment = Alignment.CenterVertically) {
-				Text(
-					step.title,
-					color = Color.White,
-					fontWeight = FontWeight.SemiBold,
-					fontSize = 14.sp
-				)
-			}
 			Text(
-				step.rationale,
-				color = Color.Gray,
-				fontSize = 12.sp
+				text = step.title,
+				style = MaterialTheme.typography.titleMedium,
+				color = MaterialTheme.colorScheme.onSurface,
+				fontWeight = FontWeight.SemiBold
+			)
+			Spacer(modifier = Modifier.height(2.dp))
+			Text(
+				text = step.rationale,
+				style = MaterialTheme.typography.bodySmall,
+				color = MaterialTheme.colorScheme.onSurfaceVariant
 			)
 		}
-		Spacer(Modifier.width(8.dp))
+		Spacer(Modifier.width(16.dp))
+
 		if (isActedOn) {
 			Icon(
-				Icons.Default.CheckCircle,
+				imageVector = Icons.Default.CheckCircle,
 				contentDescription = "Done",
-				tint = Color(0xFF1A73E8),
-				modifier = Modifier.size(20.dp)
+				tint = MaterialTheme.colorScheme.primary,
+				modifier = Modifier.size(24.dp)
 			)
 		} else {
+			// Elevated text button or filled tonal button is great for Expressive M3 actions
 			TextButton(onClick = onAction) {
 				Text(
-					if (step.action != null || step == PermissionStep.XiaomiAutostart)
-						"Open settings" else "Allow",
-					color = Color(0xFF1A73E8),
-					fontSize = 13.sp
+					text = if (step.action != null || step == PermissionStep.XiaomiAutostart) "Open settings" else "Allow",
+					color = MaterialTheme.colorScheme.primary
 				)
 			}
 		}
