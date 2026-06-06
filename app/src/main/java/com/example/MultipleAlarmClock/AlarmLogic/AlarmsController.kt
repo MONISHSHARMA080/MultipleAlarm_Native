@@ -7,13 +7,14 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
-import com.example.MultipleAlarmClock.BroadCastReceivers.AlarmReceiver
 import com.coolApps.MultipleAlarmClock.BroadCastReceivers.AlarmInfoNotification
 import com.coolApps.MultipleAlarmClock.BroadCastReceivers.NextAlarmReceiver
-import com.example.MultipleAlarmClock.BroadCastReceivers.LastAlarmUpdateDBReceiver
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmObject
+import com.example.MultipleAlarmClock.BroadCastReceivers.AlarmReceiver
+import com.example.MultipleAlarmClock.BroadCastReceivers.LastAlarmUpdateDBReceiver
+import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +26,6 @@ import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import kotlin.jvm.java
 import com.coolApps.MultipleAlarmClock.utils.Result.Result as ResultCustom
 
 const val ALARM_ACTION = "com.coolApps.trying_native.ALARM_TRIGGERED"
@@ -38,6 +38,7 @@ class TimeProviderImpl : TimeProvider {
 }
 
 class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImpl()){
+    @Inject constructor() : this(TimeProviderImpl())
     var scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val alarmInfoNotificationClass:Class<out BroadcastReceiver> = AlarmInfoNotification::class.java
     private val alarmReceiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java

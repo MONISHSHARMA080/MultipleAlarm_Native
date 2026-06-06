@@ -80,6 +80,7 @@ androidx-profileinstaller = { group = "androidx.profileinstaller", name = "profi
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtxVersion" }
 protobuf-kotlin-lite-v4321 = { module = "com.google.protobuf:protobuf-kotlin-lite", version.ref = "googleProtobufKotlinLite" }
 androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltWork" }
+androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltWork" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
