@@ -13,7 +13,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "2.4.0"
 	id("com.google.protobuf") version "0.10.0"
     id("com.google.dagger.hilt.android")
-
+	id("androidx.room")
 }
 
 val myAppName="Multiple alarms"
@@ -118,6 +118,9 @@ fun Project.configureAndroid() {
     }
 }
 
+room {
+	schemaDirectory("$projectDir/schemas")
+}
 
 kotlin {
     compilerOptions {
