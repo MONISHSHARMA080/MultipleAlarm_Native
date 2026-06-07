@@ -50,6 +50,7 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
@@ -70,7 +71,8 @@ import kotlinx.coroutines.launch
 ){
 	val alarmContainerViewModel :AlarmContainerViewModel = hiltViewModel()
 //	val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-	val screenHeight = containerSize.height.dp
+	val screenHeight = LocalWindowInfo.current.containerSize.height.dp
+//	val screenHeight = containerSize.height.dp
 	val snackBarHostState = remember { SnackbarHostState() }
 	val clipBoard =LocalClipboard.current
 	val alarms by alarmContainerViewModel.alarms.collectAsStateWithLifecycle()
@@ -186,7 +188,7 @@ import kotlinx.coroutines.launch
 			}
 
 			Box(
-				modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = screenHeight / 29)
+				modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = screenHeight / 26)
 			) {
 				AddAlarmButton(
 					onClick = {
