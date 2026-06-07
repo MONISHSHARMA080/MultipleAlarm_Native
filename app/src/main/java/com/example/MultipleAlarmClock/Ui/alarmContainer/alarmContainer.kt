@@ -8,8 +8,10 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +25,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AlarmAdd
+import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledTonalIconButton
@@ -49,6 +52,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -171,6 +175,15 @@ import kotlinx.coroutines.launch
 				}
 			}
 
+			if (alarms?.isEmpty() == true) {
+				EmptyState(
+					modifier = Modifier
+						.fillMaxSize()
+						.padding(edgeToEdgePadding)
+						.padding(bottom = 100.dp) // Offset to center above FAB
+				)
+			}
+
 			Box(
 				modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = screenHeight / 15)
 			) {
@@ -187,6 +200,37 @@ import kotlinx.coroutines.launch
 	}
 }
 
+
+@Composable
+fun EmptyState(modifier: Modifier = Modifier) {
+	Column(
+		modifier = modifier,
+		verticalArrangement = Arrangement.Center,
+		horizontalAlignment = Alignment.CenterHorizontally
+	) {
+		Icon(
+			imageVector = Icons.Outlined.Alarm,
+			contentDescription = null,
+			modifier = Modifier.size(120.dp),
+			tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+		)
+		Spacer(modifier = Modifier.height(24.dp))
+		Text(
+			text = "Add alarm to get started",
+			style = MaterialTheme.typography.headlineSmall,
+			fontWeight = FontWeight.Bold,
+			color = MaterialTheme.colorScheme.onSurface
+		)
+		Spacer(modifier = Modifier.height(8.dp))
+		Text(
+			text = "You haven't set any alarms yet. Tap 'Add alarm' to get started and never miss a beat.",
+			style = MaterialTheme.typography.bodyMedium,
+			textAlign = TextAlign.Center,
+			color = MaterialTheme.colorScheme.onSurfaceVariant,
+			modifier = Modifier.padding(horizontal = 48.dp)
+		)
+	}
+}
 
 @Composable
 fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
