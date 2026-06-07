@@ -70,6 +70,13 @@ jobs:
           
           echo "version_name=v$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          
+          # Generate changelog from commits since last tag
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          git log "$LAST_TAG"..HEAD --pretty=format:"- %s" 2>/dev/null || git log --pretty=format:"- %s" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
           echo "New version: v$NEW_VERSION (code: $VERSION_CODE)"
       - name: Decode keystore
         run: |
@@ -145,6 +152,10 @@ jobs:
             - Version Name: ${{ steps.version.outputs.version_name }}
             - Version Code: ${{ steps.version.outputs.version_code }}
             - Commit: ${{ github.sha }}
+            
+            ### Changes
+            ${{ steps.version.outputs.changelog }}
+
             ### Downloads
             - **APK**: For direct installation on Android devices
             - **AAB**: For Google Play Store distribution
