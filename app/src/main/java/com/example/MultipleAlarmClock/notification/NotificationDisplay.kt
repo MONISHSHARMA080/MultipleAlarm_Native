@@ -4,8 +4,8 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import com.coolApps.MultipleAlarmClock.R
 import androidx.core.app.NotificationCompat
+import com.coolApps.MultipleAlarmClock.R
 import kotlin.random.Random
 
 sealed class NotificationChannelType(val channelId: String, val channelName: String, val importance: Int, val description: String ) {
@@ -42,7 +42,7 @@ class NotificationHandler(val context: Context) {
 		notificationChannel: NotificationChannelType, notificationTitle: String, notificationText: String
 	): Notification {
 		return NotificationCompat.Builder(context, notificationChannel.channelId )
-			.setSmallIcon(R.mipmap.ic_launcher_app_icon_name)
+			.setSmallIcon(R.mipmap.app_icon)
 			.setContentTitle(notificationTitle)
 			.setContentText(notificationText)
 			.setPriority(NotificationCompat.PRIORITY_DEFAULT)
