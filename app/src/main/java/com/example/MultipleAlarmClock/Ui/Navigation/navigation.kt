@@ -20,6 +20,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -71,6 +73,7 @@ import kotlinx.coroutines.launch
 	logD("the startKey screen is $startKey")
 	val backStack = rememberNavBackStack(startKey)
 	val coroutineScope = rememberCoroutineScope()
+	val screenHeight = LocalWindowInfo.current.containerSize
 
 	Scaffold(
 		contentWindowInsets = WindowInsets.safeContent,
@@ -159,7 +162,7 @@ import kotlinx.coroutines.launch
 						},
 						onNavigateToSettings = {
 							backStack.add(Screen.SettingsScreen)
-						}
+						}, screenHeight
 					)
 
 					LaunchedEffect(Unit) {

@@ -19,6 +19,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 
 @HiltViewModel
@@ -43,7 +45,9 @@ class AlarmContainerViewModel @Inject constructor(
 	val showFeedbackUIState: StateFlow<Boolean> = dataStore.data
 		.map { settings ->
 			logD("data from datastore, feedbackShown: ${settings.feedbackShown} firstAlarmSet: ${settings.firstAlarmSet}")
-			settings.firstAlarmSet && !settings.feedbackShown }
+			delay(2.seconds) // don't immediately show the ask for feedback popup
+			settings.firstAlarmSet && !settings.feedbackShown
+		}
 		.distinctUntilChanged()
 		.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
