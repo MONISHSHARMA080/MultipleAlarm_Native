@@ -71,9 +71,8 @@ jobs:
           echo "version_name=v$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
           
-          # Generate changelog from commits since last tag
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          git log "$LAST_TAG"..HEAD --pretty=format:"- %s" 2>/dev/null || git log --pretty=format:"- %s" >> $GITHUB_OUTPUT
+          { git log "$LAST_TAG"..HEAD --pretty=format:"- %s" 2>/dev/null || git log --pretty=format:"- %s"; } >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
