@@ -86,7 +86,7 @@ class PlayAlarm(
 	}
 
 	fun play(soundUri: Uri) {
-		stop(abandonFocus = true)
+		stop(true)
 
 		val focusResult =
 			audioManager.requestAudioFocus(audioFocusRequest)

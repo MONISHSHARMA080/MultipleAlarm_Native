@@ -8,7 +8,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
-import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.net.Uri
 import android.util.Log
@@ -24,7 +23,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.random.Random
 
 @AndroidEntryPoint
@@ -38,7 +39,7 @@ class AlarmService: Service() {
     val intentHashMap: LinkedHashMap<Int,Intent> = LinkedHashMap(20)
     val analytics by lazy { Analytics(this) }
     val playAlarm by lazy { PlayAlarm(this, analytics) }
-    val coroutineScope = CoroutineScope(Dispatchers.IO)
+	val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 	@Inject lateinit var alarmDao: AlarmDao
 	var context: Context = this
 
@@ -81,7 +82,6 @@ class AlarmService: Service() {
             return problemSoStopTheService(" Error building notification: ${exception.message} ", mapOf("function" to "startPlayingAlarm"))
         }
 		// get the alarmData from Db and then play the alarm or if error then play random
-
         val notification: Notification = res.first
         val alarmIntentData: AlarmActivityIntentData = res.second
         intentHashMap.putIfAbsent(alarmIntentData.alarmIdInDb, intent)
@@ -89,38 +89,29 @@ class AlarmService: Service() {
 		coroutineScope.launch {
 			val alarmData = alarmDao.getAlarmById(alarmIntentData.alarmIdInDb)
 			val soundUri = alarmData?.sound?.toUri() ?: getRandomAlarm()
-			playAlarm.play(soundUri)
+			withContext(Dispatchers.Main){
+				playAlarm.play(soundUri)
+			}
 		}
         return START_REDELIVER_INTENT
     }
 
-	private fun getRandomAlarm(): Uri{
-		val ringtoneManager = RingtoneManager(context)
-		ringtoneManager.setType(RingtoneManager.TYPE_ALARM)
-		val ringtoneCursor = ringtoneManager.cursor
-		val len = ringtoneCursor.count
-		val randomIndex = Random.nextInt(len)
-		coroutineScope.launch {
-			analytics.captureEvent("alarm sounds fetched", mapOf(
-				"random_index_selected" to randomIndex,
-				"total_alarms" to len
-			))
+	private fun getRandomAlarm(): Uri {
+		val ringtoneManager = RingtoneManager(context).apply {
+			setType(RingtoneManager.TYPE_ALARM)
 		}
-		val ringtone = ringtoneManager.getRingtone(randomIndex)
+		val cursor = ringtoneManager.cursor
+		val count = cursor.count
 
-		ringtone.audioAttributes = AudioAttributes.Builder()
-			.setUsage(AudioAttributes.USAGE_ALARM)
-			.setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-			.build()
+		coroutineScope.launch {
+			analytics.captureEvent("alarm sounds fetched", mapOf("total_alarms" to count))
+		}
 
-		ringtone.isLooping = true
-		val uri = if (len > 0) {
-			val randomIndex = Random.nextInt(len)
-			ringtoneManager.getRingtoneUri(randomIndex)
+		return if (count > 0) {
+			ringtoneManager.getRingtoneUri(Random.nextInt(count))
 		} else {
 			RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
 		}
-		return uri
 	}
 
 
