@@ -29,7 +29,6 @@ fun AlarmFlowScreen(
 	onCloseFlow: () -> Unit
 ) {
 	val viewModel: AlarmPickerViewModel = hiltViewModel()
-//	viewModel.setInitialAlarmObject(alarmData)
 	LaunchedEffect(alarmData) {
 		viewModel.setInitialAlarmObject(alarmData)
 	}
