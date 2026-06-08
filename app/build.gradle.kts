@@ -10,7 +10,7 @@ plugins {
     id("com.posthog.android") version "1.2.0"
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.baselineprofile)
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.4.0"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.3.21"
 	id("com.google.protobuf") version "0.10.0"
     id("com.google.dagger.hilt.android")
 	id("androidx.room")
