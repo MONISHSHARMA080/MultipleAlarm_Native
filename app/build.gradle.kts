@@ -23,12 +23,12 @@ fun Project.configureAndroid() {
     extensions.configure<ApplicationExtension> {
 
         namespace = "com.coolApps.MultipleAlarmClock"
-        compileSdk = 36
+        compileSdk = 37
 
         defaultConfig {
             applicationId = "com.coolApps.MultipleAlarmClock"
             minSdk = 33
-            targetSdk = 36
+            targetSdk = 37
             versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
             versionName = project.findProperty("versionName") as String? ?: "1.0.0"
 
