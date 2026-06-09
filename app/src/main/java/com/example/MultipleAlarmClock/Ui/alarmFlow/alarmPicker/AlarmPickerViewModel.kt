@@ -9,7 +9,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController.AlarmValueForAlarmSeries
-import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.getPreviewAlarms
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
@@ -40,7 +39,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 
 @HiltViewModel
 class AlarmPickerViewModel @Inject constructor(
@@ -299,6 +300,28 @@ class AlarmPickerViewModel @Inject constructor(
 	fun captureEvent(name:String, properties: Map<String, Any>){
 		viewModelScope.launch {
 			analytics.captureEvent(name, properties)
+		}
+	}
+	private fun getPreviewAlarms(alarm: AlarmObject, numberOfAlarmPreviewToReturn:Int = 3): String{
+		val alarmObj = alarm.deepCopy()
+		val stringBuilder= StringBuilder()
+		val timeFormat = SimpleDateFormat("h:mm", Locale.getDefault())
+		var index = 0
+
+		while (!alarmObj.startTime.after(alarmObj.endTime) && index < numberOfAlarmPreviewToReturn) {
+			stringBuilder.append(timeFormat.format(alarmObj.startTime.time))
+			alarmObj.startTime.timeInMillis += alarmObj.getFreqInMillisecond()
+			if (alarmObj.freqGottenAfterCallback <= 0) break
+			index ++
+			if (index < numberOfAlarmPreviewToReturn && !alarmObj.startTime.after(alarmObj.endTime)) {
+				stringBuilder.append(", ")
+			}
+		}
+
+		return if(alarmObj.startTime.after(alarmObj.endTime)){
+			stringBuilder.toString().trim()
+		}else{
+			stringBuilder.append(".....${timeFormat.format(alarmObj.endTime.time)}").toString().trim()
 		}
 	}
 
