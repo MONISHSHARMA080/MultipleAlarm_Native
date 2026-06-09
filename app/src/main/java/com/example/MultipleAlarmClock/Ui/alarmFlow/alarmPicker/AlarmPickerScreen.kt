@@ -135,6 +135,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -660,9 +661,11 @@ fun AlarmPickerScreen(
 
 	// ── Permission dialog (unchanged – just forwarded) ────────────────────────
 	if (showPermissionDialog && missingSteps.isNotEmpty()) {
-		PermissionRationaleDialog(
-			steps = missingSteps,
+		AlarmPermissionDialog(
+			missingSteps = missingSteps,
 			onDismiss = { showPermissionDialog = false },
+			onAllCriticalGranted = true,
+			onTrackEvent = TODO(),
 		)
 	}
 
@@ -778,8 +781,8 @@ private fun formatTime(cal: Calendar): String {
 }
 
 private fun formatDate(millis: Long): String {
-	val sdf = java.text.SimpleDateFormat("EEE, MMM d", java.util.Locale.getDefault())
-	return sdf.format(java.util.Date(millis))
+	val sdf = SimpleDateFormat("EEE, MMM d", Locale.getDefault())
+	return sdf.format(Date(millis))
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
