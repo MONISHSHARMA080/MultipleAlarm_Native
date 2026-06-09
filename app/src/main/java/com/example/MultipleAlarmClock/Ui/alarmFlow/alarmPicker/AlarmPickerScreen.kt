@@ -666,26 +666,3 @@ fun getTimeFormatted(cal: Calendar, formatter:String = "hh:mm"): String{
     return DateFormat.format(formatter, cal.timeInMillis).toString()
 }
 
-fun getPreviewAlarms(alarm: AlarmObject, numberOfAlarmPreviewToReturn:Int = 3): String{
-    val alarmObj = alarm.deepCopy()
-    val stringBuilder= StringBuilder()
-    val timeFormat = SimpleDateFormat("h:mm", Locale.getDefault())
-    var index = 0
-
-    while (!alarmObj.startTime.after(alarmObj.endTime) && index < numberOfAlarmPreviewToReturn) {
-        stringBuilder.append(timeFormat.format(alarmObj.startTime.time))
-        alarmObj.startTime.timeInMillis += alarmObj.getFreqInMillisecond()
-        if (alarmObj.freqGottenAfterCallback <= 0) break
-        index ++
-        if (index < numberOfAlarmPreviewToReturn && !alarmObj.startTime.after(alarmObj.endTime)) {
-            stringBuilder.append(", ")
-        }
-    }
-
-    return if(alarmObj.startTime.after(alarmObj.endTime)){
-        stringBuilder.toString().trim()
-    }else{
-        stringBuilder.append(".....${timeFormat.format(alarmObj.endTime.time)}").toString().trim()
-    }
-}
-
