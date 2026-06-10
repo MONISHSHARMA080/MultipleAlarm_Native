@@ -161,10 +161,6 @@ fun AddMoreDatesCard(onClick: () -> Unit) {
 }
 
 @Composable fun DateCard(date: LocalDate, isSelected: Boolean, weGood: Boolean, isEnabled: Boolean , onClick: () -> Unit) {
-//	val backgroundColor = if (isSelected) Color(0xFF152A46) else Color(0xFF1C1F26)
-//	val backgroundColorIfErrorState = Color( 0xFFde0707)
-//	val borderColor = if (isSelected) Color(0xFF1E88E5) else Color(0xFF2C313A)
-//	val textColor = if (isSelected) Color.White else Color(0xFF7D8592)
 	val colorScheme = MaterialTheme.colorScheme
 	val containerColor = when {
 		!weGood && isSelected -> colorScheme.error

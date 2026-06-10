@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -37,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,22 +67,16 @@ fun AlarmPickerScreen(
 	val startTime = uiState.alarmObject.startTime.time
 	val endTime = uiState.alarmObject.endTime.time
 
-	val timeStyle = MaterialTheme.typography.displayLarge.copy(
-		fontWeight = FontWeight.Bold,
-		lineHeight = MaterialTheme.typography.displayLarge.fontSize,
-	)
+	val timeStyle = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.Bold)
+	val amPmStyle = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Medium)
 
-	val amPmStyle = MaterialTheme.typography.labelLarge.copy(
-		fontWeight = FontWeight.Medium,
-		lineHeight = MaterialTheme.typography.labelLarge.fontSize,
-	)
 	Scaffold { screenPadding->
 		Column(
 			modifier = Modifier
 				.fillMaxSize()
 				.background(MaterialTheme.colorScheme.background)
 				.padding(screenPadding)
-				.padding(horizontal = 12.dp)
+				.padding(horizontal = 10.dp)
 		) {
 			// startTime -> endTime
 			Row(
@@ -88,23 +84,23 @@ fun AlarmPickerScreen(
 				verticalAlignment = Alignment.CenterVertically
 			) {
 				Row(
-					modifier = Modifier.weight(1f),
-					verticalAlignment = Alignment.CenterVertically
+					verticalAlignment = Alignment.Bottom,
+//					horizontalArrangement = Arrangement.spacedBy(4.dp),
+					modifier = Modifier.weight(1f)
 				) {
 					Text(
-						text = timeFormat.format(startTime),
+						text = SimpleDateFormat("h:mm", LocalLocale.current.platformLocale).format(startTime),
 						style = timeStyle,
 						color = MaterialTheme.colorScheme.onBackground,
-						modifier = Modifier.alignByBaseline()
+						maxLines = 1,
+						softWrap = false
 					)
-
 					Text(
-						text = amPmFormat.format(startTime),
+						text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(startTime),
 						style = amPmStyle,
 						color = MaterialTheme.colorScheme.onBackground,
-						modifier = Modifier
-							.alignByBaseline()
-							.padding(start = 6.dp)
+						maxLines = 1,
+						softWrap = false
 					)
 				}
 
@@ -115,25 +111,25 @@ fun AlarmPickerScreen(
 					modifier = Modifier.padding(horizontal = 12.dp).size(30.dp)
 				)
 
+
 				Row(
-					modifier = Modifier.weight(1f),
-					verticalAlignment = Alignment.CenterVertically,
-					horizontalArrangement = Arrangement.End
+					verticalAlignment = Alignment.Bottom,
+					horizontalArrangement = Arrangement.spacedBy(4.dp),
+					modifier = Modifier.wrapContentWidth()
 				) {
 					Text(
-						text = timeFormat.format(endTime),
+						text = SimpleDateFormat("h:mm", LocalLocale.current.platformLocale).format(endTime),
 						style = timeStyle,
 						color = MaterialTheme.colorScheme.onBackground,
-						modifier = Modifier.alignByBaseline()
+						maxLines = 1,
+						softWrap = false
 					)
-
 					Text(
-						text = amPmFormat.format(endTime),
+						text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(endTime),
 						style = amPmStyle,
 						color = MaterialTheme.colorScheme.onBackground,
-						modifier = Modifier
-							.alignByBaseline()
-							.padding(start = 6.dp)
+						maxLines = 1,
+						softWrap = false
 					)
 				}
 			}
