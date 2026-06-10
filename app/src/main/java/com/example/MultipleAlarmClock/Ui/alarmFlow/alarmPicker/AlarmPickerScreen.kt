@@ -43,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
+import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -162,6 +163,11 @@ fun AlarmPickerScreen(
 			}
 
 			Spacer(modifier = Modifier.height(32.dp))
+			DateList(
+				{}, startTime.time,
+				weGood = uiState.validationResult == ValidationResult.Success,
+				allowSelectingPastDate = false,
+			)
 
 
 			Spacer(modifier = Modifier.height(16.dp))
