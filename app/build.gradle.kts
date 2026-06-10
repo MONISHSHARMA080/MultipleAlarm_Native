@@ -152,6 +152,7 @@ dependencies {
 		exclude(group = "com.google.protobuf", module = "protobuf-lite")
 	}
     implementation("com.google.dagger:hilt-android:2.59.2")
+	implementation(libs.androidx.datastore.core)
 	implementation(libs.androidx.hilt.work)
 	ksp(libs.androidx.hilt.compiler)
 	ksp("com.google.dagger:hilt-android-compiler:2.59.2")
