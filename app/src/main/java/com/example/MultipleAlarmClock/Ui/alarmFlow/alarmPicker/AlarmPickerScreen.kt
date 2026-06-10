@@ -95,7 +95,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmErrorField
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmObject
 import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.coolApps.MultipleAlarmClock.logD
 import com.example.MultipleAlarmClock.Ui.Permissions.AlarmPermissionDialog
@@ -104,9 +103,7 @@ import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerEvent
 import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Locale
 
 sealed class AccentColor {
 	object Ok : AccentColor()
@@ -127,12 +124,10 @@ fun AlarmPickerScreen(
     viewModel: AlarmPickerViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-	val selectedAlarmSoundTitle by viewModel.selectedAlarmSound.collectAsStateWithLifecycle()
+	val selectedAlarmSound by viewModel.selectedAlarmSound.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
-
-
 
     var showPermissionDialog by remember { mutableStateOf(false) }
     var missingSteps by remember { mutableStateOf<List<PermissionStep>>(emptyList()) }
@@ -511,13 +506,13 @@ fun AlarmPickerScreen(
 								) {
 
 									Text(
-										text = selectedAlarmSoundTitle?.title ?: "Random",
+										text = selectedAlarmSound?.title ?: "Random",
 										style = MaterialTheme.typography.titleMedium,
 										color = colorScheme.onSurface
 									)
 
 									Text(
-										text = if (selectedAlarmSoundTitle == null)
+										text = if (selectedAlarmSound == null)
 											"A random alarm sound will be chosen"
 										else
 											"Tap to change",
