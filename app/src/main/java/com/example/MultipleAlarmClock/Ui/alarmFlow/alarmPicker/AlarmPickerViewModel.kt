@@ -68,7 +68,6 @@ class AlarmPickerViewModel @Inject constructor(
 	private val _previewingSound = MutableStateFlow<AlarmSound?>(null)
 	val previewingSound = _previewingSound.asStateFlow()
 
-
 	private val _previewingRandom = MutableStateFlow(false)
 	val previewingRandom = _previewingRandom.asStateFlow()
 
