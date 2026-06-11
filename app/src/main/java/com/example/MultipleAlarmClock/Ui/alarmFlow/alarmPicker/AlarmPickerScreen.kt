@@ -1,5 +1,6 @@
 package com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -46,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -73,6 +75,7 @@ fun AlarmPickerScreen(
 	val timeStyle = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.Bold)
 	val amPmStyle = MaterialTheme.typography.labelLarge
 	val currentError by remember(uiState) { mutableStateOf(  uiState.validationResult as? ValidationResult.Failure) }
+	val view = LocalView.current
 
 	Scaffold { screenPadding ->
 		Column(
@@ -110,12 +113,11 @@ fun AlarmPickerScreen(
 						modifier = Modifier.alignByBaseline()
 					)
 				}
-
 				Icon(
 					imageVector = Icons.AutoMirrored.Filled.ArrowForward,
 					contentDescription = null,
 					tint = MaterialTheme.colorScheme.onBackground,
-					modifier = Modifier.padding(horizontal = 24.dp).size(32.dp)
+					modifier = Modifier.padding(horizontal = 10.dp).size(32.dp)
 				)
 				Row(
 					verticalAlignment = Alignment.Bottom,
@@ -143,7 +145,7 @@ fun AlarmPickerScreen(
 			Spacer(modifier = Modifier.weight(0.6f))
 
 			DateList(
-				{}, startTime.time,
+				{ viewModel.updateDate(it)}, startTime.time,
 				weGood = currentError?.field != AlarmErrorField.DATE,
 				allowSelectingPastDate = false,
 			)
@@ -213,7 +215,7 @@ fun AlarmPickerScreen(
 				verticalAlignment = Alignment.CenterVertically
 			) {
 				TextButton(
-					onClick = { /* Handle delete logic */ }
+					onClick = { alarmSetGoBack() }
 				) {
 					Text(
 						text = "Delete",
@@ -221,10 +223,10 @@ fun AlarmPickerScreen(
 						style = MaterialTheme.typography.bodyLarge ,
 					)
 				}
-
 				Button(
 					onClick = {
 						viewModel.onSetAlarmClicked(uiState.initialAlarm, uiState.alarmObject)
+						view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
 						alarmSetGoBack()
 					},
 					colors = ButtonDefaults.buttonColors(
@@ -363,6 +365,7 @@ private fun FrequencyRow(
 ) {
 	val colorScheme = MaterialTheme.colorScheme
 	val doWeHaveError =validationResult?.field == AlarmErrorField.FREQUENCY
+	val view = LocalView.current
 
 	Column(
 		modifier = Modifier
@@ -385,19 +388,24 @@ private fun FrequencyRow(
 				fontSize = 16.sp,
 				modifier = Modifier.weight(1f)
 			)
-
-			// Expressive Frequency Picker
 			Row(
 				verticalAlignment = Alignment.CenterVertically,
 				modifier = Modifier
 					.background(
-						color = if (doWeHaveError) colorScheme.errorContainer else colorScheme.primaryContainer ,
+						color = if (doWeHaveError) colorScheme.errorContainer else colorScheme.secondaryContainer ,
 						shape = RoundedCornerShape(12.dp)
 					)
 					.padding(4.dp)
 			) {
 				IconButton(
-					onClick = { if(value - 1 > 0 )onValueChange(value -1) },
+					onClick = {
+						if (value - 1 > 0) {
+							onValueChange(value - 1)
+						} else {
+							// Semantic "Expressive" Reject haptic for limit reached (Android 14/15+)
+							view.performHapticFeedback(HapticFeedbackConstants.REJECT)
+						}
+					},
 					modifier = Modifier.size(36.dp)
 				) {
 					Icon(
@@ -421,7 +429,14 @@ private fun FrequencyRow(
 				)
 
 				IconButton(
-					onClick = { if(value + 1 <= 700 )onValueChange(value + 1) },
+					onClick = {
+						if (value + 1 <= 700) {
+							onValueChange(value + 1)
+						} else {
+							// Also signal error if trying to exceed maximum limit
+							view.performHapticFeedback(HapticFeedbackConstants.REJECT)
+						}
+					},
 					modifier = Modifier.size(36.dp)
 				) {
 					Icon(

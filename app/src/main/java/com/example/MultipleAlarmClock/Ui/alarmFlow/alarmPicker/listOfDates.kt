@@ -140,7 +140,7 @@ fun AddMoreDatesCard(onClick: () -> Unit) {
 		onClick = onClick,
 		shape = RoundedCornerShape(25.dp),
 		color = colorScheme.surface,
-		border = BorderStroke(2.dp, colorScheme.primary),
+		border = BorderStroke(2.dp, colorScheme.secondary),
 		modifier = Modifier
 			.width(64.dp)
 			.height(80.dp)
@@ -152,7 +152,7 @@ fun AddMoreDatesCard(onClick: () -> Unit) {
 			Icon(
 				imageVector = Icons.Outlined.EditCalendar,
 				contentDescription = "Load more dates",
-				tint = colorScheme.primary,
+				tint = colorScheme.secondary,
 				modifier = Modifier.size(32.dp)
 			)
 		}
