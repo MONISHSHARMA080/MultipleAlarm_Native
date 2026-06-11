@@ -80,7 +80,7 @@ fun AlarmPickerScreen(
 				.fillMaxSize()
 				.background(MaterialTheme.colorScheme.background)
 				.padding(screenPadding)
-				.padding(horizontal = 10.dp), // Expressive margin
+				.padding(horizontal = 10.dp),
 			horizontalAlignment = Alignment.CenterHorizontally
 		) {
 			Spacer(modifier = Modifier.weight(0.6f))
@@ -114,7 +114,7 @@ fun AlarmPickerScreen(
 				Icon(
 					imageVector = Icons.AutoMirrored.Filled.ArrowForward,
 					contentDescription = null,
-					tint = MaterialTheme.colorScheme.primary, // Primary color for emphasis
+					tint = MaterialTheme.colorScheme.onBackground,
 					modifier = Modifier.padding(horizontal = 24.dp).size(32.dp)
 				)
 
