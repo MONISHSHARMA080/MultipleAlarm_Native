@@ -77,7 +77,6 @@ fun AlarmFlowScreen(
 		entryProvider = entryProvider {
 			entry<AlarmFlowRoute.AlarmPicker> {
 				AlarmPickerScreen(
-					alarm = alarmData,
 					viewModel = viewModel,
 					alarmSetGoBack = onCloseFlow,
 					onNavigateToSoundList = {

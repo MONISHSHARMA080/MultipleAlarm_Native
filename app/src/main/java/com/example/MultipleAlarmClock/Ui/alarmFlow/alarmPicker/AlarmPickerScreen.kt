@@ -49,7 +49,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmErrorField
 import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.coolApps.MultipleAlarmClock.logD
@@ -59,7 +58,6 @@ import java.text.SimpleDateFormat
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmPickerScreen(
-	alarm: AlarmData?,
 	alarmSetGoBack: () -> Unit,
 	onNavigateToSoundList: () -> Unit,
 	viewModel: AlarmPickerViewModel
@@ -80,7 +78,7 @@ fun AlarmPickerScreen(
 				.fillMaxSize()
 				.background(MaterialTheme.colorScheme.background)
 				.padding(screenPadding)
-				.padding(horizontal = 10.dp)
+				.padding(horizontal = 16.dp)
 		) {
 			// startTime -> endTime
 			Row(
@@ -89,6 +87,7 @@ fun AlarmPickerScreen(
 			) {
 				Row(
 					verticalAlignment = Alignment.Bottom,
+					horizontalArrangement = Arrangement.spacedBy(4.dp),
 					modifier = Modifier.weight(1f)
 				) {
 					Text(
@@ -96,14 +95,16 @@ fun AlarmPickerScreen(
 						style = timeStyle,
 						color = MaterialTheme.colorScheme.onBackground,
 						maxLines = 1,
-						softWrap = false
+						softWrap = false,
+						modifier = Modifier.alignByBaseline()
 					)
 					Text(
 						text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(startTime),
 						style = amPmStyle,
 						color = MaterialTheme.colorScheme.onBackground,
 						maxLines = 1,
-						softWrap = false
+						softWrap = false,
+						modifier = Modifier.alignByBaseline()
 					)
 				}
 
@@ -125,14 +126,16 @@ fun AlarmPickerScreen(
 						style = timeStyle,
 						color = MaterialTheme.colorScheme.onBackground,
 						maxLines = 1,
-						softWrap = false
+						softWrap = false,
+						modifier = Modifier.alignByBaseline()
 					)
 					Text(
 						text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(endTime),
 						style = amPmStyle,
 						color = MaterialTheme.colorScheme.onBackground,
 						maxLines = 1,
-						softWrap = false
+						softWrap = false,
+						modifier = Modifier.alignByBaseline()
 					)
 				}
 			}
@@ -212,8 +215,7 @@ fun AlarmPickerScreen(
 					Text(
 						text = "Delete",
 						color = MaterialTheme.colorScheme.error,
-						fontSize = 16.sp,
-						fontWeight = FontWeight.Medium
+						style = MaterialTheme.typography.bodyLarge ,
 					)
 				}
 
@@ -230,8 +232,7 @@ fun AlarmPickerScreen(
 				) {
 					Text(
 						text = "Save",
-						fontSize = 16.sp,
-						fontWeight = FontWeight.Medium
+						style = MaterialTheme.typography.bodyLarge ,
 					)
 				}
 			}
