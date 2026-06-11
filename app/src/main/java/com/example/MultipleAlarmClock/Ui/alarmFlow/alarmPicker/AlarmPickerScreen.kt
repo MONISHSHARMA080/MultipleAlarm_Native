@@ -34,6 +34,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -41,6 +43,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.text.font.FontWeight
@@ -80,7 +83,7 @@ fun AlarmPickerScreen(
 				.padding(horizontal = 10.dp), // Expressive margin
 			horizontalAlignment = Alignment.CenterHorizontally
 		) {
-			Spacer(modifier = Modifier.weight(0.5f))
+			Spacer(modifier = Modifier.weight(0.6f))
 			Row(
 				modifier = Modifier.fillMaxWidth(),
 				verticalAlignment = Alignment.CenterVertically,
@@ -139,7 +142,7 @@ fun AlarmPickerScreen(
 				}
 			}
 
-			Spacer(modifier = Modifier.weight(0.5f))
+			Spacer(modifier = Modifier.weight(0.6f))
 
 			DateList(
 				{}, startTime.time,
@@ -147,7 +150,7 @@ fun AlarmPickerScreen(
 				allowSelectingPastDate = false,
 			)
 
-			Spacer(modifier = Modifier.weight(0.5f))
+			Spacer(modifier = Modifier.weight(0.4f))
 
 			// 5. Settings Card (Name & Sound)
 			Surface(
@@ -300,54 +303,52 @@ private fun MessageRow(
 			Icon(
 				imageVector = icon,
 				contentDescription = null,
-				tint = if (doWeHaveError) colorScheme.error else colorScheme.onSurfaceVariant
+				tint = if (doWeHaveError) colorScheme.error else colorScheme.onSurfaceVariant,
+				modifier = Modifier.size(20.dp)
 			)
-			Spacer(modifier = Modifier.width(16.dp))
+			Spacer(modifier = Modifier.width(12.dp))
 			Text(
 				text = title,
-				color = if (doWeHaveError) colorScheme.error else colorScheme.onBackground,
-				style = MaterialTheme.typography.titleMedium,
+				color = if (doWeHaveError) colorScheme.error else colorScheme.onSurfaceVariant,
+				style = MaterialTheme.typography.labelLarge,
 				modifier = Modifier.weight(1f)
 			)
 		}
 
 		Spacer(modifier = Modifier.height(8.dp))
 
-		BasicTextField(
+		TextField(
 			value = value,
 			onValueChange = onValueChange,
 			modifier = Modifier
 				.fillMaxWidth()
-				.padding(start = 40.dp) // Align with title text
-				.background(
-					color = if (doWeHaveError) colorScheme.errorContainer else colorScheme.surfaceContainerHighest,
-					shape = RoundedCornerShape(16.dp)
+				.padding(start = 32.dp),
+			textStyle = MaterialTheme.typography.bodyMedium,
+			placeholder = {
+				Text(
+					text = "Add message...",
+					style = MaterialTheme.typography.bodyMedium,
+					color = colorScheme.onSurfaceVariant
 				)
-				.padding(horizontal = 16.dp, vertical = 12.dp),
-			textStyle = MaterialTheme.typography.bodyLarge.copy(
-				color = if (doWeHaveError) colorScheme.onErrorContainer else colorScheme.onSurface
-			),
-			minLines = 2,
-			maxLines = 4,
-			decorationBox = { innerTextField ->
-				if (value.isEmpty()) {
-					Text(
-						text = "Add alarm message...",
-						style = MaterialTheme.typography.bodyLarge,
-						color = if (doWeHaveError) colorScheme.onErrorContainer.copy(alpha = 0.6f)
-						else colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-					)
-				}
-				innerTextField()
-			}
+			},
+			minLines = 3, // Support 2-3 lines comfortably
+			maxLines = 5,
+			shape = RoundedCornerShape(18.dp),
+			colors = TextFieldDefaults.colors(
+				focusedIndicatorColor = Color.Transparent,
+				unfocusedIndicatorColor = Color.Transparent,
+				disabledIndicatorColor = Color.Transparent,
+				errorIndicatorColor = Color.Transparent
+			)
 		)
 
 		if (doWeHaveError) {
+			Spacer(Modifier.padding(3.dp))
 			Text(
 				text = validationResult.message,
 				color = colorScheme.error,
 				style = MaterialTheme.typography.labelSmall,
-				modifier = Modifier.padding(start = 40.dp, top = 4.dp)
+				modifier = Modifier.padding(start = 32.dp, top = 4.dp)
 			)
 		}
 	}
@@ -398,7 +399,7 @@ private fun FrequencyRow(
 					.padding(4.dp)
 			) {
 				IconButton(
-					onClick = {onValueChange(value -1)},
+					onClick = { if(value - 1 > 0 )onValueChange(value -1) },
 					modifier = Modifier.size(36.dp)
 				) {
 					Icon(
@@ -422,7 +423,7 @@ private fun FrequencyRow(
 				)
 
 				IconButton(
-					onClick = {onValueChange(value + 1)},
+					onClick = { if(value + 1 <= 700 )onValueChange(value + 1) },
 					modifier = Modifier.size(36.dp)
 				) {
 					Icon(
