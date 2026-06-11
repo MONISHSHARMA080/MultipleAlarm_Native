@@ -83,18 +83,20 @@ fun AlarmPickerScreen(
 				.fillMaxSize()
 				.background(MaterialTheme.colorScheme.background)
 				.padding(screenPadding)
-				.padding(horizontal = 10.dp),
+				.padding(horizontal = 5.dp),
 			horizontalAlignment = Alignment.CenterHorizontally
 		) {
 			Spacer(modifier = Modifier.weight(0.6f))
+
 			Row(
 				modifier = Modifier.fillMaxWidth(),
 				verticalAlignment = Alignment.CenterVertically,
-				horizontalArrangement = Arrangement.Center
 			) {
 				Row(
 					verticalAlignment = Alignment.Bottom,
-					horizontalArrangement = Arrangement.spacedBy(4.dp)
+					modifier = Modifier.weight(1f),
+					horizontalArrangement = Arrangement.Start
+
 				) {
 					Text(
 						text = SimpleDateFormat("h:mm", LocalLocale.current.platformLocale).format(startTime),
@@ -117,11 +119,12 @@ fun AlarmPickerScreen(
 					imageVector = Icons.AutoMirrored.Filled.ArrowForward,
 					contentDescription = null,
 					tint = MaterialTheme.colorScheme.onBackground,
-					modifier = Modifier.padding(horizontal = 10.dp).size(32.dp)
+					modifier = Modifier.size(32.dp)
 				)
 				Row(
 					verticalAlignment = Alignment.Bottom,
-					horizontalArrangement = Arrangement.spacedBy(4.dp)
+					modifier = Modifier.weight(1f),
+					horizontalArrangement = Arrangement.End
 				) {
 					Text(
 						text = SimpleDateFormat("h:mm", LocalLocale.current.platformLocale).format(endTime),
