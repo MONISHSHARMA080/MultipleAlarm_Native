@@ -3,7 +3,6 @@ package com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -135,42 +134,15 @@ fun AlarmPickerScreen(
 				}
 			}
 
-			Spacer(modifier = Modifier.height(20.dp))
+			Spacer(modifier = Modifier.height(52.dp))
 
-			// 3. Days of the Week Selector
-			val daysOfWeek = listOf("S", "M", "T", "W", "T", "F", "S")
-			Row(
-				modifier = Modifier.fillMaxWidth(),
-				horizontalArrangement = Arrangement.SpaceBetween
-			) {
-				daysOfWeek.forEach { day ->
-					Surface(
-						shape = RoundedCornerShape(12.dp),
-						color = MaterialTheme.colorScheme.surfaceVariant,
-						modifier = Modifier
-							.size(44.dp)
-							.clickable { /* Toggle day logic */ }
-					) {
-						Box(contentAlignment = Alignment.Center) {
-							Text(
-								text = day,
-								color = MaterialTheme.colorScheme.onSurfaceVariant,
-								fontWeight = FontWeight.Medium
-							)
-						}
-					}
-				}
-			}
-
-			Spacer(modifier = Modifier.height(32.dp))
 			DateList(
 				{}, startTime.time,
 				weGood = uiState.validationResult == ValidationResult.Success,
 				allowSelectingPastDate = false,
 			)
 
-
-			Spacer(modifier = Modifier.height(16.dp))
+			Spacer(modifier = Modifier.height(26.dp))
 
 			// 5. Settings Card (Name & Sound)
 			Surface(
@@ -247,6 +219,40 @@ fun AlarmPickerScreen(
 
 @Composable
 private fun SettingRow(
+	icon: ImageVector,
+	title: String,
+	value: String,
+	onClick: () -> Unit
+) {
+	Row(
+		modifier = Modifier
+			.fillMaxWidth()
+			.clickable(onClick = onClick)
+			.padding(horizontal = 16.dp, vertical = 20.dp),
+		verticalAlignment = Alignment.CenterVertically
+	) {
+		Icon(
+			imageVector = icon,
+			contentDescription = null,
+			tint = MaterialTheme.colorScheme.onSurfaceVariant
+		)
+		Spacer(modifier = Modifier.width(16.dp))
+		Text(
+			text = title,
+			color = MaterialTheme.colorScheme.onBackground,
+			fontSize = 16.sp
+		)
+		Spacer(modifier = Modifier.weight(1f))
+		Text(
+			text = value,
+			color = MaterialTheme.colorScheme.onSurfaceVariant,
+			fontSize = 14.sp
+		)
+	}
+}
+
+@Composable
+private fun FrequencyRow(
 	icon: ImageVector,
 	title: String,
 	value: String,
