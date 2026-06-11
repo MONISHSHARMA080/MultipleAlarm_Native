@@ -16,7 +16,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.EditCalendar
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.Icon
@@ -138,8 +138,8 @@ fun AddMoreDatesCard(onClick: () -> Unit) {
 	val colorScheme = MaterialTheme.colorScheme
 	Surface(
 		onClick = onClick,
-		shape = RoundedCornerShape(12.dp),
-		color = Color(0xFF1C1F26),
+		shape = RoundedCornerShape(25.dp),
+		color = colorScheme.surface,
 		border = BorderStroke(2.dp, colorScheme.primary),
 		modifier = Modifier
 			.width(64.dp)
@@ -150,7 +150,7 @@ fun AddMoreDatesCard(onClick: () -> Unit) {
 			verticalArrangement = Arrangement.Center
 		) {
 			Icon(
-				imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+				imageVector = Icons.Outlined.EditCalendar,
 				contentDescription = "Load more dates",
 				tint = colorScheme.primary,
 				modifier = Modifier.size(32.dp)

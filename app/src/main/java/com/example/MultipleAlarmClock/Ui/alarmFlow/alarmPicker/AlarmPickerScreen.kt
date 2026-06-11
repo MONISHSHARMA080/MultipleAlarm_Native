@@ -9,17 +9,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.rounded.Label
+import androidx.compose.material.icons.automirrored.rounded.Message
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Remove
@@ -72,23 +70,24 @@ fun AlarmPickerScreen(
 	val amPmStyle = MaterialTheme.typography.labelLarge
 	val currentError by remember(uiState) { mutableStateOf(  uiState.validationResult as? ValidationResult.Failure) }
 
-	Scaffold { screenPadding->
+	Scaffold { screenPadding ->
 		Column(
 			modifier = Modifier
 				.fillMaxSize()
 				.background(MaterialTheme.colorScheme.background)
 				.padding(screenPadding)
-				.padding(horizontal = 16.dp)
+				.padding(horizontal = 10.dp), // Expressive margin
+			horizontalAlignment = Alignment.CenterHorizontally
 		) {
-			// startTime -> endTime
+			Spacer(modifier = Modifier.weight(0.5f))
 			Row(
 				modifier = Modifier.fillMaxWidth(),
-				verticalAlignment = Alignment.CenterVertically
+				verticalAlignment = Alignment.CenterVertically,
+				horizontalArrangement = Arrangement.Center
 			) {
 				Row(
 					verticalAlignment = Alignment.Bottom,
-					horizontalArrangement = Arrangement.spacedBy(4.dp),
-					modifier = Modifier.weight(1f)
+					horizontalArrangement = Arrangement.spacedBy(4.dp)
 				) {
 					Text(
 						text = SimpleDateFormat("h:mm", LocalLocale.current.platformLocale).format(startTime),
@@ -111,15 +110,14 @@ fun AlarmPickerScreen(
 				Icon(
 					imageVector = Icons.AutoMirrored.Filled.ArrowForward,
 					contentDescription = null,
-					tint = MaterialTheme.colorScheme.onBackground,
-					modifier = Modifier.padding(horizontal = 12.dp).size(30.dp)
+					tint = MaterialTheme.colorScheme.primary, // Primary color for emphasis
+					modifier = Modifier.padding(horizontal = 24.dp).size(32.dp)
 				)
 
 
 				Row(
 					verticalAlignment = Alignment.Bottom,
-					horizontalArrangement = Arrangement.spacedBy(4.dp),
-					modifier = Modifier.wrapContentWidth()
+					horizontalArrangement = Arrangement.spacedBy(4.dp)
 				) {
 					Text(
 						text = SimpleDateFormat("h:mm", LocalLocale.current.platformLocale).format(endTime),
@@ -140,7 +138,7 @@ fun AlarmPickerScreen(
 				}
 			}
 
-			Spacer(modifier = Modifier.height(52.dp))
+			Spacer(modifier = Modifier.weight(0.5f))
 
 			DateList(
 				{}, startTime.time,
@@ -148,22 +146,31 @@ fun AlarmPickerScreen(
 				allowSelectingPastDate = false,
 			)
 
-			Spacer(modifier = Modifier.height(26.dp))
+			Spacer(modifier = Modifier.weight(0.5f))
 
 			// 5. Settings Card (Name & Sound)
 			Surface(
-				shape = RoundedCornerShape(25.dp),
-				color = MaterialTheme.colorScheme.surfaceVariant,
+				shape = RoundedCornerShape(28.dp), // More expressive corner radius
+				color = MaterialTheme.colorScheme.surfaceContainer, // Updated M3 token
 				modifier = Modifier.fillMaxWidth()
 			) {
 				Column {
-					SettingRow(
-						icon = Icons.AutoMirrored.Rounded.Label,
-						title = "Alarm name",
-						value = uiState.alarmObject.message.ifEmpty { "Alarm" },
-						onClick = { /* Open Name Dialog */ }
-					)
 
+					FrequencyRow(
+						icon = Icons.Rounded.Timer,
+						title = "Repeat every",
+						value = uiState.alarmObject.freqGottenAfterCallback,
+						onValueChange = { newValue ->
+							newValue.let {
+								logD("new freq: value is $it")
+								if (it in 0..<720){
+									viewModel.updateFrequency(it)
+								}
+							}
+						},
+						previewText = viewModel.getFrequencyPreviewText(),
+						validationResult = currentError,
+					)
 					HorizontalDivider(
 						modifier = Modifier.padding(horizontal = 16.dp),
 						color = MaterialTheme.colorScheme.outlineVariant,
@@ -181,21 +188,14 @@ fun AlarmPickerScreen(
 						color = MaterialTheme.colorScheme.outlineVariant,
 					)
 
-					FrequencyRow(
-						icon = Icons.Rounded.Timer,
-						title = "Repeat every",
-						value = uiState.alarmObject.freqGottenAfterCallback,
-						onValueChange = { newValue ->
-							newValue.let {
-								logD("new freq: value is $it")
-								if (it in 0..<720){
-									viewModel.updateFrequency(it)
-								}
-							}
-						},
-						previewText = viewModel.getFrequencyPreviewText(),
-						validationResult = currentError,
+					SettingRow(
+						icon = Icons.AutoMirrored.Rounded.Message,
+						title = "Alarm message",
+						value = uiState.alarmObject.message.ifEmpty { "Alarm" },
+						onClick = { /* Open Name Dialog */ }
 					)
+
+
 				}
 			}
 
@@ -358,6 +358,7 @@ private fun FrequencyRow(
 
 		if (previewText.isNotEmpty()) {
 			// add a slight animation here
+			Spacer(modifier = Modifier.padding(3.dp))
 			Text(
 				text = previewText,
 				style = MaterialTheme.typography.labelSmall,
