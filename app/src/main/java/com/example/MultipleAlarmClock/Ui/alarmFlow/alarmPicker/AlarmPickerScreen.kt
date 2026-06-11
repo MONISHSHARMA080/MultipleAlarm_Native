@@ -117,8 +117,6 @@ fun AlarmPickerScreen(
 					tint = MaterialTheme.colorScheme.onBackground,
 					modifier = Modifier.padding(horizontal = 24.dp).size(32.dp)
 				)
-
-
 				Row(
 					verticalAlignment = Alignment.Bottom,
 					horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -154,15 +152,15 @@ fun AlarmPickerScreen(
 
 			// 5. Settings Card (Name & Sound)
 			Surface(
-				shape = RoundedCornerShape(28.dp), // More expressive corner radius
-				color = MaterialTheme.colorScheme.surfaceContainer, // Updated M3 token
+				shape = RoundedCornerShape(28.dp),
+				color = MaterialTheme.colorScheme.surfaceContainer,
 				modifier = Modifier.fillMaxWidth()
 			) {
 				Column {
 
 					FrequencyRow(
 						icon = Icons.Rounded.Timer,
-						title = "Repeat every",
+						title = "repeat every",
 						value = uiState.alarmObject.freqGottenAfterCallback,
 						onValueChange = { newValue ->
 							newValue.let {
@@ -182,7 +180,7 @@ fun AlarmPickerScreen(
 
 					SettingRow(
 						icon = Icons.Rounded.Notifications,
-						title = "Sound",
+						title = "sound",
 						value = selectedSound?.title ?: "Random",
 						onClick = onNavigateToSoundList
 					)
@@ -194,7 +192,7 @@ fun AlarmPickerScreen(
 
 					MessageRow(
 						icon = Icons.AutoMirrored.Rounded.Message,
-						title = "Alarm message",
+						title = "message",
 						value = uiState.alarmObject.message,
 						onValueChange = { viewModel.updateMessage(it) },
 						validationResult = currentError

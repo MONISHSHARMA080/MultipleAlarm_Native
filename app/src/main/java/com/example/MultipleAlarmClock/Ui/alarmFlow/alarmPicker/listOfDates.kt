@@ -172,14 +172,14 @@ fun DateCard(
 	val containerColor = when {
 		!isEnabled -> colorScheme.surfaceVariant.copy(alpha = 0.95f)
 		!weGood && isSelected -> colorScheme.errorContainer
-		isSelected -> colorScheme.primaryContainer
+		isSelected -> colorScheme.secondaryContainer
 		else -> colorScheme.surfaceVariant
 	}
 
 	val contentColor = when {
 		!isEnabled -> colorScheme.onSurfaceVariant.copy(alpha = 0.28f)
 		!weGood && isSelected -> colorScheme.onErrorContainer
-		isSelected -> colorScheme.onPrimaryContainer
+		isSelected -> colorScheme.onSecondaryContainer
 		else -> colorScheme.onSurfaceVariant
 	}
 
@@ -248,7 +248,7 @@ fun getListOfDatesInThisWeek(startDate: LocalDate = LocalDate.now()): List<DayIn
 	val saturday = startDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.SATURDAY))
 
 	require(saturday.toEpochDay() - sunday.toEpochDay() == 6L) {
-		"Week span is incorrect, expected the distance from saturday - sunday to be 6 but got ${saturday.toEpochDay() - sunday.toEpochDay()}"
+		"Week span is incorrect, expected the distance from Saturday - Sunday to be 6 but got ${saturday.toEpochDay() - sunday.toEpochDay()}"
 	}
 
 	val list = (0..6).map { offset ->
