@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -188,11 +189,12 @@ fun AlarmPickerScreen(
 						color = MaterialTheme.colorScheme.outlineVariant,
 					)
 
-					SettingRow(
+					MessageRow(
 						icon = Icons.AutoMirrored.Rounded.Message,
 						title = "Alarm message",
-						value = uiState.alarmObject.message.ifEmpty { "Alarm" },
-						onClick = { /* Open Name Dialog */ }
+						value = uiState.alarmObject.message,
+						onValueChange = { viewModel.updateMessage(it) },
+						validationResult = currentError
 					)
 
 
@@ -272,6 +274,82 @@ private fun SettingRow(
 			color = MaterialTheme.colorScheme.onSurfaceVariant,
 			fontSize = 14.sp
 		)
+	}
+}
+
+@Composable
+private fun MessageRow(
+	icon: ImageVector,
+	title: String,
+	value: String,
+	onValueChange: (String) -> Unit,
+	validationResult: ValidationResult.Failure? = null
+) {
+	val colorScheme = MaterialTheme.colorScheme
+	val doWeHaveError = validationResult?.field == AlarmErrorField.MESSAGE
+
+	Column(
+		modifier = Modifier
+			.fillMaxWidth()
+			.padding(horizontal = 16.dp, vertical = 12.dp)
+	) {
+		Row(
+			modifier = Modifier.fillMaxWidth(),
+			verticalAlignment = Alignment.CenterVertically
+		) {
+			Icon(
+				imageVector = icon,
+				contentDescription = null,
+				tint = if (doWeHaveError) colorScheme.error else colorScheme.onSurfaceVariant
+			)
+			Spacer(modifier = Modifier.width(16.dp))
+			Text(
+				text = title,
+				color = if (doWeHaveError) colorScheme.error else colorScheme.onBackground,
+				style = MaterialTheme.typography.titleMedium,
+				modifier = Modifier.weight(1f)
+			)
+		}
+
+		Spacer(modifier = Modifier.height(8.dp))
+
+		BasicTextField(
+			value = value,
+			onValueChange = onValueChange,
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(start = 40.dp) // Align with title text
+				.background(
+					color = if (doWeHaveError) colorScheme.errorContainer else colorScheme.surfaceContainerHighest,
+					shape = RoundedCornerShape(16.dp)
+				)
+				.padding(horizontal = 16.dp, vertical = 12.dp),
+			textStyle = MaterialTheme.typography.bodyLarge.copy(
+				color = if (doWeHaveError) colorScheme.onErrorContainer else colorScheme.onSurface
+			),
+			minLines = 2,
+			maxLines = 4,
+			decorationBox = { innerTextField ->
+				if (value.isEmpty()) {
+					Text(
+						text = "Add alarm message...",
+						style = MaterialTheme.typography.bodyLarge,
+						color = if (doWeHaveError) colorScheme.onErrorContainer.copy(alpha = 0.6f)
+						else colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+					)
+				}
+				innerTextField()
+			}
+		)
+
+		if (doWeHaveError) {
+			Text(
+				text = validationResult.message,
+				color = colorScheme.error,
+				style = MaterialTheme.typography.labelSmall,
+				modifier = Modifier.padding(start = 40.dp, top = 4.dp)
+			)
+		}
 	}
 }
 
