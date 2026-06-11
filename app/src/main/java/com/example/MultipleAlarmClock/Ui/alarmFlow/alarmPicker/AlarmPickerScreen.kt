@@ -96,7 +96,6 @@ fun AlarmPickerScreen(
 					verticalAlignment = Alignment.Bottom,
 					modifier = Modifier.weight(1f),
 					horizontalArrangement = Arrangement.Start
-
 				) {
 					Text(
 						text = SimpleDateFormat("h:mm", LocalLocale.current.platformLocale).format(startTime),
