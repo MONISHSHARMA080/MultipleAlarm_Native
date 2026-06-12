@@ -3,7 +3,7 @@ name: Release Build
 on:
   push:
     branches:
-      - main
+      - '**'
   workflow_dispatch:
 jobs:
   build-release:
@@ -129,6 +129,7 @@ jobs:
           cp app/build/outputs/bundle/release/app-release.aab \
              "Multiple-Alarms-${{ steps.version.outputs.version_name }}.aab"
       - name: Push Git Tag
+        if: github.ref == 'refs/heads/main'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -141,6 +142,7 @@ jobs:
             git push origin "$TAG"
           fi
       - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.version.outputs.version_name }}
