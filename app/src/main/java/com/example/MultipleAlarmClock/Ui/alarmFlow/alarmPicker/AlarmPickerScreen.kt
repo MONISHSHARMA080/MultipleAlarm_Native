@@ -37,17 +37,22 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerDialog
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -56,8 +61,10 @@ import androidx.compose.ui.unit.sp
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmErrorField
 import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.coolApps.MultipleAlarmClock.logD
+import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerUiState
 import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerViewModel
 import java.text.SimpleDateFormat
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,8 +79,6 @@ fun AlarmPickerScreen(
 	val startTime = uiState.alarmObject.startTime.time
 	val endTime = uiState.alarmObject.endTime.time
 
-	val timeStyle = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.Bold)
-	val amPmStyle = MaterialTheme.typography.labelLarge
 	val currentError by remember(uiState) { mutableStateOf(  uiState.validationResult as? ValidationResult.Failure) }
 	val view = LocalView.current
 
@@ -88,61 +93,7 @@ fun AlarmPickerScreen(
 		) {
 			Spacer(modifier = Modifier.weight(0.6f))
 
-			Row(
-				modifier = Modifier.fillMaxWidth(),
-				verticalAlignment = Alignment.CenterVertically,
-			) {
-				Row(
-					verticalAlignment = Alignment.Bottom,
-					modifier = Modifier.weight(1f),
-					horizontalArrangement = Arrangement.Start
-				) {
-					Text(
-						text = SimpleDateFormat("h:mm", LocalLocale.current.platformLocale).format(startTime),
-						style = timeStyle,
-						color = MaterialTheme.colorScheme.onBackground,
-						maxLines = 1,
-						softWrap = false,
-						modifier = Modifier.alignByBaseline()
-					)
-					Text(
-						text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(startTime),
-						style = amPmStyle,
-						color = MaterialTheme.colorScheme.onBackground,
-						maxLines = 1,
-						softWrap = false,
-						modifier = Modifier.alignByBaseline()
-					)
-				}
-				Icon(
-					imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-					contentDescription = null,
-					tint = MaterialTheme.colorScheme.onBackground,
-					modifier = Modifier.size(32.dp)
-				)
-				Row(
-					verticalAlignment = Alignment.Bottom,
-					modifier = Modifier.weight(1f),
-					horizontalArrangement = Arrangement.End
-				) {
-					Text(
-						text = SimpleDateFormat("h:mm", LocalLocale.current.platformLocale).format(endTime),
-						style = timeStyle,
-						color = MaterialTheme.colorScheme.onBackground,
-						maxLines = 1,
-						softWrap = false,
-						modifier = Modifier.alignByBaseline()
-					)
-					Text(
-						text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(endTime),
-						style = amPmStyle,
-						color = MaterialTheme.colorScheme.onBackground,
-						maxLines = 1,
-						softWrap = false,
-						modifier = Modifier.alignByBaseline()
-					)
-				}
-			}
+			TimeRow(uiState, {}, {})
 
 			Spacer(modifier = Modifier.weight(0.6f))
 
@@ -245,8 +196,160 @@ fun AlarmPickerScreen(
 			}
 		}
 	}
-
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TimeRow(
+	uiState: AlarmPickerUiState,
+	onStartTimeChange: (Calendar) -> Unit,
+	onEndTimeChange: (Calendar) -> Unit
+) {
+	val startTime = uiState.alarmObject.startTime
+	val endTime = uiState.alarmObject.endTime
+
+	val timeStyle = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.Bold)
+	val amPmStyle = MaterialTheme.typography.labelLarge
+
+	val configuration = LocalWindowInfo.current.containerSize
+	// Calculate title spacing adaptively based on screen height
+	val titleSpacing = (configuration.height.dp * 0.04f).coerceIn(12.dp, 36.dp)
+
+	var showStartTimePicker by remember { mutableStateOf(false) }
+	var showEndTimePicker by remember { mutableStateOf(false) }
+
+	if (showStartTimePicker) {
+		val timePickerState = rememberTimePickerState(
+			initialHour = startTime.get(Calendar.HOUR_OF_DAY),
+			initialMinute = startTime.get(Calendar.MINUTE),
+			is24Hour = false
+		)
+		TimePickerDialog(
+			onDismissRequest = { showStartTimePicker = false },
+			confirmButton = {
+				TextButton(onClick = {
+					val newTime = (startTime.clone() as Calendar).apply {
+						set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+						set(Calendar.MINUTE, timePickerState.minute)
+					}
+					onStartTimeChange(newTime)
+					showStartTimePicker = false
+				}) { Text("OK") }
+			},
+			dismissButton = {
+				TextButton(onClick = { showStartTimePicker = false }) { Text("Cancel") }
+			}, title = {
+				Column {
+					Text(
+						text = "Select start time",
+						style = MaterialTheme.typography.titleMedium,
+						color = MaterialTheme.colorScheme.onSurfaceVariant,
+						maxLines = 1,
+						softWrap = false,
+					)
+					Spacer(modifier = Modifier.height(titleSpacing))
+				}
+			}
+		) {
+			TimePicker(state = timePickerState)
+		}
+	}
+
+	if (showEndTimePicker) {
+		val endTimePickerState = rememberTimePickerState(
+			initialHour = endTime.get(Calendar.HOUR_OF_DAY),
+			initialMinute = endTime.get(Calendar.MINUTE),
+			is24Hour = false
+		)
+		TimePickerDialog(
+			onDismissRequest = { showEndTimePicker = false },
+			confirmButton = {
+				TextButton(onClick = {
+					val newTime = (endTime.clone() as Calendar).apply {
+						set(Calendar.HOUR_OF_DAY, endTimePickerState.hour)
+						set(Calendar.MINUTE, endTimePickerState.minute)
+					}
+					onEndTimeChange(newTime)
+					showEndTimePicker = false
+				}) { Text("OK") }
+			},
+			dismissButton = {
+				TextButton(onClick = { showEndTimePicker = false }) { Text("Cancel") }
+			}, title = {
+				Column {
+					Text(
+						text = "Select end time",
+						style = MaterialTheme.typography.titleMedium,
+						color = MaterialTheme.colorScheme.onSurfaceVariant,
+						maxLines = 1,
+						softWrap = false,
+					)
+					Spacer(modifier = Modifier.height(titleSpacing))
+				}
+			}
+		) {
+			TimePicker(state = endTimePickerState)
+		}
+	}
+
+	Row(
+		modifier = Modifier.fillMaxWidth(),
+		verticalAlignment = Alignment.CenterVertically,
+	) {
+		Row(
+			verticalAlignment = Alignment.Bottom,
+			modifier = Modifier.weight(1f).clickable{showStartTimePicker = !showStartTimePicker},
+			horizontalArrangement = Arrangement.Start
+		) {
+			Text(
+				text = SimpleDateFormat("h:mm", LocalLocale.current.platformLocale).format(startTime.time),
+				style = timeStyle,
+				color = MaterialTheme.colorScheme.onBackground,
+				maxLines = 1,
+				softWrap = false,
+				modifier = Modifier.alignByBaseline()
+			)
+			Text(
+				text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(startTime.time),
+				style = amPmStyle,
+				color = MaterialTheme.colorScheme.onBackground,
+				maxLines = 1,
+				softWrap = false,
+				modifier = Modifier.alignByBaseline()
+			)
+		}
+		Icon(
+			imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+			contentDescription = null,
+			tint = MaterialTheme.colorScheme.onBackground,
+			modifier = Modifier.size(32.dp)
+		)
+		Row(
+			verticalAlignment = Alignment.Bottom,
+			modifier = Modifier.weight(1f).clickable{showEndTimePicker = !showEndTimePicker},
+			horizontalArrangement = Arrangement.End
+		) {
+			Text(
+				text = SimpleDateFormat("h:mm", LocalLocale.current.platformLocale).format(endTime.time),
+				style = timeStyle,
+				color = MaterialTheme.colorScheme.onBackground,
+				maxLines = 1,
+				softWrap = false,
+				modifier = Modifier.alignByBaseline()
+			)
+			Text(
+				text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(endTime.time),
+				style = amPmStyle,
+				color = MaterialTheme.colorScheme.onBackground,
+				maxLines = 1,
+				softWrap = false,
+				modifier = Modifier.alignByBaseline()
+			)
+		}
+	}
+}
+
+
 
 @Composable
 private fun SettingRow(
@@ -333,9 +436,9 @@ private fun MessageRow(
 					color = colorScheme.onSurfaceVariant
 				)
 			},
-			minLines = 3, // Support 2-3 lines comfortably
-			maxLines = 5,
-			shape = RoundedCornerShape(18.dp),
+			minLines = 2, // Support 2-3 lines comfortably
+			maxLines = 3,
+			shape = RoundedCornerShape(20.dp),
 			colors = TextFieldDefaults.colors(
 				focusedIndicatorColor = Color.Transparent,
 				unfocusedIndicatorColor = Color.Transparent,
@@ -435,7 +538,6 @@ private fun FrequencyRow(
 						if (value + 1 <= 700) {
 							onValueChange(value + 1)
 						} else {
-							// Also signal error if trying to exceed maximum limit
 							view.performHapticFeedback(HapticFeedbackConstants.REJECT)
 						}
 					},
