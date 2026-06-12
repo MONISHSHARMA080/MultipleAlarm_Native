@@ -14,7 +14,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
 
 class PlayAlarm(
 	context: Context,
@@ -32,6 +32,8 @@ class PlayAlarm(
 	private val audioFocusRequest: AudioFocusRequest by lazy { buildAudioFocusRequest() }
 
 	private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+	private val mainScope = CoroutineScope( Dispatchers.Main)
+
 
 	private val audioFocusChangeListener =
 		AudioManager.OnAudioFocusChangeListener { focusChange ->
@@ -116,14 +118,31 @@ class PlayAlarm(
 
 		mediaPlayer = player
 
-		playJob = scope.launch(Dispatchers.Main) {
-			val focusResult = requestAudioFocusWithForegroundServiceRetry(soundUri)
+		mainScope.launch {
+			var focusResult = runCatching {
+				audioManager.requestAudioFocus(audioFocusRequest)
+			}.getOrElse {
+				AudioManager.AUDIOFOCUS_REQUEST_FAILED
+			}
+			val tries = 4
+			for (i in 1..tries ) {
+				hasAudioFocus = focusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+				if (hasAudioFocus) break
+				delay(350.milliseconds) // 350 is an arbitrary no
+				focusResult = runCatching { audioManager.requestAudioFocus(audioFocusRequest) }.getOrElse { AudioManager.AUDIOFOCUS_REQUEST_FAILED }
+			}
+			if (focusResult == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
+				scope.launch {
+					analytics.captureEvent(
+						"audio focus request failed",
+						mapOf("uri" to soundUri.toString(),
+							"no of audioFocusRequest" to tries
+						)
+					)
+				}
+			}
 
-			hasAudioFocus = (focusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
-
-			if (mediaPlayer !== player) return@launch
-
-			// Alarms should still ring if focus remains denied by a phone call or policy.
+			// Alarm-app behavior: proceed even if focus wasn't granted.
 			runCatching { player.start() }.onFailure { t ->
 				scope.launch {
 					analytics.captureEvent(
@@ -192,7 +211,7 @@ class PlayAlarm(
 	}
 
 	private fun buildAudioFocusRequest(): AudioFocusRequest {
-		return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+		return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
 			.setAudioAttributes(
 				AudioAttributes.Builder()
 					.setUsage(AudioAttributes.USAGE_ALARM)
