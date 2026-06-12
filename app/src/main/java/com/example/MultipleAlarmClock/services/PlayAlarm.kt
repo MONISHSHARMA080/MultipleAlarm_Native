@@ -9,6 +9,7 @@ import android.net.Uri
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
@@ -25,6 +26,7 @@ class PlayAlarm(
 
 	private var mediaPlayer: MediaPlayer? = null
 	private var hasAudioFocus = false
+	private var playJob: Job? = null
 
 	// Reuse the same request instance for request + abandon, per docs.
 	private val audioFocusRequest: AudioFocusRequest by lazy { buildAudioFocusRequest() }
@@ -45,7 +47,7 @@ class PlayAlarm(
 					// If we were paused/stopped for some reason and still have a player,
 					// resume. For an alarm, we prefer not to stop just because focus changed.
 					mediaPlayer?.let { player ->
-						if (!player.isPlaying) {
+						if (runCatching { !player.isPlaying }.getOrDefault(false)) {
 							runCatching { player.start() }
 						}
 					}
@@ -114,35 +116,14 @@ class PlayAlarm(
 
 		mediaPlayer = player
 
-		var focusResult = runCatching {
-			audioManager.requestAudioFocus(audioFocusRequest)
-		}.getOrElse {
-			AudioManager.AUDIOFOCUS_REQUEST_FAILED
-		}
-
-		hasAudioFocus = focusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
-
-		if (focusResult == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
-			scope.launch {
-				analytics.captureEvent(
-					"audio focus request failed",
-					mapOf("uri" to soundUri.toString())
-				)
-			}
-		}
-		scope.launch(Dispatchers.Main) {
-			var retries = 3
-
-			// Retry a few times as the service promotes to foreground
-			while (focusResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED && retries > 0) {
-				delay(0.5.seconds)
-				focusResult = audioManager.requestAudioFocus(audioFocusRequest)
-				if (focusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) break
-				retries--
-			}
+		playJob = scope.launch(Dispatchers.Main) {
+			val focusResult = requestAudioFocusWithForegroundServiceRetry(soundUri)
 
 			hasAudioFocus = (focusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
-			// Start playing anyway (Alarm behavior), but now you likely have focus
+
+			if (mediaPlayer !== player) return@launch
+
+			// Alarms should still ring if focus remains denied by a phone call or policy.
 			runCatching { player.start() }.onFailure { t ->
 				scope.launch {
 					analytics.captureEvent(
@@ -153,10 +134,12 @@ class PlayAlarm(
 				stop(abandonFocus = true)
 			}
 		}
-		// Alarm-app behavior: proceed even if focus wasn't granted.
 	}
 
 	fun stop(abandonFocus: Boolean = true) {
+		playJob?.cancel()
+		playJob = null
+
 		mediaPlayer?.let { player ->
 			runCatching {
 				if (player.isPlaying) {
@@ -177,6 +160,35 @@ class PlayAlarm(
 	fun destroy() {
 		stop(abandonFocus = true)
 		scope.cancel()
+	}
+
+	private suspend fun requestAudioFocusWithForegroundServiceRetry(soundUri: Uri): Int {
+		var focusResult = requestAudioFocus()
+		var attemptsLeft = 3
+
+		// On Android 15+, a just-started FGS may not be eligible for focus immediately.
+		while (focusResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED && attemptsLeft > 0) {
+			delay(0.5.seconds)
+			focusResult = requestAudioFocus()
+			attemptsLeft--
+		}
+
+		if (focusResult == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
+			analytics.captureEvent(
+				"audio focus request failed",
+				mapOf("uri" to soundUri.toString())
+			)
+		}
+
+		return focusResult
+	}
+
+	private fun requestAudioFocus(): Int {
+		return runCatching {
+			audioManager.requestAudioFocus(audioFocusRequest)
+		}.getOrElse {
+			AudioManager.AUDIOFOCUS_REQUEST_FAILED
+		}
 	}
 
 	private fun buildAudioFocusRequest(): AudioFocusRequest {

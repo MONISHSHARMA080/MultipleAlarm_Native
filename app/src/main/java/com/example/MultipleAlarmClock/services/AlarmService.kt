@@ -159,10 +159,9 @@ class AlarmService: Service() {
         when(intentHashMap.isEmpty()){
             true ->{
                 // nothing in the hashMap so we can stop this activity
+                playAlarm.stop()
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
-                playAlarm.stop()
-                playAlarm.destroy()
                 return START_REDELIVER_INTENT
             }
             false ->{

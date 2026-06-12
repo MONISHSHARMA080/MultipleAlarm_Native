@@ -69,6 +69,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @AndroidEntryPoint
@@ -78,6 +79,7 @@ class AlarmActivity : ComponentActivity() {
     private lateinit var intentReceived: Intent
     private  val AUTO_FINISH_DELAY = 120000L // 2 sec is 120000
     private var dismissIntent : Intent? = null
+	private var shouldDismissAlarm = false
 	@Inject lateinit var analytics: Analytics
 
 
@@ -111,12 +113,12 @@ class AlarmActivity : ComponentActivity() {
                     if (dismissIntent == null) dismissIntent = makeDismissIntent()
                 }
                 TimeDisplay(
-                    onFinish = { finishAndRemoveTask()},
+                    onFinish = { stopAlarmAndFinish() },
                     message = messageVarToSet
                 )
             }
         }
-        lifecycleScope.launch { delay(AUTO_FINISH_DELAY); this@AlarmActivity.finish() }
+        lifecycleScope.launch { delay(AUTO_FINISH_DELAY.milliseconds); stopAlarmAndFinish() }
         lifecycleScope.launch(Dispatchers.IO) {keepScreenON()  }
     }
 
@@ -152,8 +154,9 @@ class AlarmActivity : ComponentActivity() {
             } catch (e: Exception) {
                 logD("Error releasing WakeLock in onDestroy: ${e.message}")
             }
-            dismissTheAlarm()
-            finishAndRemoveTask()
+            if (shouldDismissAlarm) {
+                dismissTheAlarm()
+            }
             activityScope.cancel()
         }.fold(onSuccess = {}, onFailure = {exception ->
             logD("there is a exception while destroying the AlarmActivity ->  ${exception.message}\n-->$exception")
@@ -169,6 +172,11 @@ class AlarmActivity : ComponentActivity() {
         if (dismissIntent == null) dismissIntent = makeDismissIntent()
         startService(dismissIntent)
     }
+
+	private fun stopAlarmAndFinish() {
+		shouldDismissAlarm = true
+		finishAndRemoveTask()
+	}
 
     private fun keepScreenON() {
         window.addFlags(
