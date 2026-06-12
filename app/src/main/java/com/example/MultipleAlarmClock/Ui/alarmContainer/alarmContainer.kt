@@ -71,6 +71,8 @@ import kotlinx.coroutines.launch
 	val alarmContainerViewModel :AlarmContainerViewModel = hiltViewModel()
 	val screenHeight = containerSize.height.dp
 	val snackBarHostState = remember { SnackbarHostState() }
+
+
 	val clipBoard =LocalClipboard.current
 	val alarms by alarmContainerViewModel.alarms.collectAsStateWithLifecycle()
 	ReportDrawnWhen { alarms != null }

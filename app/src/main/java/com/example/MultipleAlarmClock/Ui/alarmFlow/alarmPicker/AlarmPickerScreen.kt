@@ -110,7 +110,7 @@ fun AlarmPickerScreen(
 				.fillMaxSize()
 				.background(MaterialTheme.colorScheme.background)
 				.padding(screenPadding)
-				.padding(horizontal = 6.dp),
+				.padding(horizontal = 8.dp),
 			horizontalAlignment = Alignment.CenterHorizontally
 		) {
 			Spacer(modifier = Modifier.weight(0.6f))
@@ -172,10 +172,7 @@ fun AlarmPickerScreen(
 						title = "message",
 						value = uiState.alarmObject.message,
 						onValueChange = { viewModel.updateMessage(it) },
-						validationResult = currentError
 					)
-
-
 				}
 			}
 
@@ -191,9 +188,11 @@ fun AlarmPickerScreen(
 			) {
 				Button(
 					onClick = {
-						viewModel.onSetAlarmClicked(uiState.initialAlarm, uiState.alarmObject)
-						view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-						alarmSetGoBack()
+						if (uiState.validationResult == ValidationResult.Success){
+							viewModel.onSetAlarmClicked(uiState.initialAlarm, uiState.alarmObject)
+							view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+							alarmSetGoBack()
+						}
 					},
 					colors = ButtonDefaults.buttonColors(
 						containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -343,7 +342,7 @@ fun TimeRow(
 			horizontalArrangement = Arrangement.End
 		) {
 			Text(
-				text = SimpleDateFormat("h:mm", LocalLocale.current.platformLocale).format(endTime.time),
+				text = SimpleDateFormat("h:mm ", LocalLocale.current.platformLocale).format(endTime.time),
 				style = timeStyle,
 				color = MaterialTheme.colorScheme.onBackground,
 				maxLines = 1,
@@ -404,10 +403,8 @@ private fun MessageRow(
 	title: String,
 	value: String,
 	onValueChange: (String) -> Unit,
-	validationResult: ValidationResult.Failure? = null
 ) {
 	val colorScheme = MaterialTheme.colorScheme
-	val doWeHaveError = validationResult?.field == AlarmErrorField.MESSAGE
 
 	Column(
 		modifier = Modifier
@@ -421,13 +418,13 @@ private fun MessageRow(
 			Icon(
 				imageVector = icon,
 				contentDescription = null,
-				tint = if (doWeHaveError) colorScheme.error else colorScheme.onSurfaceVariant,
+				tint =  colorScheme.onSurfaceVariant,
 				modifier = Modifier.size(20.dp)
 			)
 			Spacer(modifier = Modifier.width(12.dp))
 			Text(
 				text = title,
-				color = if (doWeHaveError) colorScheme.error else colorScheme.onSurfaceVariant,
+				color =  colorScheme.onSurfaceVariant,
 				style = MaterialTheme.typography.labelLarge,
 				modifier = Modifier.weight(1f)
 			)
@@ -459,16 +456,6 @@ private fun MessageRow(
 				errorIndicatorColor = Color.Transparent
 			)
 		)
-
-		if (doWeHaveError) {
-			Spacer(Modifier.padding(3.dp))
-			Text(
-				text = validationResult.message,
-				color = colorScheme.error,
-				style = MaterialTheme.typography.labelSmall,
-				modifier = Modifier.padding(start = 32.dp, top = 4.dp)
-			)
-		}
 	}
 }
 

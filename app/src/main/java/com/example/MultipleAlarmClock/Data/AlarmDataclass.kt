@@ -158,7 +158,6 @@ enum class AlarmErrorField {
     Time,
     DATE,
 	FREQUENCY,
-	MESSAGE,
 	AlarmIsNotDiff,
 }
 
@@ -194,6 +193,36 @@ data class AlarmObject(
             endTime = (this.endTime.clone() as Calendar)
         )
     }
+
+	fun incrementDateToCurrentDate(): AlarmObject {
+		val now = Calendar.getInstance()
+		val alarmDateCal = Calendar.getInstance().apply { timeInMillis = date }
+
+		val isSameDay = alarmDateCal.get(Calendar.YEAR) == now.get(Calendar.YEAR) &&
+				alarmDateCal.get(Calendar.DAY_OF_YEAR) == now.get(Calendar.DAY_OF_YEAR)
+
+		return if (!isSameDay && alarmDateCal.before(now)) {
+			val todayYear = now.get(Calendar.YEAR)
+			val todayDayOfYear = now.get(Calendar.DAY_OF_YEAR)
+
+			val newStartTime = (startTime.clone() as Calendar).apply {
+				set(Calendar.YEAR, todayYear)
+				set(Calendar.DAY_OF_YEAR, todayDayOfYear)
+			}
+			val newEndTime = (endTime.clone() as Calendar).apply {
+				set(Calendar.YEAR, todayYear)
+				set(Calendar.DAY_OF_YEAR, todayDayOfYear)
+			}
+
+			this.copy(
+				startTime = newStartTime,
+				endTime = newEndTime,
+				date = newStartTime.timeInMillis
+			)
+		} else {
+			this
+		}
+	}
 
     fun toAlarmData(id:Int,isReadyToUse: Boolean = true): AlarmData{
         return AlarmData(

@@ -71,7 +71,6 @@ class AlarmPickerViewModel @Inject constructor(
 	private val _previewingRandom = MutableStateFlow(false)
 	val previewingRandom = _previewingRandom.asStateFlow()
 
-
 	private val _events = MutableSharedFlow<AlarmPickerEvent>(extraBufferCapacity = 1)
 	val events: SharedFlow<AlarmPickerEvent> = _events.asSharedFlow()
 
@@ -115,9 +114,10 @@ class AlarmPickerViewModel @Inject constructor(
 
 	fun setInitialAlarmObject(alarmData: AlarmData?) {
 		viewModelScope.launch {
+			val initialAlarmObject = alarmData?.toAlarmObject() ?: createDefaultAlarmObject(alarmData)
 			_uiState.update {
 				it.copy(
-					alarmObject = alarmData?.toAlarmObject() ?: createDefaultAlarmObject(alarmData),
+					alarmObject = initialAlarmObject.incrementDateToCurrentDate(),
 					initialAlarm = alarmData
 				)
 			}
