@@ -11,7 +11,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 class PlayAlarm(
 	context: Context,
@@ -59,7 +61,6 @@ class PlayAlarm(
 		}
 
 	fun play(soundUri: Uri) {
-		// Always dispose the previous instance first.
 		stop(abandonFocus = true)
 
 		val player = try {
@@ -113,7 +114,7 @@ class PlayAlarm(
 
 		mediaPlayer = player
 
-		val focusResult = runCatching {
+		var focusResult = runCatching {
 			audioManager.requestAudioFocus(audioFocusRequest)
 		}.getOrElse {
 			AudioManager.AUDIOFOCUS_REQUEST_FAILED
@@ -129,17 +130,30 @@ class PlayAlarm(
 				)
 			}
 		}
+		scope.launch(Dispatchers.Main) {
+			var retries = 3
 
-		// Alarm-app behavior: proceed even if focus wasn't granted.
-		runCatching { player.start() }.onFailure { t ->
-			scope.launch {
-				analytics.captureEvent(
-					"play alarm start failed",
-					mapOf("message" to (t.message ?: "unknown"))
-				)
+			// Retry a few times as the service promotes to foreground
+			while (focusResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED && retries > 0) {
+				delay(0.5.seconds)
+				focusResult = audioManager.requestAudioFocus(audioFocusRequest)
+				if (focusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) break
+				retries--
 			}
-			stop(abandonFocus = true)
+
+			hasAudioFocus = (focusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
+			// Start playing anyway (Alarm behavior), but now you likely have focus
+			runCatching { player.start() }.onFailure { t ->
+				scope.launch {
+					analytics.captureEvent(
+						"play alarm start failed",
+						mapOf("message" to (t.message ?: "unknown"))
+					)
+				}
+				stop(abandonFocus = true)
+			}
 		}
+		// Alarm-app behavior: proceed even if focus wasn't granted.
 	}
 
 	fun stop(abandonFocus: Boolean = true) {

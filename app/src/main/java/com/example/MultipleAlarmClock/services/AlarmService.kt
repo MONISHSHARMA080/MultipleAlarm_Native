@@ -84,8 +84,8 @@ class AlarmService: Service() {
 		// get the alarmData from Db and then play the alarm or if error then play random
         val notification: Notification = res.first
         val alarmIntentData: AlarmActivityIntentData = res.second
+		ServiceCompat.startForeground(this, alarmIntentData.alarmIdInDb, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
         intentHashMap.putIfAbsent(alarmIntentData.alarmIdInDb, intent)
-        ServiceCompat.startForeground(this, alarmIntentData.alarmIdInDb, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
 		coroutineScope.launch {
 			val alarmData = alarmDao.getAlarmById(alarmIntentData.alarmIdInDb)
 			val soundUri = alarmData?.sound?.toUri() ?: getRandomAlarm()
