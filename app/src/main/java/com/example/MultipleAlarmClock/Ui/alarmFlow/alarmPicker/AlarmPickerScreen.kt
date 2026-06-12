@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Message
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Notifications
@@ -39,6 +40,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDialog
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -78,8 +80,31 @@ fun AlarmPickerScreen(
 
 	val currentError by remember(uiState) { mutableStateOf(  uiState.validationResult as? ValidationResult.Failure) }
 	val view = LocalView.current
+	val timeStyle = MaterialTheme.typography.headlineSmall
 
-	Scaffold { screenPadding ->
+	Scaffold(
+		topBar = {
+			TopAppBar(
+				title = {
+					Text(if (uiState.initialAlarm == null) "Set alarm" else "Edit alarm" ,
+						style = timeStyle,
+						color = MaterialTheme.colorScheme.onBackground,
+						maxLines = 1,
+						softWrap = false,
+
+					)
+				},
+				navigationIcon = {
+					IconButton(onClick = alarmSetGoBack) {
+						Icon(
+							imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+							contentDescription = "Back"
+						)
+					}
+				},
+			)
+		}
+	) { screenPadding ->
 		Column(
 			modifier = Modifier
 				.fillMaxSize()
@@ -160,19 +185,10 @@ fun AlarmPickerScreen(
 			Row(
 				modifier = Modifier
 					.fillMaxWidth()
-					.padding(bottom = 16.dp),
-				horizontalArrangement = Arrangement.SpaceBetween,
+					.padding(bottom = 18.dp),
+				horizontalArrangement = Arrangement.End,
 				verticalAlignment = Alignment.CenterVertically
 			) {
-				TextButton(
-					onClick = { alarmSetGoBack() }
-				) {
-					Text(
-						text = "Delete",
-						color = MaterialTheme.colorScheme.error,
-						style = MaterialTheme.typography.bodyLarge ,
-					)
-				}
 				Button(
 					onClick = {
 						viewModel.onSetAlarmClicked(uiState.initialAlarm, uiState.alarmObject)
@@ -186,7 +202,7 @@ fun AlarmPickerScreen(
 					contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
 				) {
 					Text(
-						text = "Save",
+						text = "Set alarm",
 						style = MaterialTheme.typography.bodyLarge ,
 					)
 				}
@@ -299,7 +315,7 @@ fun TimeRow(
 			horizontalArrangement = Arrangement.Start
 		) {
 			Text(
-				text = SimpleDateFormat("h:mm", LocalLocale.current.platformLocale).format(startTime.time),
+				text = SimpleDateFormat("h:mm ", LocalLocale.current.platformLocale).format(startTime.time),
 				style = timeStyle,
 				color = MaterialTheme.colorScheme.onBackground,
 				maxLines = 1,
@@ -433,7 +449,7 @@ private fun MessageRow(
 					color = colorScheme.onSurfaceVariant
 				)
 			},
-			minLines = 2, // Support 2-3 lines comfortably
+			minLines = 1, // Support 2-3 lines comfortably
 			maxLines = 3,
 			shape = RoundedCornerShape(20.dp),
 			colors = TextFieldDefaults.colors(

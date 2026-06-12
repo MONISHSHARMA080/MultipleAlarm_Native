@@ -15,7 +15,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 class PlayAlarm(
 	context: Context,
@@ -180,35 +179,6 @@ class PlayAlarm(
 	fun destroy() {
 		stop(abandonFocus = true)
 		scope.cancel()
-	}
-
-	private suspend fun requestAudioFocusWithForegroundServiceRetry(soundUri: Uri): Int {
-		var focusResult = requestAudioFocus()
-		var attemptsLeft = 3
-
-		// On Android 15+, a just-started FGS may not be eligible for focus immediately.
-		while (focusResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED && attemptsLeft > 0) {
-			delay(0.5.seconds)
-			focusResult = requestAudioFocus()
-			attemptsLeft--
-		}
-
-		if (focusResult == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
-			analytics.captureEvent(
-				"audio focus request failed",
-				mapOf("uri" to soundUri.toString())
-			)
-		}
-
-		return focusResult
-	}
-
-	private fun requestAudioFocus(): Int {
-		return runCatching {
-			audioManager.requestAudioFocus(audioFocusRequest)
-		}.getOrElse {
-			AudioManager.AUDIOFOCUS_REQUEST_FAILED
-		}
 	}
 
 	private fun buildAudioFocusRequest(): AudioFocusRequest {
