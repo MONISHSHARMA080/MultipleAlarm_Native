@@ -30,10 +30,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmListScreen.AlarmContainer
-import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.AlarmPickerScreen
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.logD
-import com.example.MultipleAlarmClock.Ui.Navigation.AlarmFlowRoute
 import com.example.MultipleAlarmClock.Ui.Navigation.NavigationViewModel
 import com.example.MultipleAlarmClock.Ui.Navigation.Screen
 import com.example.MultipleAlarmClock.Ui.alarmFlow.AlarmFlowScreen
@@ -42,21 +39,6 @@ import com.example.MultipleAlarmClock.Ui.alarmPicker.listAlarmRingtone.ListAlarm
 import com.example.MultipleAlarmClock.Ui.utils.SettingsScreen
 import kotlinx.coroutines.launch
 
-//sealed interface Screen : NavKey {
-//	@Serializable
-//	data object OnboardingScreen: Screen
-//
-//	@Serializable
-//	data class  AlarmSoundListScreen(val currentSelectedUri : String? ): Screen
-//
-//	@Serializable
-//	data object AlarmContainer : Screen
-//	@Serializable
-//	data class AlarmPicker(val alarmData: AlarmData? = null) : Screen
-//	@Serializable
-//	data object SettingsScreen: Screen
-//
-//}
 
 @Composable fun NavigationStack( navViewModel: NavigationViewModel ,  deepLinkScreen: Screen? ) {
 	// -----------------------------------------------------------------------------------------------------------

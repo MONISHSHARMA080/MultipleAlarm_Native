@@ -68,7 +68,6 @@ class AlarmPickerViewModel @Inject constructor(
 	private val _previewingSound = MutableStateFlow<AlarmSound?>(null)
 	val previewingSound = _previewingSound.asStateFlow()
 
-
 	private val _previewingRandom = MutableStateFlow(false)
 	val previewingRandom = _previewingRandom.asStateFlow()
 
@@ -300,6 +299,28 @@ class AlarmPickerViewModel @Inject constructor(
 	fun captureEvent(name:String, properties: Map<String, Any>){
 		viewModelScope.launch {
 			analytics.captureEvent(name, properties)
+		}
+	}
+	private fun getPreviewAlarms(alarm: AlarmObject, numberOfAlarmPreviewToReturn:Int = 3): String{
+		val alarmObj = alarm.deepCopy()
+		val stringBuilder= StringBuilder()
+		val timeFormat = SimpleDateFormat("h:mm", Locale.getDefault())
+		var index = 0
+
+		while (!alarmObj.startTime.after(alarmObj.endTime) && index < numberOfAlarmPreviewToReturn) {
+			stringBuilder.append(timeFormat.format(alarmObj.startTime.time))
+			alarmObj.startTime.timeInMillis += alarmObj.getFreqInMillisecond()
+			if (alarmObj.freqGottenAfterCallback <= 0) break
+			index ++
+			if (index < numberOfAlarmPreviewToReturn && !alarmObj.startTime.after(alarmObj.endTime)) {
+				stringBuilder.append(", ")
+			}
+		}
+
+		return if(alarmObj.startTime.after(alarmObj.endTime)){
+			stringBuilder.toString().trim()
+		}else{
+			stringBuilder.append(".....${timeFormat.format(alarmObj.endTime.time)}").toString().trim()
 		}
 	}
 

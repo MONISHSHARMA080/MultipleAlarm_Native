@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -15,7 +16,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.EditCalendar
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.Icon
@@ -36,10 +37,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.coolApps.MultipleAlarmClock.logD
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
@@ -139,9 +138,9 @@ fun AddMoreDatesCard(onClick: () -> Unit) {
 	val colorScheme = MaterialTheme.colorScheme
 	Surface(
 		onClick = onClick,
-		shape = RoundedCornerShape(12.dp),
-		color = Color(0xFF1C1F26),
-		border = BorderStroke(2.dp, colorScheme.primary),
+		shape = RoundedCornerShape(25.dp),
+		color = colorScheme.surface,
+		border = BorderStroke(2.dp, colorScheme.secondary),
 		modifier = Modifier
 			.width(64.dp)
 			.height(80.dp)
@@ -151,72 +150,93 @@ fun AddMoreDatesCard(onClick: () -> Unit) {
 			verticalArrangement = Arrangement.Center
 		) {
 			Icon(
-				imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+				imageVector = Icons.Outlined.EditCalendar,
 				contentDescription = "Load more dates",
-				tint = colorScheme.primary,
+				tint = colorScheme.secondary,
 				modifier = Modifier.size(32.dp)
 			)
 		}
 	}
 }
 
-@Composable fun DateCard(date: LocalDate, isSelected: Boolean, weGood: Boolean, isEnabled: Boolean , onClick: () -> Unit) {
-//	val backgroundColor = if (isSelected) Color(0xFF152A46) else Color(0xFF1C1F26)
-//	val backgroundColorIfErrorState = Color( 0xFFde0707)
-//	val borderColor = if (isSelected) Color(0xFF1E88E5) else Color(0xFF2C313A)
-//	val textColor = if (isSelected) Color.White else Color(0xFF7D8592)
+@Composable
+fun DateCard(
+	date: LocalDate,
+	isSelected: Boolean,
+	weGood: Boolean,
+	isEnabled: Boolean,
+	onClick: () -> Unit
+) {
 	val colorScheme = MaterialTheme.colorScheme
+
 	val containerColor = when {
-		!weGood && isSelected -> colorScheme.error
-		isSelected -> colorScheme.primary
-		else -> colorScheme.surfaceContainer
+		!isEnabled -> colorScheme.surfaceVariant.copy(alpha = 0.95f)
+		!weGood && isSelected -> colorScheme.errorContainer
+		isSelected -> colorScheme.secondaryContainer
+		else -> colorScheme.surfaceVariant
 	}
-	val baseContentColor = if (isEnabled) colorScheme.onSurface else colorScheme.onSurface.copy(alpha = 0.38f)
+
 	val contentColor = when {
-		!weGood && isSelected -> colorScheme.onError
-		isSelected -> colorScheme.onPrimary
-		else -> baseContentColor
+		!isEnabled -> colorScheme.onSurfaceVariant.copy(alpha = 0.28f)
+		!weGood && isSelected -> colorScheme.onErrorContainer
+		isSelected -> colorScheme.onSecondaryContainer
+		else -> colorScheme.onSurfaceVariant
 	}
-	val dayName =  date.dayOfWeek.name.take(3)
-	val borderColor = if (isSelected) colorScheme.outline else colorScheme.outlineVariant
+
+	val borderColor = when {
+		isSelected -> Color.Transparent
+		!isEnabled -> colorScheme.outlineVariant.copy(alpha = 0.45f)
+		else -> colorScheme.outlineVariant
+	}
+
 	Surface(
 		onClick = onClick,
-		shape = RoundedCornerShape(12.dp),
+		enabled = isEnabled,
+		shape = RoundedCornerShape(15.dp),
 		color = containerColor,
-		border = BorderStroke(2.dp, borderColor),
+		contentColor = contentColor,
+		border = BorderStroke(1.dp, borderColor),
 		modifier = Modifier
 			.width(64.dp)
 			.height(80.dp)
 	) {
 		Column(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(vertical = 10.dp, horizontal = 6.dp),
 			horizontalAlignment = Alignment.CenterHorizontally,
-			verticalArrangement = Arrangement.Center,
-			modifier = Modifier.padding(8.dp)
+			verticalArrangement = Arrangement.Center
 		) {
 			Text(
-				text = dayName,
-				style = TextStyle(
-					fontSize = 10.sp,
+				text = date.dayOfWeek.name.take(3),
+				style = MaterialTheme.typography.labelSmall.copy(
 					fontWeight = FontWeight.Bold,
-					color = if (isSelected) colorScheme.onPrimary else contentColor
-				)
+					color = contentColor
+				),
+				maxLines = 1,
+				softWrap = false
 			)
+
 			Spacer(modifier = Modifier.height(4.dp))
+
 			Text(
 				text = date.dayOfMonth.toString(),
-				style = TextStyle(
-					fontSize = 20.sp,
+				style = MaterialTheme.typography.titleMedium.copy(
 					fontWeight = FontWeight.Bold,
-					color = if (isSelected) colorScheme.onPrimary else contentColor
-				)
+					color = contentColor
+				),
+				maxLines = 1,
+				softWrap = false
 			)
+
 			Text(
 				text = date.month.name.take(3),
-				style = TextStyle(
-					fontSize = 10.sp,
+				style = MaterialTheme.typography.labelSmall.copy(
 					fontWeight = FontWeight.Medium,
 					color = contentColor
-				)
+				),
+				maxLines = 1,
+				softWrap = false
 			)
 		}
 	}
@@ -228,7 +248,7 @@ fun getListOfDatesInThisWeek(startDate: LocalDate = LocalDate.now()): List<DayIn
 	val saturday = startDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.SATURDAY))
 
 	require(saturday.toEpochDay() - sunday.toEpochDay() == 6L) {
-		"Week span is incorrect, expected the distance from saturday - sunday to be 6 but got ${saturday.toEpochDay() - sunday.toEpochDay()}"
+		"Week span is incorrect, expected the distance from Saturday - Sunday to be 6 but got ${saturday.toEpochDay() - sunday.toEpochDay()}"
 	}
 
 	val list = (0..6).map { offset ->

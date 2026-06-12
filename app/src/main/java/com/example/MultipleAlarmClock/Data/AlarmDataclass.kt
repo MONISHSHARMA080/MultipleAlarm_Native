@@ -156,8 +156,10 @@ data class ValidationResultAlarmData(
 
 enum class AlarmErrorField {
     Time,
-//    EndTime, // since not useful
-    DATE, FREQUENCY, MESSAGE, AlarmIsNotDiff, SOUND
+    DATE,
+	FREQUENCY,
+	MESSAGE,
+	AlarmIsNotDiff,
 }
 
 sealed class ValidationResult {

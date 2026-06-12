@@ -42,9 +42,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,8 +62,6 @@ import com.example.MultipleAlarmClock.Ui.alarmPicker.data.AlarmSound
 	modifier: Modifier = Modifier,
 ) {
 	val listOfAlarms by vm.listOfAlarms.collectAsStateWithLifecycle()
-	var isRandomSelected by remember { mutableStateOf(selectedUri == null) }
-	var isRadomSoundPlaying by remember { mutableStateOf(( false ))}
 	val randomPreviewing by vm.previewingRandom.collectAsStateWithLifecycle()
 
 	Scaffold(
@@ -89,7 +84,7 @@ import com.example.MultipleAlarmClock.Ui.alarmPicker.data.AlarmSound
 	) { padding ->
 		LazyColumn(
 			modifier = Modifier.fillMaxSize().padding(padding),
-			contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+			contentPadding = PaddingValues(horizontal = 15.dp, ),
 			verticalArrangement = Arrangement.spacedBy(12.dp)
 		) {
 			item {

@@ -1,663 +1,563 @@
 package com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.text.format.DateFormat
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.foundation.ExperimentalFoundationApi
+import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoViewRequester
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.Message
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.filled.AccessTimeFilled
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AlarmAdd
-import androidx.compose.material.icons.filled.AlarmOff
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.NotificationsOff
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.rounded.GraphicEq
-import androidx.compose.material.icons.rounded.MusicNote
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.automirrored.rounded.Message
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.rounded.Remove
+import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmErrorField
 import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.coolApps.MultipleAlarmClock.logD
-import com.example.MultipleAlarmClock.Ui.Permissions.AlarmPermissionDialog
-import com.example.MultipleAlarmClock.Ui.Permissions.PermissionStep
-import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerEvent
+import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerUiState
 import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerViewModel
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.Calendar
 
-sealed class AccentColor {
-	object Ok : AccentColor()
-	object Problem: AccentColor()
-
-	@Composable fun resolve(): Color = when (this) {
-		is Ok -> MaterialTheme.colorScheme.primary
-		is Problem -> MaterialTheme.colorScheme.error
-	}
-}
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class, ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmPickerScreen(
-    alarm: AlarmData?,
-    alarmSetGoBack: () -> Unit,
-    onNavigateToSoundList: ()-> Unit,
-    viewModel: AlarmPickerViewModel
+	alarmSetGoBack: () -> Unit,
+	onNavigateToSoundList: () -> Unit,
+	viewModel: AlarmPickerViewModel
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-	val selectedAlarmSound by viewModel.selectedAlarmSound.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val lifecycleOwner = LocalLifecycleOwner.current
+	val uiState by viewModel.uiState.collectAsState()
+	val selectedSound by viewModel.selectedAlarmSound.collectAsState()
 
-    var showPermissionDialog by remember { mutableStateOf(false) }
-    var missingSteps by remember { mutableStateOf<List<PermissionStep>>(emptyList()) }
-    val alarmObject = uiState.alarmObject
-    val validationResult = uiState.validationResult
-    val currentError = validationResult as? ValidationResult.Failure
-    val validationOk = validationResult is ValidationResult.Success
-    val isPermissionsOk = uiState.areAllPermissionsGranted
-    val weGood = validationOk && isPermissionsOk
-    val freqText = if (alarmObject.freqGottenAfterCallback < 1) "" else viewModel.getFrequencyPreviewText()
+	val currentError by remember(uiState) { mutableStateOf(  uiState.validationResult as? ValidationResult.Failure) }
+	val view = LocalView.current
 
-	val okColor      = AccentColor.Ok.resolve()
-	val problemColor = AccentColor.Problem.resolve()
-	val colorScheme = MaterialTheme.colorScheme
+	Scaffold { screenPadding ->
+		Column(
+			modifier = Modifier
+				.fillMaxSize()
+				.background(MaterialTheme.colorScheme.background)
+				.padding(screenPadding)
+				.padding(horizontal = 5.dp),
+			horizontalAlignment = Alignment.CenterHorizontally
+		) {
+			Spacer(modifier = Modifier.weight(0.6f))
 
+			TimeRow(uiState, {viewModel.updateStartTime(it)}, {viewModel.updateEndTime(it)})
 
-    val accentColor by animateColorAsState(
-        targetValue = if (weGood) AccentColor.Ok.resolve() else AccentColor.Problem.resolve(),
-        animationSpec = tween(durationMillis = 190),
-    )
+			Spacer(modifier = Modifier.weight(0.6f))
 
-    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+			DateList(
+				{ viewModel.updateDate(it)}, uiState.alarmObject.startTime.time.time,
+				weGood = currentError?.field != AlarmErrorField.DATE,
+				allowSelectingPastDate = false,
+			)
 
-    LaunchedEffect(Unit) {
-        viewModel.checkPermissions(context)
-    }
-    LaunchedEffect(weGood,uiState ) {
-        val isNotificationsEnabled = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-        viewModel.captureEvent("is alarmObject value valid changed", mapOf(
-            "weGood" to weGood,
-            "alarmObject" to alarmObject.toString(),
-            "are all permission granted" to uiState.areAllPermissionsGranted,
-            "validation error message" to (currentError?.message ?: ""),
-            "alarmData" to alarm.toString(),
-            "ui_state" to uiState.toString(),
-			"did user choose random alarmSound" to (uiState.alarmObject.alarmSoundUri == null),
-            "notification permission granted" to isNotificationsEnabled
-        ))
-    }
+			Spacer(modifier = Modifier.weight(0.4f))
 
-    LaunchedEffect(Unit) {
-        viewModel.events.collect { event ->
-            logD("got event: $event")
-            when (event) {
-                is AlarmPickerEvent.NavigateBack -> alarmSetGoBack()
-                is AlarmPickerEvent.ShowPermissionDialog -> {
-                    missingSteps = event.missingSteps
-                    showPermissionDialog = true
-                }
-                AlarmPickerEvent.UpdateDataStoreGranted -> { /* handled in VM */ }
-            }
-        }
-    }
-
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.checkPermissions(context)
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
-
-    LaunchedEffect(showPermissionDialog) {
-        viewModel.captureEvent("ask for permission dialog opened", mapOf())
-    }
-
-    logD("showPermissionDialog:$showPermissionDialog  missingStep.isNotEmpty():${missingSteps.isNotEmpty()}")
-    if (showPermissionDialog) {
-        AlarmPermissionDialog(
-            missingSteps ,
-            onAllCriticalGranted = {
-                showPermissionDialog = false
-                viewModel.checkPermissions(context)
-            },
-            onDismiss = {
-                showPermissionDialog = false
-                viewModel.checkPermissions(context)
-            },
-            onTrackEvent = {event, prop -> viewModel.captureEvent(event, prop)}
-        )
-    }
-
-    // btw I want to see the dataStore.allPermissionsGranted = true if it is then check and if the check results in false then update it and update it too after writing to it
-
-    Scaffold(
-        contentWindowInsets = WindowInsets.safeContent,
-        modifier = Modifier.fillMaxSize(),
-		bottomBar = {
-			Box(
-				modifier = Modifier
-					.fillMaxWidth()
-					.navigationBarsPadding()
-					.padding(horizontal = 20.dp, vertical = 12.dp)
+			// 5. Settings Card (Name & Sound)
+			Surface(
+				shape = RoundedCornerShape(28.dp),
+				color = MaterialTheme.colorScheme.surfaceContainer,
+				modifier = Modifier.fillMaxWidth()
 			) {
-				Button(
-					onClick = {
-						if (validationOk) {
-							viewModel.onSetAlarmClicked(alarm, alarmObject)
-						}
-					},
-					modifier = Modifier
-						.fillMaxWidth()
-						.height(64.dp),
-					shape = RoundedCornerShape(33.dp),
-					colors = ButtonDefaults.buttonColors(containerColor = accentColor)
-				) {
-					AnimatedContent(
-						targetState = Triple(validationOk, isPermissionsOk, currentError?.field),
-					) { (isValid, hasPermissions, errorField) ->
-						Row(verticalAlignment = Alignment.CenterVertically) {
-							when {
-								!isValid -> {
-									Icon(Icons.Default.AlarmOff, contentDescription = null, tint = colorScheme.onError)
-									Spacer(Modifier.width(8.dp))
-									val errorText = if (errorField == AlarmErrorField.AlarmIsNotDiff)
-										"New alarm must be different"
-									else
-										"Fix the input to set alarm"
-									Text(errorText, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = colorScheme.onError)
-								}
-								!hasPermissions -> {
-									Icon(Icons.Default.NotificationsOff, contentDescription = null, tint = colorScheme.onError)
-									Spacer(Modifier.width(8.dp))
-									Text("Grant required permissions", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = colorScheme.onError)
-								}
-								else -> {
-									Icon(Icons.Default.AlarmAdd, contentDescription = null, tint = colorScheme.onPrimary)
-									Spacer(Modifier.width(8.dp))
-									Text("Set Alarm", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = colorScheme.onPrimary)
+				Column {
+
+					FrequencyRow(
+						icon = Icons.Rounded.Timer,
+						title = "repeat every",
+						value = uiState.alarmObject.freqGottenAfterCallback,
+						onValueChange = { newValue ->
+							newValue.let {
+								logD("new freq: value is $it")
+								if (it in 0..<720){
+									viewModel.updateFrequency(it)
 								}
 							}
-						}
-					}
+						},
+						previewText = viewModel.getFrequencyPreviewText(),
+						validationResult = currentError,
+					)
+					HorizontalDivider(
+						modifier = Modifier.padding(horizontal = 16.dp),
+						color = MaterialTheme.colorScheme.outlineVariant,
+					)
+
+					SettingRow(
+						icon = Icons.Rounded.Notifications,
+						title = "sound",
+						value = selectedSound?.title ?: "Random",
+						onClick = onNavigateToSoundList
+					)
+
+					HorizontalDivider(
+						modifier = Modifier.padding(horizontal = 16.dp),
+						color = MaterialTheme.colorScheme.outlineVariant,
+					)
+
+					MessageRow(
+						icon = Icons.AutoMirrored.Rounded.Message,
+						title = "message",
+						value = uiState.alarmObject.message,
+						onValueChange = { viewModel.updateMessage(it) },
+						validationResult = currentError
+					)
+
+
+				}
+			}
+
+			Spacer(modifier = Modifier.weight(1f))
+
+			// 6. Bottom Actions (Delete & Save)
+			Row(
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(bottom = 16.dp),
+				horizontalArrangement = Arrangement.SpaceBetween,
+				verticalAlignment = Alignment.CenterVertically
+			) {
+				TextButton(
+					onClick = { alarmSetGoBack() }
+				) {
+					Text(
+						text = "Delete",
+						color = MaterialTheme.colorScheme.error,
+						style = MaterialTheme.typography.bodyLarge ,
+					)
+				}
+				Button(
+					onClick = {
+						viewModel.onSetAlarmClicked(uiState.initialAlarm, uiState.alarmObject)
+						view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+						alarmSetGoBack()
+					},
+					colors = ButtonDefaults.buttonColors(
+						containerColor = MaterialTheme.colorScheme.primaryContainer,
+						contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+					),
+					contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+				) {
+					Text(
+						text = "Save",
+						style = MaterialTheme.typography.bodyLarge ,
+					)
 				}
 			}
 		}
-    ) { contentPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(colorScheme.background)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(colorScheme.background)
-                    .verticalScroll(rememberScrollState())
-                    .fillMaxSize()
-                    .navigationBarsPadding()
-                    .animateContentSize()
-                    .padding(horizontal = 20.dp)
-                    .padding(top = contentPadding.calculateTopPadding())
-                    .padding(bottom = contentPadding.calculateBottomPadding() + 35.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Header
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp)
-                        .padding(start = 16.dp, end = 16.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        if (alarm == null) "New alarm" else "Edit alarm",
-						color = colorScheme.onSurface,
-						fontWeight = FontWeight.Medium,
-						letterSpacing = (-2).sp,
-						style = MaterialTheme.typography.headlineMedium
-                    )
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                // Time Range Card
-                CardContainer {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.AccessTimeFilled,
-                                contentDescription = null,
-                                tint = if (currentError?.field == AlarmErrorField.Time) problemColor else okColor,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Time", color = colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                        }
-                        Spacer(modifier = Modifier.height(13.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            TimeBox(
-                                label = "Start time",
-                                time = alarmObject.startTime,
-                                modifier = Modifier.weight(1f),
-                                accentColor = if (currentError?.field == AlarmErrorField.Time) problemColor else okColor,
-                                onNewTimeSelected = { viewModel.updateStartTime(it) }
-                            )
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = null,
-                                tint = colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            TimeBox(
-                                label = "End time",
-                                time = alarmObject.endTime,
-                                modifier = Modifier.weight(1f),
-                                accentColor = if (currentError?.field == AlarmErrorField.Time) problemColor else okColor,
-                                onNewTimeSelected = { viewModel.updateEndTime(it) }
-                            )
-                        }
-                        ShowErrorMessageIfError(currentError, AlarmErrorField.Time)
-                    }
-                }
-                // Date Card
-                CardContainer {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.CalendarMonth,
-                                contentDescription = null,
-                                tint = if (currentError?.field == AlarmErrorField.DATE) problemColor else okColor,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Date", color = colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        DateList(
-                            startDateIndex = alarm?.startTime,
-                            weGood = !(currentError?.field == AlarmErrorField.DATE),
-                            onSelect = { viewModel.updateDate(it) }
-                        )
-                        ShowErrorMessageIfError(currentError, AlarmErrorField.DATE)
-                    }
-                }
-                // Frequency Card
-                CardContainer {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.Schedule,
-                                contentDescription = null,
-                                tint = if (currentError?.field == AlarmErrorField.FREQUENCY) problemColor else okColor,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Repeat every", color = colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Row(
-                                    modifier = Modifier
-                                        .height(48.dp)
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(25.dp))
-                                        .background(if (currentError?.field == AlarmErrorField.FREQUENCY) problemColor else okColor),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    IconButton(onClick = { viewModel.decrementFrequency() }) {
-                                        Icon(Icons.Default.Remove, contentDescription = null, tint = colorScheme.onPrimary)
-                                    }
-                                    BasicTextField(
-                                        value = if (alarmObject.freqGottenAfterCallback !in 1..710) ""
-                                        else alarmObject.freqGottenAfterCallback.toString(),
-                                        onValueChange = { newValue ->
-                                            val filteredValue = newValue.filter { it.isDigit() }
-                                            if (filteredValue.isEmpty()) {
-                                                viewModel.updateFrequency(0)
-                                            } else {
-                                                val intValue = filteredValue.toLongOrNull()
-                                                if (intValue != null && intValue in 1..709) {
-                                                    viewModel.updateFrequency(intValue)
-                                                }
-                                            }
-                                        },
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .bringIntoViewRequester(bringIntoViewRequester)
-                                            .onFocusEvent {
-                                                if (it.isFocused) {
-                                                    coroutineScope.launch {
-                                                        bringIntoViewRequester.bringIntoView()
-                                                    }
-                                                }
-                                            },
-                                        textStyle = TextStyle(
-                                            color = colorScheme.onPrimary,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 16.sp,
-                                            textAlign = TextAlign.Center
-                                        ),
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        singleLine = true
-                                    )
-                                    IconButton(onClick = { viewModel.incrementFrequency() }) {
-                                        Icon(Icons.Default.Add, contentDescription = null, tint = colorScheme.onPrimary)
-                                    }
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                            Text(freqText, color = colorScheme.onSurfaceVariant, fontSize = 12.sp)
-                        ShowErrorMessageIfError(currentError, AlarmErrorField.FREQUENCY)
-                    }
-                }
-
-				// Alarm Sound or ringtone
-				CardContainer {
-					Column(
-						modifier = Modifier.padding(16.dp)
-					) {
-
-						Row(
-							verticalAlignment = Alignment.CenterVertically
-						) {
-
-							Icon(
-								Icons.Rounded.MusicNote,
-								contentDescription = null,
-								tint = okColor
-							)
-
-							Spacer(Modifier.width(8.dp))
-
-							Text(
-								text = "Alarm sound",
-								color = colorScheme.onSurface,
-								fontWeight = FontWeight.Bold
-							)
-						}
-
-						Spacer(Modifier.height(14.dp))
-
-						Surface(
-							onClick = {onNavigateToSoundList()},
-							shape = RoundedCornerShape(20.dp),
-							color = colorScheme.surfaceContainerHigh,
-						) {
-
-							Row(
-								modifier = Modifier
-									.fillMaxWidth()
-									.padding(
-										horizontal = 18.dp,
-										vertical = 16.dp
-									),
-								verticalAlignment = Alignment.CenterVertically
-							) {
-
-								Surface(
-									shape = CircleShape,
-									color = colorScheme.secondaryContainer
-								) {
-									Icon(
-										Icons.Rounded.GraphicEq,
-										contentDescription = null,
-										modifier = Modifier.padding(10.dp),
-										tint = colorScheme.onSecondaryContainer
-									)
-								}
-
-								Spacer(Modifier.width(14.dp))
-
-								Column(
-									modifier = Modifier.weight(1f)
-								) {
-
-									Text(
-										text = selectedAlarmSound?.title ?: "Random",
-										style = MaterialTheme.typography.titleMedium,
-										color = colorScheme.onSurface
-									)
-
-									Text(
-										text = if (selectedAlarmSound == null)
-											"A random alarm sound will be chosen"
-										else
-											"Tap to change",
-										style = MaterialTheme.typography.bodyMedium,
-										color = colorScheme.onSurfaceVariant
-									)
-								}
-
-								Icon(
-									imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-									contentDescription = null,
-									tint = colorScheme.onSurfaceVariant
-								)
-							}
-						}
-					}
-				}
-
-                // Message Card
-                CardContainer {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.Message,
-                                contentDescription = null,
-                                tint = okColor
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Message", color = colorScheme.onSurface, fontWeight = FontWeight.Bold)
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        BasicTextField(
-                            value = alarmObject.message,
-                            onValueChange = { viewModel.updateMessage(it) },
-                            cursorBrush = SolidColor(colorScheme.primary),
-                            modifier = Modifier
-                                .bringIntoViewRequester(bringIntoViewRequester)
-                                .onFocusEvent {
-                                    if (it.isFocused) {
-                                        coroutineScope.launch { bringIntoViewRequester.bringIntoView() }
-                                    }
-                                }
-                                .fillMaxWidth()
-                                .height(80.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(colorScheme.surfaceVariant)
-                                .padding(12.dp),
-                            textStyle = TextStyle(color = colorScheme.onSurfaceVariant, fontSize = 14.sp),
-                            decorationBox = { innerTextField ->
-                                Box {
-                                    if (alarmObject.message.isEmpty()) {
-                                        Text("Alarm message......", color = colorScheme.onSurfaceVariant, fontSize = 14.sp)
-                                    }
-                                    innerTextField()
-                                }
-                            }
-                        )
-                    }
-                }
-            }
-        }
-    }
+	}
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable fun TimeBox(label: String, time: Calendar, accentColor: Color, modifier: Modifier = Modifier, onNewTimeSelected: (Calendar) -> Unit) {
-    var calendar by remember(time) { mutableStateOf(time) }
-    var showTimePicker by remember { mutableStateOf(false) }
-	val colorScheme = MaterialTheme.colorScheme
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1.5f) // Keeps the box height relative to its width
-                .border(2.dp, accentColor, RoundedCornerShape(24.dp))
-                .background(colorScheme.surfaceContainer, RoundedCornerShape(24.dp))
-                .clickable { showTimePicker = true },
-            contentAlignment = Alignment.Center,
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                if (showTimePicker) {
-                    val timePickerState = rememberTimePickerState(
-                        initialHour = calendar.get(Calendar.HOUR_OF_DAY), initialMinute = calendar.get(Calendar.MINUTE),
-                        is24Hour = false,
-                    )
-                    AlertDialog(
-                        onDismissRequest = { showTimePicker = false },
-                        title = { Text(text = "Select ${label.lowercase()}") }, text = {
-                            TimePicker(state = timePickerState)
-                        },
-                        confirmButton = {
-                            Button(onClick = {
-                                // here we need to update the reference of the calendar object
-                                calendar = Calendar.getInstance().apply {
-                                    timeInMillis = calendar.timeInMillis
-                                    set(Calendar.HOUR_OF_DAY, timePickerState.hour)
-                                    set(Calendar.MINUTE, timePickerState.minute)
-                                    set(Calendar.SECOND, 0)
-                                }
-                                onNewTimeSelected(calendar)
-                                showTimePicker = false
-                            }) {
-                                Text("OK")
-                            }
-                        },
-                        dismissButton = {
-                            Button(onClick = { showTimePicker = false }) {
-                                Text("Cancel")
-                            }
-                        }
-                    )
-                }
-				Text(label, color = colorScheme.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-				Text(getTimeFormatted(calendar), color = colorScheme.onSurface, fontSize = 32.sp, fontWeight = FontWeight.Bold)
-				Text(getTimeFormatted(calendar, "a"), color = colorScheme.onSurfaceVariant, fontSize = 12.sp)
+@Composable
+fun TimeRow(
+	uiState: AlarmPickerUiState,
+	onStartTimeChange: (Calendar) -> Unit,
+	onEndTimeChange: (Calendar) -> Unit
+) {
+	val startTime = uiState.alarmObject.startTime
+	val endTime = uiState.alarmObject.endTime
+
+	val timeStyle = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.Bold)
+	val amPmStyle = MaterialTheme.typography.labelLarge
+
+	val configuration = LocalWindowInfo.current.containerSize
+	// Calculate title spacing adaptively based on screen height
+	val titleSpacing = (configuration.height.dp * 0.04f).coerceIn(12.dp, 36.dp)
+
+	var showStartTimePicker by remember { mutableStateOf(false) }
+	var showEndTimePicker by remember { mutableStateOf(false) }
+
+	if (showStartTimePicker) {
+		val timePickerState = rememberTimePickerState(
+			initialHour = startTime.get(Calendar.HOUR_OF_DAY),
+			initialMinute = startTime.get(Calendar.MINUTE),
+			is24Hour = false
+		)
+		TimePickerDialog(
+			onDismissRequest = { showStartTimePicker = false },
+			confirmButton = {
+				TextButton(onClick = {
+					val newTime = (startTime.clone() as Calendar).apply {
+						set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+						set(Calendar.MINUTE, timePickerState.minute)
+					}
+					onStartTimeChange(newTime)
+					showStartTimePicker = false
+				}) { Text("OK") }
+			},
+			dismissButton = {
+				TextButton(onClick = { showStartTimePicker = false }) { Text("Cancel") }
+			}, title = {
+				Column {
+					Text(
+						text = "Select start time",
+						style = MaterialTheme.typography.titleMedium,
+						color = MaterialTheme.colorScheme.onSurfaceVariant,
+						maxLines = 1,
+						softWrap = false,
+					)
+					Spacer(modifier = Modifier.height(titleSpacing))
+				}
 			}
-        }
-    }
+		) {
+			TimePicker(state = timePickerState)
+		}
+	}
+
+	if (showEndTimePicker) {
+		val endTimePickerState = rememberTimePickerState(
+			initialHour = endTime.get(Calendar.HOUR_OF_DAY),
+			initialMinute = endTime.get(Calendar.MINUTE),
+			is24Hour = false
+		)
+		TimePickerDialog(
+			onDismissRequest = { showEndTimePicker = false },
+			confirmButton = {
+				TextButton(onClick = {
+					val newTime = (endTime.clone() as Calendar).apply {
+						set(Calendar.HOUR_OF_DAY, endTimePickerState.hour)
+						set(Calendar.MINUTE, endTimePickerState.minute)
+					}
+					onEndTimeChange(newTime)
+					showEndTimePicker = false
+				}) { Text("OK") }
+			},
+			dismissButton = {
+				TextButton(onClick = { showEndTimePicker = false }) { Text("Cancel") }
+			}, title = {
+				Column {
+					Text(
+						text = "Select end time",
+						style = MaterialTheme.typography.titleMedium,
+						color = MaterialTheme.colorScheme.onSurfaceVariant,
+						maxLines = 1,
+						softWrap = false,
+					)
+					Spacer(modifier = Modifier.height(titleSpacing))
+				}
+			}
+		) {
+			TimePicker(state = endTimePickerState)
+		}
+	}
+
+	Row(
+		modifier = Modifier.fillMaxWidth(),
+		verticalAlignment = Alignment.CenterVertically,
+	) {
+		Row(
+			verticalAlignment = Alignment.Bottom,
+			modifier = Modifier.weight(1f).clickable{showStartTimePicker = !showStartTimePicker},
+			horizontalArrangement = Arrangement.Start
+		) {
+			Text(
+				text = SimpleDateFormat("h:mm", LocalLocale.current.platformLocale).format(startTime.time),
+				style = timeStyle,
+				color = MaterialTheme.colorScheme.onBackground,
+				maxLines = 1,
+				softWrap = false,
+				modifier = Modifier.alignByBaseline()
+			)
+			Text(
+				text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(startTime.time),
+				style = amPmStyle,
+				color = MaterialTheme.colorScheme.onBackground,
+				maxLines = 1,
+				softWrap = false,
+				modifier = Modifier.alignByBaseline()
+			)
+		}
+		Icon(
+			imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+			contentDescription = null,
+			tint = MaterialTheme.colorScheme.onBackground,
+			modifier = Modifier.size(32.dp)
+		)
+		Row(
+			verticalAlignment = Alignment.Bottom,
+			modifier = Modifier.weight(1f).clickable{showEndTimePicker = !showEndTimePicker},
+			horizontalArrangement = Arrangement.End
+		) {
+			Text(
+				text = SimpleDateFormat("h:mm", LocalLocale.current.platformLocale).format(endTime.time),
+				style = timeStyle,
+				color = MaterialTheme.colorScheme.onBackground,
+				maxLines = 1,
+				softWrap = false,
+				modifier = Modifier.alignByBaseline()
+			)
+			Text(
+				text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(endTime.time),
+				style = amPmStyle,
+				color = MaterialTheme.colorScheme.onBackground,
+				maxLines = 1,
+				softWrap = false,
+				modifier = Modifier.alignByBaseline()
+			)
+		}
+	}
 }
 
-@Composable fun CardContainer(modifier: Modifier = Modifier, endSpaceHeight: Dp = 16.dp, shape: Shape = RoundedCornerShape(26.dp), color: Color = MaterialTheme.colorScheme.surfaceContainer, content: @Composable (() -> Unit)) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = shape,
-        color = color
-    ) { content()}
-    Spacer(Modifier.height(endSpaceHeight))
+
+
+@Composable
+private fun SettingRow(
+	icon: ImageVector,
+	title: String,
+	value: String,
+	onClick: () -> Unit
+) {
+	Row(
+		modifier = Modifier
+			.fillMaxWidth()
+			.clickable(onClick = onClick)
+			.padding(horizontal = 16.dp, vertical = 20.dp),
+		verticalAlignment = Alignment.CenterVertically
+	) {
+		Icon(
+			imageVector = icon,
+			contentDescription = null,
+			tint = MaterialTheme.colorScheme.onSurfaceVariant
+		)
+		Spacer(modifier = Modifier.width(16.dp))
+		Text(
+			text = title,
+			color = MaterialTheme.colorScheme.onBackground,
+			fontSize = 16.sp
+		)
+		Spacer(modifier = Modifier.weight(1f))
+		Text(
+			text = value,
+			color = MaterialTheme.colorScheme.onSurfaceVariant,
+			fontSize = 14.sp
+		)
+	}
 }
 
-@Composable fun ShowErrorMessageIfError( currentError: ValidationResult.Failure?, alarmErrorField: AlarmErrorField){
-    AnimatedVisibility(
-        visible = currentError != null && currentError.field == alarmErrorField,
-        enter = fadeIn() + expandHorizontally(),
-        exit = fadeOut() + shrinkHorizontally()
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Spacer(modifier = Modifier.width(7.dp))
-            Text(currentError?.message ?: "",color = MaterialTheme.colorScheme.onSurface, fontSize = 12.sp )
-        }
-    }
+@Composable
+private fun MessageRow(
+	icon: ImageVector,
+	title: String,
+	value: String,
+	onValueChange: (String) -> Unit,
+	validationResult: ValidationResult.Failure? = null
+) {
+	val colorScheme = MaterialTheme.colorScheme
+	val doWeHaveError = validationResult?.field == AlarmErrorField.MESSAGE
 
+	Column(
+		modifier = Modifier
+			.fillMaxWidth()
+			.padding(horizontal = 16.dp, vertical = 12.dp)
+	) {
+		Row(
+			modifier = Modifier.fillMaxWidth(),
+			verticalAlignment = Alignment.CenterVertically
+		) {
+			Icon(
+				imageVector = icon,
+				contentDescription = null,
+				tint = if (doWeHaveError) colorScheme.error else colorScheme.onSurfaceVariant,
+				modifier = Modifier.size(20.dp)
+			)
+			Spacer(modifier = Modifier.width(12.dp))
+			Text(
+				text = title,
+				color = if (doWeHaveError) colorScheme.error else colorScheme.onSurfaceVariant,
+				style = MaterialTheme.typography.labelLarge,
+				modifier = Modifier.weight(1f)
+			)
+		}
+
+		Spacer(modifier = Modifier.height(8.dp))
+
+		TextField(
+			value = value,
+			onValueChange = onValueChange,
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(start = 32.dp),
+			textStyle = MaterialTheme.typography.bodyMedium,
+			placeholder = {
+				Text(
+					text = "Add message...",
+					style = MaterialTheme.typography.bodyMedium,
+					color = colorScheme.onSurfaceVariant
+				)
+			},
+			minLines = 2, // Support 2-3 lines comfortably
+			maxLines = 3,
+			shape = RoundedCornerShape(20.dp),
+			colors = TextFieldDefaults.colors(
+				focusedIndicatorColor = Color.Transparent,
+				unfocusedIndicatorColor = Color.Transparent,
+				disabledIndicatorColor = Color.Transparent,
+				errorIndicatorColor = Color.Transparent
+			)
+		)
+
+		if (doWeHaveError) {
+			Spacer(Modifier.padding(3.dp))
+			Text(
+				text = validationResult.message,
+				color = colorScheme.error,
+				style = MaterialTheme.typography.labelSmall,
+				modifier = Modifier.padding(start = 32.dp, top = 4.dp)
+			)
+		}
+	}
 }
 
-fun getTimeFormatted(cal: Calendar, formatter:String = "hh:mm"): String{
-    return DateFormat.format(formatter, cal.timeInMillis).toString()
-}
+@Composable
+private fun FrequencyRow(
+	icon: ImageVector,
+	title: String,
+	value: Long,
+	onValueChange: (Long) -> Unit,
+	previewText: String = "",
+	validationResult: ValidationResult.Failure?
+) {
+	val colorScheme = MaterialTheme.colorScheme
+	val doWeHaveError =validationResult?.field == AlarmErrorField.FREQUENCY
+	val view = LocalView.current
 
+	Column(
+		modifier = Modifier
+			.fillMaxWidth()
+			.padding(horizontal = 16.dp, vertical = 12.dp)
+	) {
+		Row(
+			modifier = Modifier.fillMaxWidth(),
+			verticalAlignment = Alignment.CenterVertically
+		) {
+			Icon(
+				imageVector = icon,
+				contentDescription = null,
+				tint = MaterialTheme.colorScheme.onSurfaceVariant
+			)
+			Spacer(modifier = Modifier.width(16.dp))
+			Text(
+				text = title,
+				color = MaterialTheme.colorScheme.onBackground,
+				fontSize = 16.sp,
+				modifier = Modifier.weight(1f)
+			)
+			Row(
+				verticalAlignment = Alignment.CenterVertically,
+				modifier = Modifier
+					.background(
+						color = if (doWeHaveError) colorScheme.errorContainer else colorScheme.secondaryContainer ,
+						shape = RoundedCornerShape(12.dp)
+					)
+					.padding(4.dp)
+			) {
+				IconButton(
+					onClick = {
+						if (value - 1 > 0) {
+							onValueChange(value - 1)
+						} else {
+							// Semantic "Expressive" Reject haptic for limit reached (Android 14/15+)
+							view.performHapticFeedback(HapticFeedbackConstants.REJECT)
+						}
+					},
+					modifier = Modifier.size(36.dp)
+				) {
+					Icon(
+						imageVector = Icons.Rounded.Remove,
+						contentDescription = "Decrease",
+						tint = MaterialTheme.colorScheme.onPrimaryContainer
+					)
+				}
+
+				BasicTextField(
+					value = if (value == 0L) "" else value.toString(),
+					onValueChange = {newValue -> newValue.toLongOrNull()?.let { onValueChange(it)} ?: onValueChange(0);  },
+					modifier = Modifier.width(45.dp),
+					textStyle = MaterialTheme.typography.titleMedium.copy(
+						textAlign = TextAlign.Center,
+						color = MaterialTheme.colorScheme.onPrimaryContainer,
+						fontWeight = FontWeight.Bold
+					),
+					keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+					singleLine = true
+				)
+
+				IconButton(
+					onClick = {
+						if (value + 1 <= 700) {
+							onValueChange(value + 1)
+						} else {
+							view.performHapticFeedback(HapticFeedbackConstants.REJECT)
+						}
+					},
+					modifier = Modifier.size(36.dp)
+				) {
+					Icon(
+						imageVector = Icons.Rounded.Add,
+						contentDescription = "Increase",
+						tint = MaterialTheme.colorScheme.onPrimaryContainer
+					)
+				}
+			}
+		}
+
+		if (previewText.isNotEmpty()) {
+			// add a slight animation here
+			Spacer(modifier = Modifier.padding(3.dp))
+			Text(
+				text = previewText,
+				style = MaterialTheme.typography.labelSmall,
+				color = if (doWeHaveError) colorScheme.onErrorContainer else colorScheme.onSurfaceVariant,
+				modifier = Modifier.padding(start = 40.dp, top = 2.dp)
+			)
+		}
+	}
+}
