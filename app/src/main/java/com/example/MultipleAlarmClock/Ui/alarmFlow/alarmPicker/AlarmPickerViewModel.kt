@@ -114,10 +114,10 @@ class AlarmPickerViewModel @Inject constructor(
 
 	fun setInitialAlarmObject(alarmData: AlarmData?) {
 		viewModelScope.launch {
-			val initialAlarmObject = alarmData?.toAlarmObject() ?: createDefaultAlarmObject(alarmData)
+			val initialAlarmObject = alarmData?.toAlarmObject()?.incrementDateToCurrentDate() ?: createDefaultAlarmObject(alarmData)
 			_uiState.update {
 				it.copy(
-					alarmObject = initialAlarmObject.incrementDateToCurrentDate(),
+					alarmObject = initialAlarmObject,
 					initialAlarm = alarmData
 				)
 			}
