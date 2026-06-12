@@ -76,9 +76,6 @@ fun AlarmPickerScreen(
 	val uiState by viewModel.uiState.collectAsState()
 	val selectedSound by viewModel.selectedAlarmSound.collectAsState()
 
-	val startTime = uiState.alarmObject.startTime.time
-	val endTime = uiState.alarmObject.endTime.time
-
 	val currentError by remember(uiState) { mutableStateOf(  uiState.validationResult as? ValidationResult.Failure) }
 	val view = LocalView.current
 
@@ -93,12 +90,12 @@ fun AlarmPickerScreen(
 		) {
 			Spacer(modifier = Modifier.weight(0.6f))
 
-			TimeRow(uiState, {}, {})
+			TimeRow(uiState, {viewModel.updateStartTime(it)}, {viewModel.updateEndTime(it)})
 
 			Spacer(modifier = Modifier.weight(0.6f))
 
 			DateList(
-				{ viewModel.updateDate(it)}, startTime.time,
+				{ viewModel.updateDate(it)}, uiState.alarmObject.startTime.time.time,
 				weGood = currentError?.field != AlarmErrorField.DATE,
 				allowSelectingPastDate = false,
 			)
