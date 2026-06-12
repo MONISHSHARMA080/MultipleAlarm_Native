@@ -75,8 +75,6 @@ class AlarmPickerViewModel @Inject constructor(
 	private val _events = MutableSharedFlow<AlarmPickerEvent>(extraBufferCapacity = 1)
 	val events: SharedFlow<AlarmPickerEvent> = _events.asSharedFlow()
 
-
-
 	private val errorHandler = ErrorHandler(notificationHandler = NotificationHandler(context),analytics)
 	private val alarmsController = AlarmsController()
 
