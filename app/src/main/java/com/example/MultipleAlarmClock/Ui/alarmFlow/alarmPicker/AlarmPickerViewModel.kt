@@ -299,28 +299,6 @@ class AlarmPickerViewModel @Inject constructor(
 			analytics.captureEvent(name, properties)
 		}
 	}
-	private fun getPreviewAlarms(alarm: AlarmObject, numberOfAlarmPreviewToReturn:Int = 3): String{
-		val alarmObj = alarm.deepCopy()
-		val stringBuilder= StringBuilder()
-		val timeFormat = SimpleDateFormat("h:mm", Locale.getDefault())
-		var index = 0
-
-		while (!alarmObj.startTime.after(alarmObj.endTime) && index < numberOfAlarmPreviewToReturn) {
-			stringBuilder.append(timeFormat.format(alarmObj.startTime.time))
-			alarmObj.startTime.timeInMillis += alarmObj.getFreqInMillisecond()
-			if (alarmObj.freqGottenAfterCallback <= 0) break
-			index ++
-			if (index < numberOfAlarmPreviewToReturn && !alarmObj.startTime.after(alarmObj.endTime)) {
-				stringBuilder.append(", ")
-			}
-		}
-
-		return if(alarmObj.startTime.after(alarmObj.endTime)){
-			stringBuilder.toString().trim()
-		}else{
-			stringBuilder.append(".....${timeFormat.format(alarmObj.endTime.time)}").toString().trim()
-		}
-	}
 
 	private fun getPreviewAlarms(alarm: AlarmObject, numberOfAlarmPreviewToReturn:Int = 3): String{
 		val alarmObj = alarm.deepCopy()
@@ -344,7 +322,6 @@ class AlarmPickerViewModel @Inject constructor(
 			stringBuilder.append(".....${timeFormat.format(alarmObj.endTime.time)}").toString().trim()
 		}
 	}
-
 
 
 	/**[setAlarm] - here [AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
