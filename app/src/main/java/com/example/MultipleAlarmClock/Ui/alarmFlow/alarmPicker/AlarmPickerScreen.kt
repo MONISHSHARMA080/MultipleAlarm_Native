@@ -85,7 +85,7 @@ fun AlarmPickerScreen(
 				.fillMaxSize()
 				.background(MaterialTheme.colorScheme.background)
 				.padding(screenPadding)
-				.padding(horizontal = 5.dp),
+				.padding(horizontal = 6.dp),
 			horizontalAlignment = Alignment.CenterHorizontally
 		) {
 			Spacer(modifier = Modifier.weight(0.6f))
