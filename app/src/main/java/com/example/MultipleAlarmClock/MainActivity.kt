@@ -39,8 +39,6 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
 
     val deepLinkScreen: Screen? = parseDeepLinkIntent(intent)
-    NotificationHandler(this).createNotificationChannels()
-
 	  coroutineScope.launch(Dispatchers.Main) {
 		  notificationHandler.createNotificationChannels()
 	  }
