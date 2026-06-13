@@ -167,22 +167,22 @@ fun AlarmPickerScreen(
 				.fillMaxSize()
 				.background(MaterialTheme.colorScheme.background)
 				.padding(screenPadding)
-				.padding(horizontal = horizontalPadding), // ← replaces your hardcoded 8.dp
+				.padding(horizontal = horizontalPadding)
+				.animateContentSize()
+			,
 
 			horizontalAlignment = Alignment.CenterHorizontally
 		) {
-			Spacer(modifier = Modifier.weight(0.45f))
 
+			Spacer(modifier = Modifier.weight(0.45f))
 			TimeRow(uiState, {viewModel.updateStartTime(it)}, {viewModel.updateEndTime(it)})
-
 			Spacer(modifier = Modifier.weight(0.45f))
-
 			DateList(
 				{ viewModel.updateDate(it)}, uiState.alarmObject.startTime.time.time,
 				weGood = currentError?.field != AlarmErrorField.DATE,
 				allowSelectingPastDate = false,
 			)
-			Spacer(modifier = Modifier.weight(0.2f))
+			Spacer(modifier = Modifier.weight(0.178f))
 			// 5. Settings Card (Name & Sound)
 			Surface(
 				shape = RoundedCornerShape(28.dp),
@@ -204,7 +204,7 @@ fun AlarmPickerScreen(
 							}
 						},
 						previewText = viewModel.getFrequencyPreviewText(),
-						validationResult = currentError,
+						uiState,
 					)
 					HorizontalDivider(
 						modifier = Modifier.padding(horizontal = 16.dp),
@@ -500,10 +500,11 @@ private fun FrequencyRow(
 	value: Long,
 	onValueChange: (Long) -> Unit,
 	previewText: String = "",
-	validationResult: ValidationResult.Failure?
+	uiState: AlarmPickerUiState,
 ) {
 	val colorScheme = MaterialTheme.colorScheme
-	val doWeHaveError =validationResult?.field == AlarmErrorField.FREQUENCY
+	val doWeHaveError = uiState.validationResult != ValidationResult.Success  && (uiState.validationResult as? ValidationResult.Failure)?.field == AlarmErrorField.FREQUENCY
+
 	val view = LocalView.current
 
 	Column(
@@ -586,7 +587,8 @@ private fun FrequencyRow(
 			}
 		}
 
-		if (previewText.isNotEmpty()) {
+		// check for failure as if we have a error  in time then we won't be able to produce correct sequence of preview text, so don't display
+		if (previewText.isNotEmpty() && uiState.validationResult == ValidationResult.Success) {
 			// add a slight animation here
 			Spacer(modifier = Modifier.padding(3.dp))
 			Text(
