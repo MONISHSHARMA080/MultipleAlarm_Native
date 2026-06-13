@@ -126,7 +126,7 @@ fun AlarmPickerScreen(
 					) {
 						Button(
 							onClick = {
-								if (uiState.validationResult == ValidationResult.Success || true){
+								if (uiState.validationResult == ValidationResult.Success ){
 									viewModel.onSetAlarmClicked(uiState.initialAlarm, uiState.alarmObject)
 									view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
 									alarmSetGoBack()
