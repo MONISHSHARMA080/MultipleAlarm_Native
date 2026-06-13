@@ -1,9 +1,11 @@
 package com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker
 
 import android.view.HapticFeedbackConstants
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -41,6 +44,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -58,8 +62,11 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXPANDED_LOWER_BOUND
+import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_MEDIUM_LOWER_BOUND
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmErrorField
 import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.coolApps.MultipleAlarmClock.logD
@@ -82,6 +89,8 @@ fun AlarmPickerScreen(
 	val view = LocalView.current
 	val timeStyle = MaterialTheme.typography.headlineSmall
 
+	val horizontalPadding = rememberAdaptiveHorizontalPadding()
+
 	Scaffold(
 		topBar = {
 			TopAppBar(
@@ -103,30 +112,67 @@ fun AlarmPickerScreen(
 					}
 				},
 			)
-		}
+		},
+			bottomBar = {
+				Box(
+					modifier = Modifier
+						.fillMaxWidth()
+						.background(MaterialTheme.colorScheme.background)
+						.padding(16.dp).padding(bottom = 20.dp),
+					contentAlignment = Alignment.Center
+				) {
+					Row(
+						modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth(),
+						horizontalArrangement = Arrangement.End
+					) {
+						Button(
+							onClick = {
+								if (uiState.validationResult == ValidationResult.Success){
+									viewModel.onSetAlarmClicked(uiState.initialAlarm, uiState.alarmObject)
+									view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+									alarmSetGoBack()
+								}
+							},
+							colors = ButtonDefaults.buttonColors(
+								containerColor = MaterialTheme.colorScheme.primaryContainer,
+								contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+							),
+							modifier = Modifier
+								.height(56.dp) // Extra Large Height
+								.animateContentSize(),
+							contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
+							shape = RoundedCornerShape(28.dp) // Extra Large Shape
+						) {
+							Text(
+								text = "Set alarm",
+								style = MaterialTheme.typography.bodyLarge ,
+							)
+						}
+					}
+				}
+			}
 	) { screenPadding ->
 		Column(
 			modifier = Modifier
 				.fillMaxSize()
 				.background(MaterialTheme.colorScheme.background)
 				.padding(screenPadding)
-				.padding(horizontal = 8.dp),
+				.padding(horizontal = horizontalPadding), // ← replaces your hardcoded 8.dp
+
 			horizontalAlignment = Alignment.CenterHorizontally
 		) {
-			Spacer(modifier = Modifier.weight(0.6f))
+			Spacer(modifier = Modifier.weight(0.45f))
 
 			TimeRow(uiState, {viewModel.updateStartTime(it)}, {viewModel.updateEndTime(it)})
 
-			Spacer(modifier = Modifier.weight(0.6f))
+			Spacer(modifier = Modifier.weight(0.45f))
 
 			DateList(
 				{ viewModel.updateDate(it)}, uiState.alarmObject.startTime.time.time,
 				weGood = currentError?.field != AlarmErrorField.DATE,
 				allowSelectingPastDate = false,
 			)
-
-			Spacer(modifier = Modifier.weight(0.4f))
-
+			Spacer(modifier = Modifier.weight(0.3f))
 			// 5. Settings Card (Name & Sound)
 			Surface(
 				shape = RoundedCornerShape(28.dp),
@@ -175,37 +221,6 @@ fun AlarmPickerScreen(
 					)
 				}
 			}
-
-			Spacer(modifier = Modifier.weight(1f))
-
-			// 6. Bottom Actions (Delete & Save)
-			Row(
-				modifier = Modifier
-					.fillMaxWidth()
-					.padding(bottom = 18.dp),
-				horizontalArrangement = Arrangement.End,
-				verticalAlignment = Alignment.CenterVertically
-			) {
-				Button(
-					onClick = {
-						if (uiState.validationResult == ValidationResult.Success){
-							viewModel.onSetAlarmClicked(uiState.initialAlarm, uiState.alarmObject)
-							view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-							alarmSetGoBack()
-						}
-					},
-					colors = ButtonDefaults.buttonColors(
-						containerColor = MaterialTheme.colorScheme.primaryContainer,
-						contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-					),
-					contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
-				) {
-					Text(
-						text = "Set alarm",
-						style = MaterialTheme.typography.bodyLarge ,
-					)
-				}
-			}
 		}
 	}
 }
@@ -226,6 +241,14 @@ fun TimeRow(
 	val configuration = LocalWindowInfo.current.containerSize
 	// Calculate title spacing adaptively based on screen height
 	val titleSpacing = (configuration.height.dp * 0.04f).coerceIn(12.dp, 36.dp)
+	val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+
+	// Adaptive horizontal padding: tighter on compact, more room on medium+
+	val horizontalPadding = when {
+		windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_EXPANDED_LOWER_BOUND) -> 32.dp
+		windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND)   -> 16.dp
+		else                                                                     -> 4.dp  // Compact
+	}
 
 	var showStartTimePicker by remember { mutableStateOf(false) }
 	var showEndTimePicker by remember { mutableStateOf(false) }
@@ -305,7 +328,9 @@ fun TimeRow(
 	}
 
 	Row(
-		modifier = Modifier.fillMaxWidth(),
+		modifier = Modifier
+			.fillMaxWidth()
+			.padding(horizontal = horizontalPadding),
 		verticalAlignment = Alignment.CenterVertically,
 	) {
 		Row(
@@ -361,6 +386,15 @@ fun TimeRow(
 	}
 }
 
+@Composable
+fun rememberAdaptiveHorizontalPadding(
+	percent: Float = 0.0086f,
+	min: Dp = 16.dp,
+	max: Dp = 32.dp
+): Dp {
+	val screenWidthDp = LocalWindowInfo.current.containerSize.width.dp
+	return (screenWidthDp * percent).coerceIn(min, max)
+}
 
 
 @Composable
