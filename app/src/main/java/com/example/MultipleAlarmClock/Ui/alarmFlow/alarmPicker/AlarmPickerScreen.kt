@@ -399,7 +399,6 @@ fun TimeRow(
 				textAlign = TextAlign.Start,
 				modifier = Modifier.padding( top = 5.dp)
 			)
-
 		}
 	}
 }
