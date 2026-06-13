@@ -51,7 +51,7 @@ class BaselineProfileGenerator {
 			startActivityAndWait(
 				Intent().apply {
 					action = Intent.ACTION_VIEW
-					data = Uri.parse("alarmapp://home")  // ← use setData() instead
+					data = Uri.parse("alarmapp://home")
 					setPackage(packageName)
 				}
 			)

@@ -1,6 +1,5 @@
 package com.coolApps.MultipleAlarmClock
 
-import android.app.ComponentCaller
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -32,7 +31,7 @@ class MainActivity : ComponentActivity() {
   private val navViewModel: NavigationViewModel by viewModels()
   @Inject lateinit var analytics: Analytics
   private val coroutineScope = CoroutineScope(Dispatchers.Main)
-  val notificationHandler = NotificationHandler(this)
+  private val notificationHandler by lazy { NotificationHandler(this) }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     val splashScreen = installSplashScreen()
@@ -64,8 +63,8 @@ class MainActivity : ComponentActivity() {
     }
   }
 
-  override fun onNewIntent(intent: Intent, caller: ComponentCaller) {
-    super.onNewIntent(intent, caller)
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
     setIntent(intent)
   }
 
