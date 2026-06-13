@@ -389,17 +389,15 @@ fun TimeRow(
 	}
 	if (doWeHaveError) {
 		// add a slight animation here
-		Column(
-			modifier = Modifier.fillMaxWidth(),
-			horizontalAlignment = Alignment.Start
-) {
+		Column() {
+			// text in center as I want to draw attention to it and left aligned one looked ugly
 			Spacer(modifier = Modifier.padding(3.dp))
 			Text(
 				text = errorMessage ?: "",
-				style = MaterialTheme.typography.labelSmall,
+				style = MaterialTheme.typography.labelMedium,
 				color =  colorScheme.onErrorContainer ,
 				textAlign = TextAlign.Start,
-				modifier = Modifier.padding( top = 4.dp)
+				modifier = Modifier.padding( top = 5.dp)
 			)
 
 		}
