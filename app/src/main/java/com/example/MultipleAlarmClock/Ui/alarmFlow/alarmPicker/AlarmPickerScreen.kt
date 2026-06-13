@@ -65,8 +65,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXPANDED_LOWER_BOUND
-import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_MEDIUM_LOWER_BOUND
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmErrorField
 import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.coolApps.MultipleAlarmClock.logD
@@ -244,11 +242,11 @@ fun TimeRow(
 	val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
 
 	// Adaptive horizontal padding: tighter on compact, more room on medium+
-	val horizontalPadding = when {
-		windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_EXPANDED_LOWER_BOUND) -> 32.dp
-		windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND)   -> 16.dp
-		else                                                                     -> 4.dp  // Compact
-	}
+//	val horizontalPadding = when {
+//		windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_EXPANDED_LOWER_BOUND) -> 32.dp
+//		windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND)   -> 16.dp
+//		else                                                                     -> 4.dp  // Compact
+//	}
 
 	var showStartTimePicker by remember { mutableStateOf(false) }
 	var showEndTimePicker by remember { mutableStateOf(false) }
@@ -329,8 +327,8 @@ fun TimeRow(
 
 	Row(
 		modifier = Modifier
-			.fillMaxWidth()
-			.padding(horizontal = horizontalPadding),
+			.fillMaxWidth(),
+//			.padding(horizontal = horizontalPadding),
 		verticalAlignment = Alignment.CenterVertically,
 	) {
 		Row(
