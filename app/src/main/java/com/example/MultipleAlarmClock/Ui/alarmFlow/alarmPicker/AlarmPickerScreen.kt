@@ -35,6 +35,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -251,6 +252,12 @@ fun TimeRow(
 	var showStartTimePicker by remember { mutableStateOf(false) }
 	var showEndTimePicker by remember { mutableStateOf(false) }
 
+	val doWeHaveError = uiState.validationResult != ValidationResult.Success  && (uiState.validationResult as? ValidationResult.Failure)?.field == AlarmErrorField.Time
+	val errorMessage = (uiState.validationResult as? ValidationResult.Failure)?.message
+	val timeColor = if (doWeHaveError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground
+	val amPmColor = if (doWeHaveError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground
+
+
 	if (showStartTimePicker) {
 		val timePickerState = rememberTimePickerState(
 			initialHour = startTime.get(Calendar.HOUR_OF_DAY),
@@ -337,7 +344,7 @@ fun TimeRow(
 			Text(
 				text = SimpleDateFormat("h:mm ", LocalLocale.current.platformLocale).format(startTime.time),
 				style = timeStyle,
-				color = MaterialTheme.colorScheme.onBackground,
+				color = timeColor,
 				maxLines = 1,
 				softWrap = false,
 				modifier = Modifier.alignByBaseline()
@@ -345,7 +352,7 @@ fun TimeRow(
 			Text(
 				text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(startTime.time),
 				style = amPmStyle,
-				color = MaterialTheme.colorScheme.onBackground,
+				color = amPmColor,
 				maxLines = 1,
 				softWrap = false,
 				modifier = Modifier.alignByBaseline()
@@ -365,7 +372,7 @@ fun TimeRow(
 			Text(
 				text = SimpleDateFormat("h:mm ", LocalLocale.current.platformLocale).format(endTime.time),
 				style = timeStyle,
-				color = MaterialTheme.colorScheme.onBackground,
+				color = timeColor,
 				maxLines = 1,
 				softWrap = false,
 				modifier = Modifier.alignByBaseline()
@@ -373,11 +380,28 @@ fun TimeRow(
 			Text(
 				text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(endTime.time),
 				style = amPmStyle,
-				color = MaterialTheme.colorScheme.onBackground,
+				color = amPmColor,
 				maxLines = 1,
 				softWrap = false,
 				modifier = Modifier.alignByBaseline()
 			)
+		}
+	}
+	if (doWeHaveError) {
+		// add a slight animation here
+		Column(
+			modifier = Modifier.fillMaxWidth(),
+			horizontalAlignment = Alignment.Start
+) {
+			Spacer(modifier = Modifier.padding(3.dp))
+			Text(
+				text = errorMessage ?: "",
+				style = MaterialTheme.typography.labelSmall,
+				color =  colorScheme.onErrorContainer ,
+				textAlign = TextAlign.Start,
+				modifier = Modifier.padding( top = 4.dp)
+			)
+
 		}
 	}
 }
@@ -410,18 +434,18 @@ private fun SettingRow(
 		Icon(
 			imageVector = icon,
 			contentDescription = null,
-			tint = MaterialTheme.colorScheme.onSurfaceVariant
+			tint = colorScheme.onSurfaceVariant
 		)
 		Spacer(modifier = Modifier.width(16.dp))
 		Text(
 			text = title,
-			color = MaterialTheme.colorScheme.onBackground,
+			color = colorScheme.onBackground,
 			fontSize = 16.sp
 		)
 		Spacer(modifier = Modifier.weight(1f))
 		Text(
 			text = value,
-			color = MaterialTheme.colorScheme.onSurfaceVariant,
+			color = colorScheme.onSurfaceVariant,
 			fontSize = 14.sp
 		)
 	}
@@ -498,9 +522,11 @@ private fun FrequencyRow(
 	previewText: String = "",
 	uiState: AlarmPickerUiState,
 ) {
-	val colorScheme = MaterialTheme.colorScheme
-	val doWeHaveError = uiState.validationResult != ValidationResult.Success  && (uiState.validationResult as? ValidationResult.Failure)?.field == AlarmErrorField.FREQUENCY
+	val colorScheme = colorScheme
+	val doWeHaveFrequencyError = (uiState.validationResult as? ValidationResult.Failure)?.field == AlarmErrorField.FREQUENCY
+//	val frequencyError = (uiState.validationResult as? ValidationResult.Failure)?.field == AlarmErrorField.FREQUENCY
 
+	logD("preview text is isNotEmpty:${previewText.isNotEmpty()}, and doWeHaveFrequencyError:$doWeHaveFrequencyError, validation result: ${uiState.validationResult}")
 	val view = LocalView.current
 
 	Column(
@@ -528,7 +554,7 @@ private fun FrequencyRow(
 				verticalAlignment = Alignment.CenterVertically,
 				modifier = Modifier
 					.background(
-						color = if (doWeHaveError) colorScheme.errorContainer else colorScheme.secondaryContainer ,
+						color = if (doWeHaveFrequencyError) colorScheme.errorContainer else colorScheme.secondaryContainer ,
 						shape = RoundedCornerShape(12.dp)
 					)
 					.padding(4.dp)
@@ -584,13 +610,13 @@ private fun FrequencyRow(
 		}
 
 		// check for failure as if we have a error  in time then we won't be able to produce correct sequence of preview text, so don't display
-		if (previewText.isNotEmpty() && uiState.validationResult == ValidationResult.Success) {
+		if (previewText.isNotEmpty() || doWeHaveFrequencyError) {
 			// add a slight animation here
 			Spacer(modifier = Modifier.padding(3.dp))
 			Text(
 				text = previewText,
 				style = MaterialTheme.typography.labelSmall,
-				color = if (doWeHaveError) colorScheme.onErrorContainer else colorScheme.onSurfaceVariant,
+				color = if (doWeHaveFrequencyError) colorScheme.onErrorContainer else colorScheme.onSurfaceVariant,
 				modifier = Modifier.padding(start = 40.dp, top = 2.dp)
 			)
 		}
