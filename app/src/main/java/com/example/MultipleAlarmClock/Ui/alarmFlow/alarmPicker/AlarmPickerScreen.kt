@@ -126,7 +126,7 @@ fun AlarmPickerScreen(
 					) {
 						Button(
 							onClick = {
-								if (uiState.validationResult == ValidationResult.Success ){
+								if (uiState.validationResult == ValidationResult.Success){
 									viewModel.onSetAlarmClicked(uiState.initialAlarm, uiState.alarmObject)
 									view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
 									alarmSetGoBack()
@@ -168,7 +168,6 @@ fun AlarmPickerScreen(
 				.padding(horizontal = horizontalPadding)
 				.animateContentSize()
 			,
-
 			horizontalAlignment = Alignment.CenterHorizontally
 		) {
 
