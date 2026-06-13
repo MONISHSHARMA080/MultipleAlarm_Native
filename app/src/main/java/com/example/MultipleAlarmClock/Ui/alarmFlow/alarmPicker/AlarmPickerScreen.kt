@@ -44,7 +44,6 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -89,6 +88,8 @@ fun AlarmPickerScreen(
 
 	val horizontalPadding = rememberAdaptiveHorizontalPadding()
 
+	val colorScheme = MaterialTheme.colorScheme
+
 	Scaffold(
 		topBar = {
 			TopAppBar(
@@ -116,7 +117,9 @@ fun AlarmPickerScreen(
 					modifier = Modifier
 						.fillMaxWidth()
 						.background(MaterialTheme.colorScheme.background)
-						.padding(16.dp).padding(bottom = 20.dp),
+						.padding(16.dp).padding(bottom = 20.dp)
+						.animateContentSize()
+					,
 					contentAlignment = Alignment.Center
 				) {
 					Row(
@@ -131,18 +134,27 @@ fun AlarmPickerScreen(
 									alarmSetGoBack()
 								}
 							},
-							colors = ButtonDefaults.buttonColors(
-								containerColor = MaterialTheme.colorScheme.primaryContainer,
-								contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-							),
+							colors = when{
+								uiState.validationResult == ValidationResult.Success ->{
+									ButtonDefaults.buttonColors(
+										containerColor = MaterialTheme.colorScheme.primaryContainer,
+										contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+									)
+								}else ->{
+									ButtonDefaults.buttonColors(
+										containerColor = MaterialTheme.colorScheme.errorContainer,
+										contentColor = MaterialTheme.colorScheme.onErrorContainer
+									)
+								}
+							} ,
 							modifier = Modifier
-								.height(56.dp) // Extra Large Height
+								.height(56.dp)
 								.animateContentSize(),
 							contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
 							shape = RoundedCornerShape(28.dp) // Extra Large Shape
 						) {
 							Text(
-								text = "Set alarm",
+								text =  if(uiState.validationResult == ValidationResult.Success) "Set alarm" else "Fix the error",
 								style = MaterialTheme.typography.bodyLarge ,
 							)
 						}
@@ -170,7 +182,7 @@ fun AlarmPickerScreen(
 				weGood = currentError?.field != AlarmErrorField.DATE,
 				allowSelectingPastDate = false,
 			)
-			Spacer(modifier = Modifier.weight(0.3f))
+			Spacer(modifier = Modifier.weight(0.2f))
 			// 5. Settings Card (Name & Sound)
 			Surface(
 				shape = RoundedCornerShape(28.dp),
@@ -239,14 +251,6 @@ fun TimeRow(
 	val configuration = LocalWindowInfo.current.containerSize
 	// Calculate title spacing adaptively based on screen height
 	val titleSpacing = (configuration.height.dp * 0.04f).coerceIn(12.dp, 36.dp)
-	val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
-
-	// Adaptive horizontal padding: tighter on compact, more room on medium+
-//	val horizontalPadding = when {
-//		windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_EXPANDED_LOWER_BOUND) -> 32.dp
-//		windowSizeClass.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND)   -> 16.dp
-//		else                                                                     -> 4.dp  // Compact
-//	}
 
 	var showStartTimePicker by remember { mutableStateOf(false) }
 	var showEndTimePicker by remember { mutableStateOf(false) }
@@ -326,9 +330,7 @@ fun TimeRow(
 	}
 
 	Row(
-		modifier = Modifier
-			.fillMaxWidth(),
-//			.padding(horizontal = horizontalPadding),
+		modifier = Modifier.fillMaxWidth(),
 		verticalAlignment = Alignment.CenterVertically,
 	) {
 		Row(

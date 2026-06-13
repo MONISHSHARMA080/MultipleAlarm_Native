@@ -220,12 +220,10 @@ class AlarmPickerViewModel @Inject constructor(
 
 	fun updateStartTime(newTime: Calendar) {
 		_uiState.update { it.copy(alarmObject = it.alarmObject.copy(startTime = newTime)) }
-		validateAlarm()
 	}
 
 	fun updateEndTime(newTime: Calendar) {
 		_uiState.update { it.copy(alarmObject = it.alarmObject.copy(endTime = newTime)) }
-		validateAlarm()
 	}
 
 	fun updateDate(calVersion: Calendar) {
@@ -252,44 +250,24 @@ class AlarmPickerViewModel @Inject constructor(
 				)
 			)
 		}
-		validateAlarm()
 	}
 
 	fun updateFrequency(newFreq: Long) {
 		_uiState.update { it.copy(alarmObject = it.alarmObject.copy(freqGottenAfterCallback = newFreq)) }
-		validateAlarm()
 	}
 
 	fun updateMessage(newMessage: String) {
 		_uiState.update { it.copy(alarmObject = it.alarmObject.copy(message = newMessage)) }
-		validateAlarm()
-	}
-
-	fun incrementFrequency() {
-		val current = _uiState.value.alarmObject.freqGottenAfterCallback
-		val newFreq = if (current >= 1) current + 1 else 1
-		updateFrequency(newFreq)
-	}
-
-	fun decrementFrequency() {
-		val current = _uiState.value.alarmObject.freqGottenAfterCallback
-		updateFrequency(current - 1)
-	}
-
-	private fun validateAlarm() {
-		val result = _uiState.value.alarmObject.validate(_uiState.value.initialAlarm)
-		_uiState.update { it.copy(validationResult = result) }
 	}
 
 	fun getFrequencyPreviewText(): String {
 		val state = _uiState.value
-		val currentError = state.validationResult as? ValidationResult.Failure
-		return if (state.validationResult is ValidationResult.Success) {
-			"alarm will ring on ${getPreviewAlarms(state.alarmObject, 4)}"
-		} else {
-			if (currentError?.field == AlarmErrorField.FREQUENCY) {
-				currentError.message
-			} else ""
+		val error = state.validationResult as? ValidationResult.Failure
+
+		return when {
+			error?.field == AlarmErrorField.FREQUENCY -> error.message
+			state.alarmObject.freqGottenAfterCallback > 0 -> "alarm will ring on ${getPreviewAlarms(state.alarmObject, 4)}"
+			else -> ""
 		}
 	}
 

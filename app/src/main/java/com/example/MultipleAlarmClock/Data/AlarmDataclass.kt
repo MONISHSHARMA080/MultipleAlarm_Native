@@ -15,6 +15,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.Update
 import androidx.room.Upsert
+import com.coolApps.MultipleAlarmClock.logD
 import com.coolApps.MultipleAlarmClock.utils.Result.GenericDataIterator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
@@ -237,11 +238,12 @@ data class AlarmObject(
     }
     // when we get a weGood == false then we can call this function to see what value produced an error and then display it
     fun validate(alarmData: AlarmData?): ValidationResult{
+		logD(" -- validation the alarm")
         if (startTime.timeInMillis >= endTime.timeInMillis) {
             return ValidationResult.Failure( message = "Start time must be less than end time.", field = AlarmErrorField.Time)
         }
         if (freqGottenAfterCallback !in 1..700) {
-            return ValidationResult.Failure(AlarmErrorField.FREQUENCY, "Frequency must be between 1 and 700 minutes.")
+            return ValidationResult.Failure(AlarmErrorField.FREQUENCY, "Enter a value between 1 to 700 minutes")
         }
         val currentDate = Calendar.getInstance()
         val selectedDate = Calendar.getInstance().apply { timeInMillis = date}
@@ -249,7 +251,7 @@ data class AlarmObject(
         val startAndEndTimeHaveSameDate = startTime.get(Calendar.DAY_OF_YEAR) == endTime.get(Calendar.DAY_OF_YEAR)
         if (!startAndEndTimeHaveSameDate) return ValidationResult.Failure(AlarmErrorField.DATE, "expected the date in startTime and endTime to be same but got startTimeDate:${getDateTimeFormatted(startTime.timeInMillis)} endDateTime:${getDateTimeFormatted(endTime.timeInMillis)}")
         if ( !(dateSame || selectedDate.after(currentDate)) ){
-            return ValidationResult.Failure(AlarmErrorField.DATE, "Date must be today or in the future.")
+            return ValidationResult.Failure(AlarmErrorField.DATE, "Date value must be today or in the future.")
         }
         // 2. Check for Changes (If in Edit Mode)
         if (alarmData != null) {
