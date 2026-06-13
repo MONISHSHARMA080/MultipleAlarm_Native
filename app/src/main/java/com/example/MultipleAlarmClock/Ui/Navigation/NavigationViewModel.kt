@@ -25,6 +25,8 @@ class NavigationViewModel @Inject constructor(
 //			initialValue = null
 //		)
 
+	val scope = viewModelScope
+
 	fun captureEvent(eventName:String, properties: Map<String, Any>): Unit {
 		viewModelScope.launch {
 			analytics.captureEvent(eventName, properties)

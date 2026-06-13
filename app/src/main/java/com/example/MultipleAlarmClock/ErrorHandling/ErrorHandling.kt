@@ -34,5 +34,4 @@ class ErrorHandler(val notificationHandler: NotificationHandler, val analytics: 
 	private  fun  logD(msg: String): Unit{
 		Log.d("AAAAAA", "[ErrorHandling] $msg")
 	}
-
 }

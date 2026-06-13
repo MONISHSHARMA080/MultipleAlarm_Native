@@ -17,22 +17,34 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.NavigationStack
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
+import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.example.MultipleAlarmClock.Ui.Navigation.NavigationViewModel
 import com.example.MultipleAlarmClock.Ui.Navigation.Screen
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
   private val navViewModel: NavigationViewModel by viewModels()
   @Inject lateinit var analytics: Analytics
+  private val coroutineScope = CoroutineScope(Dispatchers.Main)
+  val notificationHandler = NotificationHandler(this)
 
   override fun onCreate(savedInstanceState: Bundle?) {
     val splashScreen = installSplashScreen()
     super.onCreate(savedInstanceState)
-//    splashScreen.setKeepOnScreenCondition{  navViewModel.isFirstLaunch.value == null}
+
     val deepLinkScreen: Screen? = parseDeepLinkIntent(intent)
+    NotificationHandler(this).createNotificationChannels()
+
+	  coroutineScope.launch(Dispatchers.Main) {
+		  notificationHandler.createNotificationChannels()
+	  }
+
 
     try {
       enableEdgeToEdge()

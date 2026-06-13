@@ -88,8 +88,6 @@ fun AlarmPickerScreen(
 
 	val horizontalPadding = rememberAdaptiveHorizontalPadding()
 
-	val colorScheme = MaterialTheme.colorScheme
-
 	Scaffold(
 		topBar = {
 			TopAppBar(
@@ -128,7 +126,7 @@ fun AlarmPickerScreen(
 					) {
 						Button(
 							onClick = {
-								if (uiState.validationResult == ValidationResult.Success){
+								if (uiState.validationResult == ValidationResult.Success || true){
 									viewModel.onSetAlarmClicked(uiState.initialAlarm, uiState.alarmObject)
 									view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
 									alarmSetGoBack()
@@ -190,7 +188,6 @@ fun AlarmPickerScreen(
 				modifier = Modifier.fillMaxWidth()
 			) {
 				Column {
-
 					FrequencyRow(
 						icon = Icons.Rounded.Timer,
 						title = "repeat every",
