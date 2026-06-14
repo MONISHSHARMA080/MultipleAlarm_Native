@@ -124,7 +124,7 @@ fun AlarmPickerScreen(
 	LaunchedEffect(uiState.alarmOperationCompletedGoBack) {
 		if (uiState.alarmOperationCompletedGoBack) {
 			alarmSetGoBack()
-			viewModel.resetAlarmSavedState() // Reset so it doesn't re-trigger
+			viewModel.updateUi(uiState.copy(alarmOperationCompletedGoBack = false))// Reset so it doesn't re-trigger
 		}
 	}
 
@@ -247,7 +247,7 @@ fun AlarmPickerScreen(
 		) {
 
 			Spacer(modifier = Modifier.weight(0.45f))
-			TimeRow(uiState, {viewModel.updateStartTime(it)}, {viewModel.updateEndTime(it)})
+			TimeRow(uiState, {viewModel.updateUi( uiState.copy(alarmObject = uiState.alarmObject.copy(startTime = it)) )}, {viewModel.updateUi( uiState.copy(alarmObject = uiState.alarmObject.copy(startTime = it)) )})
 			Spacer(modifier = Modifier.weight(0.45f))
 			DateList(
 				{ viewModel.updateDate(it)}, uiState.alarmObject.startTime.time.time,

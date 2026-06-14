@@ -68,9 +68,6 @@ class AlarmPickerViewModel @Inject constructor(
 	private val _previewingRandom = MutableStateFlow(false)
 	val previewingRandom = _previewingRandom.asStateFlow()
 
-//	private val _events = MutableSharedFlow<AlarmPickerEvent>(extraBufferCapacity = 1)
-//	val events: SharedFlow<AlarmPickerEvent> = _events.asSharedFlow()
-
 	private val errorHandler = ErrorHandler(notificationHandler = NotificationHandler(context),analytics)
 	private val alarmsController = AlarmsController()
 
@@ -215,22 +212,13 @@ class AlarmPickerViewModel @Inject constructor(
 		}
 	}
 
-	// make one fun for ui state update and then
-	fun resetAlarmSavedState() {
-		_uiState.update { it.copy(alarmOperationCompletedGoBack = false) }
+	fun updateUi(newUiState: AlarmPickerUiState){
+		_uiState.update { newUiState }
 	}
 
 	fun dismissPermissionDialog() {
 		_uiState.update { it.copy(showPermissionDialog = false) }
 		checkPermissions(context)
-	}
-
-	fun updateStartTime(newTime: Calendar) {
-		_uiState.update { it.copy(alarmObject = it.alarmObject.copy(startTime = newTime)) }
-	}
-
-	fun updateEndTime(newTime: Calendar) {
-		_uiState.update { it.copy(alarmObject = it.alarmObject.copy(endTime = newTime)) }
 	}
 
 	fun updateDate(calVersion: Calendar) {
@@ -383,7 +371,6 @@ class AlarmPickerViewModel @Inject constructor(
 				}
 			}
 		}
-
 	}
 
 	override fun onCleared() {
