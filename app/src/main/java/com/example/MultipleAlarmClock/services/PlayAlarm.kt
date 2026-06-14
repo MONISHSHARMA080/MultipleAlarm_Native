@@ -128,7 +128,7 @@ class PlayAlarm(
 			for (i in 1..tries ) {
 				hasAudioFocus = focusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
 				if (hasAudioFocus) break
-				delay(350.milliseconds) // 350 is an arbitrary no
+				delay(290.milliseconds) //  arbitrary no.
 				focusResult = runCatching { audioManager.requestAudioFocus(audioFocusRequest) }.getOrElse { AudioManager.AUDIOFOCUS_REQUEST_FAILED }
 			}
 			if (focusResult == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
@@ -182,7 +182,7 @@ class PlayAlarm(
 	}
 
 	private fun buildAudioFocusRequest(): AudioFocusRequest {
-		return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+		return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
 			.setAudioAttributes(
 				AudioAttributes.Builder()
 					.setUsage(AudioAttributes.USAGE_ALARM)
