@@ -12,9 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.milliseconds
 
 class PlayAlarm(
 	context: Context,
@@ -119,38 +117,34 @@ class PlayAlarm(
 		mediaPlayer = player
 
 		mainScope.launch {
-			var focusResult = runCatching {
+			val focusResult = runCatching {
 				audioManager.requestAudioFocus(audioFocusRequest)
 			}.getOrElse {
 				AudioManager.AUDIOFOCUS_REQUEST_FAILED
 			}
-			val tries = 4
-			for (i in 1..tries ) {
-				hasAudioFocus = focusResult == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
-				if (hasAudioFocus) break
-				delay(290.milliseconds) //  arbitrary no.
-				focusResult = runCatching { audioManager.requestAudioFocus(audioFocusRequest) }.getOrElse { AudioManager.AUDIOFOCUS_REQUEST_FAILED }
-			}
-			if (focusResult == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
-				scope.launch {
-					analytics.captureEvent(
-						"audio focus request failed",
-						mapOf("uri" to soundUri.toString(),
-							"no of audioFocusRequest" to tries
-						)
-					)
-				}
-			}
 
-			// Alarm-app behavior: proceed even if focus wasn't granted.
-			runCatching { player.start() }.onFailure { t ->
-				scope.launch {
-					analytics.captureEvent(
-						"play alarm start failed",
-						mapOf("message" to (t.message ?: "unknown"))
-					)
+			when (focusResult) {
+				AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> {
+					hasAudioFocus = true
+					// We have focus, start ringing!
+					startPlayer(player)
 				}
-				stop(abandonFocus = true)
+				AudioManager.AUDIOFOCUS_REQUEST_DELAYED -> {
+					hasAudioFocus = false
+					// Do NOT start playing yet.
+					// The system will call your audioFocusChangeListener with AUDIOFOCUS_GAIN
+					// the moment your foreground status registers or the blocking app releases focus.
+					scope.launch {
+						analytics.captureEvent("audio focus delayed", mapOf("uri" to soundUri.toString()))
+					}
+				}
+				AudioManager.AUDIOFOCUS_REQUEST_FAILED -> {
+					hasAudioFocus = false
+					// Focus was outright denied (e.g., user is on an active phone call).
+					// For an alarm app, you usually still force the playback anyway,
+					// but at a lower volume or routing to the earpiece.
+					startPlayer(player)
+				}
 			}
 		}
 	}
@@ -181,6 +175,18 @@ class PlayAlarm(
 		scope.cancel()
 	}
 
+	private fun startPlayer(player: MediaPlayer) {
+		runCatching { player.start() }.onFailure { t ->
+			scope.launch {
+				analytics.captureEvent(
+					"play alarm start failed",
+					mapOf("message" to (t.message ?: "unknown"))
+				)
+			}
+			stop(abandonFocus = true)
+		}
+	}
+
 	private fun buildAudioFocusRequest(): AudioFocusRequest {
 		return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
 			.setAudioAttributes(
@@ -189,7 +195,7 @@ class PlayAlarm(
 					.setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
 					.build()
 			)
-			.setAcceptsDelayedFocusGain(false)
+			.setAcceptsDelayedFocusGain(true)
 			.setOnAudioFocusChangeListener(audioFocusChangeListener)
 			.build()
 	}
