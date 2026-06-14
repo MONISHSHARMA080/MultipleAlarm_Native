@@ -159,6 +159,7 @@ fun AlarmPickerScreen(
 					Text(if (uiState.initialAlarm == null) "Set alarm" else "Edit alarm" ,
 						style = timeStyle,
 						color = colorScheme.onBackground,
+						modifier = Modifier.padding(horizontal = 7.dp),
 						maxLines = 1, softWrap = false,
 					)
 				},
@@ -246,16 +247,16 @@ fun AlarmPickerScreen(
 			horizontalAlignment = Alignment.CenterHorizontally
 		) {
 
-			Spacer(modifier = Modifier.weight(0.45f))
+			Spacer(modifier = Modifier.weight(0.44f))
 			TimeRow(uiState, {viewModel.updateUi( uiState.copy(alarmObject = uiState.alarmObject.copy(startTime = it)) )}, {viewModel.updateUi( uiState.copy(alarmObject = uiState.alarmObject.copy(startTime = it)) )})
-			Spacer(modifier = Modifier.weight(0.45f))
+			Spacer(modifier = Modifier.weight(0.43f))
 			DateList(
 				{ viewModel.updateDate(it)}, uiState.alarmObject.startTime.time.time,
 				weGood = currentError?.field != AlarmErrorField.DATE,
 				allowSelectingPastDate = false,
 			)
 
-			Spacer(modifier = Modifier.weight(0.178f))
+			Spacer(modifier = Modifier.weight(0.182f))
 
 			// 5. Settings Card (Name & Sound)
 			Surface(
