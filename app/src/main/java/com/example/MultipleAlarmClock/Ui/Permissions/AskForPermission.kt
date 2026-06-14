@@ -17,6 +17,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -214,11 +216,9 @@ private fun PermissionStepRow(
 				modifier = Modifier.size(24.dp)
 			)
 		} else {
-			// Elevated text button or filled tonal button is great for Expressive M3 actions
-			TextButton(onClick = onAction) {
+			Button(onClick = {onAction()}, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer)) {
 				Text(
 					text = if (step.action != null || step == PermissionStep.XiaomiAutostart) "Open settings" else "Allow",
-					color = MaterialTheme.colorScheme.primary
 				)
 			}
 		}

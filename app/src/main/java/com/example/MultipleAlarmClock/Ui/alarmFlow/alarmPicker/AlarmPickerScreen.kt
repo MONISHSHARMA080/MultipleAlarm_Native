@@ -1,5 +1,7 @@
 package com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -58,6 +60,7 @@ import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,6 +70,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalView
@@ -77,9 +81,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmErrorField
 import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.coolApps.MultipleAlarmClock.logD
+import com.example.MultipleAlarmClock.Ui.Permissions.AlarmPermissionDialog
 import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerUiState
 import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerViewModel
 import java.text.SimpleDateFormat
@@ -99,7 +106,52 @@ fun AlarmPickerScreen(
 	val view = LocalView.current
 	val timeStyle = typography.headlineSmall
 
+	val context = LocalContext.current
+	val isPermissionsOk = uiState.areAllPermissionsGranted
+	val weGood = uiState.validationResult is ValidationResult.Success && isPermissionsOk
+
+	LaunchedEffect(weGood,uiState ) {
+		val isNotificationsEnabled = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+		viewModel.captureEvent("is alarmObject value valid changed", mapOf(
+			"are all permission granted" to uiState.areAllPermissionsGranted,
+			"validation error message" to (currentError?.message ?: ""),
+			"ui_state" to uiState.toString(),
+			"did user choose random alarmSound" to (uiState.alarmObject.alarmSoundUri == null),
+			"notification permission granted" to isNotificationsEnabled
+		))
+	}
+
+	LaunchedEffect(uiState.alarmOperationCompletedGoBack) {
+		if (uiState.alarmOperationCompletedGoBack) {
+			alarmSetGoBack()
+			viewModel.resetAlarmSavedState() // Reset so it doesn't re-trigger
+		}
+	}
+
+	LifecycleResumeEffect(Unit) {
+		viewModel.checkPermissions(context)
+		onPauseOrDispose {
+			// Optional cleanup when the screen pauses/disposes
+		}
+	}
+
+	LaunchedEffect(uiState.showPermissionDialog) {
+		if (uiState.showPermissionDialog) {
+			viewModel.captureEvent("ask for permission dialog opened", mapOf())
+		}
+	}
+
+	if (uiState.showPermissionDialog) {
+		AlarmPermissionDialog(
+			uiState.missingSteps ,
+			onAllCriticalGranted = { viewModel.dismissPermissionDialog() },
+			onDismiss = { viewModel.dismissPermissionDialog() },
+			onTrackEvent = {event, prop -> viewModel.captureEvent(event, prop)}
+		)
+	}
+
 	val horizontalPadding = rememberAdaptiveHorizontalPadding()
+
 	Scaffold(
 		topBar = {
 			TopAppBar(
@@ -107,8 +159,7 @@ fun AlarmPickerScreen(
 					Text(if (uiState.initialAlarm == null) "Set alarm" else "Edit alarm" ,
 						style = timeStyle,
 						color = colorScheme.onBackground,
-						maxLines = 1,
-						softWrap = false,
+						maxLines = 1, softWrap = false,
 					)
 				},
 				navigationIcon = {
@@ -137,10 +188,9 @@ fun AlarmPickerScreen(
 					) {
 						Button(
 							onClick = {
-								if (uiState.validationResult == ValidationResult.Success){
+								if (uiState.validationResult == ValidationResult.Success  ){
 									viewModel.onSetAlarmClicked(uiState.initialAlarm, uiState.alarmObject)
 									view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-									alarmSetGoBack()
 								}
 							},
 							colors = when{

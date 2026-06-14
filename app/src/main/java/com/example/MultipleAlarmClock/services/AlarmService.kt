@@ -190,7 +190,6 @@ class AlarmService: Service() {
         Log.d("AAAAA", "[AlarmService] $message")
     }
 
-
     private fun buildNotification(context:Context, originalIntent: Intent):Result<Pair<Notification, AlarmActivityIntentData>>{
         return runCatching {
             val notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager

@@ -28,12 +28,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -71,8 +68,8 @@ class AlarmPickerViewModel @Inject constructor(
 	private val _previewingRandom = MutableStateFlow(false)
 	val previewingRandom = _previewingRandom.asStateFlow()
 
-	private val _events = MutableSharedFlow<AlarmPickerEvent>(extraBufferCapacity = 1)
-	val events: SharedFlow<AlarmPickerEvent> = _events.asSharedFlow()
+//	private val _events = MutableSharedFlow<AlarmPickerEvent>(extraBufferCapacity = 1)
+//	val events: SharedFlow<AlarmPickerEvent> = _events.asSharedFlow()
 
 	private val errorHandler = ErrorHandler(notificationHandler = NotificationHandler(context),analytics)
 	private val alarmsController = AlarmsController()
@@ -210,12 +207,22 @@ class AlarmPickerViewModel @Inject constructor(
 		viewModelScope.launch {
 			if (!_uiState.value.areAllPermissionsGranted) {
 				val missing = PermissionUtils.getRequiredPermissionSteps(context)
-				_events.emit(AlarmPickerEvent.ShowPermissionDialog(missing))
+				_uiState.update { it.copy(showPermissionDialog = true, missingSteps = missing) }
 			} else {
 				setAlarm(alarmObject, currentAlarm)
-				_events.emit(AlarmPickerEvent.NavigateBack)
+				_uiState.update { it.copy(alarmOperationCompletedGoBack = true) }
 			}
 		}
+	}
+
+	// make one fun for ui state update and then
+	fun resetAlarmSavedState() {
+		_uiState.update { it.copy(alarmOperationCompletedGoBack = false) }
+	}
+
+	fun dismissPermissionDialog() {
+		_uiState.update { it.copy(showPermissionDialog = false) }
+		checkPermissions(context)
 	}
 
 	fun updateStartTime(newTime: Calendar) {
@@ -304,7 +311,7 @@ class AlarmPickerViewModel @Inject constructor(
 
 
 	/**[setAlarm] - here [AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
-	fun setAlarm(newAlarmObject: AlarmObject, oldAlarm: AlarmData? ){
+	private fun setAlarm(newAlarmObject: AlarmObject, oldAlarm: AlarmData? ){
 		when (oldAlarm) {
 			null -> {
 				//  oldAlarm was not there so setting a new alarm

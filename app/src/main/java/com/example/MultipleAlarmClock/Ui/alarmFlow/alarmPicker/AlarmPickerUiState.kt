@@ -26,7 +26,10 @@ data class AlarmPickerUiState(
 	val isLoading: Boolean = false,
 	val areAllPermissionsGranted: Boolean = true,
 	// if this is null then we are creating a new alarm else if not null then we are editing an existing alarm
-	var initialAlarm: AlarmData? = null
+	var initialAlarm: AlarmData? = null,
+	val showPermissionDialog: Boolean = false,
+	val missingSteps: List<PermissionStep> = emptyList(),
+	val alarmOperationCompletedGoBack: Boolean = false
 ){
 	override fun toString(): String {
 		return "AlarmPickerUiState: alarmObject:$alarmObject , \n  validationResult:$validationResult , \n isLoading:$isLoading , \n  areAllPermissionsGranted:$areAllPermissionsGranted \n, initialAlarm:$initialAlarm \n   "

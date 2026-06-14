@@ -61,7 +61,7 @@ class AlarmContainerViewModel @Inject constructor(
 	fun captureFeedback(feedback: String) {
 		viewModelScope.launch {
 			analytics.captureEvent("feedback given", mapOf("feedback" to feedback))
-			dataStore.updateData { it.copy { feedbackShown = true } } // ← actually persists!
+			dataStore.updateData { it.copy { feedbackShown = true } }
 		}
 	}
 
