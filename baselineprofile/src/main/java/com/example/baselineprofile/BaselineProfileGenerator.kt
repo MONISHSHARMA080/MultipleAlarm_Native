@@ -6,6 +6,7 @@ import androidx.benchmark.macro.junit4.BaselineProfileRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
+import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -55,6 +56,44 @@ class BaselineProfileGenerator {
 					setPackage(packageName)
 				}
 			)
+			device.waitForIdle()
+		}
+	}
+
+	@Test
+	fun generateAlarmProfile() {
+		rule.collect(
+			packageName = InstrumentationRegistry.getArguments().getString("targetAppId")
+				?: throw Exception("targetAppId not passed as instrumentation runner arg"),
+			includeInStartupProfile = true, // Important for background components
+		) {
+			// 1. Start the app to capture initial setup
+			pressHome()
+			startActivityAndWait()
+
+			// 2. Simulate the Alarm broadcast
+			val mockData = AlarmActivityIntentData(
+				alarmIdInDb = 1,
+				startTimeForDb = System.currentTimeMillis(),
+				startTime = System.currentTimeMillis() + 5000,
+				endTime = System.currentTimeMillis() + 86700,
+				message = "Baseline Profile Optimization"
+			)
+
+			// We use strings for Action and Extras because we don't have access to the App's constants
+			val intent = Intent("com.coolApps.trying_native.ALARM_TRIGGERED").apply {
+				setPackage(packageName)
+				component = android.content.ComponentName(
+					packageName,
+					"com.example.MultipleAlarmClock.BroadCastReceivers.AlarmReceiver"
+				)
+				putExtra("intentData", mockData)
+			}
+
+			// Trigger the receiver
+			InstrumentationRegistry.getInstrumentation().context.sendBroadcast(intent)
+
+			// 3. Give the system time to process the receiver and start the service
 			device.waitForIdle()
 		}
 	}
