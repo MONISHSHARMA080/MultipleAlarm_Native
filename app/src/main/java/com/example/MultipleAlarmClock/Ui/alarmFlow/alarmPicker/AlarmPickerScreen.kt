@@ -1,7 +1,17 @@
 package com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker
 
 import android.view.HapticFeedbackConstants
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +46,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -64,7 +75,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmErrorField
 import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.coolApps.MultipleAlarmClock.logD
@@ -85,20 +95,18 @@ fun AlarmPickerScreen(
 
 	val currentError by remember(uiState) { mutableStateOf(  uiState.validationResult as? ValidationResult.Failure) }
 	val view = LocalView.current
-	val timeStyle = MaterialTheme.typography.headlineSmall
+	val timeStyle = typography.headlineSmall
 
 	val horizontalPadding = rememberAdaptiveHorizontalPadding()
-
 	Scaffold(
 		topBar = {
 			TopAppBar(
 				title = {
 					Text(if (uiState.initialAlarm == null) "Set alarm" else "Edit alarm" ,
 						style = timeStyle,
-						color = MaterialTheme.colorScheme.onBackground,
+						color = colorScheme.onBackground,
 						maxLines = 1,
 						softWrap = false,
-
 					)
 				},
 				navigationIcon = {
@@ -115,7 +123,7 @@ fun AlarmPickerScreen(
 				Box(
 					modifier = Modifier
 						.fillMaxWidth()
-						.background(MaterialTheme.colorScheme.background)
+						.background(colorScheme.background)
 						.padding(16.dp).padding(bottom = 20.dp)
 						.animateContentSize()
 					,
@@ -136,26 +144,40 @@ fun AlarmPickerScreen(
 							colors = when{
 								uiState.validationResult == ValidationResult.Success ->{
 									ButtonDefaults.buttonColors(
-										containerColor = MaterialTheme.colorScheme.primaryContainer,
-										contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+										containerColor = colorScheme.primaryContainer,
+										contentColor = colorScheme.onPrimaryContainer
 									)
 								}else ->{
 									ButtonDefaults.buttonColors(
-										containerColor = MaterialTheme.colorScheme.errorContainer,
-										contentColor = MaterialTheme.colorScheme.onErrorContainer
+										containerColor = colorScheme.errorContainer,
+										contentColor = colorScheme.onErrorContainer
 									)
 								}
 							} ,
 							modifier = Modifier
 								.height(56.dp)
-								.animateContentSize(),
+								.animateContentSize(
+									animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
+								),
 							contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
-							shape = RoundedCornerShape(28.dp) // Extra Large Shape
+							shape = RoundedCornerShape(28.dp)
 						) {
-							Text(
-								text =  if(uiState.validationResult == ValidationResult.Success) "Set alarm" else "Fix the error",
-								style = MaterialTheme.typography.bodyLarge ,
-							)
+							AnimatedContent(
+								targetState = uiState.validationResult == ValidationResult.Success,
+								transitionSpec = {
+									fadeIn() togetherWith fadeOut() using SizeTransform()
+								},
+								label = "button_text"
+							) { isValid ->
+								Text(
+									when{
+										isValid ->"Set alarm"
+										uiState.validationResult is ValidationResult.Failure && (uiState.validationResult as ValidationResult.Failure).field == AlarmErrorField.AlarmIsNotDiff ->"Change something"
+										else -> "Fix the error"
+									},
+									style = typography.bodyLarge ,
+								)
+							}
 						}
 					}
 				}
@@ -164,7 +186,7 @@ fun AlarmPickerScreen(
 		Column(
 			modifier = Modifier
 				.fillMaxSize()
-				.background(MaterialTheme.colorScheme.background)
+				.background(colorScheme.background)
 				.padding(screenPadding)
 				.padding(horizontal = horizontalPadding)
 				.animateContentSize()
@@ -180,11 +202,13 @@ fun AlarmPickerScreen(
 				weGood = currentError?.field != AlarmErrorField.DATE,
 				allowSelectingPastDate = false,
 			)
+
 			Spacer(modifier = Modifier.weight(0.178f))
+
 			// 5. Settings Card (Name & Sound)
 			Surface(
 				shape = RoundedCornerShape(28.dp),
-				color = MaterialTheme.colorScheme.surfaceContainer,
+				color = colorScheme.surfaceContainer,
 				modifier = Modifier.fillMaxWidth()
 			) {
 				Column {
@@ -205,7 +229,7 @@ fun AlarmPickerScreen(
 					)
 					HorizontalDivider(
 						modifier = Modifier.padding(horizontal = 16.dp),
-						color = MaterialTheme.colorScheme.outlineVariant,
+						color = colorScheme.outlineVariant,
 					)
 
 					SettingRow(
@@ -217,7 +241,7 @@ fun AlarmPickerScreen(
 
 					HorizontalDivider(
 						modifier = Modifier.padding(horizontal = 16.dp),
-						color = MaterialTheme.colorScheme.outlineVariant,
+						color = colorScheme.outlineVariant,
 					)
 
 					MessageRow(
@@ -242,8 +266,8 @@ fun TimeRow(
 	val startTime = uiState.alarmObject.startTime
 	val endTime = uiState.alarmObject.endTime
 
-	val timeStyle = MaterialTheme.typography.displayLarge.copy(fontWeight = FontWeight.Bold)
-	val amPmStyle = MaterialTheme.typography.labelLarge
+	val timeStyle = typography.displayLarge.copy(fontWeight = FontWeight.Bold)
+	val amPmStyle = typography.labelLarge
 
 	val configuration = LocalWindowInfo.current.containerSize
 	// Calculate title spacing adaptively based on screen height
@@ -254,8 +278,8 @@ fun TimeRow(
 
 	val doWeHaveError = uiState.validationResult != ValidationResult.Success  && (uiState.validationResult as? ValidationResult.Failure)?.field == AlarmErrorField.Time
 	val errorMessage = (uiState.validationResult as? ValidationResult.Failure)?.message
-	val timeColor = if (doWeHaveError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground
-	val amPmColor = if (doWeHaveError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground
+	val timeColor = if (doWeHaveError) colorScheme.error else colorScheme.onBackground
+	val amPmColor = if (doWeHaveError) colorScheme.error else colorScheme.onBackground
 
 
 	if (showStartTimePicker) {
@@ -282,8 +306,8 @@ fun TimeRow(
 				Column {
 					Text(
 						text = "Select start time",
-						style = MaterialTheme.typography.titleMedium,
-						color = MaterialTheme.colorScheme.onSurfaceVariant,
+						style = typography.titleMedium,
+						color = colorScheme.onSurfaceVariant,
 						maxLines = 1,
 						softWrap = false,
 					)
@@ -361,7 +385,7 @@ fun TimeRow(
 		Icon(
 			imageVector = Icons.AutoMirrored.Filled.ArrowForward,
 			contentDescription = null,
-			tint = MaterialTheme.colorScheme.onBackground,
+			tint = colorScheme.onBackground,
 			modifier = Modifier.size(32.dp)
 		)
 		Row(
@@ -387,45 +411,39 @@ fun TimeRow(
 			)
 		}
 	}
-	if (doWeHaveError) {
-		// add a slight animation here
 		Column() {
 			// text in center as I want to draw attention to it and left aligned one looked ugly
 			Spacer(modifier = Modifier.padding(3.dp))
-			Text(
-				text = errorMessage ?: "",
-				style = MaterialTheme.typography.labelMedium,
-				color =  colorScheme.onErrorContainer ,
-				textAlign = TextAlign.Start,
-				modifier = Modifier.padding( top = 5.dp)
-			)
+			AnimatedVisibility(
+				visible = doWeHaveError,
+				enter = expandVertically() + fadeIn(),
+				exit = shrinkVertically() + fadeOut()
+			) {
+				Text(
+					text = errorMessage.orEmpty(),
+					style = typography.labelMedium,
+					textAlign = TextAlign.Start,
+					modifier = Modifier.padding( top = 5.dp),
+					color = colorScheme.onErrorContainer
+				)
+			}
 		}
-	}
 }
 
-@Composable
-fun rememberAdaptiveHorizontalPadding(
-	percent: Float = 0.0086f,
-	min: Dp = 16.dp,
-	max: Dp = 32.dp
-): Dp {
+@Composable fun rememberAdaptiveHorizontalPadding(percent: Float = 0.0062f, min: Dp = 14.dp, max: Dp = 30.dp): Dp {
 	val screenWidthDp = LocalWindowInfo.current.containerSize.width.dp
 	return (screenWidthDp * percent).coerceIn(min, max)
 }
 
 
-@Composable
-private fun SettingRow(
-	icon: ImageVector,
-	title: String,
-	value: String,
-	onClick: () -> Unit
-) {
+@Composable fun SettingRow(icon: ImageVector, title: String, value: String, onClick: () -> Unit) {
 	Row(
 		modifier = Modifier
 			.fillMaxWidth()
 			.clickable(onClick = onClick)
-			.padding(horizontal = 16.dp, vertical = 20.dp),
+			.padding(horizontal = 16.dp, vertical = 20.dp)
+			.animateContentSize()
+		,
 		verticalAlignment = Alignment.CenterVertically
 	) {
 		Icon(
@@ -437,30 +455,25 @@ private fun SettingRow(
 		Text(
 			text = title,
 			color = colorScheme.onBackground,
-			fontSize = 16.sp
+			style =typography.titleSmall,
 		)
 		Spacer(modifier = Modifier.weight(1f))
 		Text(
 			text = value,
 			color = colorScheme.onSurfaceVariant,
-			fontSize = 14.sp
+			style = typography.labelLarge,
 		)
 	}
 }
 
 @Composable
-private fun MessageRow(
-	icon: ImageVector,
-	title: String,
-	value: String,
-	onValueChange: (String) -> Unit,
-) {
-	val colorScheme = MaterialTheme.colorScheme
+private fun MessageRow(icon: ImageVector, title: String, value: String, onValueChange: (String) -> Unit) {
 
 	Column(
 		modifier = Modifier
 			.fillMaxWidth()
 			.padding(horizontal = 16.dp, vertical = 12.dp)
+			.animateContentSize()
 	) {
 		Row(
 			modifier = Modifier.fillMaxWidth(),
@@ -475,12 +488,11 @@ private fun MessageRow(
 			Spacer(modifier = Modifier.width(12.dp))
 			Text(
 				text = title,
-				color =  colorScheme.onSurfaceVariant,
-				style = MaterialTheme.typography.labelLarge,
+				color = colorScheme.onBackground,
+				style =typography.titleSmall,
 				modifier = Modifier.weight(1f)
 			)
 		}
-
 		Spacer(modifier = Modifier.height(8.dp))
 
 		TextField(
@@ -489,11 +501,11 @@ private fun MessageRow(
 			modifier = Modifier
 				.fillMaxWidth()
 				.padding(start = 32.dp),
-			textStyle = MaterialTheme.typography.bodyMedium,
+			textStyle = typography.bodyMedium,
 			placeholder = {
 				Text(
 					text = "Add message...",
-					style = MaterialTheme.typography.bodyMedium,
+					style = typography.bodyMedium,
 					color = colorScheme.onSurfaceVariant
 				)
 			},
@@ -519,17 +531,18 @@ private fun FrequencyRow(
 	previewText: String = "",
 	uiState: AlarmPickerUiState,
 ) {
-	val colorScheme = colorScheme
 	val doWeHaveFrequencyError = (uiState.validationResult as? ValidationResult.Failure)?.field == AlarmErrorField.FREQUENCY
-//	val frequencyError = (uiState.validationResult as? ValidationResult.Failure)?.field == AlarmErrorField.FREQUENCY
+	val doWeHaveErrorOtherThanFrequency = (uiState.validationResult as? ValidationResult.Failure) != null &&  uiState.validationResult.field != AlarmErrorField.FREQUENCY
 
-	logD("preview text is isNotEmpty:${previewText.isNotEmpty()}, and doWeHaveFrequencyError:$doWeHaveFrequencyError, validation result: ${uiState.validationResult}")
+
+	logD("preview text is isNotEmpty:${previewText.isNotEmpty()}, and doWeHaveFrequencyError:$doWeHaveFrequencyError, validation result: ${uiState.validationResult}, doWeHaveErrorOtherThanFrequency: $doWeHaveErrorOtherThanFrequency ")
 	val view = LocalView.current
 
 	Column(
 		modifier = Modifier
 			.fillMaxWidth()
 			.padding(horizontal = 16.dp, vertical = 12.dp)
+			.animateContentSize()
 	) {
 		Row(
 			modifier = Modifier.fillMaxWidth(),
@@ -544,7 +557,7 @@ private fun FrequencyRow(
 			Text(
 				text = title,
 				color = MaterialTheme.colorScheme.onBackground,
-				fontSize = 16.sp,
+				style =typography.titleSmall,
 				modifier = Modifier.weight(1f)
 			)
 			Row(
@@ -558,9 +571,7 @@ private fun FrequencyRow(
 			) {
 				IconButton(
 					onClick = {
-						if (value - 1 > 0) {
-							onValueChange(value - 1)
-						} else {
+						if (value - 1 > 0) { onValueChange(value - 1) } else {
 							// Semantic "Expressive" Reject haptic for limit reached (Android 14/15+)
 							view.performHapticFeedback(HapticFeedbackConstants.REJECT)
 						}
@@ -578,9 +589,10 @@ private fun FrequencyRow(
 					value = if (value == 0L) "" else value.toString(),
 					onValueChange = {newValue -> newValue.toLongOrNull()?.let { onValueChange(it)} ?: onValueChange(0);  },
 					modifier = Modifier.width(45.dp),
-					textStyle = MaterialTheme.typography.titleMedium.copy(
+					textStyle = typography.titleMedium.copy(
 						textAlign = TextAlign.Center,
-						color = MaterialTheme.colorScheme.onPrimaryContainer,
+
+						color = colorScheme.onPrimaryContainer,
 						fontWeight = FontWeight.Bold
 					),
 					keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -607,15 +619,19 @@ private fun FrequencyRow(
 		}
 
 		// check for failure as if we have a error  in time then we won't be able to produce correct sequence of preview text, so don't display
-		if (previewText.isNotEmpty() || doWeHaveFrequencyError) {
-			// add a slight animation here
-			Spacer(modifier = Modifier.padding(3.dp))
-			Text(
-				text = previewText,
-				style = MaterialTheme.typography.labelSmall,
-				color = if (doWeHaveFrequencyError) colorScheme.onErrorContainer else colorScheme.onSurfaceVariant,
-				modifier = Modifier.padding(start = 40.dp, top = 2.dp)
-			)
-		}
+			AnimatedVisibility(
+				visible = !doWeHaveErrorOtherThanFrequency && (previewText.isNotEmpty() || doWeHaveFrequencyError),
+				enter = expandVertically() + fadeIn(),
+				exit = shrinkVertically() + fadeOut()
+			) {
+				Spacer(modifier = Modifier.padding(3.dp))
+				Text(
+					text = previewText,
+					style = typography.labelMedium,
+					textAlign = TextAlign.Start,
+					modifier = Modifier.padding( top = 5.dp, start = 2.dp).animateContentSize(),
+					color = if (doWeHaveFrequencyError) colorScheme.onErrorContainer else colorScheme.onSurfaceVariant
+				)
+			}
 	}
 }

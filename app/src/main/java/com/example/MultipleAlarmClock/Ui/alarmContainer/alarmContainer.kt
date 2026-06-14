@@ -218,14 +218,14 @@ fun EmptyState(modifier: Modifier = Modifier) {
 		)
 		Spacer(modifier = Modifier.height(24.dp))
 		Text(
-			text = "Add alarm to get started",
+			text = "Add your first alarm",
 			style = MaterialTheme.typography.headlineSmall,
 			fontWeight = FontWeight.Bold,
 			color = MaterialTheme.colorScheme.onSurface
 		)
 		Spacer(modifier = Modifier.height(8.dp))
 		Text(
-			text = "You haven't set any alarms yet. Tap 'Add alarm' to get started and never miss a beat.",
+			text = "Tap 'Add alarm' to get started and never miss a beat.",
 			style = MaterialTheme.typography.bodyMedium,
 			textAlign = TextAlign.Center,
 			color = MaterialTheme.colorScheme.onSurfaceVariant,

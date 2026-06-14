@@ -28,59 +28,60 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-  private val navViewModel: NavigationViewModel by viewModels()
-  @Inject lateinit var analytics: Analytics
-  private val coroutineScope = CoroutineScope(Dispatchers.Main)
-  private val notificationHandler by lazy { NotificationHandler(this) }
+	private val navViewModel: NavigationViewModel by viewModels()
+	@Inject lateinit var analytics: Analytics
+	private val coroutineScope = CoroutineScope(Dispatchers.Main)
+	private val notificationHandler by lazy { NotificationHandler(this) }
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    val splashScreen = installSplashScreen()
-    super.onCreate(savedInstanceState)
-
-    val deepLinkScreen: Screen? = parseDeepLinkIntent(intent)
-	  coroutineScope.launch(Dispatchers.Main) {
-		  notificationHandler.createNotificationChannels()
-	  }
+	override fun onCreate(savedInstanceState: Bundle?) {
+		val splashScreen = installSplashScreen()
+		super.onCreate(savedInstanceState)
 
 
-    try {
-      enableEdgeToEdge()
+		val deepLinkScreen: Screen? = parseDeepLinkIntent(intent)
+		coroutineScope.launch(Dispatchers.Main) {
+			notificationHandler.createNotificationChannels()
+		}
 
-      setContent {
-		  val colorScheme = if (isSystemInDarkTheme()) { dynamicDarkColorScheme(LocalContext.current) } else { dynamicLightColorScheme(LocalContext.current) }
-        MaterialTheme(colorScheme = colorScheme ) {
-            NavigationStack(
-              navViewModel = navViewModel,
-              deepLinkScreen = deepLinkScreen
-			)
-        }
-      }
-    } catch (e: Exception) {
-      logD(" \n\n\n\n\n\n [FATAL] --> error occurred in the onCreate, and it is ${e}\n}")
-      analytics.captureEvent("main activity class got error", mapOf(
-        "error Exception" to e.toString()
-      ))
-    }
-  }
 
-  override fun onNewIntent(intent: Intent) {
-    super.onNewIntent(intent)
-    setIntent(intent)
-  }
+		try {
+			enableEdgeToEdge()
 
-  fun parseDeepLinkIntent(intent: Intent?): Screen?{
-    if (intent == null || intent.action != Intent.ACTION_VIEW) return null
-    val data: Uri = intent.data ?: return null
-    logD("Deep link is data:$data and  intent.data:${intent.data} intent.action: ${intent.action} and intent:$intent ")
-    return when {
-      data.scheme == "alarmapp" && data.host == "home" -> Screen.AlarmContainer
-      else -> null
-    }
-  }
+			setContent {
+				val colorScheme = if (isSystemInDarkTheme()) { dynamicDarkColorScheme(LocalContext.current) } else { dynamicLightColorScheme(LocalContext.current) }
+				MaterialTheme(colorScheme = colorScheme,   ) {
+					NavigationStack(
+						navViewModel = navViewModel,
+						deepLinkScreen = deepLinkScreen
+					)
+				}
+			}
+		} catch (e: Exception) {
+			logD(" \n\n\n\n\n\n [FATAL] --> error occurred in the onCreate, and it is ${e}\n}")
+			analytics.captureEvent("main activity class got error", mapOf(
+				"error Exception" to e.toString()
+			))
+		}
+	}
+
+	override fun onNewIntent(intent: Intent) {
+		super.onNewIntent(intent)
+		setIntent(intent)
+	}
+
+	fun parseDeepLinkIntent(intent: Intent?): Screen?{
+		if (intent == null || intent.action != Intent.ACTION_VIEW) return null
+		val data: Uri = intent.data ?: return null
+		logD("Deep link is data:$data and  intent.data:${intent.data} intent.action: ${intent.action} and intent:$intent ")
+		return when {
+			data.scheme == "alarmapp" && data.host == "home" -> Screen.AlarmContainer
+			else -> null
+		}
+	}
 
 }
 
 fun logD(message: String): Unit {
-  Log.d("AAAAA", message)
+	Log.d("AAAAA", message)
 }
 
