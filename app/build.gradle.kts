@@ -154,6 +154,7 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.59.2")
 	implementation(libs.androidx.datastore.core)
 	implementation(libs.androidx.hilt.work)
+	implementation(libs.play.services.appset)
 	ksp(libs.androidx.hilt.compiler)
 	ksp("com.google.dagger:hilt-android-compiler:2.59.2")
 	implementation("androidx.hilt:hilt-navigation-compose:1.3.0")
@@ -163,7 +164,10 @@ dependencies {
     implementation ("com.posthog:posthog-android:3.45.1")
     implementation("androidx.core:core-splashscreen:1.2.0")
 
-    implementation("com.google.android.gms:play-services-appset:16.1.0")
+//    implementation("com.google.android.gms:play-services-appset:16.1.0")
+	implementation("androidx.media3:media3-exoplayer:1.10.1")
+	implementation("androidx.media3:media3-ui:1.10.1")
+	implementation(libs.androidx.media3.common)
 
     implementation(libs.androidx.datastore)
 	implementation(libs.protobuf.kotlin.lite.v4321)
@@ -196,7 +200,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.core)
 
     implementation(libs.androidx.material.icons.extended)
-    implementation(libs.androidx.media3.common)
     implementation(libs.androidx.ui.test.android)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 

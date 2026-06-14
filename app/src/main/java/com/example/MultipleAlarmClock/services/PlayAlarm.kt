@@ -6,6 +6,7 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.net.Uri
+import android.util.Log
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,8 +31,7 @@ class PlayAlarm(
 	private val audioFocusRequest: AudioFocusRequest by lazy { buildAudioFocusRequest() }
 
 	private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-	private val mainScope = CoroutineScope( Dispatchers.Main)
-
+	private val mainScope = CoroutineScope(Dispatchers.Main)
 
 	private val audioFocusChangeListener =
 		AudioManager.OnAudioFocusChangeListener { focusChange ->
@@ -42,13 +42,22 @@ class PlayAlarm(
 				)
 			}
 
+		logD("audio focus changed: $focusChange ,AUDIOFOCUS_GAIN:${AudioManager.AUDIOFOCUS_GAIN}   ")
+
 			when (focusChange) {
 				AudioManager.AUDIOFOCUS_GAIN -> {
-					// If we were paused/stopped for some reason and still have a player,
-					// resume. For an alarm, we prefer not to stop just because focus changed.
+					// This triggers either immediately, after a delay, or after a transient loss.
+					hasAudioFocus = true
 					mediaPlayer?.let { player ->
 						if (runCatching { !player.isPlaying }.getOrDefault(false)) {
-							runCatching { player.start() }
+							runCatching { player.start() }.onFailure { t ->
+								scope.launch {
+									analytics.captureEvent(
+										"play alarm delayed start failed",
+										mapOf("message" to (t.message ?: "unknown"))
+									)
+								}
+							}
 						}
 					}
 				}
@@ -56,8 +65,9 @@ class PlayAlarm(
 				AudioManager.AUDIOFOCUS_LOSS,
 				AudioManager.AUDIOFOCUS_LOSS_TRANSIENT,
 				AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
-					// Alarm policy: keep ringing. We only log the event.
-					// If the system enforces a mute/fade for this device/state, we can't override it.
+					// Alarm policy: keep ringing if possible, or pause if strict policy requires.
+					// For now, we only log the event and let the system enforce its rules.
+					hasAudioFocus = false
 				}
 			}
 		}
@@ -117,33 +127,59 @@ class PlayAlarm(
 		mediaPlayer = player
 
 		mainScope.launch {
-			val focusResult = runCatching {
-				audioManager.requestAudioFocus(audioFocusRequest)
-			}.getOrElse {
-				AudioManager.AUDIOFOCUS_REQUEST_FAILED
-			}
+			val focusResult = audioManager.requestAudioFocus(audioFocusRequest)
+			logD("audio focus res:$focusResult, AudioManager.AUDIOFOCUS_REQUEST_GRANTED:${AudioManager.AUDIOFOCUS_REQUEST_GRANTED},AudioManager.AUDIOFOCUS_REQUEST_DELAYED:${AudioManager.AUDIOFOCUS_REQUEST_DELAYED}, AudioManager.AUDIOFOCUS_REQUEST_FAILED:${AudioManager.AUDIOFOCUS_REQUEST_FAILED}      ")
 
 			when (focusResult) {
 				AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> {
 					hasAudioFocus = true
-					// We have focus, start ringing!
-					startPlayer(player)
-				}
-				AudioManager.AUDIOFOCUS_REQUEST_DELAYED -> {
-					hasAudioFocus = false
-					// Do NOT start playing yet.
-					// The system will call your audioFocusChangeListener with AUDIOFOCUS_GAIN
-					// the moment your foreground status registers or the blocking app releases focus.
-					scope.launch {
-						analytics.captureEvent("audio focus delayed", mapOf("uri" to soundUri.toString()))
+					// Focus granted immediately. Start playing!
+					runCatching { player.start() }.onFailure { t ->
+						scope.launch {
+							analytics.captureEvent(
+								"play alarm start failed",
+								mapOf("message" to (t.message ?: "unknown"))
+							)
+						}
+						stop(abandonFocus = true)
 					}
 				}
+
+				AudioManager.AUDIOFOCUS_REQUEST_DELAYED -> {
+					hasAudioFocus = false
+					// DO NOT START PLAYING YET.
+					// The system acknowledged the request but needs a moment (FGS propagation).
+					// The `audioFocusChangeListener` will receive `AUDIOFOCUS_GAIN` shortly.
+					scope.launch {
+						analytics.captureEvent(
+							"audio focus delayed",
+							mapOf("uri" to soundUri.toString())
+						)
+					}
+				}
+
 				AudioManager.AUDIOFOCUS_REQUEST_FAILED -> {
 					hasAudioFocus = false
-					// Focus was outright denied (e.g., user is on an active phone call).
-					// For an alarm app, you usually still force the playback anyway,
-					// but at a lower volume or routing to the earpiece.
-					startPlayer(player)
+					// The system outright denied focus.
+					scope.launch {
+						analytics.captureEvent(
+							"audio focus request failed",
+							mapOf("uri" to soundUri.toString())
+						)
+					}
+
+					// Fallback strategy for alarms: Try to force play anyway.
+					// If the system absolutely prohibits it, it will stay silent,
+					// but we ensure our state machine doesn't break.
+					runCatching { player.start() }.onFailure { t ->
+						scope.launch {
+							analytics.captureEvent(
+								"play alarm force start failed",
+								mapOf("message" to (t.message ?: "unknown"))
+							)
+						}
+						stop(abandonFocus = true)
+					}
 				}
 			}
 		}
@@ -175,28 +211,22 @@ class PlayAlarm(
 		scope.cancel()
 	}
 
-	private fun startPlayer(player: MediaPlayer) {
-		runCatching { player.start() }.onFailure { t ->
-			scope.launch {
-				analytics.captureEvent(
-					"play alarm start failed",
-					mapOf("message" to (t.message ?: "unknown"))
-				)
-			}
-			stop(abandonFocus = true)
-		}
-	}
-
 	private fun buildAudioFocusRequest(): AudioFocusRequest {
-		return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
+		// Change 1: TRANSIENT focus ensures background apps auto-resume when you hit stop.
+		return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
 			.setAudioAttributes(
 				AudioAttributes.Builder()
 					.setUsage(AudioAttributes.USAGE_ALARM)
 					.setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
 					.build()
 			)
+			// Change 2: Accept delayed focus to handle the Foreground Service race condition.
 			.setAcceptsDelayedFocusGain(true)
 			.setOnAudioFocusChangeListener(audioFocusChangeListener)
 			.build()
 	}
+}
+
+private fun logD(msg: String){
+	Log.d("AAAA", "[PlayAlarm] $msg")
 }

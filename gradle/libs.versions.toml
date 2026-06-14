@@ -35,6 +35,7 @@ coreKtx = "1.19.0"
 
 hiltWork = "1.3.0"
 datastoreCore = "1.2.1"
+playServicesAppset = "16.1.0"
 
 [libraries]
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3Core" }
@@ -79,6 +80,7 @@ protobuf-kotlin-lite-v4321 = { module = "com.google.protobuf:protobuf-kotlin-lit
 androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltWork" }
 androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltWork" }
 androidx-datastore-core = { group = "androidx.datastore", name = "datastore-core", version.ref = "datastoreCore" }
+play-services-appset = { group = "com.google.android.gms", name = "play-services-appset", version.ref = "playServicesAppset" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
