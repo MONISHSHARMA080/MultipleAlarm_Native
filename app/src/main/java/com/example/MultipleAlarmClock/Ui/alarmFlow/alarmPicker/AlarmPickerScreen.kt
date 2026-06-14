@@ -273,8 +273,6 @@ fun TimeRow(
 	val screenWidthDp = with(density) { containerSize.width.toDp() }
 	val screenHeightDp = with(density) { containerSize.height.toDp() }
 
-	// Adaptive font size: scale displayLarge (57sp) based on screen width
-	// We use a base scale of 411dp (standard phone) and scale down if needed
 	val timeFontSize = (57.sp * (screenWidthDp / 460.dp).coerceIn(0.8f, 1.099f))
 	val timeStyle = typography.displayLarge.copy(
 		fontWeight = FontWeight.Bold,
@@ -282,7 +280,6 @@ fun TimeRow(
 	)
 	val amPmStyle = typography.labelLarge
 
-	// Correct pixel-to-dp conversion for titleSpacing
 	val titleSpacing = (screenHeightDp * 0.04f).coerceIn(12.dp, 36.dp)
 
 	var showStartTimePicker by remember { mutableStateOf(false) }
