@@ -67,6 +67,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -75,6 +76,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmErrorField
 import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.coolApps.MultipleAlarmClock.logD
@@ -266,12 +268,22 @@ fun TimeRow(
 	val startTime = uiState.alarmObject.startTime
 	val endTime = uiState.alarmObject.endTime
 
-	val timeStyle = typography.displayLarge.copy(fontWeight = FontWeight.Bold)
+	val density = LocalDensity.current
+	val containerSize = LocalWindowInfo.current.containerSize
+	val screenWidthDp = with(density) { containerSize.width.toDp() }
+	val screenHeightDp = with(density) { containerSize.height.toDp() }
+
+	// Adaptive font size: scale displayLarge (57sp) based on screen width
+	// We use a base scale of 411dp (standard phone) and scale down if needed
+	val timeFontSize = (57.sp * (screenWidthDp / 460.dp).coerceIn(0.8f, 1.099f))
+	val timeStyle = typography.displayLarge.copy(
+		fontWeight = FontWeight.Bold,
+		fontSize = timeFontSize
+	)
 	val amPmStyle = typography.labelLarge
 
-	val configuration = LocalWindowInfo.current.containerSize
-	// Calculate title spacing adaptively based on screen height
-	val titleSpacing = (configuration.height.dp * 0.04f).coerceIn(12.dp, 36.dp)
+	// Correct pixel-to-dp conversion for titleSpacing
+	val titleSpacing = (screenHeightDp * 0.04f).coerceIn(12.dp, 36.dp)
 
 	var showStartTimePicker by remember { mutableStateOf(false) }
 	var showEndTimePicker by remember { mutableStateOf(false) }
@@ -431,7 +443,8 @@ fun TimeRow(
 }
 
 @Composable fun rememberAdaptiveHorizontalPadding(percent: Float = 0.0062f, min: Dp = 14.dp, max: Dp = 30.dp): Dp {
-	val screenWidthDp = LocalWindowInfo.current.containerSize.width.dp
+	val density = LocalDensity.current
+	val screenWidthDp = with(density) { LocalWindowInfo.current.containerSize.width.toDp() }
 	return (screenWidthDp * percent).coerceIn(min, max)
 }
 
