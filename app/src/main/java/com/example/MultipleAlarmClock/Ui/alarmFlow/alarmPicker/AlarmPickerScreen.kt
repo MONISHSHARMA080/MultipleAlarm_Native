@@ -248,7 +248,7 @@ fun AlarmPickerScreen(
 		) {
 
 			Spacer(modifier = Modifier.weight(0.44f))
-			TimeRow(uiState, {viewModel.updateUi( uiState.copy(alarmObject = uiState.alarmObject.copy(startTime = it)) )}, {viewModel.updateUi( uiState.copy(alarmObject = uiState.alarmObject.copy(startTime = it)) )})
+			TimeRow(uiState, {viewModel.updateUi( uiState.copy(alarmObject = uiState.alarmObject.copy(startTime = it)) )}, {viewModel.updateUi( uiState.copy(alarmObject = uiState.alarmObject.copy(endTime = it)) )})
 			Spacer(modifier = Modifier.weight(0.43f))
 			DateList(
 				{ viewModel.updateDate(it)}, uiState.alarmObject.startTime.time.time,

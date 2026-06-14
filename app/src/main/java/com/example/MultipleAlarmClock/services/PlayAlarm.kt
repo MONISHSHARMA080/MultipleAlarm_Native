@@ -13,7 +13,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 class PlayAlarm(
 	context: Context,
@@ -25,13 +28,14 @@ class PlayAlarm(
 
 	private var mediaPlayer: MediaPlayer? = null
 	private var hasAudioFocus = false
-	private var playJob: Job? = null
 
 	// Reuse the same request instance for request + abandon, per docs.
 	private val audioFocusRequest: AudioFocusRequest by lazy { buildAudioFocusRequest() }
 
+	private var playJob: Job? = null
+
 	private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-	private val mainScope = CoroutineScope(Dispatchers.Main)
+	private val mainScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
 	private val audioFocusChangeListener =
 		AudioManager.OnAudioFocusChangeListener { focusChange ->
@@ -111,7 +115,6 @@ class PlayAlarm(
 
 					true
 				}
-
 				prepare()
 			}
 		} catch (t: Throwable) {
@@ -126,66 +129,65 @@ class PlayAlarm(
 
 		mediaPlayer = player
 
-		mainScope.launch {
-			val focusResult = audioManager.requestAudioFocus(audioFocusRequest)
-			logD("audio focus res:$focusResult, AudioManager.AUDIOFOCUS_REQUEST_GRANTED:${AudioManager.AUDIOFOCUS_REQUEST_GRANTED},AudioManager.AUDIOFOCUS_REQUEST_DELAYED:${AudioManager.AUDIOFOCUS_REQUEST_DELAYED}, AudioManager.AUDIOFOCUS_REQUEST_FAILED:${AudioManager.AUDIOFOCUS_REQUEST_FAILED}      ")
+		playJob = mainScope.launch {
+			var focusResult = audioManager.requestAudioFocus(audioFocusRequest)
+				logD("audio focus res:$focusResult, AudioManager.AUDIOFOCUS_REQUEST_GRANTED:${AudioManager.AUDIOFOCUS_REQUEST_GRANTED},AudioManager.AUDIOFOCUS_REQUEST_DELAYED:${AudioManager.AUDIOFOCUS_REQUEST_DELAYED}, AudioManager.AUDIOFOCUS_REQUEST_FAILED:${AudioManager.AUDIOFOCUS_REQUEST_FAILED}      ")
+
+
+
+			// 3. Controlled Retries if the system initially reports a hard FAILED status
+			if (focusResult == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
+
+				for (attempt in 1..7) {
+					logD("hii god god")
+					delay(350.milliseconds) // Suspend non-blockingly to give the OS a chance to update FGS status
+
+					logD("alarm focus request retry")
+
+					// CRITICAL SAFETY CHECK: If the user cancelled via stop() during our delay,
+					// or if another alarm instance mutated the global player, stop immediately.
+					if (!isActive || mediaPlayer !== player) return@launch
+					logD("alarm focus request retry 2")
+
+
+					focusResult = audioManager.requestAudioFocus(audioFocusRequest)
+					logD(" repeat audio focus res:$focusResult, AudioManager.AUDIOFOCUS_REQUEST_GRANTED:${AudioManager.AUDIOFOCUS_REQUEST_GRANTED},AudioManager.AUDIOFOCUS_REQUEST_DELAYED:${AudioManager.AUDIOFOCUS_REQUEST_DELAYED}, AudioManager.AUDIOFOCUS_REQUEST_FAILED:${AudioManager.AUDIOFOCUS_REQUEST_FAILED}      ")
+
+					if (focusResult != AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
+						scope.launch { analytics.captureEvent("audio focus acquired on retry", mapOf("attempt" to attempt)) }
+						break
+					}
+				}
+			}
+
+			logD("booo")
+
+			// 4. Double check safety flags right before altering the active MediaPlayer state
+			if (!isActive || mediaPlayer !== player) return@launch
 
 			when (focusResult) {
 				AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> {
 					hasAudioFocus = true
-					// Focus granted immediately. Start playing!
-					runCatching { player.start() }.onFailure { t ->
-						scope.launch {
-							analytics.captureEvent(
-								"play alarm start failed",
-								mapOf("message" to (t.message ?: "unknown"))
-							)
-						}
-						stop(abandonFocus = true)
-					}
+					runCatching { player.start() }
 				}
 
 				AudioManager.AUDIOFOCUS_REQUEST_DELAYED -> {
-					hasAudioFocus = false
-					// DO NOT START PLAYING YET.
-					// The system acknowledged the request but needs a moment (FGS propagation).
-					// The `audioFocusChangeListener` will receive `AUDIOFOCUS_GAIN` shortly.
-					scope.launch {
-						analytics.captureEvent(
-							"audio focus delayed",
-							mapOf("uri" to soundUri.toString())
-						)
-					}
+					hasAudioFocus = false // Let our change listener flip this to true shortly
 				}
 
 				AudioManager.AUDIOFOCUS_REQUEST_FAILED -> {
 					hasAudioFocus = false
-					// The system outright denied focus.
-					scope.launch {
-						analytics.captureEvent(
-							"audio focus request failed",
-							mapOf("uri" to soundUri.toString())
-						)
-					}
-
-					// Fallback strategy for alarms: Try to force play anyway.
-					// If the system absolutely prohibits it, it will stay silent,
-					// but we ensure our state machine doesn't break.
-					runCatching { player.start() }.onFailure { t ->
-						scope.launch {
-							analytics.captureEvent(
-								"play alarm force start failed",
-								mapOf("message" to (t.message ?: "unknown"))
-							)
-						}
-						stop(abandonFocus = true)
-					}
+					scope.launch { analytics.captureEvent("audio focus permanently failed - falling back", emptyMap()) }
+					// Absolute fallback: Play the alarm regardless of system compliance
+					runCatching { player.start() }
 				}
 			}
 		}
 	}
 
 	fun stop(abandonFocus: Boolean = true) {
+
+
 		playJob?.cancel()
 		playJob = null
 
@@ -197,7 +199,6 @@ class PlayAlarm(
 			}
 			runCatching { player.release() }
 		}
-
 		mediaPlayer = null
 
 		if (abandonFocus && hasAudioFocus) {
@@ -209,18 +210,18 @@ class PlayAlarm(
 	fun destroy() {
 		stop(abandonFocus = true)
 		scope.cancel()
+		mainScope.cancel()
 	}
 
 	private fun buildAudioFocusRequest(): AudioFocusRequest {
 		// Change 1: TRANSIENT focus ensures background apps auto-resume when you hit stop.
-		return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+		return AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
 			.setAudioAttributes(
 				AudioAttributes.Builder()
 					.setUsage(AudioAttributes.USAGE_ALARM)
 					.setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
 					.build()
 			)
-			// Change 2: Accept delayed focus to handle the Foreground Service race condition.
 			.setAcceptsDelayedFocusGain(true)
 			.setOnAudioFocusChangeListener(audioFocusChangeListener)
 			.build()

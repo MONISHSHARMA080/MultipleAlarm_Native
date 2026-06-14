@@ -164,9 +164,9 @@ dependencies {
     implementation ("com.posthog:posthog-android:3.45.1")
     implementation("androidx.core:core-splashscreen:1.2.0")
 
-//    implementation("com.google.android.gms:play-services-appset:16.1.0")
-	implementation("androidx.media3:media3-exoplayer:1.10.1")
-	implementation("androidx.media3:media3-ui:1.10.1")
+//	implementation("androidx.media3:media3-exoplayer:1.10.1")
+//	implementation("androidx.media3:media3-ui:1.10.1")
+
 	implementation(libs.androidx.media3.common)
 
     implementation(libs.androidx.datastore)
