@@ -12,12 +12,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -53,7 +55,6 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -66,10 +67,9 @@ import com.example.MultipleAlarmClock.Ui.utils.FeedbackPopUpCard
 import kotlinx.coroutines.launch
 
 @Composable fun AlarmContainer(
-	 onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit, onNavigateToSettings:()->Unit, containerSize: IntSize
+	 onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit, onNavigateToSettings:()->Unit
 ){
 	val alarmContainerViewModel :AlarmContainerViewModel = hiltViewModel()
-	val screenHeight = containerSize.height.dp
 	val snackBarHostState = remember { SnackbarHostState() }
 
 
@@ -85,7 +85,10 @@ import kotlinx.coroutines.launch
 
 	logD(" showFeedbackCard:$showFeedbackCard   ")
 
-	Scaffold( containerColor = colorScheme.surface ) { edgeToEdgePadding ->
+	Scaffold(
+		containerColor = colorScheme.surface,
+		contentWindowInsets = WindowInsets.safeDrawing
+	) { edgeToEdgePadding ->
 		Box(modifier = Modifier.fillMaxSize()) {
 			SnackbarHost(
 				hostState = snackBarHostState,
@@ -187,7 +190,9 @@ import kotlinx.coroutines.launch
 			}
 
 			Box(
-				modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = screenHeight / 26)
+				modifier = Modifier
+					.align(Alignment.BottomCenter)
+					.padding(bottom = edgeToEdgePadding.calculateBottomPadding() + 20.dp)
 			) {
 				AddAlarmButton(
 					onClick = {

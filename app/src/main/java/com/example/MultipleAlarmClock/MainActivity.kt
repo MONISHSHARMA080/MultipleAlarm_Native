@@ -46,6 +46,7 @@ class MainActivity : ComponentActivity() {
 
 		try {
 			enableEdgeToEdge()
+			window.isNavigationBarContrastEnforced = false
 
 			setContent {
 				val colorScheme = if (isSystemInDarkTheme()) { dynamicDarkColorScheme(LocalContext.current) } else { dynamicLightColorScheme(LocalContext.current) }

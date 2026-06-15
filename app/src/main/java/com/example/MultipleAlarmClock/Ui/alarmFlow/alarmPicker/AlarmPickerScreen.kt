@@ -22,10 +22,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -99,6 +102,7 @@ fun AlarmPickerScreen(
 	onNavigateToSoundList: () -> Unit,
 	viewModel: AlarmPickerViewModel
 ) {
+
 	val uiState by viewModel.uiState.collectAsState()
 	val selectedSound by viewModel.selectedAlarmSound.collectAsState()
 
@@ -109,6 +113,10 @@ fun AlarmPickerScreen(
 	val context = LocalContext.current
 	val isPermissionsOk = uiState.areAllPermissionsGranted
 	val weGood = uiState.validationResult is ValidationResult.Success && isPermissionsOk
+
+	LaunchedEffect(Unit) {
+		viewModel.screen("AlarmPickerScreen")
+	}
 
 	LaunchedEffect(weGood,uiState ) {
 		val isNotificationsEnabled = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
@@ -153,6 +161,7 @@ fun AlarmPickerScreen(
 	val horizontalPadding = rememberAdaptiveHorizontalPadding()
 
 	Scaffold(
+		contentWindowInsets = WindowInsets.safeDrawing,
 		topBar = {
 			TopAppBar(
 				title = {
@@ -178,6 +187,7 @@ fun AlarmPickerScreen(
 					modifier = Modifier
 						.fillMaxWidth()
 						.background(colorScheme.background)
+						.navigationBarsPadding()
 						.padding(16.dp).padding(bottom = 20.dp)
 						.animateContentSize()
 					,

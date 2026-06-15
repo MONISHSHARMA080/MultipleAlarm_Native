@@ -53,7 +53,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.IntentCompat
-import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.logD
@@ -85,11 +84,10 @@ class AlarmActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
          logD("about to create a new alarm")
-        window.isNavigationBarContrastEnforced = false
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        super.onCreate(savedInstanceState)
-		this.intentReceived = intent
         enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
+        window.isNavigationBarContrastEnforced = false
+		this.intentReceived = intent
         setContent {
 			val colorScheme = if (isSystemInDarkTheme()) { dynamicDarkColorScheme(LocalContext.current) } else { dynamicLightColorScheme(LocalContext.current) }
             MaterialTheme(colorScheme = colorScheme) {

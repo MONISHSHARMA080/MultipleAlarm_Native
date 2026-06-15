@@ -274,6 +274,13 @@ class AlarmPickerViewModel @Inject constructor(
 		}
 	}
 
+	fun screen(screenName:String, properties: Map<String, Any>? = null): Unit {
+		viewModelScope.launch {
+			analytics.screen(screenName, properties)
+		}
+	}
+
+
 	private fun getPreviewAlarms(alarm: AlarmObject, numberOfAlarmPreviewToReturn:Int = 3): String{
 		val alarmObj = alarm.deepCopy()
 		val stringBuilder= StringBuilder()
