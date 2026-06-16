@@ -23,15 +23,18 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -114,6 +117,8 @@ fun AlarmPickerScreen(
 	val isPermissionsOk = uiState.areAllPermissionsGranted
 	val weGood = uiState.validationResult is ValidationResult.Success && isPermissionsOk
 
+	val scrollState = rememberScrollState()
+
 	LaunchedEffect(Unit) {
 		viewModel.screen("AlarmPickerScreen")
 	}
@@ -165,7 +170,8 @@ fun AlarmPickerScreen(
 		topBar = {
 			TopAppBar(
 				title = {
-					Text(if (uiState.initialAlarm == null) "Set alarm" else "Edit alarm" ,
+					Text(
+						if (uiState.initialAlarm == null) "Set alarm" else "Edit alarm",
 						style = timeStyle,
 						color = colorScheme.onBackground,
 						modifier = Modifier.padding(horizontal = 7.dp),
@@ -188,13 +194,16 @@ fun AlarmPickerScreen(
 						.fillMaxWidth()
 						.background(colorScheme.background)
 						.navigationBarsPadding()
-						.padding(16.dp).padding(bottom = 20.dp)
+						.padding(16.dp)
+						.padding(bottom = 20.dp)
 						.animateContentSize()
 					,
 					contentAlignment = Alignment.Center
 				) {
 					Row(
-						modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth(),
+						modifier = Modifier
+							.widthIn(max = 600.dp)
+							.fillMaxWidth(),
 						horizontalArrangement = Arrangement.End
 					) {
 						Button(
@@ -220,7 +229,10 @@ fun AlarmPickerScreen(
 							modifier = Modifier
 								.height(56.dp)
 								.animateContentSize(
-									animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
+									animationSpec = spring(
+										dampingRatio = Spring.DampingRatioMediumBouncy,
+										stiffness = Spring.StiffnessMedium
+									)
 								),
 							contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
 							shape = RoundedCornerShape(28.dp)
@@ -251,6 +263,7 @@ fun AlarmPickerScreen(
 				.fillMaxSize()
 				.background(colorScheme.background)
 				.padding(screenPadding)
+				.consumeWindowInsets(screenPadding)
 				.padding(horizontal = horizontalPadding)
 				.animateContentSize()
 			,
@@ -432,7 +445,9 @@ fun TimeRow(
 	) {
 		Row(
 			verticalAlignment = Alignment.Bottom,
-			modifier = Modifier.weight(1f).clickable{showStartTimePicker = !showStartTimePicker},
+			modifier = Modifier
+				.weight(1f)
+				.clickable { showStartTimePicker = !showStartTimePicker },
 			horizontalArrangement = Arrangement.Start
 		) {
 			Text(
@@ -460,7 +475,9 @@ fun TimeRow(
 		)
 		Row(
 			verticalAlignment = Alignment.Bottom,
-			modifier = Modifier.weight(1f).clickable{showEndTimePicker = !showEndTimePicker},
+			modifier = Modifier
+				.weight(1f)
+				.clickable { showEndTimePicker = !showEndTimePicker },
 			horizontalArrangement = Arrangement.End
 		) {
 			Text(
@@ -544,6 +561,7 @@ private fun MessageRow(icon: ImageVector, title: String, value: String, onValueC
 		modifier = Modifier
 			.fillMaxWidth()
 			.padding(horizontal = 16.dp, vertical = 12.dp)
+			.imePadding()
 			.animateContentSize()
 	) {
 		Row(
@@ -580,7 +598,7 @@ private fun MessageRow(icon: ImageVector, title: String, value: String, onValueC
 					color = colorScheme.onSurfaceVariant
 				)
 			},
-			minLines = 1, // Support 2-3 lines comfortably
+			minLines = 1,
 			maxLines = 3,
 			shape = RoundedCornerShape(20.dp),
 			colors = TextFieldDefaults.colors(
@@ -635,7 +653,7 @@ private fun FrequencyRow(
 				verticalAlignment = Alignment.CenterVertically,
 				modifier = Modifier
 					.background(
-						color = if (doWeHaveFrequencyError) colorScheme.errorContainer else colorScheme.secondaryContainer ,
+						color = if (doWeHaveFrequencyError) colorScheme.errorContainer else colorScheme.secondaryContainer,
 						shape = RoundedCornerShape(12.dp)
 					)
 					.padding(4.dp)
@@ -700,7 +718,9 @@ private fun FrequencyRow(
 					text = previewText,
 					style = typography.labelMedium,
 					textAlign = TextAlign.Start,
-					modifier = Modifier.padding( top = 5.dp, start = 2.dp).animateContentSize(),
+					modifier = Modifier
+						.padding(top = 5.dp, start = 2.dp)
+						.animateContentSize(),
 					color = if (doWeHaveFrequencyError) colorScheme.onErrorContainer else colorScheme.onSurfaceVariant
 				)
 			}
