@@ -373,8 +373,9 @@ fun TimeRow(
   val screenHeightDp = with(density) { containerSize.height.toDp() }
 
   val timeFontSize = (57.sp * (screenWidthDp / 460.dp).coerceIn(0.8f, 1.099f))
-  val timeStyle =
-          typography.displayLarge.copy(fontWeight = FontWeight.Bold, fontSize = timeFontSize)
+  val timeStyle = typography.displayLarge.copy(fontWeight = FontWeight.Bold,
+	  // fontSize = timeFontSize
+  )
   val amPmStyle = typography.labelLarge
 
   val titleSpacing = (screenHeightDp * 0.04f).coerceIn(12.dp, 36.dp)
