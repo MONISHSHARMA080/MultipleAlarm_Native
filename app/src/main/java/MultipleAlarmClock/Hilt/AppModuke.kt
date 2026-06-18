@@ -2,6 +2,8 @@ package com.example.MultipleAlarmClock.Hilt
 
 import MultipleAlarmClock.alarmFeature.data.local.AlarmDao
 import MultipleAlarmClock.alarmFeature.data.local.AlarmDatabase
+import MultipleAlarmClock.alarmFeature.data.local.repository.AlarmRepositoryImpl
+import MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import android.app.AlarmManager
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -45,6 +47,14 @@ object AppModule {
 
 	@Provides
 	fun provideAlarmDao(db: AlarmDatabase): AlarmDao = db.alarmDao()
+
+	@Provides
+	@Singleton
+	fun provideAlarmRepository(repository: AlarmRepositoryImpl): AlarmRepository = repository
+
+	@Provides
+	fun provideTimeProvider(): com.coolApps.MultipleAlarmClock.AlarmLogic.TimeProvider = com.coolApps.MultipleAlarmClock.AlarmLogic.TimeProviderImpl()
+
 
 	@Provides
 	fun provideAlarmManager(@ApplicationContext context: Context): AlarmManager {

@@ -1,7 +1,7 @@
 package com.coolApps.MultipleAlarmClock.BroadCastReceivers
 
-import MultipleAlarmClock.alarmFeature.data.local.AlarmDao
 import MultipleAlarmClock.alarmFeature.data.local.AlarmData
+import MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import MultipleAlarmClock.alarmFeature.domain.getFreqInMillisecond
 import android.app.AlarmManager
 import android.content.BroadcastReceiver
@@ -31,10 +31,10 @@ class NextAlarmReceiver: BroadcastReceiver() {
     private lateinit var context: Context
     private val coroutineScope = CoroutineScope( Dispatchers.Default)
     private val alarmManager by lazy { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
-    var alarmsController = AlarmsController()
+    @Inject lateinit var alarmsController: AlarmsController
     val analytics by lazy {Analytics(context)}
     private  val receiverClass: Class<out BroadcastReceiver> = AlarmReceiver::class.java
-	@Inject lateinit var alarmDao: AlarmDao
+	@Inject lateinit var alarmRepository: AlarmRepository
 
     val doWeWantToGoAsync =true
 
@@ -79,10 +79,7 @@ class NextAlarmReceiver: BroadcastReceiver() {
     private suspend fun scheduleFutureAlarm(activityContext: Context, alarmManager: AlarmManager, oldIntent: Intent) {
         val parsedIntentData = IntentCompat.getParcelableExtra(oldIntent,"intentData", AlarmActivityIntentData::class.java) ?: return
         val currentTimeAlarmFired = parsedIntentData.startTime
-        val startTimeForAlarmSeries = parsedIntentData.startTimeForDb
-        val originalDbEndTime = parsedIntentData.endTime
-        val alarmDaoImpl = alarmDao
-        val alarmData: AlarmData? = alarmDaoImpl.getAlarmByValues(startTimeForAlarmSeries, originalDbEndTime)
+        val alarmData: AlarmData? = alarmRepository.getAlarmById(parsedIntentData.alarmIdInDb)
 
         if (alarmData == null) {
             analytics.captureEvent("alarmData delivered from intent not found in DB", mapOf(
@@ -100,7 +97,7 @@ class NextAlarmReceiver: BroadcastReceiver() {
                startTime = nextAlarmTime, // This is the time the next alarm will trigger
                endTime = alarmData.endTime, // The series end time
                alarmManager = alarmManager,componentActivity = activityContext,
-               receiverClass = receiverClass,startTimeForAlarmSeries = startTimeForAlarmSeries,
+               receiverClass = receiverClass,startTimeForAlarmSeries = alarmData.startTime,
                alarmData = alarmData, alarmMessage = alarmData.message
                )
            }.await()
@@ -112,7 +109,7 @@ class NextAlarmReceiver: BroadcastReceiver() {
             }, onError = {messageToDisplayUser, exception->
                 val errorHandler = ErrorHandler(NotificationHandler(context), analytics)
                 errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "error returned in scheduling upcoming alarm " )
-                alarmDaoImpl.updateAlarmForReset(alarmData.copy(isReadyToUse = false))
+                alarmRepository.updateAlarm(alarmData.copy(isReadyToUse = false))
             })
         }
     }

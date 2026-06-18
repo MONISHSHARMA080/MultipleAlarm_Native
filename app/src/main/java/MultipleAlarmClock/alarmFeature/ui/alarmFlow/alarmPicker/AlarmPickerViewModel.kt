@@ -1,8 +1,8 @@
 package com.example.MultipleAlarmClock.Ui.alarmPicker
 
-import MultipleAlarmClock.alarmFeature.data.local.AlarmDao
 import MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import MultipleAlarmClock.alarmFeature.data.local.toDomain
+import MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
 import MultipleAlarmClock.alarmFeature.domain.model.AlarmObject
 import MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
@@ -45,8 +45,9 @@ import java.util.Locale
 class AlarmPickerViewModel @Inject constructor(
 	val analytics: Analytics,
 	private val alarmManager: AlarmManager,
-	private val alarmDao: AlarmDao,
+	private val alarmRepository: AlarmRepository,
 	private val dataStore: DataStore<Settings>,
+	private val alarmsController: AlarmsController,
 	@ApplicationContext  val context: Context
 ) : ViewModel() {
 
@@ -70,7 +71,6 @@ class AlarmPickerViewModel @Inject constructor(
 	val previewingRandom = _previewingRandom.asStateFlow()
 
 	private val errorHandler = ErrorHandler(notificationHandler = NotificationHandler(context),analytics)
-	private val alarmsController = AlarmsController()
 
 	private val playAlarm = PlayAlarm(context, analytics)
 
@@ -322,7 +322,6 @@ class AlarmPickerViewModel @Inject constructor(
 						alarm = AlarmValueForAlarmSeries.AlarmObjectType(newAlarmObject),
 						alarmManager = alarmManager,
 						activityContext = context,
-						alarmDao = alarmDao,
 					)
 					exception.fold(
 						onSuccess = {
@@ -344,7 +343,7 @@ class AlarmPickerViewModel @Inject constructor(
 				//  oldAlarm was there so editing an existing alarm
 				viewModelScope.launch {
 					logD("deleting the alarm $ oldAlarm")
-					alarmsController.updateAlarmStateInDb( oldAlarm, alarmDao).fold(onSuccess = {}, onError = { messageToDisplayUser, exception  ->
+					alarmsController.updateAlarmStateInDb( oldAlarm).fold(onSuccess = {}, onError = { messageToDisplayUser, exception  ->
 						// no such alarm exist in DB so can't update it
 						logD("there is a error while editing the alarm and updating it's state in DB and  that is ${exception.message} ")
 						errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while editing alarm, Please try again" )
@@ -352,7 +351,7 @@ class AlarmPickerViewModel @Inject constructor(
 					)
 					val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(
 						alarm = AlarmValueForAlarmSeries.AlarmDataType(newAlarmObject.toAlarmData(oldAlarm.id) ),
-						alarmManager, context, alarmDao
+						alarmManager, context
 					)
 					// now the error case is handled there
 					alarmScheduledResult.fold(

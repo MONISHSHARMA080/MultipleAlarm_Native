@@ -10,6 +10,8 @@ class AlarmLocalDataSource @Inject constructor(
 ) {
 	fun getAlarmsStream(): Flow<List<AlarmData>> = alarmDao.getAllAlarmsFlow()
 
+	suspend fun getAllAlarms(): List<AlarmData> = alarmDao.getAllAlarms()
+
 	suspend fun getAlarmById(id: Int): AlarmData? = alarmDao.getAlarmById(id)
 
 	suspend fun insertAlarm(alarm: AlarmData): Long = alarmDao.insert(alarm)
@@ -18,5 +20,5 @@ class AlarmLocalDataSource @Inject constructor(
 
 	suspend fun deleteAlarm(alarm: AlarmData): Int = alarmDao.deleteAlarm(alarm)
 
-	suspend fun updateAlarm(alarm: AlarmData) = alarmDao.updateAlarm(alarm)
+	suspend fun updateAlarm(alarm: AlarmData): Int = alarmDao.updateAlarm(alarm)
 }

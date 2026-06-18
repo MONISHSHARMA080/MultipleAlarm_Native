@@ -1,7 +1,7 @@
 package com.example.MultipleAlarmClock.Ui.alarmContainer
 
-import MultipleAlarmClock.alarmFeature.data.local.AlarmDao
 import MultipleAlarmClock.alarmFeature.data.local.AlarmData
+import MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import android.app.AlarmManager
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -33,13 +33,13 @@ import kotlin.time.Duration.Companion.seconds
 @HiltViewModel
 class AlarmContainerViewModel @Inject constructor(
 	val analytics: Analytics,
-	private val alarmDao: AlarmDao,
+	private val alarmRepository: AlarmRepository,
 	private val alarmManager: AlarmManager,
 	private val dataStore: DataStore<Settings>,
+	private val alarmsController: AlarmsController,
 	@ApplicationContext  val context: Context
 ) : ViewModel(){
 
-	private val alarmsController = AlarmsController()
 	private val errorHandler = ErrorHandler(notificationHandler = NotificationHandler(context),analytics)
 
 	val showFeedbackUIState: StateFlow<Boolean> = dataStore.data
@@ -65,7 +65,7 @@ class AlarmContainerViewModel @Inject constructor(
 		}
 	}
 
-	val alarms: StateFlow<List<AlarmData>?> = alarmDao.getAllAlarmsFlow()
+	val alarms: StateFlow<List<AlarmData>?> = alarmRepository.getAlarmsStream()
 		.flowOn(Dispatchers.IO)
 		.stateIn(
 			scope = viewModelScope,
@@ -81,7 +81,7 @@ class AlarmContainerViewModel @Inject constructor(
 				))
 			}
 			logD("user asked to stop the alarm $alarmData")
-			alarmsController.cancelAlarmHandler(alarmData,  context, alarmManager, alarmDao).fold(onSuccess = {}, onError = {messageToDisplayUser,exception ->
+			alarmsController.cancelAlarmHandler(alarmData,  context, alarmManager).fold(onSuccess = {}, onError = { messageToDisplayUser, exception ->
 				errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while cancelling alarm, Please try again" )
 				logD("there is a error/Exception in making new alarm-->${exception.message}")
 			})
@@ -104,7 +104,6 @@ class AlarmContainerViewModel @Inject constructor(
 				alarmData = alarmData,
 				alarmManager = alarmManager,
 				activityContext = context,
-				alarmDao =alarmDao,
 			)
 			exception.fold(
 				onSuccess = {
@@ -132,7 +131,7 @@ class AlarmContainerViewModel @Inject constructor(
 				)
 			}
 			logD("deleting the alarm $alarmData")
-			alarmsController.deleteAlarmHandler(alarmData, context, alarmDao,  alarmManager).fold(onSuccess = {}, onError = {messageToDisplayUser, exception ->
+			alarmsController.deleteAlarmHandler(alarmData, context, alarmManager).fold(onSuccess = {}, onError = { messageToDisplayUser, exception ->
 				logD("there is a error in deleting the alarm  that is $exception ")
 				errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while deleting the alarm, Please try again" )
 			})

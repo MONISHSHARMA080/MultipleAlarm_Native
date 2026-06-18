@@ -13,6 +13,10 @@ class AlarmRepositoryImpl @Inject constructor(
 		return localDataSource.getAlarmsStream()
 	}
 
+	override suspend fun getAllAlarms(): List<AlarmData> {
+		return localDataSource.getAllAlarms()
+	}
+
 	override suspend fun getAlarmById(id: Int): AlarmData? {
 		return localDataSource.getAlarmById(id)
 	}

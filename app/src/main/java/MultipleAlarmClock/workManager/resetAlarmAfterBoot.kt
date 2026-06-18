@@ -1,7 +1,7 @@
 package com.coolApps.MultipleAlarmClock.workManager
 
-import MultipleAlarmClock.alarmFeature.data.local.AlarmDao
 import MultipleAlarmClock.alarmFeature.data.local.AlarmData
+import MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import android.app.AlarmManager
 import android.content.Context
 import androidx.hilt.work.HiltWorker
@@ -24,14 +24,14 @@ class ResetAlarmAfterBoot @AssistedInject constructor(
 	@Assisted workerParams: WorkerParameters,
 	private val analytics: Analytics,           // injected
 	private val alarmsController: AlarmsController ,// injected
-	private val alarmDao: AlarmDao
+	private val alarmRepository: AlarmRepository
 ) : CoroutineWorker(appContext, workerParams) {
 
 	val alarmManager = applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
 	override suspend fun doWork(): Result {
 		// Do the work here--in this case, upload the images.
-		val allAlarmsInDb =getAllAlarms(alarmDao)
+		val allAlarmsInDb =getAllAlarms(alarmRepository)
 		val enabledAlarms: List<AlarmData> = allAlarmsInDb.filter { it.isReadyToUse }
 
 		analytics.captureEvent("resetting Alarm after boot or app update", mapOf(
@@ -45,9 +45,9 @@ class ResetAlarmAfterBoot @AssistedInject constructor(
 		val results = coroutineScope {
 			enabledAlarms.map { alarmData ->
 				async {
-					val result =alarmsController.resetAlarms(alarmData = alarmData, alarmManager = alarmManager, activityContext = applicationContext, alarmDao = alarmDao)
+					val result =alarmsController.resetAlarms(alarmData = alarmData, alarmManager = alarmManager, activityContext = applicationContext)
 					if (result.isErr()){
-						alarmsController.updateAlarmStateInDb(alarmData.copy(isReadyToUse = false), alarmDao)
+						alarmsController.updateAlarmStateInDb(alarmData.copy(isReadyToUse = false))
 					}
 					return@async result
 				}
@@ -62,7 +62,7 @@ class ResetAlarmAfterBoot @AssistedInject constructor(
 		}
 		return if (hasError) Result.failure() else Result.success()
 	}
-	private suspend fun getAllAlarms(alarmDao: AlarmDao): List<AlarmData> {
-		return alarmDao.getAllAlarms()
+	private suspend fun getAllAlarms(alarmRepository: AlarmRepository): List<AlarmData> {
+		return alarmRepository.getAllAlarms()
 	}
 }
