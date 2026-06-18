@@ -1,5 +1,7 @@
 package com.example.MultipleAlarmClock.Ui.alarmContainer
 
+import MultipleAlarmClock.alarmFeature.data.local.AlarmDao
+import MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import android.app.AlarmManager
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -8,8 +10,6 @@ import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.logD
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.utils.Result.Result

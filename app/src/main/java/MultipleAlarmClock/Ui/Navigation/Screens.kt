@@ -1,7 +1,7 @@
 package com.example.MultipleAlarmClock.Ui.Navigation
 
+import MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import androidx.navigation3.runtime.NavKey
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import kotlinx.serialization.Serializable
 
 

@@ -1,5 +1,8 @@
 package com.coolApps.MultipleAlarmClock.BroadCastReceivers
 
+import MultipleAlarmClock.alarmFeature.data.local.AlarmDao
+import MultipleAlarmClock.alarmFeature.data.local.AlarmData
+import MultipleAlarmClock.alarmFeature.domain.getFreqInMillisecond
 import android.app.AlarmManager
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -10,8 +13,6 @@ import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.utils.Result.Result
 import com.example.MultipleAlarmClock.BroadCastReceivers.AlarmReceiver

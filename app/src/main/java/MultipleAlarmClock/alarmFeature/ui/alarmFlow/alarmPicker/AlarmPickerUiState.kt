@@ -1,8 +1,8 @@
 package com.example.MultipleAlarmClock.Ui.alarmPicker
 
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmObject
-import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
+import MultipleAlarmClock.alarmFeature.data.local.AlarmData
+import MultipleAlarmClock.alarmFeature.domain.model.AlarmObject
+import MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
 import com.example.MultipleAlarmClock.Ui.Permissions.PermissionStep
 import java.util.Calendar
 
@@ -36,8 +36,8 @@ data class AlarmPickerUiState(
 	}
 }
 
-sealed interface AlarmPickerEvent {
-	data object NavigateBack : AlarmPickerEvent
-	data class ShowPermissionDialog(val missingSteps: List<PermissionStep>) : AlarmPickerEvent
-	data object UpdateDataStoreGranted : AlarmPickerEvent
-}
+//sealed interface AlarmPickerEvent {
+//	data object NavigateBack : AlarmPickerEvent
+//	data class ShowPermissionDialog(val missingSteps: List<PermissionStep>) : AlarmPickerEvent
+//	data object UpdateDataStoreGranted : AlarmPickerEvent
+//}

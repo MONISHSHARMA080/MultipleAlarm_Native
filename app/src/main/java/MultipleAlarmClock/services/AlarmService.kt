@@ -1,5 +1,6 @@
 package com.coolApps.MultipleAlarmClock.services
 
+import MultipleAlarmClock.alarmFeature.data.local.AlarmDao
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -18,7 +19,7 @@ import androidx.core.net.toUri
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivity
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
+import MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope

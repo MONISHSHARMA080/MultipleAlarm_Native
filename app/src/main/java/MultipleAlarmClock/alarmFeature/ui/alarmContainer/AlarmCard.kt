@@ -1,5 +1,6 @@
 package com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmListScreen
 
+import MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -46,13 +47,15 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable fun AlarmCard(
 	alarmData: AlarmData,
-	onEdit: (AlarmData) -> Unit ,
-	onStop: (AlarmData) -> Unit ,
-	onReset: (AlarmData) -> Unit ,
+	onEdit: (AlarmData) -> Unit,
+	onStop: (AlarmData) -> Unit,
+	onReset: (AlarmData) -> Unit,
 	onDelete: (AlarmData) -> Unit,
 	modifier: Modifier,
 	onLongPress: (AlarmData) -> Unit
@@ -253,9 +256,9 @@ import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 }
 
 fun formatTime12h(millis: Long, pattern: String ="h:mm " ): String {
-	val formatter = java.text.SimpleDateFormat(pattern, java.util.Locale.getDefault())
-	return formatter.format(java.util.Date(millis))
+	val formatter = SimpleDateFormat(pattern, Locale.getDefault())
+	return formatter.format(Date(millis))
 }
 
 fun formatDate(millis: Long): String =
-	java.text.SimpleDateFormat("EEEE, MMM d", java.util.Locale.getDefault()).format(java.util.Date(millis))
+	SimpleDateFormat("EEEE, MMM d", Locale.getDefault()).format(Date(millis))

@@ -1,12 +1,12 @@
 package com.coolApps.MultipleAlarmClock.BroadCastReceivers
 
+import MultipleAlarmClock.alarmFeature.data.local.AlarmDao
+import MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.notification.NotificationChannelType
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.utils.Result.Error

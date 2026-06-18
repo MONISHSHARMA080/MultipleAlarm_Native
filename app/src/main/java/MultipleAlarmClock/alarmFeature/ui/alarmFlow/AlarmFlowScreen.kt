@@ -1,5 +1,6 @@
 package com.example.MultipleAlarmClock.Ui.alarmFlow
 
+import MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -18,7 +19,6 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.AlarmPickerScreen
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.example.MultipleAlarmClock.Ui.Navigation.AlarmFlowRoute
 import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerViewModel
 import com.example.MultipleAlarmClock.Ui.alarmPicker.listAlarmRingtone.ListAlarmScreen

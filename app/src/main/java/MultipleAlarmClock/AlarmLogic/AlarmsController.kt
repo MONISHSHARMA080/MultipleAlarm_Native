@@ -1,5 +1,11 @@
 package com.coolApps.MultipleAlarmClock.AlarmLogic
 
+import MultipleAlarmClock.alarmFeature.data.local.AlarmDao
+import MultipleAlarmClock.alarmFeature.data.local.AlarmData
+import MultipleAlarmClock.alarmFeature.data.local.toDomain
+import MultipleAlarmClock.alarmFeature.domain.getFreqInMillisecond
+import MultipleAlarmClock.alarmFeature.domain.isValid
+import MultipleAlarmClock.alarmFeature.domain.model.AlarmObject
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
@@ -9,9 +15,6 @@ import android.util.Log
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.BroadCastReceivers.AlarmInfoNotification
 import com.coolApps.MultipleAlarmClock.BroadCastReceivers.NextAlarmReceiver
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmObject
 import com.example.MultipleAlarmClock.BroadCastReceivers.AlarmReceiver
 import com.example.MultipleAlarmClock.BroadCastReceivers.LastAlarmUpdateDBReceiver
 import jakarta.inject.Inject
@@ -71,10 +74,9 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
             logD("the message in the startTime is $alarmMessage")
             logD(" startTime:${getTimeInHumanReadableFormat(startTime)} and endTime:${getTimeInHumanReadableFormat(endTime)} \n")
             val currentCalTime = timeProvider.getCurrentTime()
-            val currentTimeViaCalender = currentCalTime
-            logD("\n fireTime of (upcoming) alarm is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)}")
+		    logD("\n fireTime of (upcoming) alarm is ${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)}")
             if (startTime >= endTime)return ResultCustom.Failure(scheduleAlarmError.ProgrammerError(), internalException = Exception("the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not > endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} "))
-            if (currentTimeViaCalender > startTime ) return ResultCustom.Failure( errorMessageToDisplayUser = scheduleAlarmError.ProgrammerError(),internalException = Exception("the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not greater than the current time(from cal):${this.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeViaCalender)} ") )
+            if (currentCalTime > startTime ) return ResultCustom.Failure( errorMessageToDisplayUser = scheduleAlarmError.ProgrammerError(),internalException = Exception("the startTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTime)} is not greater than the current time(from cal):${this.getTimeInHumanReadableFormatProtectFrom0Included(currentCalTime)} ") )
             if ( alarmData.startTime != startTimeForAlarmSeries ) return ResultCustom.Failure( errorMessageToDisplayUser = scheduleAlarmError.ProgrammerError(), internalException = Exception("the SeriesStartTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(startTimeForAlarmSeries)} is not same as the one from the alarmData(DB):${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.startTime)} "))
             if (alarmData.endTime != endTime)return ResultCustom.Failure(errorMessageToDisplayUser = scheduleAlarmError.ProgrammerError(), internalException = Exception("the endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} is not same as the one from the alarmData(DB):${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.endTime)} "))
             logD("\n++setting the pending intent of request code(startTime of alarm to int)->${startTime.toInt()} and it is in the human readable format is ${SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date(startTime)) }++\n\n")
@@ -169,11 +171,10 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
                 val msg = "Expected the endTIme to be less than current time but got endTIme:${getTimeInHumanReadableFormat(alarmData.endTime)}, currentTime:${getTimeInHumanReadableFormat(currentTIme.timeInMillis)}"
                 return  ResultCustom.Failure(errorMessageToDisplayUser = StartAlarmSeriesError.ProgrammerError(msg), internalException = Exception(msg) )
             }
-            val alarmIterator = alarmData.iteratorGeneric()
-            var timeReturned = alarmIterator.next()
-            while (timeReturned < currentTIme.timeInMillis && alarmIterator.hasNext()) {
-                timeReturned = alarmIterator.next()
-            }
+			val alarmObj = alarmData.toDomain()
+			val timeReturned =alarmObj.alarmTimeSequence().firstOrNull{ it < currentTIme.timeInMillis }
+				?: return ResultCustom.Failure(StartAlarmSeriesError.ErrorSchedulingAlarm("Unable to schedule alarm, please fix the input and try again",),
+				Exception("Can't get first alarm to start the series\n alarmData:$alarmData and converted to alarmObject is $alarmObj "))
             val scheduleAlarmHandler  =   scope.async {scheduleAlarm(timeReturned , alarmData.endTime, alarmManager, activityContext,  receiverClass = receiverClass,
                 startTimeForAlarmSeries = alarmData.startTime, alarmMessage = alarmData.message, alarmData = alarmData )  }
             val lastIntentHandler = scope.async {this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(
@@ -291,30 +292,31 @@ class AlarmsController (private val timeProvider: TimeProvider = TimeProviderImp
             defaultErrorMessage = CancelAlarmError.GenericError("Sorry, an error occurred. Please try again")
         ){
             val cal = Calendar.getInstance()
-            // cancel the alarm and also try to cancel a few more to be on safe side and not to encounter race conditions
-            var extraSafetyAlarmsToCancel = 5
             val currentTime = cal.timeInMillis
-            val alarmIterator = alarmData.iterator()
+
             val validationResult = alarmData.isValid()
             if (!validationResult.isValid) return ResultCustom.Failure(CancelAlarmError.ProgrammerError(validationResult.errorMessage), internalException = Exception(validationResult.errorMessage) )
-            while (alarmIterator.hasNext()  && extraSafetyAlarmsToCancel >0 ) {
-                val alarmIterVal = alarmIterator.next()
-                logD("the time value gotten in iterating is ${getTimeInHumanReadableFormatProtectFrom0Included(alarmIterVal)}")
-                if (alarmIterVal < currentTime) continue
-                val intentData = AlarmActivityIntentData(
-                    startTimeForDb = alarmData.startTime,
-                    startTime = alarmIterVal,
-                    endTime = alarmData.endTime,
-                    message = alarmData.message,
-                    alarmIdInDb = alarmData.id
-                )
-                val baseIntent = Intent(ALARM_ACTION)
-                cancelPendingIntentReceiver(baseIntent, context, intentData, alarmReceiverClass, alarmManager, alarmData.id)
-                cancelPendingIntentReceiver(baseIntent, context, intentData, nextAlarmReceiver, alarmManager, alarmData.id)
-                cancelPendingIntentReceiver(baseIntent, context, intentData, alarmReceiverClass, alarmManager, alarmData.startTime.toInt())
-                // have to cancel next alarm receiver, nextAlarmReceiver, AlarmInfoNotification
-                extraSafetyAlarmsToCancel--
-            }
+			val alarmObj = alarmData.toDomain()
+			alarmObj.alarmTimeSequence()
+				.dropWhile { it < currentTime }
+				.take(5)
+				.forEach { alarmIterVal ->
+					logD("the time value gotten in iterating is ${getTimeInHumanReadableFormatProtectFrom0Included(alarmIterVal)}")
+
+					val intentData = AlarmActivityIntentData(
+						startTimeForDb = alarmData.startTime,
+						startTime = alarmIterVal,
+						endTime = alarmData.endTime,
+						message = alarmData.message,
+						alarmIdInDb = alarmData.id
+					)
+
+					val baseIntent = Intent(ALARM_ACTION)
+					cancelPendingIntentReceiver(baseIntent, context, intentData, alarmReceiverClass, alarmManager, alarmData.id)
+					cancelPendingIntentReceiver(baseIntent, context, intentData, nextAlarmReceiver, alarmManager, alarmData.id)
+					cancelPendingIntentReceiver(baseIntent, context, intentData, alarmReceiverClass, alarmManager, alarmData.startTime.toInt())
+				}
+
             // cancel the lastPi that is there to stop the alarm
             val lastAlarmRequestCode = (alarmData.endTime + alarmData.startTime).toInt()
             val lastAlarmIntent = Intent(context, LastAlarmUpdateDBReceiver::class.java)

@@ -1,5 +1,7 @@
 package com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker
 
+import MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
+import MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
 import android.Manifest
 import android.content.pm.PackageManager
 import android.view.HapticFeedbackConstants
@@ -52,7 +54,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
@@ -89,8 +90,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmErrorField
-import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.coolApps.MultipleAlarmClock.logD
 import com.example.MultipleAlarmClock.Ui.Permissions.AlarmPermissionDialog
 import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerUiState
@@ -460,8 +459,8 @@ fun TimeRow(
               Column {
                 Text(
                         text = "Select end time",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = typography.titleMedium,
+                        color = colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         softWrap = false,
                 )
@@ -677,12 +676,12 @@ private fun FrequencyRow(
       Icon(
               imageVector = icon,
               contentDescription = null,
-              tint = MaterialTheme.colorScheme.onSurfaceVariant
+              tint = colorScheme.onSurfaceVariant
       )
       Spacer(modifier = Modifier.width(16.dp))
       Text(
               text = title,
-              color = MaterialTheme.colorScheme.onBackground,
+              color = colorScheme.onBackground,
               style = typography.titleSmall,
               modifier = Modifier.weight(1f)
       )
@@ -711,7 +710,7 @@ private fun FrequencyRow(
           Icon(
                   imageVector = Icons.Rounded.Remove,
                   contentDescription = "Decrease",
-                  tint = MaterialTheme.colorScheme.onPrimaryContainer
+                  tint = colorScheme.onPrimaryContainer
           )
         }
 
@@ -744,7 +743,7 @@ private fun FrequencyRow(
           Icon(
                   imageVector = Icons.Rounded.Add,
                   contentDescription = "Increase",
-                  tint = MaterialTheme.colorScheme.onPrimaryContainer
+                  tint = colorScheme.onPrimaryContainer
           )
         }
       }

@@ -1,5 +1,11 @@
 package com.example.MultipleAlarmClock.Ui.alarmPicker
 
+import MultipleAlarmClock.alarmFeature.data.local.AlarmDao
+import MultipleAlarmClock.alarmFeature.data.local.AlarmData
+import MultipleAlarmClock.alarmFeature.data.local.toDomain
+import MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
+import MultipleAlarmClock.alarmFeature.domain.model.AlarmObject
+import MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
 import android.app.AlarmManager
 import android.content.Context
 import android.media.RingtoneManager
@@ -11,11 +17,6 @@ import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController.AlarmValueForAlarmSeries
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmErrorField
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmObject
-import com.coolApps.MultipleAlarmClock.dataBase.ValidationResult
 import com.coolApps.MultipleAlarmClock.logD
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.services.PlayAlarm
@@ -108,7 +109,7 @@ class AlarmPickerViewModel @Inject constructor(
 
 	fun setInitialAlarmObject(alarmData: AlarmData?) {
 		viewModelScope.launch {
-			val initialAlarmObject = alarmData?.toAlarmObject()?.incrementDateToCurrentDate() ?: createDefaultAlarmObject(alarmData)
+			val initialAlarmObject = alarmData?.toDomain()?.incrementDateToCurrentDate() ?: createDefaultAlarmObject(alarmData)
 			_uiState.update {
 				it.copy(
 					alarmObject = initialAlarmObject,
@@ -185,7 +186,7 @@ class AlarmPickerViewModel @Inject constructor(
 			date = Calendar.getInstance().timeInMillis,
 			message = alarm?.message ?: "",
 			freqGottenAfterCallback = alarm?.frequencyInMin ?: 1,
-			alarmSoundUri = alarm?.sound?.toUri() ,
+			alarmSoundUri = alarm?.sound?.toUri(),
 		)
 	}
 

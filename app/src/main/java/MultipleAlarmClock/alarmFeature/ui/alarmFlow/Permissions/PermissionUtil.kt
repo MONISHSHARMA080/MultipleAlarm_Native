@@ -1,5 +1,6 @@
 package com.example.MultipleAlarmClock.Ui.Permissions
 
+import android.Manifest
 import android.app.AlarmManager
 import android.app.NotificationManager
 import android.content.ComponentName
@@ -14,7 +15,7 @@ object PermissionUtils {
 
 	fun isPostNotificationsGranted(context: Context): Boolean =
 		ContextCompat.checkSelfPermission(
-			context, android.Manifest.permission.POST_NOTIFICATIONS
+			context, Manifest.permission.POST_NOTIFICATIONS
 		) == PackageManager.PERMISSION_GRANTED
 
 	fun isFullScreenIntentGranted(context: Context): Boolean =

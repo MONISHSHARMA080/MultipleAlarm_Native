@@ -1,9 +1,9 @@
 package com.example.MultipleAlarmClock.BroadCastReceivers
 
+import MultipleAlarmClock.alarmFeature.data.local.AlarmDao
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
 import com.coolApps.MultipleAlarmClock.logD
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject

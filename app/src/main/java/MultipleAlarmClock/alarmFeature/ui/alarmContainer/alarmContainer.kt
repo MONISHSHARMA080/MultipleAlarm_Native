@@ -1,5 +1,6 @@
 package com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmListScreen
 
+import MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import android.content.ClipData
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.core.animateFloatAsState
@@ -23,7 +24,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AlarmAdd
@@ -60,22 +61,22 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.logD
 import com.example.MultipleAlarmClock.Ui.alarmContainer.AlarmContainerViewModel
 import com.example.MultipleAlarmClock.Ui.utils.FeedbackPopUpCard
 import kotlinx.coroutines.launch
 
+
 @Composable fun AlarmContainer(
-	 onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit, onNavigateToSettings:()->Unit
+	onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit, onNavigateToSettings:()->Unit
 ){
 	val alarmContainerViewModel :AlarmContainerViewModel = hiltViewModel()
 	val snackBarHostState = remember { SnackbarHostState() }
 
 
 	val clipBoard =LocalClipboard.current
-	val alarms by alarmContainerViewModel.alarms.collectAsStateWithLifecycle()
-	ReportDrawnWhen { alarms != null }
+	val alarmList: List<AlarmData>? by alarmContainerViewModel.alarms.collectAsStateWithLifecycle()
+	ReportDrawnWhen { alarmList != null }
 	val coroutineScope = rememberCoroutineScope()
 	val colorScheme = MaterialTheme.colorScheme
 	val showFeedbackCard by alarmContainerViewModel.showFeedbackUIState.collectAsStateWithLifecycle()
@@ -148,26 +149,30 @@ import kotlinx.coroutines.launch
 					}
 				}
 
-				val alarmList = alarms
-				if (alarmList != null){
-					itemsIndexed(
-						items = alarmList,
-						key = { _, alarm -> alarm.id }
-					) { _, individualAlarm ->
+				alarmList?.let {list ->
+					items(
+						items = list,
+						key = {it.id}
+					) { individualAlarm ->
 						AlarmCard(
 							individualAlarm, onEdit = {alarmData -> onNavigateToEdit(alarmData)}, onStop = { alarmData -> alarmContainerViewModel.stopAlarm(alarmData) },
 							onDelete = {alarmData ->alarmContainerViewModel.deleteAlarm(alarmData)}, onReset = {alarmData -> alarmContainerViewModel.resetAlarm(alarmData)}, onLongPress = { alarmData ->
 								coroutineScope.launch {
-									launch {
-										alarmContainerViewModel.captureEvent("user long pressed the alarm", mapOf(
-											"copying the alarm message" to true,
-											"is message empty" to alarmData.message.isEmpty(),
-											"showing snackBar" to alarmData.message.isNotEmpty()
-										)
-										)
-									}
+									alarmContainerViewModel.captureEvent("user long pressed the alarm", mapOf(
+										"copying the alarm message" to true,
+										"is message empty" to alarmData.message.isEmpty(),
+										"showing snackBar" to alarmData.message.isNotEmpty()
+									)
+									)
 									if (alarmData.message.isNotEmpty()) {
-										clipBoard.setClipEntry(ClipEntry(ClipData.newPlainText("alarm message", alarmData.message)))
+										clipBoard.setClipEntry(
+											ClipEntry(
+												ClipData.newPlainText(
+													"alarm message",
+													alarmData.message
+												)
+											)
+										)
 										snackBarHostState.showSnackbar("Message copied to clipboard")
 									}else{
 										snackBarHostState.showSnackbar("Message message not present")
@@ -178,14 +183,15 @@ import kotlinx.coroutines.launch
 						)
 					}
 				}
+
 			}
 
-			if (alarms?.isEmpty() == true) {
+			if (alarmList?.isEmpty() == true) {
 				EmptyState(
 					modifier = Modifier
 						.fillMaxSize()
 						.padding(edgeToEdgePadding)
-						.padding(bottom = 100.dp) // Offset to center above FAB
+						.padding(bottom = 100.dp)
 				)
 			}
 
@@ -224,7 +230,7 @@ fun EmptyState(modifier: Modifier = Modifier) {
 		Spacer(modifier = Modifier.height(24.dp))
 		Text(
 			text = "Add your first alarm",
-			style = MaterialTheme.typography.headlineSmall,
+			style = MaterialTheme.typography.headlineMedium,
 			fontWeight = FontWeight.Bold,
 			color = MaterialTheme.colorScheme.onSurface
 		)
@@ -279,7 +285,7 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 				Icon(
 					imageVector = Icons.Default.AlarmAdd,
 					contentDescription = null,
-					modifier = Modifier.size(28.dp) // 🔑 Fixed dp, not sp
+					modifier = Modifier.size(28.dp)
 				)
 			},
 			text = {
@@ -288,7 +294,7 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 					fontSize = 14.sp,
 					fontWeight = FontWeight.Bold,
 					letterSpacing = 0.1.sp,
-					maxLines = 1  // 🔑 Prevent wrapping on small screens
+					maxLines = 1
 				)
 			}
 		)

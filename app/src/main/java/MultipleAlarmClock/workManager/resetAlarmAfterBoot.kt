@@ -1,5 +1,7 @@
 package com.coolApps.MultipleAlarmClock.workManager
 
+import MultipleAlarmClock.alarmFeature.data.local.AlarmDao
+import MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import android.app.AlarmManager
 import android.content.Context
 import androidx.hilt.work.HiltWorker
@@ -8,8 +10,6 @@ import androidx.work.WorkerParameters
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject

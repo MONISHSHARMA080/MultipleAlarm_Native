@@ -1,5 +1,7 @@
 package com.example.MultipleAlarmClock.Hilt
 
+import MultipleAlarmClock.alarmFeature.data.local.AlarmDao
+import MultipleAlarmClock.alarmFeature.data.local.AlarmDatabase
 import android.app.AlarmManager
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -7,8 +9,6 @@ import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import androidx.room.Room
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
-import com.coolApps.MultipleAlarmClock.dataBase.AlarmDatabase
 import com.example.MultipleAlarmClock.Data.MIGRATION_1_2
 import com.example.MultipleAlarmClock.Data.dataStore.Settings
 import com.example.MultipleAlarmClock.Data.dataStore.SettingsSerializer
