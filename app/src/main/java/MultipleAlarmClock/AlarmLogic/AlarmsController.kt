@@ -6,6 +6,8 @@ import MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import MultipleAlarmClock.alarmFeature.domain.getFreqInMillisecond
 import MultipleAlarmClock.alarmFeature.domain.isValid
 import MultipleAlarmClock.alarmFeature.domain.model.AlarmObject
+import MultipleAlarmClock.alarmFeature.receiver.AlarmReceiver
+import MultipleAlarmClock.alarmFeature.receiver.LastAlarmUpdateDBReceiver
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
@@ -14,9 +16,6 @@ import android.content.Intent
 import android.util.Log
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.BroadCastReceivers.AlarmInfoNotification
-import MultipleAlarmClock.alarmFeature.receiver.NextAlarmReceiver
-import MultipleAlarmClock.alarmFeature.receiver.AlarmReceiver
-import MultipleAlarmClock.alarmFeature.receiver.LastAlarmUpdateDBReceiver
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -46,7 +45,6 @@ class AlarmsController @Inject constructor(
     var scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val alarmInfoNotificationClass:Class<out BroadcastReceiver> = AlarmInfoNotification::class.java
     private val alarmReceiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java
-     val nextAlarmReceiver:Class<out BroadcastReceiver> = NextAlarmReceiver::class.java
     data class NextAlarmInfo(
         val nextAlarmTriggerTime: Long,
         val newSeriesStartTime: Long,
@@ -83,25 +81,16 @@ class AlarmsController @Inject constructor(
             if (alarmData.endTime != endTime)return ResultCustom.Failure(errorMessageToDisplayUser = scheduleAlarmError.ProgrammerError(), internalException = Exception("the endTime:${this.getTimeInHumanReadableFormatProtectFrom0Included(endTime)} is not same as the one from the alarmData(DB):${this.getTimeInHumanReadableFormatProtectFrom0Included(alarmData.endTime)} "))
             logD("\n++setting the pending intent of request code(startTime of alarm to int)->${startTime.toInt()} and it is in the human readable format is ${SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date(startTime)) }++\n\n")
             val resultForAlarmOpr = scope.async {getPendingIntentForAlarm(receiverClass, componentActivity, startTimeForAlarmSeries, startTime, endTime, alarmMessage, alarmData.id)}
-            val resultForSettingNextAlarmOpr = scope.async {getPendingIntentForAlarm(nextAlarmReceiver, componentActivity, startTimeForAlarmSeries, startTime, endTime, alarmMessage, alarmData.id, createIntentForAlarmMetaData = false)}
             val PIForAlarm = resultForAlarmOpr.await().fold(
                 onSuccess = {PI -> PI},
                 onError = {failureRes, exception-> return ResultCustom.Failure(errorMessageToDisplayUser = scheduleAlarmError.PendingIntentNotFound(failureRes.messageToDisplayUser), internalException = Exception(exception)) }
             )
-            val PIForSettingNextAlarm = resultForSettingNextAlarmOpr.await().fold(
-                onSuccess = {PI -> PI},
-                onError = {failureRes, exception-> return ResultCustom.Failure(errorMessageToDisplayUser = scheduleAlarmError.PendingIntentNotFound(failureRes.messageToDisplayUser), internalException = Exception(exception)) }
-            )
             if (PIForAlarm.pendingIntentToGiveUserUpcommingAlarmInfoWhenAsked != null ) return ResultCustom.Failure(internalException = Exception(" the pending intent for alarm's info. notification is null "), errorMessageToDisplayUser = scheduleAlarmError.PendingIntentNotFound("Unable to set alarm, Please try again"))
-            if (PIForSettingNextAlarm.pendingIntentToGiveUserUpcommingAlarmInfoWhenAsked != null  ) return ResultCustom.Failure(errorMessageToDisplayUser = scheduleAlarmError.PendingIntentNotFound(" the pending intent for setting next alarm's notification info. notification is not null "))
             logD("\n\n\n [INFO] the pending Intent for the alarm is $PIForAlarm ")
-            logD("\n\n\n [INFO] the pending Intent for setting the next alarm is $PIForSettingNextAlarm ")
             // here the PI for the alarm notification
             val alarmClockInfoObject = AlarmManager.AlarmClockInfo(startTime, PIForAlarm.pendingIntentToGiveUserUpcommingAlarmInfoWhenAsked)
             alarmManager.setAlarmClock(alarmClockInfoObject, PIForAlarm.pendingIntentForAlarm)
             logD("Alarm successfully scheduled.")
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, startTime, PIForSettingNextAlarm.pendingIntentForAlarm)
-            logD("set the next alarm successfully")
 
           }
     }
@@ -313,7 +302,6 @@ class AlarmsController @Inject constructor(
 
 					val baseIntent = Intent(ALARM_ACTION)
 					cancelPendingIntentReceiver(baseIntent, context, intentData, alarmReceiverClass, alarmManager, alarmData.id)
-					cancelPendingIntentReceiver(baseIntent, context, intentData, nextAlarmReceiver, alarmManager, alarmData.id)
 					cancelPendingIntentReceiver(baseIntent, context, intentData, alarmReceiverClass, alarmManager, alarmData.startTime.toInt())
 				}
 

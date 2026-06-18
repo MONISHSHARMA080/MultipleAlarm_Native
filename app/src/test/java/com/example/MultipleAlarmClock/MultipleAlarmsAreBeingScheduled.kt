@@ -10,7 +10,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.AlarmLogic.TimeProvider
-import MultipleAlarmClock.alarmFeature.receiver.NextAlarmReceiver
+import MultipleAlarmClock.alarmFeature.receiver.AlarmReceiver
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmDatabase
@@ -46,7 +46,7 @@ class AlarmFlowRobolectricTest {
     private lateinit var shadowAlarmManager: ShadowAlarmManager
     private lateinit var alarmDao: AlarmDao
     private lateinit var alarmsController: AlarmsController
-    private lateinit var testReceiver: NextAlarmReceiver
+    private lateinit var testReceiver: AlarmReceiver
 
     @Before
     fun setup() {
@@ -57,7 +57,7 @@ class AlarmFlowRobolectricTest {
         alarmsController.scope = TestScope()
         val context: Context = ApplicationProvider.getApplicationContext()
         alarmDao = Room.inMemoryDatabaseBuilder(context, AlarmDatabase::class.java).allowMainThreadQueries().build().alarmDao()
-        testReceiver = NextAlarmReceiver()
+        testReceiver = AlarmReceiver()
         testReceiver.alarmDao = alarmDao
         // 2. Register it dynamically in the test context
         // This ensures the Intent with action "ALARM_TRIGGERED" comes here
@@ -173,7 +173,7 @@ class AlarmFlowRobolectricTest {
                         val operation = alarm.operation
                         val intent = shadowOf(operation).savedIntent
 
-                        if (intent.component?.className == NextAlarmReceiver::class.java.name) {
+                        if (intent.component?.className == AlarmReceiver::class.java.name) {
                             println("We got the intent with the classname $intent")
                             shadowAlarmManager.fireAlarm(alarm)
 

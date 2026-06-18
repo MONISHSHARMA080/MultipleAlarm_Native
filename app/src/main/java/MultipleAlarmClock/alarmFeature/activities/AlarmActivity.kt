@@ -32,6 +32,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -209,9 +210,9 @@ class AlarmActivity : ComponentActivity() {
 
 	// Responsive scaling factors
 	val screenWidth = configuration.width.dp
-	val timeFontSize = (screenWidth * 0.085f).value.sp // 25% of screen width
-	val amPmFontSize = (screenWidth * 0.03f).value.sp // 7% of screen width
-	logD("timeFontSize:$timeFontSize.sp and amPmFontSize:$amPmFontSize.sp")
+//	val timeFontSize = (screenWidth * 0.085f).value.sp // 25% of screen width
+//	val amPmFontSize = (screenWidth * 0.03f).value.sp // 7% of screen width
+//	logD("timeFontSize:$timeFontSize.sp and amPmFontSize:$amPmFontSize.sp")
 
 
     Scaffold(
@@ -222,7 +223,7 @@ class AlarmActivity : ComponentActivity() {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = if (message.isEmpty()) screenHeight / 12 else 40.dp),
+                    .padding(bottom =  screenHeight / 26) ,
                 contentAlignment = Alignment.Center
             ) {
                 Button(
@@ -233,11 +234,11 @@ class AlarmActivity : ComponentActivity() {
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Cancel,
-                        modifier = Modifier.size(33.dp),
+                        modifier = Modifier.size(31.dp),
                         contentDescription = "Cancel"
                     )
-                    Spacer(modifier = Modifier.width(13.dp)) // Space between icon and text
-                    Text(text = "Stop", fontSize = 33.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.width(10.dp)) // Space between icon and text
+                    Text(text = "Stop", style = typography.headlineLarge, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -246,7 +247,7 @@ class AlarmActivity : ComponentActivity() {
             modifier = modifier
                 .fillMaxSize()
                 .padding(edgeToEdgePadding)
-				.padding(top = edgeToEdgePadding.calculateTopPadding()+20.dp)
+				.padding(top = edgeToEdgePadding.calculateTopPadding()+21.dp)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = if (message.isEmpty()) Arrangement.Center else Arrangement.Top
@@ -268,8 +269,7 @@ class AlarmActivity : ComponentActivity() {
 							text = currentTime,
 							color = colorScheme.primary,
 							fontWeight = FontWeight.Medium,
-							letterSpacing = (-2).sp,
-							style = MaterialTheme.typography.displayLarge
+							style = typography.displayLarge
 						)
 
 						Spacer(modifier = Modifier.width(8.dp))
@@ -277,9 +277,9 @@ class AlarmActivity : ComponentActivity() {
 						Text(
 							text = amPm,
 							color = colorScheme.secondary,
-							fontWeight = FontWeight.Medium,
+							fontWeight = FontWeight.SemiBold,
 							modifier = Modifier.padding(bottom = 12.dp),
-							style = MaterialTheme.typography.headlineSmall,
+							style = typography.titleLarge,
 						)
 					}
 

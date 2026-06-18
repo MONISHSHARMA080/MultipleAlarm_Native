@@ -86,13 +86,7 @@
                 <action android:name="com.coolApps.trying_native.ALARM_TRIGGERED" />
             </intent-filter>
         </receiver>
-        <receiver
-            android:name="MultipleAlarmClock.alarmFeature.receiver.NextAlarmReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.coolApps.trying_native.ALARM_TRIGGERED" />
-            </intent-filter>
-        </receiver>
+
         <receiver
             android:name=".BroadCastReceivers.AlarmInfoNotification"
             android:exported="false" >
