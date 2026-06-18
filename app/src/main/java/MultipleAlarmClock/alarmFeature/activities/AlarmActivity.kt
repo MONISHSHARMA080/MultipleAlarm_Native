@@ -69,7 +69,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @AndroidEntryPoint
@@ -77,7 +77,7 @@ class AlarmActivity : ComponentActivity() {
     private var wakeLock: PowerManager.WakeLock? = null
     private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var intentReceived: Intent
-    private  val AUTO_FINISH_DELAY = 120000L // 2 sec is 120000
+    private  val AUTO_FINISH_DELAY = 2.minutes
     private var dismissIntent : Intent? = null
 	private var shouldDismissAlarm = false
 	@Inject lateinit var analytics: Analytics
@@ -117,7 +117,7 @@ class AlarmActivity : ComponentActivity() {
                 )
             }
         }
-        lifecycleScope.launch { delay(AUTO_FINISH_DELAY.milliseconds); stopAlarmAndFinish() }
+        lifecycleScope.launch { delay(AUTO_FINISH_DELAY); stopAlarmAndFinish() }
         lifecycleScope.launch(Dispatchers.IO) {keepScreenON()  }
     }
 
