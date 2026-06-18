@@ -14,9 +14,9 @@ import android.content.Intent
 import android.util.Log
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.BroadCastReceivers.AlarmInfoNotification
-import com.coolApps.MultipleAlarmClock.BroadCastReceivers.NextAlarmReceiver
-import com.example.MultipleAlarmClock.BroadCastReceivers.AlarmReceiver
-import com.example.MultipleAlarmClock.BroadCastReceivers.LastAlarmUpdateDBReceiver
+import MultipleAlarmClock.alarmFeature.receiver.NextAlarmReceiver
+import MultipleAlarmClock.alarmFeature.receiver.AlarmReceiver
+import MultipleAlarmClock.alarmFeature.receiver.LastAlarmUpdateDBReceiver
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

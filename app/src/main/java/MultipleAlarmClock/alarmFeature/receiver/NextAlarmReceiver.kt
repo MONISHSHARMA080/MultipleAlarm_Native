@@ -1,4 +1,4 @@
-package com.coolApps.MultipleAlarmClock.BroadCastReceivers
+package MultipleAlarmClock.alarmFeature.receiver
 
 import MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import MultipleAlarmClock.alarmFeature.domain.AlarmRepository
@@ -15,7 +15,6 @@ import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.utils.Result.Result
-import com.example.MultipleAlarmClock.BroadCastReceivers.AlarmReceiver
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -25,16 +24,17 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-
 @AndroidEntryPoint
 class NextAlarmReceiver: BroadcastReceiver() {
     private lateinit var context: Context
-    private val coroutineScope = CoroutineScope( Dispatchers.Default)
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
     private val alarmManager by lazy { context.getSystemService(Context.ALARM_SERVICE) as AlarmManager }
-    @Inject lateinit var alarmsController: AlarmsController
-    val analytics by lazy {Analytics(context)}
+    @Inject
+    lateinit var alarmsController: AlarmsController
+    val analytics by lazy { Analytics(context) }
     private  val receiverClass: Class<out BroadcastReceiver> = AlarmReceiver::class.java
-	@Inject lateinit var alarmRepository: AlarmRepository
+	@Inject
+	lateinit var alarmRepository: AlarmRepository
 
     val doWeWantToGoAsync =true
 
@@ -68,9 +68,9 @@ class NextAlarmReceiver: BroadcastReceiver() {
              }
              false ->{
                  // we are in the Test
-                 runBlocking {
-                     scheduleFutureAlarm(context, alarmManager, intent)
-                 }
+				 runBlocking {
+					 scheduleFutureAlarm(context, alarmManager, intent)
+				 }
 
              }
          }
@@ -92,7 +92,7 @@ class NextAlarmReceiver: BroadcastReceiver() {
         logD(" currentTimeAlarmFired is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeAlarmFired)}      the nextAlarmTime is ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTime)}  and the alarmData.getFreqInMillisecond -->  ${alarmData.getFreqInMillisecond()} \n and alarmData is --> ${alarmData.toString()} and the freq is ${alarmData.frequencyInMin} ")
 
         if (nextAlarmTime < alarmData.endTime){
-           val res = coroutineScope.async{
+           val res = coroutineScope.async {
                alarmsController.scheduleAlarm (
                startTime = nextAlarmTime, // This is the time the next alarm will trigger
                endTime = alarmData.endTime, // The series end time

@@ -1,4 +1,4 @@
-package com.example.MultipleAlarmClock.BroadCastReceivers
+package MultipleAlarmClock.alarmFeature.receiver
 
 import android.content.BroadcastReceiver
 import android.content.Context

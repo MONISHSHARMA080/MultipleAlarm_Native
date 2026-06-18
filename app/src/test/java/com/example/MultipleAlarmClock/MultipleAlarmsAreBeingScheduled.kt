@@ -8,10 +8,9 @@ import android.os.Looper
 import android.os.SystemClock
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import com.coolApps.MultipleAlarmClock.logD
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.AlarmLogic.TimeProvider
-import com.coolApps.MultipleAlarmClock.BroadCastReceivers.NextAlarmReceiver
+import MultipleAlarmClock.alarmFeature.receiver.NextAlarmReceiver
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmDao
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmData
 import com.coolApps.MultipleAlarmClock.dataBase.AlarmDatabase

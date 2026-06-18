@@ -77,17 +77,17 @@
             android:excludeFromRecents="true"
             android:exported="true" />
 
-        <receiver android:name="com.example.MultipleAlarmClock.BroadCastReceivers.LastAlarmUpdateDBReceiver"
+        <receiver android:name="MultipleAlarmClock.alarmFeature.receiver.LastAlarmUpdateDBReceiver"
             android:exported="false" />
         <receiver
-            android:name="com.example.MultipleAlarmClock.BroadCastReceivers.AlarmReceiver"
+            android:name="MultipleAlarmClock.alarmFeature.receiver.AlarmReceiver"
             android:exported="false" >
             <intent-filter>
                 <action android:name="com.coolApps.trying_native.ALARM_TRIGGERED" />
             </intent-filter>
         </receiver>
         <receiver
-            android:name=".BroadCastReceivers.NextAlarmReceiver"
+            android:name="MultipleAlarmClock.alarmFeature.receiver.NextAlarmReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.coolApps.trying_native.ALARM_TRIGGERED" />

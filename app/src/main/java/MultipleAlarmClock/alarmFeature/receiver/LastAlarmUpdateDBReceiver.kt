@@ -1,4 +1,4 @@
-package com.example.MultipleAlarmClock.BroadCastReceivers
+package MultipleAlarmClock.alarmFeature.receiver
 
 import MultipleAlarmClock.alarmFeature.data.local.AlarmDao
 import android.content.BroadcastReceiver
@@ -14,7 +14,8 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class LastAlarmUpdateDBReceiver : BroadcastReceiver() {
 
-	@Inject lateinit var alarmDao: AlarmDao
+	@Inject
+	lateinit var alarmDao: AlarmDao
 
     override fun onReceive(context: Context, intent: Intent) {
 		logD(
