@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Multiple_Alarms</string>
+    <string name="msg_copied_clipboard">Message copied to clipboard</string>
+    <string name="msg_not_present">Alarm message not present</string>
+    <string name="settings_content_description">Settings</string>
+    <string name="empty_state_title">Add your first alarm</string>
+    <string name="empty_state_subtitle">Tap \'Add alarm\' to get started and never miss a beat.</string>
+    <string name="add_alarm_button_text">Add alarm</string>
+    <string name="clip_data_label">alarm message</string>
 </resources>

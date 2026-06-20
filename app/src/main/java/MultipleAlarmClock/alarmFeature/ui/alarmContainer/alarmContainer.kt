@@ -53,6 +53,7 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
@@ -61,6 +62,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.logD
 import com.example.MultipleAlarmClock.Ui.alarmContainer.AlarmContainerViewModel
 import com.example.MultipleAlarmClock.Ui.utils.FeedbackPopUpCard
@@ -75,6 +77,10 @@ import kotlinx.coroutines.launch
 
 
 	val clipBoard =LocalClipboard.current
+	val msgCopied = stringResource(R.string.msg_copied_clipboard)
+	val msgNotPresent = stringResource(R.string.msg_not_present)
+	val clipLabel = stringResource(R.string.clip_data_label)
+
 	val alarmList: List<AlarmData>? by alarmContainerViewModel.alarms.collectAsStateWithLifecycle()
 	ReportDrawnWhen { alarmList != null }
 	val coroutineScope = rememberCoroutineScope()
@@ -144,7 +150,7 @@ import kotlinx.coroutines.launch
 						) {
 							Icon(
 								imageVector = Icons.Outlined.Settings,
-								contentDescription = "Settings",
+								contentDescription = stringResource(R.string.settings_content_description),
 								modifier = Modifier.size(24.dp)
 							)
 						}
@@ -170,14 +176,14 @@ import kotlinx.coroutines.launch
 										clipBoard.setClipEntry(
 											ClipEntry(
 												ClipData.newPlainText(
-													"alarm message",
+													clipLabel,
 													alarmData.message
 												)
 											)
 										)
-										snackBarHostState.showSnackbar("Message copied to clipboard")
+										snackBarHostState.showSnackbar(msgCopied)
 									}else{
-										snackBarHostState.showSnackbar("Message message not present")
+										snackBarHostState.showSnackbar(msgNotPresent)
 									}
 								}
 							},
@@ -231,14 +237,14 @@ fun EmptyState(modifier: Modifier = Modifier) {
 		)
 		Spacer(modifier = Modifier.height(24.dp))
 		Text(
-			text = "Add your first alarm",
+			text = stringResource(R.string.empty_state_title),
 			style = MaterialTheme.typography.headlineMedium,
 			fontWeight = FontWeight.Bold,
 			color = MaterialTheme.colorScheme.onSurface
 		)
 		Spacer(modifier = Modifier.height(8.dp))
 		Text(
-			text = "Tap 'Add alarm' to get started and never miss a beat.",
+			text = stringResource(R.string.empty_state_subtitle),
 			style = MaterialTheme.typography.bodyMedium,
 			textAlign = TextAlign.Center,
 			color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -292,7 +298,7 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 			},
 			text = {
 				Text(
-					text = "Add alarm",
+					text = stringResource(R.string.add_alarm_button_text),
 					fontSize = 14.sp,
 					fontWeight = FontWeight.Bold,
 					letterSpacing = 0.1.sp,
