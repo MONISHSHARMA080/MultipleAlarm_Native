@@ -12,4 +12,4 @@ To ensure alarms trigger reliably on **Xiaomi/HyperOS** devices, please enable t
 
 1. Open **Security App** > **Permissions** > **Autostart**.
 2. Locate **Multiple Alarm Clock** and toggle it **ON**.
-3. (Optional) Set Battery Saver to **"No Restrictions"** for the best performance.
+3. (Optional) Set Battery Saver to **"No Restrictions"** for the best performance
