@@ -36,7 +36,6 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -90,8 +89,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import com.coolApps.MultipleAlarmClock.logD
 import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.logD
 import com.example.MultipleAlarmClock.Ui.Permissions.AlarmPermissionDialog
 import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerUiState
 import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerViewModel
@@ -120,7 +119,6 @@ fun AlarmPickerScreen(
   val isPermissionsOk = uiState.areAllPermissionsGranted
   val weGood = uiState.validationResult is ValidationResult.Success && isPermissionsOk
 
-  val scrollState = rememberScrollState()
 
   LaunchedEffect(Unit) { viewModel.screen("AlarmPickerScreen") }
 
@@ -132,10 +130,9 @@ fun AlarmPickerScreen(
             "is alarmObject value valid changed",
             mapOf(
                     "are all permission granted" to uiState.areAllPermissionsGranted,
-                    "validation error message" to (currentError?.let { context.getString(it.messageResId) } ?: ""),
+					"validation error message" to (currentError?.message ?: ""),
                     "ui_state" to uiState.toString(),
-                    "did user choose random alarmSound" to
-                            (uiState.alarmObject.alarmSoundUri == null),
+                    "did user choose random alarmSound" to (uiState.alarmObject.alarmSoundUri == null),
                     "notification permission granted" to isNotificationsEnabled
             )
     )
@@ -380,12 +377,8 @@ fun TimeRow(
   var showStartTimePicker by remember { mutableStateOf(false) }
   var showEndTimePicker by remember { mutableStateOf(false) }
 
-  val doWeHaveError =
-          uiState.validationResult != ValidationResult.Success &&
-                  (uiState.validationResult as? ValidationResult.Failure)?.field ==
-                          AlarmErrorField.Time
-  val errorResId = (uiState.validationResult as? ValidationResult.Failure)?.messageResId
-  val errorMessage = errorResId?.let { stringResource(it) }
+  val doWeHaveError = uiState.validationResult != ValidationResult.Success && (uiState.validationResult as? ValidationResult.Failure)?.field == AlarmErrorField.Time
+  val errorMessage = (uiState.validationResult as? ValidationResult.Failure)?.message
   val timeColor = if (doWeHaveError) colorScheme.error else colorScheme.onBackground
   val amPmColor = if (doWeHaveError) colorScheme.error else colorScheme.onBackground
 

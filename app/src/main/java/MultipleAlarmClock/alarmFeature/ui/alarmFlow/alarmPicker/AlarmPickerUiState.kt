@@ -30,11 +30,7 @@ data class AlarmPickerUiState(
 	val showPermissionDialog: Boolean = false,
 	val missingSteps: List<PermissionStep> = emptyList(),
 	val alarmOperationCompletedGoBack: Boolean = false
-){
-	override fun toString(): String {
-		return "AlarmPickerUiState: alarmObject:$alarmObject , \n  validationResult:$validationResult , \n isLoading:$isLoading , \n  areAllPermissionsGranted:$areAllPermissionsGranted \n, initialAlarm:$initialAlarm \n   "
-	}
-}
+)
 
 //sealed interface AlarmPickerEvent {
 //	data object NavigateBack : AlarmPickerEvent

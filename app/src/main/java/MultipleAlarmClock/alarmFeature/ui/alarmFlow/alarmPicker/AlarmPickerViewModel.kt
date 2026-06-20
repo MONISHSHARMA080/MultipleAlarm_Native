@@ -262,9 +262,9 @@ class AlarmPickerViewModel @Inject constructor(
 		val error = state.validationResult as? ValidationResult.Failure
 		val freqError =(uiState.value.validationResult as? ValidationResult.Failure)?.field == AlarmErrorField.FREQUENCY
 
-		logD("do we have freqError in $freqError and return value is ${error?.let { context.getString(it.messageResId) }}")
+		logD("do we have freqError in $freqError and return value is ${error?.message}")
 		return when {
-			freqError -> error?.let { context.getString(it.messageResId) } ?: ""
+			freqError -> error?.message ?: ""
 			state.alarmObject.freqGottenAfterCallback > 0 -> {
 				val previewAlarms = getPreviewAlarms(state.alarmObject, 4)
 				context.getString(R.string.alarm_picker_frequency_preview, previewAlarms)
