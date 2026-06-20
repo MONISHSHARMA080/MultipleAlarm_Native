@@ -82,15 +82,16 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.coolApps.MultipleAlarmClock.logD
+import com.coolApps.MultipleAlarmClock.R
 import com.example.MultipleAlarmClock.Ui.Permissions.AlarmPermissionDialog
 import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerUiState
 import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerViewModel
@@ -131,7 +132,7 @@ fun AlarmPickerScreen(
             "is alarmObject value valid changed",
             mapOf(
                     "are all permission granted" to uiState.areAllPermissionsGranted,
-                    "validation error message" to (currentError?.message ?: ""),
+                    "validation error message" to (currentError?.let { context.getString(it.messageResId) } ?: ""),
                     "ui_state" to uiState.toString(),
                     "did user choose random alarmSound" to
                             (uiState.alarmObject.alarmSoundUri == null),
@@ -179,7 +180,7 @@ fun AlarmPickerScreen(
             TopAppBar(
                     title = {
                       Text(
-                              if (uiState.initialAlarm == null) "Set alarm" else "Edit alarm",
+                              if (uiState.initialAlarm == null) stringResource(R.string.alarm_picker_title_set) else stringResource(R.string.alarm_picker_title_edit),
                               style = timeStyle,
                               color = colorScheme.onBackground,
                               modifier = Modifier.padding(horizontal = 7.dp),
@@ -191,7 +192,7 @@ fun AlarmPickerScreen(
                       IconButton(onClick = alarmSetGoBack) {
                         Icon(
                                 imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                contentDescription = "Back"
+                                contentDescription = stringResource(R.string.alarm_picker_back_desc)
                         )
                       }
                     },
@@ -256,12 +257,12 @@ fun AlarmPickerScreen(
                   ) { isValid ->
                     Text(
                             when {
-                              isValid -> "Set alarm"
+                              isValid -> stringResource(R.string.alarm_picker_btn_set)
                               uiState.validationResult is ValidationResult.Failure &&
                                       (uiState.validationResult as ValidationResult.Failure)
                                               .field == AlarmErrorField.AlarmIsNotDiff ->
-                                      "Change something"
-                              else -> "Fix the error"
+                                      stringResource(R.string.alarm_picker_btn_change)
+                              else -> stringResource(R.string.alarm_picker_btn_fix)
                             },
                             style = typography.bodyLarge,
                     )
@@ -314,7 +315,7 @@ fun AlarmPickerScreen(
         Column {
           FrequencyRow(
                   icon = Icons.Rounded.Timer,
-                  title = "repeat every",
+                  title = stringResource(R.string.alarm_picker_repeat_every),
                   value = uiState.alarmObject.freqGottenAfterCallback,
                   onValueChange = { newValue ->
                     newValue.let {
@@ -334,8 +335,8 @@ fun AlarmPickerScreen(
 
           SettingRow(
                   icon = Icons.Rounded.Notifications,
-                  title = "sound",
-                  value = selectedSound?.title ?: "Random",
+                  title = stringResource(R.string.alarm_picker_sound),
+                  value = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random),
                   onClick = onNavigateToSoundList
           )
 
@@ -346,7 +347,7 @@ fun AlarmPickerScreen(
 
           MessageRow(
                   icon = Icons.AutoMirrored.Rounded.Message,
-                  title = "message",
+                  title = stringResource(R.string.alarm_picker_message),
                   value = uiState.alarmObject.message,
                   onValueChange = { viewModel.updateMessage(it) },
           )
@@ -371,10 +372,7 @@ fun TimeRow(
   val screenWidthDp = with(density) { containerSize.width.toDp() }
   val screenHeightDp = with(density) { containerSize.height.toDp() }
 
-  val timeFontSize = (57.sp * (screenWidthDp / 460.dp).coerceIn(0.8f, 1.099f))
-  val timeStyle = typography.displayLarge.copy(fontWeight = FontWeight.Bold,
-	  // fontSize = timeFontSize
-  )
+  val timeStyle = typography.displayLarge.copy(fontWeight = FontWeight.Bold)
   val amPmStyle = typography.labelLarge
 
   val titleSpacing = (screenHeightDp * 0.04f).coerceIn(12.dp, 36.dp)
@@ -386,7 +384,8 @@ fun TimeRow(
           uiState.validationResult != ValidationResult.Success &&
                   (uiState.validationResult as? ValidationResult.Failure)?.field ==
                           AlarmErrorField.Time
-  val errorMessage = (uiState.validationResult as? ValidationResult.Failure)?.message
+  val errorResId = (uiState.validationResult as? ValidationResult.Failure)?.messageResId
+  val errorMessage = errorResId?.let { stringResource(it) }
   val timeColor = if (doWeHaveError) colorScheme.error else colorScheme.onBackground
   val amPmColor = if (doWeHaveError) colorScheme.error else colorScheme.onBackground
 
@@ -410,15 +409,15 @@ fun TimeRow(
                         onStartTimeChange(newTime)
                         showStartTimePicker = false
                       }
-              ) { Text("OK") }
+              ) { Text(stringResource(R.string.alarm_picker_ok)) }
             },
             dismissButton = {
-              TextButton(onClick = { showStartTimePicker = false }) { Text("Cancel") }
+              TextButton(onClick = { showStartTimePicker = false }) { Text(stringResource(R.string.alarm_picker_cancel)) }
             },
             title = {
               Column {
                 Text(
-                        text = "Select start time",
+                        text = stringResource(R.string.alarm_picker_select_start_time),
                         style = typography.titleMedium,
                         color = colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -450,15 +449,15 @@ fun TimeRow(
                         onEndTimeChange(newTime)
                         showEndTimePicker = false
                       }
-              ) { Text("OK") }
+              ) { Text(stringResource(R.string.alarm_picker_ok)) }
             },
             dismissButton = {
-              TextButton(onClick = { showEndTimePicker = false }) { Text("Cancel") }
+              TextButton(onClick = { showEndTimePicker = false }) { Text(stringResource(R.string.alarm_picker_cancel)) }
             },
             title = {
               Column {
                 Text(
-                        text = "Select end time",
+                        text = stringResource(R.string.alarm_picker_select_end_time),
                         style = typography.titleMedium,
                         color = colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -626,7 +625,7 @@ private fun MessageRow(
             textStyle = typography.bodyMedium,
             placeholder = {
               Text(
-                      text = "Add message...",
+                      text = stringResource(R.string.alarm_picker_message_placeholder),
                       style = typography.bodyMedium,
                       color = colorScheme.onSurfaceVariant
               )
@@ -709,7 +708,7 @@ private fun FrequencyRow(
         ) {
           Icon(
                   imageVector = Icons.Rounded.Remove,
-                  contentDescription = "Decrease",
+                  contentDescription = stringResource(R.string.alarm_picker_decrease_desc),
                   tint = colorScheme.onPrimaryContainer
           )
         }
@@ -742,7 +741,7 @@ private fun FrequencyRow(
         ) {
           Icon(
                   imageVector = Icons.Rounded.Add,
-                  contentDescription = "Increase",
+                  contentDescription = stringResource(R.string.alarm_picker_increase_desc),
                   tint = colorScheme.onPrimaryContainer
           )
         }

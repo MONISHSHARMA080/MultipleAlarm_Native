@@ -7,4 +7,33 @@
     <string name="empty_state_subtitle">Tap \'Add alarm\' to get started and never miss a beat.</string>
     <string name="add_alarm_button_text">Add alarm</string>
     <string name="clip_data_label">alarm message</string>
+
+    <!-- Alarm Picker Screen -->
+    <string name="alarm_picker_title_set">Set alarm</string>
+    <string name="alarm_picker_title_edit">Edit alarm</string>
+    <string name="alarm_picker_back_desc">Back</string>
+    <string name="alarm_picker_btn_set">Set alarm</string>
+    <string name="alarm_picker_btn_change">Change something</string>
+    <string name="alarm_picker_btn_fix">Fix the error</string>
+    <string name="alarm_picker_repeat_every">repeat every</string>
+    <string name="alarm_picker_sound">sound</string>
+    <string name="alarm_picker_sound_random">Random</string>
+    <string name="alarm_picker_message">message</string>
+    <string name="alarm_picker_message_placeholder">Add message…</string>
+    <string name="alarm_picker_ok">OK</string>
+    <string name="alarm_picker_cancel">Cancel</string>
+    <string name="alarm_picker_select_start_time">Select start time</string>
+    <string name="alarm_picker_select_end_time">Select end time</string>
+    <string name="alarm_picker_decrease_desc">Decrease</string>
+    <string name="alarm_picker_increase_desc">Increase</string>
+
+    <!-- Alarm Validation Errors -->
+    <string name="alarm_error_time_range">Start time must be less than end time.</string>
+    <string name="alarm_error_frequency_range">Enter a value between 1 to 700 minutes</string>
+    <string name="alarm_error_date_mismatch">Start and end times must be on the same day</string>
+    <string name="alarm_error_past_date">Date value must be today or in the future.</string>
+    <string name="alarm_error_no_changes">No changes made. Change something to update the alarm.</string>
+
+    <!-- Frequency Preview -->
+    <string name="alarm_picker_frequency_preview">alarm will ring on %1$s</string>
 </resources>

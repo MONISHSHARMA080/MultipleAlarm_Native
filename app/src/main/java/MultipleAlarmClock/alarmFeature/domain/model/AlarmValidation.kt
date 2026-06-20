@@ -9,12 +9,12 @@ enum class AlarmErrorField {
 
 sealed class ValidationResult {
 	object Success : ValidationResult()
-	data class Failure(val field: AlarmErrorField, val message: String) : ValidationResult()
+	data class Failure(val field: AlarmErrorField, val messageResId: Int) : ValidationResult()
 
 	override fun toString(): String {
 		return when(this){
 			is Success -> "Success"
-			is Failure -> "Failure: field:$field message: $message"
+			is Failure -> "Failure: field:$field messageResId: $messageResId"
 		}
 	}
 }

@@ -16,6 +16,7 @@ import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController.AlarmValueForAlarmSeries
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
+import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.logD
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
@@ -261,10 +262,13 @@ class AlarmPickerViewModel @Inject constructor(
 		val error = state.validationResult as? ValidationResult.Failure
 		val freqError =(uiState.value.validationResult as? ValidationResult.Failure)?.field == AlarmErrorField.FREQUENCY
 
-		logD("do we have freqError in $freqError and return value is ${error?.message}")
+		logD("do we have freqError in $freqError and return value is ${error?.let { context.getString(it.messageResId) }}")
 		return when {
-			freqError -> error?.message ?: ""
-			state.alarmObject.freqGottenAfterCallback > 0 -> "alarm will ring on ${getPreviewAlarms(state.alarmObject, 4)}"
+			freqError -> error?.let { context.getString(it.messageResId) } ?: ""
+			state.alarmObject.freqGottenAfterCallback > 0 -> {
+				val previewAlarms = getPreviewAlarms(state.alarmObject, 4)
+				context.getString(R.string.alarm_picker_frequency_preview, previewAlarms)
+			}
 			else -> ""
 		}
 	}

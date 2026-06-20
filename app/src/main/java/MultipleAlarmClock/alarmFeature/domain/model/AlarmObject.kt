@@ -2,6 +2,7 @@ package MultipleAlarmClock.alarmFeature.domain.model
 
 import MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import android.net.Uri
+import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.logD
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -85,18 +86,18 @@ data class AlarmObject(
 	fun validate(alarmData: AlarmData?): ValidationResult{
 		logD(" -- validation the alarm")
 		if (startTime.timeInMillis >= endTime.timeInMillis) {
-			return ValidationResult.Failure( message = "Start time must be less than end time.", field = AlarmErrorField.Time)
+			return ValidationResult.Failure( messageResId = R.string.alarm_error_time_range, field = AlarmErrorField.Time)
 		}
 		if (freqGottenAfterCallback !in 1..700) {
-			return ValidationResult.Failure(AlarmErrorField.FREQUENCY, "Enter a value between 1 to 700 minutes")
+			return ValidationResult.Failure(AlarmErrorField.FREQUENCY, R.string.alarm_error_frequency_range)
 		}
 		val currentDate = Calendar.getInstance()
 		val selectedDate = Calendar.getInstance().apply { timeInMillis = date}
 		val dateSame = currentDate.get(Calendar.DAY_OF_YEAR) == selectedDate.get(Calendar.DAY_OF_YEAR)
 		val startAndEndTimeHaveSameDate = startTime.get(Calendar.DAY_OF_YEAR) == endTime.get(Calendar.DAY_OF_YEAR)
-		if (!startAndEndTimeHaveSameDate) return ValidationResult.Failure(AlarmErrorField.DATE, "expected the date in startTime and endTime to be same but got startTimeDate:${getDateTimeFormatted(startTime.timeInMillis)} endDateTime:${getDateTimeFormatted(endTime.timeInMillis)}")
+		if (!startAndEndTimeHaveSameDate) return ValidationResult.Failure(AlarmErrorField.DATE, R.string.alarm_error_date_mismatch)
 		if ( !(dateSame || selectedDate.after(currentDate)) ){
-			return ValidationResult.Failure(AlarmErrorField.DATE, "Date value must be today or in the future.")
+			return ValidationResult.Failure(AlarmErrorField.DATE, R.string.alarm_error_past_date)
 		}
 		// 2. Check for Changes (If in Edit Mode)
 		if (alarmData != null) {
@@ -107,7 +108,7 @@ data class AlarmObject(
 					alarmSoundUri?.toString() != alarmData.sound
 
 			if (!hasChanged) {
-				return ValidationResult.Failure(AlarmErrorField.AlarmIsNotDiff, "No changes made. Change something to update the alarm.")
+				return ValidationResult.Failure(AlarmErrorField.AlarmIsNotDiff, R.string.alarm_error_no_changes)
 			}
 		}
 		return ValidationResult.Success
