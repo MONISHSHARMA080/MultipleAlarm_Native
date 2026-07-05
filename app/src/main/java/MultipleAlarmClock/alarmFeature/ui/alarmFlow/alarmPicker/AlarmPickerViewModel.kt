@@ -201,6 +201,14 @@ class AlarmPickerViewModel @Inject constructor(
 
 	// Update your onSetAlarmClicked to be even simpler
 	fun onSetAlarmClicked(currentAlarm: AlarmData?, alarmObject: AlarmObject) {
+
+analytics.captureEvent("set alarm clicked",
+									mapOf(
+										"Ui state" to _uiState.value,
+									)
+								)
+
+
 		// We don't need to check permissions here anymore because the button
 		// is only clickable (or behaves differently) based on uiState.isPermissionGranted
 		viewModelScope.launch {
