@@ -204,7 +204,7 @@ class AlarmPickerViewModel @Inject constructor(
 
 analytics.captureEvent("set alarm clicked",
 									mapOf(
-										"Ui state" to _uiState.value,
+										"Ui state" to _uiState.value.toString(),
 									)
 								)
 
