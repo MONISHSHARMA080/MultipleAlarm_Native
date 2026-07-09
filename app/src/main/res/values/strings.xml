@@ -36,4 +36,14 @@
 
     <!-- Frequency Preview -->
     <string name="alarm_picker_frequency_preview">alarm will ring on %1$s</string>
+
+    <!-- Permission Dialog -->
+    <string name="permission_dialog_title">Permissions needed</string>
+    <string name="permission_dialog_description">To ensure your alarm works, the following permissions are needed:</string>
+    <string name="permission_dialog_autostart_advisory">Autostart is advisory. Your alarm will still work, but may not survive a reboot on Xiaomi devices.</string>
+    <string name="permission_dialog_btn_done">Done</string>
+    <string name="permission_dialog_btn_cancel">Cancel</string>
+    <string name="permission_dialog_done_desc">Done</string>
+    <string name="permission_dialog_btn_open_settings">Open settings</string>
+    <string name="permission_dialog_btn_allow">Allow</string>
 </resources>
