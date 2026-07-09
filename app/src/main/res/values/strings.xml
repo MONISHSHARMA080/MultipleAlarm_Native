@@ -46,4 +46,12 @@
     <string name="permission_dialog_done_desc">Done</string>
     <string name="permission_dialog_btn_open_settings">Open settings</string>
     <string name="permission_dialog_btn_allow">Allow</string>
+
+<!-- Feedback Card -->
+    <string name="feedback_title">Feedback please</string>
+    <string name="feedback_description">Tell us what you love and what needs work. From design tweaks to feature requests and bug fixes, help us improve the app for you and everyone</string>
+    <string name="feedback_placeholder">Tell us what you think…</string>
+    <string name="feedback_char_count">%1$d / %2$d</string>
+    <string name="feedback_btn_maybe_later">Maybe later</string>
+    <string name="feedback_btn_submit">Submit</string>
 </resources>
