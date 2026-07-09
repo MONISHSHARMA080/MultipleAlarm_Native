@@ -53,7 +53,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.example.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.R
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
