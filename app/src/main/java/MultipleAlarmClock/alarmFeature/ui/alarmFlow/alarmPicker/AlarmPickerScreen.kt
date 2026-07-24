@@ -368,9 +368,9 @@ fun TimeRow(
   val containerSize = LocalWindowInfo.current.containerSize
   val screenWidthDp = with(density) { containerSize.width.toDp() }
   val screenHeightDp = with(density) { containerSize.height.toDp() }
-
-  val timeStyle = typography.displayLarge.copy(fontWeight = FontWeight.Bold)
-  val amPmStyle = typography.labelLarge
+val timeStyle = typography.displayLarge.copy(fontWeight = FontWeight.Bold)
+val amPmStyle = typography.titleMedium  // was labelLarge — bump up to match M3 TimePicker spec
+  
 
   val titleSpacing = (screenHeightDp * 0.04f).coerceIn(12.dp, 36.dp)
 
