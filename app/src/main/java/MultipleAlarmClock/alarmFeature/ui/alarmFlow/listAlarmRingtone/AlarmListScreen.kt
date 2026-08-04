@@ -46,8 +46,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.coolApps.MultipleAlarmClock.R
 import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerViewModel
 import com.example.MultipleAlarmClock.Ui.alarmPicker.data.AlarmSound
 
@@ -65,11 +67,11 @@ import com.example.MultipleAlarmClock.Ui.alarmPicker.data.AlarmSound
 	val randomPreviewing by vm.previewingRandom.collectAsStateWithLifecycle()
 
 	Scaffold(
-		modifier = modifier,
+		modifier = Modifier.padding(2.dp),
 		topBar = {
 			LargeTopAppBar(
 				title = {
-					Text("Pick a sound")
+					Text(stringResource(R.string.Sound_screen_heading))
 				},
 				navigationIcon = {
 					IconButton(onClick = onBack) {
@@ -173,15 +175,15 @@ private fun SoundCard(
 
 			Column(modifier = Modifier.weight(1f)) {
 				Text(
-					text = sound?.title ?: "Random",
+					text = sound?.title ?: stringResource(R.string.Sound_screen_Random),
 					style = MaterialTheme.typography.titleMedium
 				)
 				Text(
 					text = when {
-						sound == null && selected -> "Playing a random sound"
-						sound == null -> "A random sound will be chosen on every alarm"
-						selected -> "Now playing"
-						else -> "Tap to preview"
+						sound == null && selected ->stringResource(R.string.Sound_screen_Random_sound_choosen)
+						sound == null ->stringResource(R.string.alarm_picker_sound_random)
+						selected ->stringResource(R.string.Sound_screen_selected)
+						else ->stringResource(R.string.Sound_screen_preview)
 					},
 					style = MaterialTheme.typography.bodyMedium,
 					color = MaterialTheme.colorScheme.onSurfaceVariant

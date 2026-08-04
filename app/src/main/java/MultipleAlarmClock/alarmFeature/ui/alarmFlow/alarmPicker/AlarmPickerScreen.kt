@@ -2,8 +2,6 @@ package com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker
 
 import MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
 import MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
-import android.Manifest
-import android.content.pm.PackageManager
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -44,6 +42,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Message
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Timer
@@ -87,7 +86,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.logD
@@ -108,13 +106,10 @@ fun AlarmPickerScreen(
   val uiState by viewModel.uiState.collectAsState()
   val selectedSound by viewModel.selectedAlarmSound.collectAsState()
 
-  val currentError by remember(uiState) { mutableStateOf(uiState.validationResult as? ValidationResult.Failure) }
   val view = LocalView.current
   val timeStyle = typography.headlineSmall
 
   val context = LocalContext.current
-  val isPermissionsOk = uiState.areAllPermissionsGranted
-  val weGood = uiState.validationResult is ValidationResult.Success && isPermissionsOk
 
 
   LaunchedEffect(Unit) { viewModel.screen("AlarmPickerScreen") }
@@ -151,6 +146,20 @@ fun AlarmPickerScreen(
   }
 
   val horizontalPadding = rememberAdaptiveHorizontalPadding()
+  var showCalendar by remember { mutableStateOf(false) }
+
+  if (showCalendar) {
+    DatePickerModal(
+            onDateSelected = { date ->
+              if (date != null) {
+                val cal = Calendar.getInstance().apply { timeInMillis = date }
+                viewModel.updateDate(cal)
+              }
+              showCalendar = false
+            },
+            onDismiss = { showCalendar = false }
+    )
+  }
 
   Scaffold(
           contentWindowInsets = WindowInsets.safeDrawing,
@@ -214,15 +223,8 @@ fun AlarmPickerScreen(
                                   }
                                 },
                         modifier =
-                                Modifier.height(56.dp)
-                                        .animateContentSize(
-                                                animationSpec =
-                                                        spring(
-                                                                dampingRatio =
-                                                                        Spring.DampingRatioMediumBouncy,
-                                                                stiffness = Spring.StiffnessMedium
-                                                        )
-                                        ),
+							Modifier.height(56.dp)
+								.animateContentSize(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)),
                         contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
                         shape = RoundedCornerShape(28.dp)
                 ) {
@@ -274,19 +276,11 @@ fun AlarmPickerScreen(
                 )
               }
       )
-      Spacer(modifier = Modifier.weight(0.43f))
-      DateList(
-              { viewModel.updateDate(it) },
-              uiState.alarmObject.startTime.time.time,
-              weGood = currentError?.field != AlarmErrorField.DATE,
-              allowSelectingPastDate = false,
-      )
-
-      Spacer(modifier = Modifier.weight(0.182f))
+      Spacer(modifier = Modifier.weight(0.84f))
 
       // 5. Settings Card (Name & Sound)
       Surface(
-              shape = RoundedCornerShape(28.dp),
+              shape = RoundedCornerShape(29.dp),
               color = colorScheme.surfaceContainer,
               modifier = Modifier.fillMaxWidth()
       ) {
@@ -306,6 +300,18 @@ fun AlarmPickerScreen(
                   previewText = viewModel.getFrequencyPreviewText(),
                   uiState,
           )
+          HorizontalDivider(
+                  modifier = Modifier.padding(horizontal = 16.dp),
+                  color = colorScheme.outlineVariant,
+          )
+
+          SettingRow(
+                  icon = Icons.Rounded.CalendarMonth,
+                  title = stringResource(R.string.alarm_picker_date),
+                  value = SimpleDateFormat("EEE, MMM d, yyyy", LocalLocale.current.platformLocale).format(uiState.alarmObject.startTime.time),
+                  onClick = { showCalendar = true }
+          )
+
           HorizontalDivider(
                   modifier = Modifier.padding(horizontal = 16.dp),
                   color = colorScheme.outlineVariant,
@@ -349,9 +355,9 @@ fun TimeRow(
   val containerSize = LocalWindowInfo.current.containerSize
   val screenWidthDp = with(density) { containerSize.width.toDp() }
   val screenHeightDp = with(density) { containerSize.height.toDp() }
-val timeStyle = typography.displayLarge.copy(fontWeight = FontWeight.Bold)
-val amPmStyle = typography.titleMedium  // was labelLarge — bump up to match M3 TimePicker spec
-  
+val timeStyle = typography.displayMedium.copy(fontWeight = FontWeight.Bold)
+val amPmStyle = typography.bodyMedium  // was labelLarge — bump up to match M3 TimePicker spec
+
 
   val titleSpacing = (screenHeightDp * 0.04f).coerceIn(12.dp, 36.dp)
 

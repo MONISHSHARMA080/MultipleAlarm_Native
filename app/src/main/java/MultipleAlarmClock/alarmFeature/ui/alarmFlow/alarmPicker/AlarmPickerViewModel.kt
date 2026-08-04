@@ -122,13 +122,12 @@ class AlarmPickerViewModel @Inject constructor(
 			"alarmPickerUi_state_change",
 			mapOf(
 				"are all permission granted" to state.areAllPermissionsGranted,
-				"validation error message" to (state.validationResult.toString() ?: ""),
+				"validation error message" to state.validationResult.toString(),
 				"ui_state" to uiState.toString(),
 				"did user choose random alarmSound" to (state.alarmObject.alarmSoundUri == null),
 				"notification permission granted" to isNotificationsEnabled
 			)
 		)
-
 	}
 
 	fun setInitialAlarmObject(alarmData: AlarmData?) {

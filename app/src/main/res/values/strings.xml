@@ -26,6 +26,7 @@
     <string name="alarm_picker_select_end_time">Select end time</string>
     <string name="alarm_picker_decrease_desc">Decrease</string>
     <string name="alarm_picker_increase_desc">Increase</string>
+    <string name="alarm_picker_date">date</string>
 
     <!-- Alarm Validation Errors -->
     <string name="alarm_error_time_range">Start time must be less than end time.</string>
@@ -54,4 +55,14 @@
     <string name="feedback_char_count">%1$d / %2$d</string>
     <string name="feedback_btn_maybe_later">Maybe later</string>
     <string name="feedback_btn_submit">Submit</string>
+
+<!-- Alarm Sound card   -->
+    <string name="Sound_screen_heading">Alarm sound</string>
+    <string name="Sound_screen_Random">Random</string>
+    <string name="Sound_screen_selected">Now playing</string>
+    <string name="Sound_screen_preview">Tap to preview</string>
+    <string name="Sound_screen_Random_sound">A random sound will be chosen on every alarm</string>
+    <string name="Sound_screen_Random_sound_choosen">A random sound will be chosen on every alarm</string>
+
+
 </resources>
