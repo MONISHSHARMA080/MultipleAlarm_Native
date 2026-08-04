@@ -276,7 +276,7 @@ fun AlarmPickerScreen(
                 )
               }
       )
-      Spacer(modifier = Modifier.weight(0.84f))
+      Spacer(modifier = Modifier.weight(0.44f))
 
       // 5. Settings Card (Name & Sound)
       Surface(
