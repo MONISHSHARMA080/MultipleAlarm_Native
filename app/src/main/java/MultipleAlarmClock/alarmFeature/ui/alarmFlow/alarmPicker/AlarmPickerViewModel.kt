@@ -6,9 +6,12 @@ import MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
 import MultipleAlarmClock.alarmFeature.domain.model.AlarmObject
 import MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
+import android.Manifest
 import android.app.AlarmManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.media.RingtoneManager
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
@@ -80,6 +83,10 @@ class AlarmPickerViewModel @Inject constructor(
 		viewModelScope.launch(Dispatchers.IO) {
 			_alarmSoundName.value = getAlarmSounds()
 		}
+
+		viewModelScope.launch {
+			_uiState.collect { state -> captureUiStateAndSendAnalytics(state) }
+		}
 	}
 
 	fun previewSound(sound: AlarmSound?) {
@@ -107,6 +114,22 @@ class AlarmPickerViewModel @Inject constructor(
 		_previewingRandom.value = false
 	}
 
+	fun captureUiStateAndSendAnalytics(state: AlarmPickerUiState): Unit {
+		val isNotificationsEnabled =
+			ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
+					PackageManager.PERMISSION_GRANTED
+		captureEvent(
+			"alarmPickerUi_state_change",
+			mapOf(
+				"are all permission granted" to state.areAllPermissionsGranted,
+				"validation error message" to (state.validationResult.toString() ?: ""),
+				"ui_state" to uiState.toString(),
+				"did user choose random alarmSound" to (state.alarmObject.alarmSoundUri == null),
+				"notification permission granted" to isNotificationsEnabled
+			)
+		)
+
+	}
 
 	fun setInitialAlarmObject(alarmData: AlarmData?) {
 		viewModelScope.launch {

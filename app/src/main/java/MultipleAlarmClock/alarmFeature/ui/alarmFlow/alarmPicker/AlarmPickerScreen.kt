@@ -108,10 +108,7 @@ fun AlarmPickerScreen(
   val uiState by viewModel.uiState.collectAsState()
   val selectedSound by viewModel.selectedAlarmSound.collectAsState()
 
-  val currentError by
-          remember(uiState) {
-            mutableStateOf(uiState.validationResult as? ValidationResult.Failure)
-          }
+  val currentError by remember(uiState) { mutableStateOf(uiState.validationResult as? ValidationResult.Failure) }
   val view = LocalView.current
   val timeStyle = typography.headlineSmall
 
@@ -121,22 +118,6 @@ fun AlarmPickerScreen(
 
 
   LaunchedEffect(Unit) { viewModel.screen("AlarmPickerScreen") }
-
-  LaunchedEffect(weGood, uiState) {
-    val isNotificationsEnabled =
-            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
-                    PackageManager.PERMISSION_GRANTED
-    viewModel.captureEvent(
-            "is alarmObject value valid changed",
-            mapOf(
-                    "are all permission granted" to uiState.areAllPermissionsGranted,
-					"validation error message" to (currentError?.message ?: ""),
-                    "ui_state" to uiState.toString(),
-                    "did user choose random alarmSound" to (uiState.alarmObject.alarmSoundUri == null),
-                    "notification permission granted" to isNotificationsEnabled
-            )
-    )
-  }
 
   LaunchedEffect(uiState.alarmOperationCompletedGoBack) {
     if (uiState.alarmOperationCompletedGoBack) {
