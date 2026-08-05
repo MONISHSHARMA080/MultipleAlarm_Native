@@ -378,7 +378,6 @@ class AlarmsController @Inject constructor(
                     val updatedAlarm =alarmData.copy(
                         isReadyToUse = true,
                         startTime = nextAlarmInfo.newSeriesStartTime,
-//                        date = nextAlarmInfo.newSeriesStartTime ,
                         endTime = nextAlarmInfo.newSeriesEndTime
                     )
                     alarmRepository.updateAlarm(updatedAlarm)
