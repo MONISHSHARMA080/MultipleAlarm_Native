@@ -208,18 +208,25 @@ fun AlarmPickerScreen(
                           }
                         },
                         colors =
-                                when {
-                                  uiState.validationResult == ValidationResult.Success -> {
+                                when (val result = uiState.validationResult) {
+                                  is ValidationResult.Success -> {
                                     ButtonDefaults.buttonColors(
                                             containerColor = colorScheme.primaryContainer,
                                             contentColor = colorScheme.onPrimaryContainer
                                     )
                                   }
-                                  else -> {
-                                    ButtonDefaults.buttonColors(
-                                            containerColor = colorScheme.errorContainer,
-                                            contentColor = colorScheme.onErrorContainer
-                                    )
+                                  is ValidationResult.Failure -> {
+                                    if (result.field == AlarmErrorField.AlarmIsNotDiff) {
+                                      ButtonDefaults.buttonColors(
+                                              containerColor = colorScheme.surfaceVariant,
+                                              contentColor = colorScheme.onSurfaceVariant
+                                      )
+                                    } else {
+                                      ButtonDefaults.buttonColors(
+                                              containerColor = colorScheme.errorContainer,
+                                              contentColor = colorScheme.onErrorContainer
+                                      )
+                                    }
                                   }
                                 },
                         modifier =

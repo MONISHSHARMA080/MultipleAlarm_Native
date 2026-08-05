@@ -59,11 +59,11 @@ fun AlarmCard(
 
 	val dismissState = rememberSwipeToDismissBoxState()
 
-	val cardShape = RoundedCornerShape(42.dp)
+	val cardShape = RoundedCornerShape(44.dp)
 
 	// Determine padding based on active state to satisfy user requirement for different spacing
 	val horizontalPadding = 10.dp
-	val verticalPadding = if (isActive) 20.dp else 4.dp
+	val verticalPadding = if (isActive) 15.dp else 4.dp
 
 	SwipeToDismissBox(
 		state = dismissState,

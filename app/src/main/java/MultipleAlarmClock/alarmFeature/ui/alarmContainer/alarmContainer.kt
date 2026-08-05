@@ -51,7 +51,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
@@ -77,10 +76,10 @@ import kotlinx.coroutines.launch
 	val snackBarHostState = remember { SnackbarHostState() }
 
 
-	val clipBoard =LocalClipboard.current
-	val msgCopied = stringResource(R.string.msg_copied_clipboard)
-	val msgNotPresent = stringResource(R.string.msg_not_present)
-	val clipLabel = stringResource(R.string.clip_data_label)
+//	val clipBoard =LocalClipboard.current
+//	val msgCopied = stringResource(R.string.msg_copied_clipboard)
+//	val msgNotPresent = stringResource(R.string.msg_not_present)
+//	val clipLabel = stringResource(R.string.clip_data_label)
 
 	val alarmList: List<AlarmData>? by alarmContainerViewModel.alarms.collectAsStateWithLifecycle()
 	var selectedAlarmId by remember { mutableStateOf<Int?>(null) }
@@ -88,13 +87,6 @@ import kotlinx.coroutines.launch
 	val coroutineScope = rememberCoroutineScope()
 	val colorScheme = MaterialTheme.colorScheme
 	val showFeedbackCard by alarmContainerViewModel.showFeedbackUIState.collectAsStateWithLifecycle()
-	LaunchedEffect(showFeedbackCard) {
-		logD("showFeedbackCard: $showFeedbackCard ")
-	}
-
-	logD(" showFeedbackCard:$showFeedbackCard   ")
-
-
 
 	Scaffold(
 		containerColor = colorScheme.surface,
