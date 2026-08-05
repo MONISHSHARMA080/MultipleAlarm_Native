@@ -417,42 +417,49 @@ val amPmStyle = typography.bodyMedium  // was labelLarge — bump up to match M3
   }
 
   if (showEndTimePicker) {
-    val endTimePickerState =
-            rememberTimePickerState(
-                    initialHour = endTime.get(Calendar.HOUR_OF_DAY),
-                    initialMinute = endTime.get(Calendar.MINUTE),
-                    is24Hour = false
-            )
-    TimePickerDialog(
-            onDismissRequest = { showEndTimePicker = false },
-            confirmButton = {
-              TextButton(
-                      onClick = {
-                        val newTime =
-                                (endTime.clone() as Calendar).apply {
-                                  set(Calendar.HOUR_OF_DAY, endTimePickerState.hour)
-                                  set(Calendar.MINUTE, endTimePickerState.minute)
-                                }
-                        onEndTimeChange(newTime)
-                        showEndTimePicker = false
-                      }
-              ) { Text(stringResource(R.string.alarm_picker_ok)) }
-            },
-            dismissButton = {
-              TextButton(onClick = { showEndTimePicker = false }) { Text(stringResource(R.string.alarm_picker_cancel)) }
-            },
-            title = {
-              Column {
-                Text(
-                        text = stringResource(R.string.alarm_picker_select_end_time),
-                        style = typography.titleMedium,
-                        color = colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        softWrap = false,
-                )
-                Spacer(modifier = Modifier.height(titleSpacing))
-              }
-            }
+	  val endTimePickerState = rememberTimePickerState(
+		  initialHour = endTime.get(Calendar.HOUR_OF_DAY),
+		  initialMinute = endTime.get(Calendar.MINUTE),
+		  is24Hour = false
+	  )
+
+	  // live-compute validity as the user spins the dial
+	  val candidateEnd = (endTime.clone() as Calendar).apply {
+		  set(Calendar.HOUR_OF_DAY, endTimePickerState.hour)
+		  set(Calendar.MINUTE, endTimePickerState.minute)
+	  }
+	  val isCandidateInvalid = candidateEnd.timeInMillis <= startTime.timeInMillis
+
+	  TimePickerDialog(
+		  onDismissRequest = { showEndTimePicker = false },
+		  confirmButton = {
+			  TextButton(
+				  onClick = {
+					  onEndTimeChange(candidateEnd)
+					  showEndTimePicker = false
+				  },
+				  enabled = !isCandidateInvalid
+			  ) { Text(stringResource(R.string.alarm_picker_ok)) }
+		  },
+		  dismissButton = { TextButton(onClick = { showEndTimePicker = false }) { Text(stringResource(R.string.alarm_picker_cancel)) } },
+		  title = {
+			  Column {
+				  Text(
+					  text = stringResource(R.string.alarm_picker_select_end_time),
+					  style = typography.titleMedium,
+					  color = colorScheme.onSurfaceVariant,
+				  )
+				  AnimatedVisibility(visible = isCandidateInvalid) {
+					  Text(
+						  text = stringResource(R.string.alarm_error_time_range), // "Must be after start time"
+						  style = typography.labelMedium,
+						  color = colorScheme.error,
+						  modifier = Modifier.padding(top = 4.dp)
+					  )
+				  }
+				  Spacer(modifier = Modifier.height(titleSpacing))
+			  }
+		  }
     ) { TimePicker(state = endTimePickerState) }
   }
 

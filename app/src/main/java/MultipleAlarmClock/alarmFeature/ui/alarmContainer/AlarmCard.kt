@@ -59,11 +59,11 @@ fun AlarmCard(
 
 	val dismissState = rememberSwipeToDismissBoxState()
 
-	val cardShape = RoundedCornerShape(44.dp)
+	val cardShape = RoundedCornerShape(45.dp)
 
 	// Determine padding based on active state to satisfy user requirement for different spacing
 	val horizontalPadding = 10.dp
-	val verticalPadding = if (isActive) 15.dp else 4.dp
+	val verticalPadding = if (isActive) 12.dp else 5.dp
 
 	SwipeToDismissBox(
 		state = dismissState,
@@ -144,7 +144,7 @@ fun AlarmCard(
 						fontWeight = FontWeight.Medium
 					)
 
-					Spacer(modifier = Modifier.height(8.dp))
+					Spacer(modifier = Modifier.height(10.dp))
 
 					// Conditional styling for time display to satisfy emphasis requirements
 
@@ -161,20 +161,18 @@ fun AlarmCard(
 							TimeDisplay(
 								millis = alarmData.startTime,
 								textStyle = typography.displaySmall,
-								contentColor = contentColor,isActive = isActive
+								contentColor = contentColor, isActive = isActive
 							)
-
 							Icon(
 								imageVector = Icons.AutoMirrored.Filled.ArrowForward,
 								contentDescription = null,
-								modifier = Modifier.padding(horizontal = 8.dp).size(20.dp),
+								modifier = Modifier.padding(horizontal = 12.dp).size(20.dp),
 								tint = secondaryContentColor
 							)
-
 							TimeDisplay(
 								millis = alarmData.endTime,
 								textStyle = typography.displaySmall,
-								contentColor = contentColor,isActive = isActive
+								contentColor = contentColor, isActive = isActive
 							)
 						}
 

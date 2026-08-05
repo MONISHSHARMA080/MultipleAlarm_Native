@@ -35,6 +35,7 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -251,14 +252,11 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 		targetValue = if (isPressed) 0.93f else 1f,
 		animationSpec = spring(),
 	)
-	val colorScheme = MaterialTheme.colorScheme
+	val colorScheme = colorScheme
 
 	// 🔑 Lock font scale so button looks identical on every device
 	CompositionLocalProvider(
-		LocalDensity provides Density(
-			density = LocalDensity.current.density,
-			fontScale = 1f
-		)
+		LocalDensity provides Density(density = LocalDensity.current.density, fontScale = 1f)
 	) {
 		ExtendedFloatingActionButton(
 			onClick = {
@@ -271,7 +269,7 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 				.widthIn(min = 178.dp)
 				.zIndex(5f),
 			interactionSource = interactionSource,
-			shape = MaterialTheme.shapes.extraLarge,
+			shape = RoundedCornerShape(45.dp),
 			containerColor = colorScheme.tertiaryContainer,
 			contentColor = colorScheme.onTertiaryContainer,
 			elevation = FloatingActionButtonDefaults.elevation(
