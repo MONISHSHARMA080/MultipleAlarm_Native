@@ -64,13 +64,13 @@ import kotlinx.coroutines.launch
 
 			transitionSpec = {
 				slideInHorizontally(
-					animationSpec = tween(200, easing = FastOutSlowInEasing),
+					animationSpec = tween(300, easing = FastOutSlowInEasing),
 					initialOffsetX = { it }
-				) + fadeIn(tween(150, easing = LinearEasing)) togetherWith
+				) + fadeIn(tween(190, easing = LinearEasing)) togetherWith
 						slideOutHorizontally(
-							animationSpec = tween(200, easing = FastOutSlowInEasing),
+							animationSpec = tween(300, easing = FastOutSlowInEasing),
 							targetOffsetX = { -it }
-						) + fadeOut(tween(100, easing = LinearEasing))
+						) + fadeOut(tween(180, easing = LinearEasing))
 			},
 
 			popTransitionSpec = {
@@ -86,13 +86,13 @@ import kotlinx.coroutines.launch
 
 			predictivePopTransitionSpec = {
 				slideInHorizontally(
-					animationSpec = tween(180, easing = FastOutSlowInEasing),
+					animationSpec = tween(240, easing = FastOutSlowInEasing),
 					initialOffsetX = { (-it * 0.3f).toInt() }
-				) + fadeIn(tween(130, easing = LinearEasing)) togetherWith
+				) + fadeIn(tween(150, easing = LinearEasing)) togetherWith
 						slideOutHorizontally(
-							animationSpec = tween(180, easing = FastOutSlowInEasing),
+							animationSpec = tween(190, easing = FastOutSlowInEasing),
 							targetOffsetX = { it }
-						) + fadeOut(tween(90, easing = LinearEasing))
+						) + fadeOut(tween(120, easing = LinearEasing))
 			},
 
 			entryProvider = entryProvider {

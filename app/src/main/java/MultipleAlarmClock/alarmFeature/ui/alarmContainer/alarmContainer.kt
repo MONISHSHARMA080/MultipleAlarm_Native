@@ -1,7 +1,6 @@
 package com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmListScreen
 
 import MultipleAlarmClock.alarmFeature.data.local.AlarmData
-import android.content.ClipData
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -23,8 +22,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AlarmAdd
@@ -44,12 +44,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -82,6 +83,7 @@ import kotlinx.coroutines.launch
 	val clipLabel = stringResource(R.string.clip_data_label)
 
 	val alarmList: List<AlarmData>? by alarmContainerViewModel.alarms.collectAsStateWithLifecycle()
+	var selectedAlarmId by remember { mutableStateOf<Int?>(null) }
 	ReportDrawnWhen { alarmList != null }
 	val coroutineScope = rememberCoroutineScope()
 	val colorScheme = MaterialTheme.colorScheme
@@ -126,20 +128,23 @@ import kotlinx.coroutines.launch
 				}
 			}
 
-			LazyColumn(
+			LazyVerticalGrid(
+				columns = GridCells.Adaptive(minSize = 300.dp),
 				modifier = Modifier.fillMaxSize(),
 				contentPadding = PaddingValues(
 					start = edgeToEdgePadding.calculateStartPadding(LocalLayoutDirection.current),
-					top = edgeToEdgePadding.calculateTopPadding() ,
+					top = edgeToEdgePadding.calculateTopPadding(),
 					end = edgeToEdgePadding.calculateEndPadding(LocalLayoutDirection.current),
 					bottom = edgeToEdgePadding.calculateBottomPadding() + 155.dp
-				)
+				),
+				horizontalArrangement = Arrangement.spacedBy(0.dp),
+				verticalArrangement = Arrangement.spacedBy(0.dp)
 			) {
-				item {
+				item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
 					Row(
 						modifier = Modifier
 							.fillMaxWidth()
-							.padding(bottom = 23.dp, end = edgeToEdgePadding.calculateEndPadding(LocalLayoutDirection.current) + 10.dp),
+							.padding(bottom = 23.dp, end = 10.dp),
 						horizontalArrangement = Arrangement.End,
 						verticalAlignment = Alignment.CenterVertically
 					) {
@@ -157,41 +162,33 @@ import kotlinx.coroutines.launch
 					}
 				}
 
-				alarmList?.let {list ->
+				alarmList?.let { list ->
 					items(
 						items = list,
-						key = {it.id}
+						key = { it.id }
 					) { individualAlarm ->
 						AlarmCard(
-							individualAlarm, onEdit = {alarmData -> onNavigateToEdit(alarmData)}, onStop = { alarmData -> alarmContainerViewModel.stopAlarm(alarmData) },
-							onDelete = {alarmData ->alarmContainerViewModel.deleteAlarm(alarmData)}, onReset = {alarmData -> alarmContainerViewModel.resetAlarm(alarmData)}, onLongPress = { alarmData ->
+							alarmData = individualAlarm,
+							onEdit = { alarmData -> onNavigateToEdit(alarmData) },
+							onToggle = { alarmData, isChecked ->
+								if (isChecked) alarmContainerViewModel.resetAlarm(alarmData)
+								else alarmContainerViewModel.stopAlarm(alarmData)
+							},
+							onDelete = { alarmData -> alarmContainerViewModel.deleteAlarm(alarmData) },
+							onLongPress = { alarmData ->
+								selectedAlarmId = if (selectedAlarmId == alarmData.id) null else alarmData.id
 								coroutineScope.launch {
-									alarmContainerViewModel.captureEvent("user long pressed the alarm", mapOf(
-										"copying the alarm message" to true,
-										"is message empty" to alarmData.message.isEmpty(),
-										"showing snackBar" to alarmData.message.isNotEmpty()
-									)
-									)
-									if (alarmData.message.isNotEmpty()) {
-										clipBoard.setClipEntry(
-											ClipEntry(
-												ClipData.newPlainText(
-													clipLabel,
-													alarmData.message
-												)
-											)
+									alarmContainerViewModel.captureEvent(
+										"user long pressed the alarm", mapOf(
+											"selecting alarm" to (selectedAlarmId != null)
 										)
-										snackBarHostState.showSnackbar(msgCopied)
-									}else{
-										snackBarHostState.showSnackbar(msgNotPresent)
-									}
+									)
 								}
 							},
 							modifier = Modifier.animateItem()
 						)
 					}
 				}
-
 			}
 
 			if (alarmList?.isEmpty() == true) {
@@ -299,7 +296,7 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 			text = {
 				Text(
 					text = stringResource(R.string.add_alarm_button_text),
-					fontSize = 14.sp,
+					style = MaterialTheme.typography.titleMedium,
 					fontWeight = FontWeight.Bold,
 					letterSpacing = 0.1.sp,
 					maxLines = 1
