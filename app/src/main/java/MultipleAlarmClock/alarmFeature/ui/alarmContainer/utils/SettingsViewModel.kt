@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
 	private val analytics: Analytics,
+
 )  : ViewModel() {
 	fun submitFeedback(feedback: String): Unit {
 		viewModelScope.launch {
@@ -18,6 +19,12 @@ class SettingsViewModel @Inject constructor(
 			))
 		}
 
+	}
+
+	fun captureEvent(title: String, properties: Map<String, Any> ): Unit {
+		viewModelScope.launch {
+			analytics.captureEvent(title, properties)
+		}
 	}
 
 }

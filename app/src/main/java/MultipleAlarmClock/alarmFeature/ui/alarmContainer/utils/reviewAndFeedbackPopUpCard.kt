@@ -92,37 +92,42 @@ fun FeedbackCardContent(
                         verticalArrangement = Arrangement.spacedBy(0.dp),
                         horizontalAlignment = Alignment.Start,
                 ) {
-                        // ── Icon badge ──
-                        Box(
-                                modifier = Modifier
-                                        .size(56.dp)
-                                        .clip(CircleShape)
-                                        .background(
-                                                brush = Brush.radialGradient(
-                                                        colors = listOf(
-                                                                MaterialTheme.colorScheme.primaryContainer,
-                                                                MaterialTheme.colorScheme.secondaryContainer,
+                        Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                                // ── Icon badge ──
+                                Box(
+                                        modifier = Modifier
+                                                .size(56.dp)
+                                                .clip(CircleShape)
+                                                .background(
+                                                        brush = Brush.radialGradient(
+                                                                colors = listOf(
+                                                                        MaterialTheme.colorScheme.primaryContainer,
+                                                                        MaterialTheme.colorScheme.secondaryContainer,
+                                                                ),
                                                         ),
                                                 ),
-                                        ),
-                                contentAlignment = Alignment.Center,
-                        ) {
-                                Icon(
-                                        imageVector = Icons.Filled.RateReview,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        modifier = Modifier.size(28.dp),
+                                        contentAlignment = Alignment.Center,
+                                ) {
+                                        Icon(
+                                                imageVector = Icons.Filled.RateReview,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                modifier = Modifier.size(28.dp),
+                                        )
+                                }
+
+                                // ── Title ──
+                                Text(
+                                        text = stringResource(R.string.feedback_title),
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        color = MaterialTheme.colorScheme.onSurface,
                                 )
                         }
 
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        // ── Title ──
-                        Text(
-                                text = stringResource(R.string.feedback_title),
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = MaterialTheme.colorScheme.onSurface,
-                        )
 
                         Spacer(modifier = Modifier.height(8.dp))
 

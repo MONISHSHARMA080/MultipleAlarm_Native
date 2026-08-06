@@ -49,7 +49,7 @@
     <string name="permission_dialog_btn_allow">Allow</string>
 
 <!-- Feedback Card -->
-    <string name="feedback_title">Feedback please</string>
+    <string name="feedback_title">Feedback</string>
     <string name="feedback_description">Tell us what you love and what needs work. From design tweaks to feature requests and bug fixes, help us improve the app for you and everyone</string>
     <string name="feedback_placeholder">Tell us what you think…</string>
     <string name="feedback_char_count">%1$d / %2$d</string>
@@ -64,5 +64,10 @@
     <string name="Sound_screen_Random_sound">A random sound will be chosen on every alarm</string>
     <string name="Sound_screen_Random_sound_choosen">A random sound will be chosen on every alarm</string>
 
+    <!-- About & Rate App -->
+    <string name="about_section_title">About</string>
+    <string name="rate_app_title">Rate %1$s</string>
+    <string name="rate_app_subtitle">Rate us on Play Store</string>
+    <string name="about_version_title">Version</string>
 
 </resources>
