@@ -79,6 +79,7 @@ fun AlarmFlowScreen(
 				AlarmPickerScreen(
 					viewModel = viewModel,
 					alarmSetGoBack = onCloseFlow,
+					forNewAlarm = alarmData == null,
 					onNavigateToSoundList = {
 						flowBackStack.add(AlarmFlowRoute.AlarmSoundListScreen)
 					}

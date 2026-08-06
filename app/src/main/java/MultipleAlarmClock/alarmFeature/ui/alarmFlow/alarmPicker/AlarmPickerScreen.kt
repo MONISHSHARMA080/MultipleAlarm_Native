@@ -95,11 +95,16 @@ import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
+
+enum class Progress{StartTime, EndTime, FullEditor}
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmPickerScreen(
         alarmSetGoBack: () -> Unit,
         onNavigateToSoundList: () -> Unit,
+		forNewAlarm: Boolean,
         viewModel: AlarmPickerViewModel
 ) {
 
