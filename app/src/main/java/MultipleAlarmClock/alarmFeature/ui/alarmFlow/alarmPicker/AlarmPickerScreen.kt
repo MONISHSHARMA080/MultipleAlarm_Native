@@ -270,7 +270,6 @@ fun AlarmPickerScreen(
                   Text(
                           text = when (currentProgress) {
                             Progress.StartTime -> stringResource(R.string.alarm_picker_cancel)
-//                            Progress.StartTime -> stringResource(R.string.alarm_picker_delete_alarm)
                             Progress.EndTime -> stringResource(R.string.alarm_picker_previous)
                             Progress.FullEditor ->{
 								if (forNewAlarm) stringResource(R.string.alarm_picker_previous) else stringResource(R.string.alarm_picker_delete_alarm)
