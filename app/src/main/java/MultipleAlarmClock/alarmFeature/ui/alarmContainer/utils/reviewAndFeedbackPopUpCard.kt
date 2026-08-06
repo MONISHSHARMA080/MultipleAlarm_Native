@@ -78,7 +78,6 @@ fun FeedbackCardContent(
                         focusRequester.requestFocus()
                 }
         }
-
         Card(
                 modifier = modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(28.dp),
