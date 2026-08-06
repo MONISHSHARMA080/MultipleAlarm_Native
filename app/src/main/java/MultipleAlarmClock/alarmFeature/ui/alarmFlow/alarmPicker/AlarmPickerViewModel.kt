@@ -32,7 +32,9 @@ import com.example.MultipleAlarmClock.Ui.alarmPicker.data.AlarmSound
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -60,6 +62,7 @@ class AlarmPickerViewModel @Inject constructor(
 		state.copy(validationResult = state.alarmObject.validate(state.initialAlarm))
 	}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AlarmPickerUiState())
 
+	private  val nonCancellableScope = CoroutineScope(NonCancellable)
 
 	private val _alarmSoundName = MutableStateFlow<List<AlarmSound>>(emptyList())
 	val listOfAlarms = _alarmSoundName.asStateFlow()
@@ -70,12 +73,9 @@ class AlarmPickerViewModel @Inject constructor(
 	/** here null means it's empty*/
 	private val _previewingSound = MutableStateFlow<AlarmSound?>(null)
 	val previewingSound = _previewingSound.asStateFlow()
-
 	private val _previewingRandom = MutableStateFlow(false)
 	val previewingRandom = _previewingRandom.asStateFlow()
-
 	private val errorHandler = ErrorHandler(notificationHandler = NotificationHandler(context),analytics)
-
 	private val playAlarm = PlayAlarm(context, analytics)
 
 
@@ -131,17 +131,42 @@ class AlarmPickerViewModel @Inject constructor(
 	}
 
 	fun setInitialAlarmObject(alarmData: AlarmData?) {
+		val initialAlarmObject = alarmData?.toDomain()?.incrementDateToCurrentDate() ?: createDefaultAlarmObject(alarmData)
+		val initialProgress = if (alarmData == null) com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.Progress.StartTime else com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.Progress.FullEditor
+		_uiState.update {
+			it.copy(
+				alarmObject = initialAlarmObject,
+				initialAlarm = alarmData,
+				progress = initialProgress
+			)
+		}
 		viewModelScope.launch {
-			val initialAlarmObject = alarmData?.toDomain()?.incrementDateToCurrentDate() ?: createDefaultAlarmObject(alarmData)
-			_uiState.update {
-				it.copy(
-					alarmObject = initialAlarmObject,
-					initialAlarm = alarmData
-				)
+			_selectedAlarmSound.value = getAlarmSoundFromAlarmData(alarmData)
+		}
+	}
+
+	fun updateProgress(newProgress: com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.Progress) {
+		_uiState.update { it.copy(progress = newProgress) }
+	}
+
+	fun updateStartTime(newStartTime: Calendar) {
+		_uiState.update { state ->
+			val updatedAlarm = state.alarmObject.copy(startTime = newStartTime)
+			val finalAlarm = if (updatedAlarm.endTime.timeInMillis <= newStartTime.timeInMillis) {
+				val newEnd = (newStartTime.clone() as Calendar).apply {
+					add(Calendar.MINUTE, 45)
+				}
+				updatedAlarm.copy(endTime = newEnd)
+			} else {
+				updatedAlarm
 			}
-			launch{
-				_selectedAlarmSound.value = getAlarmSoundFromAlarmData(alarmData)
-			}
+			state.copy(alarmObject = finalAlarm)
+		}
+	}
+
+	fun updateEndTime(newEndTime: Calendar) {
+		_uiState.update { state ->
+			state.copy(alarmObject = state.alarmObject.copy(endTime = newEndTime))
 		}
 	}
 
@@ -223,13 +248,7 @@ class AlarmPickerViewModel @Inject constructor(
 
 	// Update your onSetAlarmClicked to be even simpler
 	fun onSetAlarmClicked(currentAlarm: AlarmData?, alarmObject: AlarmObject) {
-
-analytics.captureEvent("set alarm clicked",
-									mapOf(
-										"Ui state" to _uiState.value.toString(),
-									)
-								)
-
+		analytics.captureEvent("set alarm clicked", mapOf("Ui state" to _uiState.value.toString()))
 
 		// We don't need to check permissions here anymore because the button
 		// is only clickable (or behaves differently) based on uiState.isPermissionGranted
@@ -251,6 +270,23 @@ analytics.captureEvent("set alarm clicked",
 	fun dismissPermissionDialog() {
 		_uiState.update { it.copy(showPermissionDialog = false) }
 		checkPermissions(context)
+	}
+
+	fun onDeleteClicked() {
+		val alarmData: AlarmData  = uiState.value.initialAlarm ?: return
+		analytics.captureEvent("delete alarm clicked", mapOf("alarmId" to alarmData.id))
+		nonCancellableScope.launch {
+			alarmsController.deleteAlarmHandler(alarmData, context, alarmManager).fold(
+				onSuccess = {
+					analytics.captureEvent("alarm successfully deleted", mapOf("alarmId" to alarmData.id))
+					_uiState.update { it.copy(alarmOperationCompletedGoBack = true) }
+				},
+				onError = { messageToDisplayUser, exception ->
+					logD("error while deleting alarm: ${exception.message}")
+					errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while deleting alarm, Please try again")
+				}
+			)
+		}
 	}
 
 	fun updateDate(calVersion: Calendar) {

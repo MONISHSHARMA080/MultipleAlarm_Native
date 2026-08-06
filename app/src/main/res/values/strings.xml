@@ -20,8 +20,10 @@
     <string name="alarm_picker_sound_random">Random</string>
     <string name="alarm_picker_message">message</string>
     <string name="alarm_picker_message_placeholder">Add message…</string>
-    <string name="alarm_picker_ok">OK</string>
+    <string name="alarm_picker_ok">Select</string>
     <string name="alarm_picker_cancel">Cancel</string>
+    <string name="alarm_picker_delete_alarm">Delete</string>
+    <string name="alarm_picker_previous">Previous</string>
     <string name="alarm_picker_select_start_time">Select start time</string>
     <string name="alarm_picker_select_end_time">Select end time</string>
     <string name="alarm_picker_decrease_desc">Decrease</string>
@@ -29,7 +31,7 @@
     <string name="alarm_picker_date">date</string>
 
     <!-- Alarm Validation Errors -->
-    <string name="alarm_error_time_range">End time must be after the start time</string>
+    <string name="alarm_error_time_range">Select end time after the start time</string>
     <string name="alarm_error_frequency_range">Enter a value between 1 to 700 minutes</string>
     <string name="alarm_error_date_mismatch">Start and end times must be on the same day</string>
     <string name="alarm_error_past_date">Date value must be today or in the future.</string>

@@ -64,24 +64,24 @@ import kotlinx.coroutines.launch
 
 			transitionSpec = {
 				slideInHorizontally(
-					animationSpec = tween(300, easing = FastOutSlowInEasing),
+					animationSpec = tween(330, easing = FastOutSlowInEasing),
 					initialOffsetX = { it }
 				) + fadeIn(tween(190, easing = LinearEasing)) togetherWith
 						slideOutHorizontally(
-							animationSpec = tween(300, easing = FastOutSlowInEasing),
+							animationSpec = tween(330, easing = FastOutSlowInEasing),
 							targetOffsetX = { -it }
-						) + fadeOut(tween(180, easing = LinearEasing))
+						) + fadeOut(tween(205, easing = LinearEasing))
 			},
 
 			popTransitionSpec = {
 				slideInHorizontally(
-					animationSpec = tween(200, easing = FastOutSlowInEasing),
+					animationSpec = tween(240, easing = FastOutSlowInEasing),
 					initialOffsetX = { -it }
-				) + fadeIn(tween(150, easing = LinearEasing)) togetherWith
+				) + fadeIn(tween(180, easing = LinearEasing)) togetherWith
 						slideOutHorizontally(
-							animationSpec = tween(200, easing = FastOutSlowInEasing),
+							animationSpec = tween(240, easing = FastOutSlowInEasing),
 							targetOffsetX = { it }
-						) + fadeOut(tween(100, easing = LinearEasing))
+						) + fadeOut(tween(140, easing = LinearEasing))
 			},
 
 			predictivePopTransitionSpec = {

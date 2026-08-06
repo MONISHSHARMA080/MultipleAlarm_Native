@@ -52,8 +52,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -62,18 +64,21 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDialog
+import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -113,7 +118,6 @@ fun AlarmPickerScreen(
 
   val view = LocalView.current
   val timeStyle = typography.headlineSmall
-
   val context = LocalContext.current
 
 
@@ -166,29 +170,68 @@ fun AlarmPickerScreen(
     )
   }
 
+  val currentProgress = if (!forNewAlarm) Progress.FullEditor else uiState.progress
+
+  val startTimePickerState = key(currentProgress) {
+    rememberTimePickerState(
+            initialHour = uiState.alarmObject.startTime.get(Calendar.HOUR_OF_DAY),
+            initialMinute = uiState.alarmObject.startTime.get(Calendar.MINUTE),
+            is24Hour = false
+    )
+  }
+
+  val endTimePickerState = key(currentProgress) {
+    rememberTimePickerState(
+            initialHour = uiState.alarmObject.endTime.get(Calendar.HOUR_OF_DAY),
+            initialMinute = uiState.alarmObject.endTime.get(Calendar.MINUTE),
+            is24Hour = false
+    )
+  }
+
+  val candidateEnd = remember(endTimePickerState.hour, endTimePickerState.minute, uiState.alarmObject.startTime) {
+    (uiState.alarmObject.endTime.clone() as Calendar).apply {
+      set(Calendar.HOUR_OF_DAY, endTimePickerState.hour)
+      set(Calendar.MINUTE, endTimePickerState.minute)
+    }
+  }
+  val isCandidateInvalid = candidateEnd.timeInMillis <= uiState.alarmObject.startTime.timeInMillis
+
   Scaffold(
           contentWindowInsets = WindowInsets.safeDrawing,
           topBar = {
-            TopAppBar(
-                    title = {
-                      Text(
-                              if (uiState.initialAlarm == null) stringResource(R.string.alarm_picker_title_set) else stringResource(R.string.alarm_picker_title_edit),
-                              style = timeStyle,
-                              color = colorScheme.onBackground,
-                              modifier = Modifier.padding(horizontal = 7.dp),
-                              maxLines = 1,
-                              softWrap = false,
-                      )
-                    },
-                    navigationIcon = {
-                      IconButton(onClick = alarmSetGoBack) {
-                        Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                contentDescription = stringResource(R.string.alarm_picker_back_desc)
+            Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+              TopAppBar(
+                      title = {
+                        Text(
+                                when (currentProgress) {
+                                  Progress.StartTime -> stringResource(R.string.alarm_picker_select_start_time)
+                                  Progress.EndTime -> stringResource(R.string.alarm_picker_select_end_time)
+                                  Progress.FullEditor -> if (uiState.initialAlarm == null) stringResource(R.string.alarm_picker_title_set) else stringResource(R.string.alarm_picker_title_edit)
+                                },
+                                style = timeStyle,
+                                color = colorScheme.onBackground,
+                                modifier = Modifier.padding(horizontal = 7.dp),
+                                maxLines = 1,
+                                softWrap = false,
                         )
-                      }
-                    },
-            )
+                      },
+                      navigationIcon = {
+                        IconButton(
+                                onClick = {
+                                  alarmSetGoBack()
+                                }
+                        ) {
+                          Icon(
+                                  imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                                  contentDescription = stringResource(R.string.alarm_picker_back_desc)
+                          )
+                        }
+                      },
+              )
+            }
           },
           bottomBar = {
             Box(
@@ -203,150 +246,279 @@ fun AlarmPickerScreen(
             ) {
               Row(
                       modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth(),
-                      horizontalArrangement = Arrangement.End
+                      horizontalArrangement = Arrangement.SpaceBetween,
+                      verticalAlignment = Alignment.CenterVertically
               ) {
-                Button(
+                OutlinedButton(
                         onClick = {
-                          if (uiState.validationResult == ValidationResult.Success) {
-                            viewModel.onSetAlarmClicked(uiState.initialAlarm, uiState.alarmObject)
-                            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                          when (currentProgress) {
+                            Progress.StartTime -> alarmSetGoBack()
+                            Progress.EndTime -> viewModel.updateProgress(Progress.StartTime)
+                            Progress.FullEditor -> {
+                              if (forNewAlarm) {
+                                viewModel.updateProgress(Progress.EndTime)
+                              } else {
+								  viewModel.onDeleteClicked()
+                              }
+                            }
                           }
                         },
-                        colors =
-                                when (val result = uiState.validationResult) {
-                                  is ValidationResult.Success -> {
-                                    ButtonDefaults.buttonColors(
-                                            containerColor = colorScheme.primaryContainer,
-                                            contentColor = colorScheme.onPrimaryContainer
-                                    )
-                                  }
-                                  is ValidationResult.Failure -> {
-                                    if (result.field == AlarmErrorField.AlarmIsNotDiff) {
-                                      ButtonDefaults.buttonColors(
-                                              containerColor = colorScheme.surfaceVariant,
-                                              contentColor = colorScheme.onSurfaceVariant
-                                      )
-                                    } else {
-                                      ButtonDefaults.buttonColors(
-                                              containerColor = colorScheme.errorContainer,
-                                              contentColor = colorScheme.onErrorContainer
-                                      )
-                                    }
-                                  }
-                                },
-                        modifier =
-							Modifier.height(56.dp)
-								.animateContentSize(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)),
-                        contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
+                        modifier = Modifier.height(56.dp).animateContentSize(),
+                        contentPadding = PaddingValues(horizontal = 28.dp, vertical = 0.dp),
                         shape = RoundedCornerShape(28.dp)
                 ) {
-                  AnimatedContent(
-                          targetState = uiState.validationResult == ValidationResult.Success,
-                          transitionSpec = {
-                            fadeIn() togetherWith fadeOut() using SizeTransform()
+                  Text(
+                          text = when (currentProgress) {
+                            Progress.StartTime -> stringResource(R.string.alarm_picker_cancel)
+//                            Progress.StartTime -> stringResource(R.string.alarm_picker_delete_alarm)
+                            Progress.EndTime -> stringResource(R.string.alarm_picker_previous)
+                            Progress.FullEditor ->{
+								if (forNewAlarm) stringResource(R.string.alarm_picker_previous) else stringResource(R.string.alarm_picker_delete_alarm)
+							}
                           },
-                          label = "button_text"
-                  ) { isValid ->
-                    Text(
-                            when {
-                              isValid -> stringResource(R.string.alarm_picker_btn_set)
-                              uiState.validationResult is ValidationResult.Failure &&
-                                      (uiState.validationResult as ValidationResult.Failure)
-                                              .field == AlarmErrorField.AlarmIsNotDiff ->
-                                      stringResource(R.string.alarm_picker_btn_change)
-                              else -> stringResource(R.string.alarm_picker_btn_fix)
+                          style = typography.bodyLarge,
+                  )
+                }
+
+                when (currentProgress) {
+                  Progress.StartTime -> {
+                    Button(
+                            onClick = {
+                              val selectedStartTime = (uiState.alarmObject.startTime.clone() as Calendar).apply {
+                                set(Calendar.HOUR_OF_DAY, startTimePickerState.hour)
+                                set(Calendar.MINUTE, startTimePickerState.minute)
+                              }
+                              viewModel.updateStartTime(selectedStartTime)
+                              viewModel.updateProgress(Progress.EndTime)
+                              view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                             },
-                            style = typography.bodyLarge,
-                    )
+                            colors = ButtonDefaults.buttonColors(
+                                    containerColor = colorScheme.primaryContainer,
+                                    contentColor = colorScheme.onPrimaryContainer
+                            ),
+                            modifier = Modifier.height(56.dp).animateContentSize(),
+                            contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
+                            shape = RoundedCornerShape(28.dp)
+                    ) {
+                      Text(
+                              stringResource(R.string.alarm_picker_ok),
+                              style = typography.bodyLarge,
+                      )
+                    }
+                  }
+                  Progress.EndTime -> {
+                    Button(
+                            onClick = {
+                              if (!isCandidateInvalid) {
+                                viewModel.updateEndTime(candidateEnd)
+                                viewModel.updateProgress(Progress.FullEditor)
+                                view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                              }
+                            },
+                            enabled = !isCandidateInvalid,
+                            colors = if (!isCandidateInvalid) {
+                              ButtonDefaults.buttonColors(
+                                      containerColor = colorScheme.primaryContainer,
+                                      contentColor = colorScheme.onPrimaryContainer
+                              )
+                            } else {
+                              ButtonDefaults.buttonColors(
+                                      containerColor = colorScheme.surfaceVariant,
+                                      contentColor = colorScheme.onSurfaceVariant
+                              )
+                            },
+                            modifier = Modifier.height(56.dp).animateContentSize(),
+                            contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
+                            shape = RoundedCornerShape(28.dp)
+                    ) {
+                      Text(
+                              stringResource(R.string.alarm_picker_ok),
+                              style = typography.bodyLarge,
+                      )
+                    }
+                  }
+                  Progress.FullEditor -> {
+                    val isNotDiff = uiState.validationResult is ValidationResult.Failure &&
+                            (uiState.validationResult as ValidationResult.Failure).field == AlarmErrorField.AlarmIsNotDiff
+                    val isInactiveEdit = isNotDiff && uiState.initialAlarm?.isReadyToUse == false
+                    val canSetAlarm = uiState.validationResult == ValidationResult.Success || isInactiveEdit
+
+                    Button(
+                            onClick = {
+                              if (canSetAlarm) {
+                                viewModel.onSetAlarmClicked(uiState.initialAlarm, uiState.alarmObject)
+                                view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                              }
+                            },
+                            colors =
+                                    when {
+                                      canSetAlarm -> {
+                                        ButtonDefaults.buttonColors(
+                                                containerColor = colorScheme.primaryContainer,
+                                                contentColor = colorScheme.onPrimaryContainer
+                                        )
+                                      }
+                                      uiState.validationResult is ValidationResult.Failure -> {
+                                        if (isNotDiff) {
+                                          ButtonDefaults.buttonColors(
+                                                  containerColor = colorScheme.surfaceVariant,
+                                                  contentColor = colorScheme.onSurfaceVariant
+                                          )
+                                        } else {
+                                          ButtonDefaults.buttonColors(
+                                                  containerColor = colorScheme.errorContainer,
+                                                  contentColor = colorScheme.onErrorContainer
+                                          )
+                                        }
+                                      }
+                                      else -> ButtonDefaults.buttonColors()
+                                    },
+                            modifier =
+                                Modifier.height(56.dp)
+                                    .animateContentSize(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)),
+                            contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
+                            shape = RoundedCornerShape(28.dp)
+                    ) {
+                      AnimatedContent(
+                              targetState = canSetAlarm,
+                              transitionSpec = {
+                                fadeIn() togetherWith fadeOut() using SizeTransform()
+                              },
+                              label = "button_text"
+                      ) { isValid ->
+                        Text(
+                                when {
+                                  isValid -> stringResource(R.string.alarm_picker_btn_set)
+                                  isNotDiff -> stringResource(R.string.alarm_picker_btn_change)
+                                  else -> stringResource(R.string.alarm_picker_btn_fix)
+                                },
+                                style = typography.bodyLarge,
+                        )
+                      }
+                    }
                   }
                 }
               }
             }
           }
   ) { screenPadding ->
-    Column(
-            modifier =
-                    Modifier.fillMaxSize()
-                            .background(colorScheme.background)
-                            .padding(screenPadding)
-                            .consumeWindowInsets(screenPadding)
-                            .padding(horizontal = horizontalPadding)
-                            .animateContentSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-      Spacer(modifier = Modifier.weight(0.44f))
-      TimeRow(
-              uiState,
-              {
-                viewModel.updateUi(
-                        uiState.copy(alarmObject = uiState.alarmObject.copy(startTime = it))
+    AnimatedContent(
+            targetState = currentProgress,
+            modifier = Modifier.fillMaxSize().padding(screenPadding).consumeWindowInsets(screenPadding),
+            transitionSpec = {
+              fadeIn() togetherWith fadeOut() using SizeTransform()
+            },
+            label = "progress_content"
+    ) { currentProgress ->
+
+		if (currentProgress != Progress.FullEditor) {
+			LinearProgressForNewAlarm(
+				progress = currentProgress,
+				modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 5.dp)
+			)
+		}
+
+      when (currentProgress) {
+
+        Progress.StartTime -> {
+          TimePickerWithoutDialog(
+                  state = startTimePickerState,
+                  modifier = Modifier.padding(horizontal = horizontalPadding)
+          )
+        }
+
+        Progress.EndTime -> {
+          TimePickerWithoutDialog(
+                  state = endTimePickerState,
+                  isCandidateInvalid = isCandidateInvalid,
+                  errorMessage = stringResource(R.string.alarm_error_time_range),
+                  modifier = Modifier.padding(horizontal = horizontalPadding)
+          )
+        }
+
+        Progress.FullEditor -> {
+          Column(
+                  modifier = Modifier.fillMaxSize()
+							  .padding(horizontal = horizontalPadding)
+							  .animateContentSize(),
+                  horizontalAlignment = Alignment.CenterHorizontally
+          ) {
+            Spacer(modifier = Modifier.weight(0.44f))
+            TimeRow(
+                    uiState,
+                    {
+                      viewModel.updateUi(
+                              uiState.copy(alarmObject = uiState.alarmObject.copy(startTime = it))
+                      )
+                    },
+                    {
+                      viewModel.updateUi(
+                              uiState.copy(alarmObject = uiState.alarmObject.copy(endTime = it))
+                      )
+                    }
+            )
+            Spacer(modifier = Modifier.weight(0.44f))
+
+            // 5. Settings Card (Name & Sound)
+            Surface(
+                    shape = RoundedCornerShape(29.dp),
+                    color = colorScheme.surfaceContainer,
+                    modifier = Modifier.fillMaxWidth()
+            ) {
+              Column {
+                FrequencyRow(
+                        icon = Icons.Rounded.Timer,
+                        title = stringResource(R.string.alarm_picker_repeat_every),
+                        value = uiState.alarmObject.freqGottenAfterCallback,
+                        onValueChange = { newValue ->
+                          newValue.let {
+                            logD("new freq: value is $it")
+                            if (it in 0 ..< 720) {
+                              viewModel.updateFrequency(it)
+                            }
+                          }
+                        },
+                        previewText = viewModel.getFrequencyPreviewText(),
+                        uiState,
                 )
-              },
-              {
-                viewModel.updateUi(
-                        uiState.copy(alarmObject = uiState.alarmObject.copy(endTime = it))
+                HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = colorScheme.outlineVariant,
+                )
+
+                SettingRow(
+                        icon = Icons.Rounded.CalendarMonth,
+                        title = stringResource(R.string.alarm_picker_date),
+                        value = SimpleDateFormat("EEE, MMM d, yyyy", LocalLocale.current.platformLocale).format(uiState.alarmObject.startTime.time),
+                        onClick = { showCalendar = true }
+                )
+
+                HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = colorScheme.outlineVariant,
+                )
+
+                SettingRow(
+                        icon = Icons.Rounded.Notifications,
+                        title = stringResource(R.string.alarm_picker_sound),
+                        value = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random),
+                        onClick = onNavigateToSoundList
+                )
+
+                HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = colorScheme.outlineVariant,
+                )
+
+                MessageRow(
+                        icon = Icons.AutoMirrored.Rounded.Message,
+                        title = stringResource(R.string.alarm_picker_message),
+                        value = uiState.alarmObject.message,
+                        onValueChange = { viewModel.updateMessage(it) },
                 )
               }
-      )
-      Spacer(modifier = Modifier.weight(0.44f))
-
-      // 5. Settings Card (Name & Sound)
-      Surface(
-              shape = RoundedCornerShape(29.dp),
-              color = colorScheme.surfaceContainer,
-              modifier = Modifier.fillMaxWidth()
-      ) {
-        Column {
-          FrequencyRow(
-                  icon = Icons.Rounded.Timer,
-                  title = stringResource(R.string.alarm_picker_repeat_every),
-                  value = uiState.alarmObject.freqGottenAfterCallback,
-                  onValueChange = { newValue ->
-                    newValue.let {
-                      logD("new freq: value is $it")
-                      if (it in 0 ..< 720) {
-                        viewModel.updateFrequency(it)
-                      }
-                    }
-                  },
-                  previewText = viewModel.getFrequencyPreviewText(),
-                  uiState,
-          )
-          HorizontalDivider(
-                  modifier = Modifier.padding(horizontal = 16.dp),
-                  color = colorScheme.outlineVariant,
-          )
-
-          SettingRow(
-                  icon = Icons.Rounded.CalendarMonth,
-                  title = stringResource(R.string.alarm_picker_date),
-                  value = SimpleDateFormat("EEE, MMM d, yyyy", LocalLocale.current.platformLocale).format(uiState.alarmObject.startTime.time),
-                  onClick = { showCalendar = true }
-          )
-
-          HorizontalDivider(
-                  modifier = Modifier.padding(horizontal = 16.dp),
-                  color = colorScheme.outlineVariant,
-          )
-
-          SettingRow(
-                  icon = Icons.Rounded.Notifications,
-                  title = stringResource(R.string.alarm_picker_sound),
-                  value = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random),
-                  onClick = onNavigateToSoundList
-          )
-
-          HorizontalDivider(
-                  modifier = Modifier.padding(horizontal = 16.dp),
-                  color = colorScheme.outlineVariant,
-          )
-
-          MessageRow(
-                  icon = Icons.AutoMirrored.Rounded.Message,
-                  title = stringResource(R.string.alarm_picker_message),
-                  value = uiState.alarmObject.message,
-                  onValueChange = { viewModel.updateMessage(it) },
-          )
+            }
+          }
         }
       }
     }
@@ -511,8 +683,7 @@ val amPmStyle = typography.bodyMedium  // was labelLarge — bump up to match M3
     ) {
       Text(
               text =
-                      SimpleDateFormat("h:mm ", LocalLocale.current.platformLocale)
-                              .format(endTime.time),
+                      SimpleDateFormat("h:mm ", LocalLocale.current.platformLocale).format(endTime.time),
               style = timeStyle,
               color = timeColor,
               maxLines = 1,
@@ -769,3 +940,73 @@ private fun FrequencyRow(
     }
   }
 }
+
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TimePickerWithoutDialog(
+        state: TimePickerState,
+        modifier: Modifier = Modifier,
+        isCandidateInvalid: Boolean = false,
+        errorMessage: String? = null,
+) {
+  Column(
+          modifier = modifier
+			  .fillMaxSize()
+			  .padding(vertical = 16.dp),
+          horizontalAlignment = Alignment.CenterHorizontally,
+          verticalArrangement = Arrangement.Center
+  ) {
+    TimePicker(state = state)
+
+    AnimatedVisibility(visible = isCandidateInvalid) {
+      Text(
+              text = errorMessage ?: stringResource(R.string.alarm_error_time_range),
+              style = typography.bodyMedium,
+              color = colorScheme.error,
+              modifier = Modifier.padding(top = 16.dp),
+              textAlign = TextAlign.Center
+      )
+    }
+  }
+}
+
+@Composable
+fun LinearProgressForNewAlarm(modifier: Modifier = Modifier, progress: Progress) {
+  val (step, total) =
+          when (progress) {
+            Progress.StartTime -> 1 to 3
+            Progress.EndTime -> 2 to 3
+            Progress.FullEditor -> 3 to 3
+          }
+  val progressFraction = step / total.toFloat()
+
+  Column(
+          modifier =
+                  modifier.fillMaxWidth().widthIn(max = 600.dp).padding(horizontal = 24.dp),
+          horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+    ) {
+      Text(
+              text = "Step $step of $total",
+              style = typography.labelSmall,
+              fontWeight = FontWeight.Normal,
+              color = colorScheme.onSurface
+      )
+    }
+    Spacer(modifier = Modifier.height(8.dp))
+    LinearProgressIndicator(
+            progress = { progressFraction },
+            modifier = Modifier.fillMaxWidth().height(5.dp).animateContentSize(),
+            color = colorScheme.secondary,
+            trackColor = colorScheme.surfaceContainerLow,
+            strokeCap = StrokeCap.Round
+    )
+  }
+}
+
