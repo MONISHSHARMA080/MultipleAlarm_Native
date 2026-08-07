@@ -105,7 +105,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 onError = { message, exception ->
                     logD("Error scheduling next alarm: ${message.messageToDisplayUser}")
                     val errorHandler = ErrorHandler(NotificationHandler(context), Analytics(context))
-                    errorHandler.handleError(Result.Failure(message, exception), "Error scheduling next alarm")
+                    errorHandler.handleError(Result.Failure(message, exception))
                     alarmRepository.updateAlarm(alarmData.copy(isReadyToUse = false))
                 }
             )

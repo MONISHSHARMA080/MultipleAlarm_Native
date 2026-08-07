@@ -82,7 +82,7 @@ class AlarmContainerViewModel @Inject constructor(
 			}
 			logD("user asked to stop the alarm $alarmData")
 			alarmsController.cancelAlarmHandler(alarmData,  context, alarmManager).fold(onSuccess = {}, onError = { messageToDisplayUser, exception ->
-				errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while cancelling alarm, Please try again" )
+				errorHandler.handleError(Result.Failure(messageToDisplayUser, exception))
 				logD("there is a error/Exception in making new alarm-->${exception.message}")
 			})
 		}
@@ -114,7 +114,7 @@ class AlarmContainerViewModel @Inject constructor(
 					}
 				},
 				onError = { messageToDisplayUser, exception->
-					errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while resting the  alarm, Please try again" )
+					errorHandler.handleError(Result.Failure(messageToDisplayUser, exception))
 					logD("error/exception in the reset alarm -->${exception.message}")
 				}
 			)
@@ -133,7 +133,7 @@ class AlarmContainerViewModel @Inject constructor(
 			logD("deleting the alarm $alarmData")
 			alarmsController.deleteAlarmHandler(alarmData, context, alarmManager).fold(onSuccess = {}, onError = { messageToDisplayUser, exception ->
 				logD("there is a error in deleting the alarm  that is $exception ")
-				errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while deleting the alarm, Please try again" )
+				errorHandler.handleError(Result.Failure(messageToDisplayUser, exception))
 			})
 		}
 

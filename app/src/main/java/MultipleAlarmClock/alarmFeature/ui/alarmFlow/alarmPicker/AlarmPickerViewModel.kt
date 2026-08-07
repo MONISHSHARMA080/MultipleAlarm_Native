@@ -283,7 +283,7 @@ class AlarmPickerViewModel @Inject constructor(
 				},
 				onError = { messageToDisplayUser, exception ->
 					logD("error while deleting alarm: ${exception.message}")
-					errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while deleting alarm, Please try again")
+					errorHandler.handleError(Result.Failure(messageToDisplayUser, exception))
 				}
 			)
 		}
@@ -404,7 +404,7 @@ class AlarmPickerViewModel @Inject constructor(
 						},
 						onError = {messageToDisplayUser, exception ->
 							logD("there is a error in making new alarm  that is $exception ")
-							errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while making new alarm, Please try again" )
+							errorHandler.handleError(Result.Failure(messageToDisplayUser, exception))
 						}
 					)
 				}
@@ -416,7 +416,7 @@ class AlarmPickerViewModel @Inject constructor(
 					alarmsController.updateAlarmStateInDb( oldAlarm).fold(onSuccess = {}, onError = { messageToDisplayUser, exception  ->
 						// no such alarm exist in DB so can't update it
 						logD("there is a error while editing the alarm and updating it's state in DB and  that is ${exception.message} ")
-						errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while editing alarm, Please try again" )
+						errorHandler.handleError(Result.Failure(messageToDisplayUser, exception))
 					}
 					)
 					val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(
@@ -440,7 +440,7 @@ class AlarmPickerViewModel @Inject constructor(
 							}
 						},
 						onError = { messageToDisplayUser, exception ->
-							errorHandler.handleError(Result.Failure(messageToDisplayUser, exception), "Sorry an error occurred while editing alarm, Please try again" )
+							errorHandler.handleError(Result.Failure(messageToDisplayUser, exception))
 							logD("there is a error/Exception in editing new alarm-->${exception.message}")
 						}
 					)

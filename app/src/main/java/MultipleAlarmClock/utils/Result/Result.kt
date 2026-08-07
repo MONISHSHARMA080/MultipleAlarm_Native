@@ -1,12 +1,14 @@
 package com.coolApps.MultipleAlarmClock.utils.Result
 
+import com.coolApps.MultipleAlarmClock.utils.UiText
+
 interface Error {
-    val messageToDisplayUser: String
+    val messageToDisplayUser: UiText
+    val titleToDisplayUser: UiText
 }
 
 sealed class Result<out SuccessType, out ErrorType : Error> {
     data class Success<out T>(val value: T) : Result<T, Nothing>()
-//    data class Failure<out E : Error>(val errorMessageToDisplayUser: E, val exception: Throwable) : Result<Nothing, E>()
     data class Failure<out E : Error>(
         val errorMessageToDisplayUser: E,
         val internalException: Throwable
@@ -14,38 +16,18 @@ sealed class Result<out SuccessType, out ErrorType : Error> {
         // Secondary constructor that creates exception from error message
         constructor(errorMessageToDisplayUser: E) : this(
             errorMessageToDisplayUser,
-            Exception(errorMessageToDisplayUser.messageToDisplayUser)
+            Exception("Error occurred: ${errorMessageToDisplayUser.javaClass.simpleName}")
         )
     }
 
     fun isOk(): Boolean = this is Success
     fun isErr(): Boolean = this is Failure
 
-    fun getSuccess(): SuccessType? = when (this) {
-        is Success -> value
-        is Failure -> null
-    }
-
-    fun getErrorToDisplay(): ErrorType? = when (this) {
-        is Success -> null
-        is Failure -> errorMessageToDisplayUser
-    }
-    fun getException(): Throwable? = when (this) {
-        is Success -> null
-        is Failure -> internalException
-    }
-
 
     inline fun <R> map(transform: (SuccessType) -> R): Result<R, ErrorType> = when (this) {
         is Success -> Success(transform(value))
         is Failure -> Failure(errorMessageToDisplayUser, internalException)
     }
-
-    inline fun <R : Error> mapErr(transform: (ErrorType) -> R): Result<SuccessType, R> = when (this) {
-        is Success -> Success(value)
-        is Failure -> Failure(transform(errorMessageToDisplayUser), internalException)
-    }
-
     inline fun <R>fold(
         onSuccess: (SuccessType) -> R,
         onError: (ErrorType, Throwable) -> R

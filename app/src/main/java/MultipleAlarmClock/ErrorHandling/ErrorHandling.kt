@@ -12,18 +12,18 @@ import com.coolApps.MultipleAlarmClock.utils.Result.Result
 // also follow single responsibility principle
 class ErrorHandler(val notificationHandler: NotificationHandler, val analytics: Analytics ) {
 
-	val defaultTitle = "Sorry an error occurred, Please try again"
-
-	fun <E: Error>handleError(error: Result.Failure<E>, title: String = defaultTitle): Unit {
+	fun <E: Error>handleError(error: Result.Failure<E>): Unit {
 		logD("got an error messageTODisplay to user:${error.errorMessageToDisplayUser.messageToDisplayUser} and exception:${error.internalException.message}")
-		notifyUserAboutError(error, title)
+		notifyUserAboutError(error)
 	}
-	fun <E: Error> notifyUserAboutError(error: Result.Failure<E>, title: String ): Unit {
-		val notification = notificationHandler.build( notificationChannel = NotificationChannelType.ErrorChannel, notificationTitle =title, notificationText = error.errorMessageToDisplayUser.messageToDisplayUser )
+	 private fun <E: Error> notifyUserAboutError(error: Result.Failure<E> ): Unit {
+		val resolvedMessage = error.errorMessageToDisplayUser.messageToDisplayUser.asString(notificationHandler.context)
+		val resolvedTitle =  error.errorMessageToDisplayUser.titleToDisplayUser.asString(notificationHandler.context)
+		val notification = notificationHandler.build( notificationChannel = NotificationChannelType.ErrorChannel, notificationTitle =resolvedTitle, notificationText = resolvedMessage )
 		notificationHandler.show(notification)
 
 		analytics.captureEvent("Error occurred", mapOf(
-			"error message displayed to user" to error.errorMessageToDisplayUser.messageToDisplayUser,
+			"error message displayed to user" to resolvedMessage,
 			"exception occurred" to error.internalException.toString(),
 			"stack trace" to error.internalException.stackTraceToString(),
 			"cause" to (error.internalException.cause?.toString() ?: "No cause" ) ,

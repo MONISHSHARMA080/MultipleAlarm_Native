@@ -72,4 +72,18 @@
     <string name="rate_app_subtitle">Rate us on Play Store</string>
     <string name="about_version_title">Version</string>
 
+    <!-- Error Strategy Strings -->
+    <string name="error_title_generic">Error</string>
+    <string name="error_title_alarm">Error</string>
+    <string name="error_title_database">Error</string>
+    <string name="error_title_internal">Error</string>
+
+    <string name="error_generic">Something went wrong. Please try again.</string>
+    <string name="error_alarm_schedule_failed">Couldn\'t set the alarm. Please try again.</string>
+    <string name="error_alarm_already_exists">An alarm is already set for this time.</string>
+    <string name="error_alarm_not_found">The alarm was not found.</string>
+    <string name="error_database_failure">Database operation failed. Please try again.</string>
+    <string name="error_internal">An internal error occurred. Please try again</string>
+    <string name="error_invalid_settings">The alarm settings are invalid.</string>
+
 </resources>

@@ -57,7 +57,7 @@ class ResetAlarmAfterBoot @AssistedInject constructor(
 
 		results.forEach { result ->
 			result.fold(onSuccess = {}, onError = {errorToDisplayUser, exception ->
-				ErrorHandler(NotificationHandler(applicationContext), Analytics(applicationContext)).handleError(ResultsCustom.Failure(errorToDisplayUser, exception), "error in resetting the alarm, after boot or app update ")
+				ErrorHandler(NotificationHandler(applicationContext), Analytics(applicationContext)).handleError(ResultsCustom.Failure(errorToDisplayUser, exception))
 			})
 		}
 		return if (hasError) Result.failure() else Result.success()
