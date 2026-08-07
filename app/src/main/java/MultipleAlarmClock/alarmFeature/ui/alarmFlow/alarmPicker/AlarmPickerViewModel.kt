@@ -18,6 +18,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController.AlarmValueForAlarmSeries
+import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.Progress
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
@@ -132,7 +133,7 @@ class AlarmPickerViewModel @Inject constructor(
 
 	fun setInitialAlarmObject(alarmData: AlarmData?) {
 		val initialAlarmObject = alarmData?.toDomain()?.incrementDateToCurrentDate() ?: createDefaultAlarmObject(alarmData)
-		val initialProgress = if (alarmData == null) com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.Progress.StartTime else com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.Progress.FullEditor
+		val initialProgress = if (alarmData == null) Progress.StartTime else Progress.FullEditor
 		_uiState.update {
 			it.copy(
 				alarmObject = initialAlarmObject,
