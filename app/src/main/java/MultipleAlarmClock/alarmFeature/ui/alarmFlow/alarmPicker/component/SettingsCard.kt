@@ -52,7 +52,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
-import com.coolApps.MultipleAlarmClock.logD
 import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerUiState
 import java.text.SimpleDateFormat
 
@@ -228,9 +227,6 @@ import java.text.SimpleDateFormat
 			(uiState.validationResult as? ValidationResult.Failure) != null &&
 					uiState.validationResult.field != AlarmErrorField.FREQUENCY
 
-		logD(
-			"preview text is isNotEmpty:${previewText.isNotEmpty()}, and doWeHaveFrequencyError:$doWeHaveFrequencyError, validation result: ${uiState.validationResult}, doWeHaveErrorOtherThanFrequency: $doWeHaveErrorOtherThanFrequency "
-		)
 		val view = LocalView.current
 
 		Column(
@@ -282,11 +278,11 @@ import java.text.SimpleDateFormat
 					}
 
 					BasicTextField(
-						value = if (value == 0L) "" else value.toString(),
+						value = if (value == 0L) "" else "$value min",
 						onValueChange = { newValue ->
 							newValue.toLongOrNull()?.let { onValueChange(it) } ?: onValueChange(0)
 						},
-						modifier = Modifier.width(45.dp),
+						modifier = Modifier.width(55.dp),
 						textStyle =
 							typography.titleMedium.copy(
 								textAlign = TextAlign.Center,
