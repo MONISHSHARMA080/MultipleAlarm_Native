@@ -1,5 +1,6 @@
 package com.coolApps.MultipleAlarmClock.Components_for_ui_compose
 
+import MultipleAlarmClock.alarmFeature.ui.onboarding.OnboardingScreen
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -16,9 +17,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -40,7 +43,6 @@ import kotlinx.coroutines.launch
 	// -----------------------------------------------------------------------------------------------------------
 //	val isFirstLaunch by navViewModel.isFirstLaunch.collectAsStateWithLifecycle()
 //	if (isFirstLaunch == null) return
-	logD("meow")
 	val isFirstLaunch = false
 	val startKey = remember(deepLinkScreen, isFirstLaunch) {
 		deepLinkScreen ?: if (isFirstLaunch == true) Screen.OnboardingScreen else Screen.AlarmContainer
@@ -98,11 +100,7 @@ import kotlinx.coroutines.launch
 			entryProvider = entryProvider {
 
 				entry<Screen.OnboardingScreen> {
-					Scaffold(contentWindowInsets = WindowInsets.safeContent) { edgeToEdgePadding ->
-						Column(Modifier.padding(edgeToEdgePadding)) {
-							Text("Hi from onboarding screen")
-						}
-					}
+							OnboardingScreen()
 				}
 
 				entry<Screen.SettingsScreen> {

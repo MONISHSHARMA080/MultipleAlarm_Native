@@ -7,6 +7,10 @@ import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.example.MultipleAlarmClock.Data.dataStore.Settings
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -17,13 +21,13 @@ class NavigationViewModel @Inject constructor(
 	val analytics: Analytics,
 ) : ViewModel() {
 
-//	val isFirstLaunch: StateFlow<Boolean?> = application.dataStore.data
-//		.map { it.isFirstLaunch }
-//		.stateIn(
-//			scope = viewModelScope,
-//			started = SharingStarted.WhileSubscribed(5_000),
-//			initialValue = null
-//		)
+	val isFirstLaunch: StateFlow<Boolean?> = dataStore.data
+		.map { it.isFirstLaunch }
+		.stateIn(
+			scope = viewModelScope,
+			started = SharingStarted.WhileSubscribed(5_000),
+			initialValue = null
+		)
 
 	val scope = viewModelScope
 
