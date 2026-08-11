@@ -40,7 +40,6 @@ import kotlinx.coroutines.launch
 	// -----------------------------------------------------------------------------------------------------------
 //	val isFirstLaunch by navViewModel.isFirstLaunch.collectAsStateWithLifecycle()
 //	if (isFirstLaunch == null) return
-	logD("meow")
 	val isFirstLaunch = false
 	val startKey = remember(deepLinkScreen, isFirstLaunch) {
 		deepLinkScreen ?: if (isFirstLaunch == true) Screen.OnboardingScreen else Screen.AlarmContainer
