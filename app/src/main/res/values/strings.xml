@@ -63,8 +63,8 @@
     <string name="Sound_screen_Random">Random</string>
     <string name="Sound_screen_selected">Now playing</string>
     <string name="Sound_screen_preview">Tap to preview</string>
-    <string name="Sound_screen_Random_sound">A random sound will be chosen on every alarm</string>
-    <string name="Sound_screen_Random_sound_choosen">A random sound will be chosen on every alarm</string>
+    <string name="Sound_screen_Random_sound">A random sound will be chosen from the alarm below on every alarm</string>
+    <string name="Sound_screen_Random_sound_choosen">Each alarm gets a random sound from the list below</string>
 
     <!-- About & Rate App -->
     <string name="about_section_title">About</string>

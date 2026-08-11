@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Audiotrack
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -94,7 +96,8 @@ import com.example.MultipleAlarmClock.Ui.alarmPicker.data.AlarmSound
 					sound = null,
 					selected = selectedUri == null,
 					isPlaying = randomPreviewing,
-					onClick = { onSelected(null) }
+					onClick = { onSelected(null) },
+					imageVector = Icons.Rounded.Shuffle
 				)
 				Spacer(Modifier.padding(bottom = 25.dp))
 			}
@@ -119,7 +122,8 @@ private fun SoundCard(
 	sound: AlarmSound?,
 	selected: Boolean,
 	isPlaying: Boolean,
-	onClick: () -> Unit
+	onClick: () -> Unit,
+	imageVector: ImageVector = Icons.Rounded.Audiotrack
 ) {
 	val containerColor = if (selected)
 		MaterialTheme.colorScheme.secondaryContainer
@@ -163,7 +167,7 @@ private fun SoundCard(
 							)
 						} else {
 							Icon(
-								imageVector = Icons.Rounded.Audiotrack,
+								imageVector = imageVector,
 								contentDescription = null,
 							)
 						}
