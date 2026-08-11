@@ -5,11 +5,15 @@ enum class AlarmErrorField {
 	DATE,
 	FREQUENCY,
 	AlarmIsNotDiff,
+	AlarmTimePassed
 }
 
 sealed class ValidationResult {
 	object Success : ValidationResult()
-	data class Failure(val field: AlarmErrorField, val message:String) : ValidationResult()
+	data class Failure(
+		val field: AlarmErrorField,
+		val message:String
+	) : ValidationResult()
 
 	override fun toString(): String {
 		return when(this){

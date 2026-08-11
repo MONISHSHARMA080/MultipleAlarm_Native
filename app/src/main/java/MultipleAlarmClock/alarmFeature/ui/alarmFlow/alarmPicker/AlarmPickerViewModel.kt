@@ -18,7 +18,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController.AlarmValueForAlarmSeries
-import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.Progress
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
@@ -59,8 +58,10 @@ class AlarmPickerViewModel @Inject constructor(
 ) : ViewModel() {
 
 	private val _uiState = MutableStateFlow(AlarmPickerUiState())
-	val uiState: StateFlow<AlarmPickerUiState> = _uiState.map { state->
-		state.copy(validationResult = state.alarmObject.validate(state.initialAlarm))
+
+	val uiState: StateFlow<AlarmPickerUiState> = _uiState.map { state ->
+		val res = state.alarmObject.ifTimeIntervalPassedThenReturnRollOver()
+		state.copy(validationResult = res.alarmObject.validate(state.initialAlarm))
 	}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AlarmPickerUiState())
 
 	private  val nonCancellableScope = CoroutineScope(NonCancellable)
@@ -87,6 +88,30 @@ class AlarmPickerViewModel @Inject constructor(
 
 		viewModelScope.launch {
 			_uiState.collect { state -> captureUiStateAndSendAnalytics(state) }
+		}
+	}
+
+
+	// Update your onSetAlarmClicked to be even simpler
+	fun onSetAlarmClicked() {
+		analytics.captureEvent("set alarm clicked", mapOf("Ui state" to _uiState.value.toString()))
+
+		val current = _uiState.value
+		val alarmToUse = current.alarmObject.ifTimeIntervalPassedThenReturnRollOver().alarmObject
+		val validationResult = alarmToUse.validate(current.initialAlarm)
+
+		_uiState.update { it.copy(alarmObject = alarmToUse, validationResult = validationResult) }
+
+		if (validationResult is ValidationResult.Failure) return
+
+		viewModelScope.launch {
+			if (!current.areAllPermissionsGranted) {
+				val missing = PermissionUtils.getRequiredPermissionSteps(context)
+				_uiState.update { it.copy(showPermissionDialog = true, missingSteps = missing) }
+			} else {
+				setAlarm(alarmToUse, current.initialAlarm)
+				_uiState.update { it.copy(alarmOperationCompletedGoBack = true) }
+			}
 		}
 	}
 
@@ -146,27 +171,20 @@ class AlarmPickerViewModel @Inject constructor(
 		}
 	}
 
-	fun updateProgress(newProgress: com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.Progress) {
+	fun updateProgress(newProgress: Progress) {
 		_uiState.update { it.copy(progress = newProgress) }
 	}
 
 	fun updateStartTime(newStartTime: Calendar) {
 		_uiState.update { state ->
 			val updatedAlarm = state.alarmObject.copy(startTime = newStartTime)
-			val finalAlarm = if (updatedAlarm.endTime.timeInMillis <= newStartTime.timeInMillis) {
-				val newEnd = (newStartTime.clone() as Calendar).apply {
-					add(Calendar.MINUTE, 45)
-				}
-				updatedAlarm.copy(endTime = newEnd)
-			} else {
-				updatedAlarm
-			}
-			state.copy(alarmObject = finalAlarm)
+			state.copy(alarmObject = updatedAlarm)
 		}
 	}
 
 	fun updateEndTime(newEndTime: Calendar) {
 		_uiState.update { state ->
+
 			state.copy(alarmObject = state.alarmObject.copy(endTime = newEndTime))
 		}
 	}
@@ -243,30 +261,12 @@ class AlarmPickerViewModel @Inject constructor(
 		viewModelScope.launch {
 			val liveCheck = PermissionUtils.allCriticalPermissionsGranted(context)
 			_uiState.update { it.copy(areAllPermissionsGranted = liveCheck) }
-			dataStore.updateData { currentVal ->  currentVal.copy {  allPermissionsGranted = true }}
+			dataStore.updateData { currentVal ->  currentVal.copy {  allPermissionsGranted = liveCheck }}
 		}
 	}
 
-	// Update your onSetAlarmClicked to be even simpler
-	fun onSetAlarmClicked(currentAlarm: AlarmData?, alarmObject: AlarmObject) {
-		analytics.captureEvent("set alarm clicked", mapOf("Ui state" to _uiState.value.toString()))
 
-		// We don't need to check permissions here anymore because the button
-		// is only clickable (or behaves differently) based on uiState.isPermissionGranted
-		viewModelScope.launch {
-			if (!_uiState.value.areAllPermissionsGranted) {
-				val missing = PermissionUtils.getRequiredPermissionSteps(context)
-				_uiState.update { it.copy(showPermissionDialog = true, missingSteps = missing) }
-			} else {
-				setAlarm(alarmObject, currentAlarm)
-				_uiState.update { it.copy(alarmOperationCompletedGoBack = true) }
-			}
-		}
-	}
 
-	fun updateUi(newUiState: AlarmPickerUiState){
-		_uiState.update { newUiState }
-	}
 
 	fun dismissPermissionDialog() {
 		_uiState.update { it.copy(showPermissionDialog = false) }

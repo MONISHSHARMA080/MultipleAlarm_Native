@@ -7,6 +7,8 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+data class RolloverResult(val alarmObject: AlarmObject, val rolledToNextDay: Boolean)
+
 data class AlarmObject(
 	val startTime: Calendar,
 	val endTime: Calendar,
@@ -98,6 +100,15 @@ data class AlarmObject(
 		if ( !(dateSame || selectedDate.after(currentDate)) ){
 			return ValidationResult.Failure(AlarmErrorField.DATE, "Date value must be today or in the future.")
 		}
+
+//		val currentTime = Calendar.getInstance()
+//		if (endTime.time.time < currentTime.timeInMillis){
+//			return ValidationResult.Failure(message = "The end time has already passed.", field = AlarmErrorField.AlarmTimePassed)
+
+		// will handle it by incrementing the date
+
+//		}
+
 		// 2. Check for Changes (If in Edit Mode)
 		if (alarmData != null) {
 			val hasChanged = startTime.timeInMillis != alarmData.startTime ||
@@ -112,6 +123,42 @@ data class AlarmObject(
 		}
 		return ValidationResult.Success
 	}
+
+	/**
+	 * Applies a new clock-time (hour/minute) to startTime, preserving date,
+	 * unless the resulting instant has already passed — in which case rolls
+	 * forward one day. Also pushes endTime forward if it would end up
+	 * before/equal to the new startTime.
+	 *
+	 * Returns the updated AlarmObject plus whether a rollover happened,
+	 * so the caller can surface that to the user.
+	 *
+	 *
+	 * NOTE: this function does not update the alarmObject
+	 */
+
+	fun ifTimeIntervalPassedThenReturnRollOver(now: Calendar = Calendar.getInstance()): RolloverResult {
+		val candidateStart = (startTime.clone() as Calendar)
+		val candidateEnd = (endTime.clone() as Calendar)
+		var rolled = false
+
+		if (candidateEnd.before(now)) {
+			candidateStart.add(Calendar.DAY_OF_YEAR, 1)
+			candidateEnd.add(Calendar.DAY_OF_YEAR, 1)
+			rolled = true
+		}
+
+		return RolloverResult(
+			alarmObject = this.copy(
+				startTime = candidateStart,
+				endTime = candidateEnd,
+				date = candidateStart.timeInMillis
+			),
+			rolledToNextDay = rolled
+		)
+	}
+
+
 	private fun getDateTimeFormatted(time:Long):String{
 		return SimpleDateFormat("hh:mm a dd/MM/yyyy", Locale.getDefault()).format(time)
 	}

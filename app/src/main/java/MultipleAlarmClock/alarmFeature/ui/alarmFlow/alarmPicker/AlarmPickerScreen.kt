@@ -10,8 +10,6 @@ import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -44,6 +42,7 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -67,10 +66,8 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.coolApps.MultipleAlarmClock.R
 import com.example.MultipleAlarmClock.Ui.Permissions.AlarmPermissionDialog
 import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerViewModel
+import com.example.MultipleAlarmClock.Ui.alarmPicker.Progress
 import java.util.Calendar
-
-
-enum class Progress{StartTime, EndTime, FullEditor}
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -95,9 +92,6 @@ fun AlarmPickerScreen(
   LaunchedEffect(uiState.alarmOperationCompletedGoBack) {
     if (uiState.alarmOperationCompletedGoBack) {
       alarmSetGoBack()
-      viewModel.updateUi(
-              uiState.copy(alarmOperationCompletedGoBack = false)
-      ) // Reset so it doesn't re-trigger
     }
   }
 
@@ -218,7 +212,9 @@ fun AlarmPickerScreen(
                       horizontalArrangement = Arrangement.SpaceBetween,
                       verticalAlignment = Alignment.CenterVertically
               ) {
-                OutlinedButton(
+                CancelAndDeleteButton(
+                        currentProgress = currentProgress,
+                        isNewAlarm = forNewAlarm,
                         onClick = {
                           when (currentProgress) {
                             Progress.StartTime -> alarmSetGoBack()
@@ -227,111 +223,51 @@ fun AlarmPickerScreen(
                               if (forNewAlarm) {
                                 viewModel.updateProgress(Progress.EndTime)
                               } else {
-								  viewModel.onDeleteClicked()
+                                viewModel.onDeleteClicked()
                               }
                             }
                           }
-                        },
-                        modifier = Modifier.height(56.dp).animateContentSize(),
-                        contentPadding = PaddingValues(horizontal = 28.dp, vertical = 0.dp),
-                        shape = RoundedCornerShape(28.dp)
-                ) {
-                  Text(
-                          text = when (currentProgress) {
-                            Progress.StartTime -> stringResource(R.string.alarm_picker_cancel)
-                            Progress.EndTime -> stringResource(R.string.alarm_picker_previous)
-                            Progress.FullEditor ->{
-								if (forNewAlarm) stringResource(R.string.alarm_picker_previous) else stringResource(R.string.alarm_picker_delete_alarm)
-							}
-                          },
-                          style = typography.bodyLarge,
-                  )
-                }
+                        }
+                )
 
-                when (currentProgress) {
-                  Progress.StartTime -> {
-					  SelectButton( onClick = {
-						  val selectedStartTime = (uiState.alarmObject.startTime.clone() as Calendar).apply {
-							  set(Calendar.HOUR_OF_DAY, startTimePickerState.hour)
-							  set(Calendar.MINUTE, startTimePickerState.minute)
-						  }
-						  viewModel.updateStartTime(selectedStartTime)
-						  viewModel.updateProgress(Progress.EndTime)
-						  view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-					  }, isCandidateInvalid = isCandidateInvalid)
-                  }
+                PrimaryActionButton(
+                        currentProgress = currentProgress,
+                        uiState = uiState,
+                        isCandidateInvalid = isCandidateInvalid,
+                        onAction = {
+                          when (currentProgress) {
+                            Progress.StartTime -> {
+                              val selectedStartTime = (uiState.alarmObject.startTime.clone() as Calendar).apply {
+                                set(Calendar.HOUR_OF_DAY, startTimePickerState.hour)
+                                set(Calendar.MINUTE, startTimePickerState.minute)
+                              }
+                              viewModel.updateStartTime(selectedStartTime)
+                              viewModel.updateProgress(Progress.EndTime)
+                              view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                            }
 
-                  Progress.EndTime -> {
-					  SelectButton( onClick = {
-						  if (!isCandidateInvalid) {
-							  viewModel.updateEndTime(candidateEnd)
-							  viewModel.updateProgress(Progress.FullEditor)
-							  view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-						  }
-					  }, isCandidateInvalid = isCandidateInvalid)
-                  }
-
-                  Progress.FullEditor -> {
-                    val isNotDiff = uiState.validationResult is ValidationResult.Failure &&
-                            (uiState.validationResult as ValidationResult.Failure).field == AlarmErrorField.AlarmIsNotDiff
-                    val isInactiveEdit = isNotDiff && uiState.initialAlarm?.isReadyToUse == false
-                    val canSetAlarm = uiState.validationResult == ValidationResult.Success || isInactiveEdit
-
-                    Button(
-                            onClick = {
-                              if (canSetAlarm) {
-                                viewModel.onSetAlarmClicked(uiState.initialAlarm, uiState.alarmObject)
+                            Progress.EndTime -> {
+                              if (!isCandidateInvalid) {
+                                viewModel.updateEndTime(candidateEnd)
+                                viewModel.updateProgress(Progress.FullEditor)
                                 view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
                               }
-                            },
-                            colors =
-                                    when {
-                                      canSetAlarm -> {
-                                        ButtonDefaults.buttonColors(
-                                                containerColor = colorScheme.primaryContainer,
-                                                contentColor = colorScheme.onPrimaryContainer
-                                        )
-                                      }
-                                      uiState.validationResult is ValidationResult.Failure -> {
-                                        if (isNotDiff) {
-                                          ButtonDefaults.buttonColors(
-                                                  containerColor = colorScheme.surfaceVariant,
-                                                  contentColor = colorScheme.onSurfaceVariant
-                                          )
-                                        } else {
-                                          ButtonDefaults.buttonColors(
-                                                  containerColor = colorScheme.errorContainer,
-                                                  contentColor = colorScheme.onErrorContainer
-                                          )
-                                        }
-                                      }
-                                      else -> ButtonDefaults.buttonColors()
-                                    },
-                            modifier =
-                                Modifier.height(56.dp)
-                                    .animateContentSize(animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)),
-                            contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
-                            shape = RoundedCornerShape(28.dp)
-                    ) {
-                      AnimatedContent(
-                              targetState = canSetAlarm,
-                              transitionSpec = {
-                                fadeIn() togetherWith fadeOut() using SizeTransform()
-                              },
-                              label = "button_text"
-                      ) { isValid ->
-                        Text(
-                                when {
-                                  isValid -> stringResource(R.string.alarm_picker_btn_set)
-                                  isNotDiff -> stringResource(R.string.alarm_picker_btn_change)
-                                  else -> stringResource(R.string.alarm_picker_btn_fix)
-                                },
-                                style = typography.bodyLarge,
-                        )
-                      }
-                    }
-                  }
-                }
+                            }
+
+                            Progress.FullEditor -> {
+                              val isNotDiff = uiState.validationResult is ValidationResult.Failure &&
+                                      (uiState.validationResult as ValidationResult.Failure).field == AlarmErrorField.AlarmIsNotDiff
+                              val isInactiveEdit = isNotDiff && uiState.initialAlarm?.isReadyToUse == false
+                              val canSetAlarm = uiState.validationResult == ValidationResult.Success || isInactiveEdit
+
+                              if (canSetAlarm) {
+                                viewModel.onSetAlarmClicked()
+                                view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                              }
+                            }
+                          }
+                        }
+                )
               }
             }
           }
@@ -381,15 +317,11 @@ fun AlarmPickerScreen(
             TimeRow(
                     uiState,
                     {
-                      viewModel.updateUi(
-                              uiState.copy(alarmObject = uiState.alarmObject.copy(startTime = it))
-                      )
+                      viewModel.updateStartTime(it)
                     },
                     {
-                      viewModel.updateUi(
-                              uiState.copy(alarmObject = uiState.alarmObject.copy(endTime = it))
-                      )
-                    }
+						viewModel.updateEndTime(it)
+					},
             )
             Spacer(modifier = Modifier.weight(0.44f))
 	    	 SettingsCard(
@@ -408,36 +340,164 @@ fun AlarmPickerScreen(
 }
 
 
+@Composable
+fun CancelAndDeleteButton(
+        currentProgress: Progress,
+        isNewAlarm: Boolean,
+        onClick: () -> Unit,
+        modifier: Modifier = Modifier
+) {
+  val isDeleteMode = currentProgress == Progress.FullEditor && !isNewAlarm
+
+  AnimatedContent(
+          targetState = isDeleteMode,
+          transitionSpec = {
+            fadeIn() togetherWith fadeOut() using SizeTransform()
+          },
+          label = "cancel_delete_button_animation"
+  ) { targetIsDelete ->
+    if (targetIsDelete) {
+      TextButton(
+              onClick = onClick,
+              modifier = modifier.height(56.dp),
+              shape = RoundedCornerShape(32.dp),
+              colors = ButtonDefaults.textButtonColors(contentColor = colorScheme.error)
+      ) {
+        Text(
+                text = stringResource(R.string.alarm_picker_delete_alarm),
+                style = typography.bodyLarge,
+        )
+      }
+    } else {
+      OutlinedButton(
+              onClick = onClick,
+              modifier = modifier.height(56.dp),
+              contentPadding = PaddingValues(horizontal = 28.dp, vertical = 0.dp),
+              shape = RoundedCornerShape(32.dp)
+      ) {
+        AnimatedContent(
+                targetState = currentProgress,
+                transitionSpec = {
+                  fadeIn() togetherWith fadeOut() using SizeTransform()
+                },
+                label = "cancel_button_text"
+        ) { progress ->
+          Text(
+                  text = when (progress) {
+                    Progress.StartTime -> stringResource(R.string.alarm_picker_cancel)
+                    Progress.EndTime -> stringResource(R.string.alarm_picker_previous)
+                    Progress.FullEditor -> stringResource(R.string.alarm_picker_previous)
+                  },
+                  style = typography.bodyLarge,
+          )
+        }
+      }
+    }
+  }
+}
+
+@Composable
+fun PrimaryActionButton(
+        currentProgress: Progress,
+        uiState: com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerUiState,
+        isCandidateInvalid: Boolean,
+        onAction: () -> Unit,
+        modifier: Modifier = Modifier
+) {
+  AnimatedContent(
+          targetState = currentProgress,
+          transitionSpec = {
+            fadeIn() togetherWith fadeOut() using SizeTransform()
+          },
+          label = "primary_action_button_animation"
+  ) { progress ->
+    when (progress) {
+      Progress.StartTime, Progress.EndTime -> {
+        Button(
+                onClick = onAction,
+                enabled = !isCandidateInvalid,
+                colors = if (!isCandidateInvalid) {
+                  ButtonDefaults.buttonColors(
+                          containerColor = colorScheme.primaryContainer,
+                          contentColor = colorScheme.onPrimaryContainer
+                  )
+                } else {
+                  ButtonDefaults.buttonColors(
+                          containerColor = colorScheme.surfaceVariant,
+                          contentColor = colorScheme.onSurfaceVariant
+                  )
+                },
+                modifier = modifier.height(56.dp),
+                contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
+                shape = RoundedCornerShape(28.dp)
+        ) {
+          Text(
+                  stringResource(R.string.alarm_picker_ok),
+                  style = typography.bodyLarge,
+          )
+        }
+      }
+
+      Progress.FullEditor -> {
+        val isNotDiff = uiState.validationResult is ValidationResult.Failure &&
+                uiState.validationResult.field == AlarmErrorField.AlarmIsNotDiff
+        val isInactiveEdit = isNotDiff && uiState.initialAlarm?.isReadyToUse == false
+        val canSetAlarm = uiState.validationResult == ValidationResult.Success || isInactiveEdit
+
+        Button(
+                onClick = onAction,
+                colors = when {
+                  canSetAlarm -> {
+                    ButtonDefaults.buttonColors(
+                            containerColor = colorScheme.primaryContainer,
+                            contentColor = colorScheme.onPrimaryContainer
+                    )
+                  }
+                  uiState.validationResult is ValidationResult.Failure -> {
+                    if (isNotDiff) {
+                      ButtonDefaults.buttonColors(
+                              containerColor = colorScheme.surfaceVariant,
+                              contentColor = colorScheme.onSurfaceVariant
+                      )
+                    } else {
+                      ButtonDefaults.buttonColors(
+                              containerColor = colorScheme.errorContainer,
+                              contentColor = colorScheme.onErrorContainer
+                      )
+                    }
+                  }
+                  else -> ButtonDefaults.buttonColors()
+                },
+                modifier = modifier.height(56.dp),
+                contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
+                shape = RoundedCornerShape(28.dp)
+        ) {
+          AnimatedContent(
+                  targetState = canSetAlarm,
+                  transitionSpec = {
+                    fadeIn() togetherWith fadeOut() using SizeTransform()
+                  },
+                  label = "button_text"
+          ) { isValid ->
+            Text(
+                    when {
+                      isValid -> stringResource(R.string.alarm_picker_btn_set)
+                      isNotDiff -> stringResource(R.string.alarm_picker_btn_change)
+                      else -> stringResource(R.string.alarm_picker_btn_fix)
+                    },
+                    style = typography.bodyLarge,
+            )
+          }
+        }
+      }
+    }
+  }
+}
+
 @Composable fun rememberAdaptiveHorizontalPadding(percent: Float = 0.0066f, min: Dp = 14.dp, max: Dp = 30.dp): Dp {
   val density = LocalDensity.current
   val screenWidthDp = with(density) { LocalWindowInfo.current.containerSize.width.toDp() }
   return (screenWidthDp * percent).coerceIn(min, max)
 }
 
-@Composable fun SelectButton(onClick:()->Unit, isCandidateInvalid: Boolean) {
-	Button(
-		onClick = onClick,
-		enabled = !isCandidateInvalid,
-		colors = if (!isCandidateInvalid) {
-			ButtonDefaults.buttonColors(
-				containerColor = colorScheme.primaryContainer,
-				contentColor = colorScheme.onPrimaryContainer
-			)
-		} else {
-			ButtonDefaults.buttonColors(
-				containerColor = colorScheme.surfaceVariant,
-				contentColor = colorScheme.onSurfaceVariant
-			)
-		},
-		modifier = Modifier.height(56.dp).animateContentSize(),
-		contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
-		shape = RoundedCornerShape(28.dp)
-	) {
-		Text(
-			stringResource(R.string.alarm_picker_ok),
-			style = typography.bodyLarge,
-		)
-	}
-
-}
 

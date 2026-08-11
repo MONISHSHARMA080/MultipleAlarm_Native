@@ -26,8 +26,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.Progress
 import com.coolApps.MultipleAlarmClock.R
+import com.example.MultipleAlarmClock.Ui.alarmPicker.Progress
 
 
 @OptIn(ExperimentalMaterial3Api::class)

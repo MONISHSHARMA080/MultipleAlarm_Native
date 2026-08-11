@@ -3,9 +3,10 @@ package com.example.MultipleAlarmClock.Ui.alarmPicker
 import MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import MultipleAlarmClock.alarmFeature.domain.model.AlarmObject
 import MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
-import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.Progress
 import com.example.MultipleAlarmClock.Ui.Permissions.PermissionStep
 import java.util.Calendar
+
+enum class Progress{StartTime, EndTime, FullEditor}
 
 /** [areAllPermissionsGranted] - make sure to set the right value when loading this, as the true is a false value */
 data class AlarmPickerUiState(
@@ -31,11 +32,9 @@ data class AlarmPickerUiState(
 	val showPermissionDialog: Boolean = false,
 	val missingSteps: List<PermissionStep> = emptyList(),
 	val alarmOperationCompletedGoBack: Boolean = false,
-	val progress: Progress = Progress.StartTime
-)
+	val progress: Progress = if(initialAlarm == null) Progress.StartTime else Progress.FullEditor
 
-//sealed interface AlarmPickerEvent {
-//	data object NavigateBack : AlarmPickerEvent
-//	data class ShowPermissionDialog(val missingSteps: List<PermissionStep>) : AlarmPickerEvent
-//	data object UpdateDataStoreGranted : AlarmPickerEvent
-//}
+){
+//	val isNewAlarm: Boolean get() = initialAlarm == null
+}
+
