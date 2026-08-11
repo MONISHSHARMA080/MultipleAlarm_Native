@@ -63,7 +63,6 @@ import com.example.MultipleAlarmClock.Ui.alarmPicker.data.AlarmSound
 	previewingUri: Uri?,
 	onBack: () -> Unit,
 	onSelected: (AlarmSound?) -> Unit,
-	modifier: Modifier = Modifier,
 ) {
 	val listOfAlarms by vm.listOfAlarms.collectAsStateWithLifecycle()
 	val randomPreviewing by vm.previewingRandom.collectAsStateWithLifecycle()
