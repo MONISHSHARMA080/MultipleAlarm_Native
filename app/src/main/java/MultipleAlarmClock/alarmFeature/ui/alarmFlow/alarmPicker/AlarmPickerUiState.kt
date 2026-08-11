@@ -34,7 +34,5 @@ data class AlarmPickerUiState(
 	val alarmOperationCompletedGoBack: Boolean = false,
 	val progress: Progress = if(initialAlarm == null) Progress.StartTime else Progress.FullEditor
 
-){
-//	val isNewAlarm: Boolean get() = initialAlarm == null
-}
+)
 

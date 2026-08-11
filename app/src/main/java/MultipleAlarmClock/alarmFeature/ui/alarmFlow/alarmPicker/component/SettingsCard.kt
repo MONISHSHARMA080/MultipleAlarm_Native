@@ -3,12 +3,7 @@ package MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component
 import MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
 import MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
 import android.view.HapticFeedbackConstants
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -58,7 +53,6 @@ import java.text.SimpleDateFormat
 
 @Composable fun SettingsCard(
 	uiState: AlarmPickerUiState,
-	frequencyText:String,
 	selectedSoundName:String,
 	messageValueChanged: (String) -> Unit,
 	updateFrequency: (Long) -> Unit,
@@ -84,7 +78,7 @@ import java.text.SimpleDateFormat
 						}
 					}
 				},
-				previewText = frequencyText,
+//				previewText = frequencyText,
 				uiState,
 			)
 			HorizontalDivider(
@@ -217,7 +211,7 @@ import java.text.SimpleDateFormat
 			title: String,
 			value: Long,
 			onValueChange: (Long) -> Unit,
-			previewText: String = "",
+//			previewText: String = "",
 			uiState: AlarmPickerUiState,
 		) {
 		val doWeHaveFrequencyError =
@@ -314,23 +308,23 @@ import java.text.SimpleDateFormat
 
 			// check for failure as if we have a error  in time then we won't be able to produce correct
 			// sequence of preview text, so don't display
-			AnimatedVisibility(
-				visible =
-					!doWeHaveErrorOtherThanFrequency &&
-							(previewText.isNotEmpty() || doWeHaveFrequencyError),
-				enter = expandVertically() + fadeIn(),
-				exit = shrinkVertically() + fadeOut()
-			) {
-				Spacer(modifier = Modifier.padding(3.dp))
-				Text(
-					text = previewText,
-					style = typography.labelMedium,
-					textAlign = TextAlign.Start,
-					modifier = Modifier.padding(top = 5.dp, start = 2.dp).animateContentSize(),
-					color =
-						if (doWeHaveFrequencyError) colorScheme.onErrorContainer
-						else colorScheme.onSurfaceVariant
-				)
-			}
+//			AnimatedVisibility(
+//				visible =
+//					!doWeHaveErrorOtherThanFrequency &&
+//							(previewText.isNotEmpty() || doWeHaveFrequencyError),
+//				enter = expandVertically() + fadeIn(),
+//				exit = shrinkVertically() + fadeOut()
+//			) {
+//				Spacer(modifier = Modifier.padding(3.dp))
+//				Text(
+//					text = previewText,
+//					style = typography.labelMedium,
+//					textAlign = TextAlign.Start,
+//					modifier = Modifier.padding(top = 5.dp, start = 2.dp).animateContentSize(),
+//					color =
+//						if (doWeHaveFrequencyError) colorScheme.onErrorContainer
+//						else colorScheme.onSurfaceVariant
+//				)
+//			}
 		}
 }

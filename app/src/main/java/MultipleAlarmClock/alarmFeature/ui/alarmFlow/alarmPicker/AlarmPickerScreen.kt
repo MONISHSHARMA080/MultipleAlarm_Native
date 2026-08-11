@@ -327,7 +327,6 @@ fun AlarmPickerScreen(
 	    	 SettingsCard(
 				 uiState = uiState, updateFrequency = {viewModel.updateFrequency(it)} ,
 				 messageValueChanged = {viewModel.updateMessage(it) },
-				 frequencyText = viewModel.getFrequencyPreviewText() ,
 				 calenderButtonClicked = {showCalendar = true},
 				 selectSoundButtonClicked =onNavigateToSoundList,
 				 selectedSoundName =selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random)
