@@ -66,6 +66,19 @@ fun TimeRow(
 
 	val titleSpacing = (screenHeightDp * 0.04f).coerceIn(12.dp, 36.dp)
 
+	val endTimePickerState = rememberTimePickerState(
+		initialHour = endTime.get(Calendar.HOUR_OF_DAY),
+		initialMinute = endTime.get(Calendar.MINUTE),
+		is24Hour = false
+	)
+
+	val timePickerState =
+		rememberTimePickerState(
+			initialHour = startTime.get(Calendar.HOUR_OF_DAY),
+			initialMinute = startTime.get(Calendar.MINUTE),
+			is24Hour = false
+		)
+
 	var showStartTimePicker by remember { mutableStateOf(false) }
 	var showEndTimePicker by remember { mutableStateOf(false) }
 
@@ -75,12 +88,6 @@ fun TimeRow(
 	val amPmColor = if (doWeHaveError) colorScheme.error else colorScheme.onBackground
 
 	if (showStartTimePicker) {
-		val timePickerState =
-			rememberTimePickerState(
-				initialHour = startTime.get(Calendar.HOUR_OF_DAY),
-				initialMinute = startTime.get(Calendar.MINUTE),
-				is24Hour = false
-			)
 		TimePickerDialog(
 			onDismissRequest = { showStartTimePicker = false },
 			confirmButton = {
@@ -115,11 +122,6 @@ fun TimeRow(
 	}
 
 	if (showEndTimePicker) {
-		val endTimePickerState = rememberTimePickerState(
-			initialHour = endTime.get(Calendar.HOUR_OF_DAY),
-			initialMinute = endTime.get(Calendar.MINUTE),
-			is24Hour = false
-		)
 
 		// live-compute validity as the user spins the dial
 		val candidateEnd = (endTime.clone() as Calendar).apply {

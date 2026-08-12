@@ -58,7 +58,7 @@ private enum class ProblemPhase {
 
 @Composable
 fun ProblemScreen(
-	onContinue: () -> Unit = {}
+	onComplete: () -> Unit
 ) {
 	var phase by remember { mutableStateOf(ProblemPhase.Building) }
 	var visibleAlarms by remember { mutableIntStateOf(0) }
@@ -136,7 +136,7 @@ fun ProblemScreen(
 		Button(
 			onClick = {
 				when (phase) {
-					ProblemPhase.Crushing -> onContinue()
+					ProblemPhase.Crushing -> onComplete()
 					else -> phase = ProblemPhase.Crushing
 				}
 			},
