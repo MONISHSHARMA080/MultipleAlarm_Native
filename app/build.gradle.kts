@@ -152,6 +152,7 @@ dependencies {
 		exclude(group = "com.google.protobuf", module = "protobuf-lite")
 	}
     implementation("com.google.dagger:hilt-android:2.59.2")
+	implementation(libs.androidx.compose.animation.core)
 	implementation(libs.androidx.datastore.core)
 	implementation(libs.androidx.hilt.work)
 	implementation(libs.play.services.appset)
