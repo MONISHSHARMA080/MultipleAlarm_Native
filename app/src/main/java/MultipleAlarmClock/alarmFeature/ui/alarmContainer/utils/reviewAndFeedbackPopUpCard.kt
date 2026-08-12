@@ -74,7 +74,7 @@ fun FeedbackCardContent(
 
         if (autoFocus) {
                 LaunchedEffect(Unit) {
-                        delay(200.milliseconds)
+                        delay(230.milliseconds)
                         focusRequester.requestFocus()
                 }
         }

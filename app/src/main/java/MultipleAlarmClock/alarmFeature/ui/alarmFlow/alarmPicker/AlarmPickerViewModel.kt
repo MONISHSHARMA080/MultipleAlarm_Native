@@ -47,8 +47,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-@HiltViewModel
-class AlarmPickerViewModel @Inject constructor(
+@HiltViewModel class AlarmPickerViewModel @Inject constructor(
 	val analytics: Analytics,
 	private val alarmManager: AlarmManager,
 	private val alarmRepository: AlarmRepository,
@@ -61,7 +60,10 @@ class AlarmPickerViewModel @Inject constructor(
 
 	val uiState: StateFlow<AlarmPickerUiState> = _uiState.map { state ->
 		val res = state.alarmObject.ifTimeIntervalPassedThenReturnRollOver()
-		state.copy(validationResult = res.alarmObject.validate(state.initialAlarm))
+		state.copy(
+			validationResult = res.alarmObject.validate(state.initialAlarm),
+			alarmObject = res.alarmObject
+		)
 	}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AlarmPickerUiState())
 
 	private  val nonCancellableScope = CoroutineScope(NonCancellable)
@@ -375,6 +377,7 @@ class AlarmPickerViewModel @Inject constructor(
 			stringBuilder.append(".....${timeFormat.format(alarmObj.endTime.time)}").toString().trim()
 		}
 	}
+
 
 
 	/**[setAlarm] - here [AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/

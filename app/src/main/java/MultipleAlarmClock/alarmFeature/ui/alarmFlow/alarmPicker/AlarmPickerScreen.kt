@@ -157,7 +157,9 @@ fun AlarmPickerScreen(
       set(Calendar.MINUTE, endTimePickerState.minute)
     }
   }
-  val isCandidateInvalid = candidateEnd.timeInMillis <= uiState.alarmObject.startTime.timeInMillis
+
+
+  val isCandidateInvalid = currentProgress != Progress.StartTime &&  candidateEnd.timeInMillis <= uiState.alarmObject.startTime.timeInMillis
 
   Scaffold(
           contentWindowInsets = WindowInsets.safeDrawing,
