@@ -1,6 +1,21 @@
 package MultipleAlarmClock.alarmFeature.ui.onboarding.components
 
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +35,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -29,20 +45,73 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.coolApps.MultipleAlarmClock.R
 import com.example.MultipleAlarmClock.Ui.Permissions.PermissionStep
+import com.example.MultipleAlarmClock.Ui.Permissions.PermissionUtils
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun PermissionScreen(
     missingSteps: List<PermissionStep>,
-    onAction: (PermissionStep) -> Unit,
+    refreshPermissionUiState: () -> Unit,
     onNext: () -> Unit,
     allCriticalGranted: Boolean
 ) {
+
+	val context = LocalContext.current
+	val lifecycleOwner = LocalLifecycleOwner.current
+
+	val notificationPermState = rememberPermissionState(android.Manifest.permission.POST_NOTIFICATIONS)
+
+	// Track if we've requested notification permission at least once
+	var notificationRequested by rememberSaveable {
+		mutableStateOf(false)
+	}
+
+	val notificationPermanentlyDenied = notificationRequested && !notificationPermState.status.isGranted && !notificationPermState.status.shouldShowRationale
+
+	// Automatic redirection to settings if permanently denied after a request
+	LaunchedEffect(notificationPermanentlyDenied) {
+		if (notificationPermanentlyDenied) {
+			context.startActivity(
+				Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+					data = Uri.fromParts("package", context.packageName, null)
+				}
+			)
+		}
+	}
+
+	DisposableEffect(lifecycleOwner) {
+		val observer = LifecycleEventObserver { _, event ->
+			if (event == Lifecycle.Event.ON_RESUME) {
+//				viewModel.refreshPermissions()
+				refreshPermissionUiState()
+			}
+		}
+		lifecycleOwner.lifecycle.addObserver(observer)
+		onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+	}
+
 
     Scaffold(
         bottomBar = {
@@ -72,7 +141,7 @@ fun PermissionScreen(
                         shape = MaterialTheme.shapes.extraLarge
                     ) {
                         Text(
-                            text = if (allCriticalGranted) "Continue" else "Grant critical permissions",
+                            text = if (allCriticalGranted) "Continue" else "Grant permissions",
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -87,34 +156,81 @@ fun PermissionScreen(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.weight(0.1f))
-            
-            Icon(
-                imageVector = Icons.Default.Security,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            
+			Spacer(modifier = Modifier.weight(0.1f))
+
+			AnimatedContent(
+				targetState = allCriticalGranted,
+				transitionSpec = {
+					(
+							fadeIn(
+								animationSpec = tween(
+									durationMillis = 220,
+									delayMillis = 100,
+									easing = FastOutSlowInEasing
+								)
+							) +
+									scaleIn(
+										initialScale = 0.75f,
+										animationSpec = spring(
+											dampingRatio = Spring.DampingRatioMediumBouncy,
+											stiffness = Spring.StiffnessMedium
+										)
+									)
+							) togetherWith (
+							fadeOut(
+								animationSpec = tween(
+									durationMillis = 120,
+									easing = FastOutLinearInEasing
+								)
+							) +
+									scaleOut(
+										targetScale = 0.75f,
+										animationSpec = tween(
+											durationMillis = 120,
+											easing = FastOutLinearInEasing
+										)
+									)
+							)
+				},
+				label = "permission_icon_transition"
+			) { granted ->
+
+				Icon(
+					imageVector = if (granted) {
+						Icons.Default.Check
+					} else {
+						Icons.Default.Security
+					},
+					contentDescription = null,
+					modifier = Modifier.size(64.dp),
+					tint = MaterialTheme.colorScheme.primary
+				)
+			}
+
+			Spacer(modifier = Modifier.height(24.dp))
+
             Spacer(modifier = Modifier.height(24.dp))
             
             Text(
-                text = "Permissions",
+                text =if (allCriticalGranted) "All set" else "Permissions" ,
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onBackground
             )
             
             Spacer(modifier = Modifier.height(12.dp))
-            
-            Text(
-                text = "To send alarm notification and schedule alarm",
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                modifier = Modifier.fillMaxWidth(0.9f)
-            )
-            
+
+			if (!allCriticalGranted){
+				Text(
+					text = stringResource(R.string.onboarding_permission_reason),
+					style = MaterialTheme.typography.bodySmall,
+					textAlign = TextAlign.Center,
+					color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+					modifier = Modifier.fillMaxWidth(0.9f)
+				)
+
+			}
+
             Spacer(modifier = Modifier.height(32.dp))
             
             LazyVerticalGrid(
@@ -127,8 +243,42 @@ fun PermissionScreen(
                 items(missingSteps) { step ->
                     PermissionItem(
                         step = step,
+                        onAction = {
+							when (step) {
+								PermissionStep.PostNotification -> {
+									if (notificationPermanentlyDenied) {
+										context.startActivity(
+											Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+												data = Uri.fromParts("package", context.packageName, null)
+											}
+										)
+									} else {
+										notificationPermState.launchPermissionRequest()
+										notificationRequested = true
+									}
+								}
+								PermissionStep.ExactAlarm -> {
+									context.startActivity(
+										Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+											data = Uri.fromParts("package", context.packageName, null)
+										}
+									)
+								}
+								PermissionStep.FullScreenIntent -> {
+									if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+										context.startActivity(
+											Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT).apply {
+												data = Uri.fromParts("package", context.packageName, null)
+											}
+										)
+									}
+								}
+								PermissionStep.XiaomiAutostart -> {
+									PermissionUtils.launchXiaomiSettings(context)
+								}
+							}
 
-                        onAction = { onAction(step) }
+						}
                     )
                 }
             }
@@ -155,12 +305,12 @@ private fun PermissionItem(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = step.title,
+                    text = stringResource(step.titleRes),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = step.rationale,
+                    text = stringResource(step.rationaleRes),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -181,20 +331,3 @@ private fun PermissionItem(
         }
     }
 }
-//
-//@Preview(name = "Phone", device = Devices.PHONE, showBackground = true)
-//@Preview(name = "Tablet", device = Devices.TABLET, showBackground = true)
-//@Composable
-//fun PermissionScreenPreview() {
-//    MaterialTheme {
-//        PermissionScreen(
-//            missingSteps = listOf(
-//                PermissionStep.PostNotification,
-//                PermissionStep.ExactAlarm
-//            ),
-//            onAction = {},
-//            onNext = {},
-//            allCriticalGranted = false
-//        )
-//    }
-//}

@@ -9,18 +9,14 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
@@ -28,7 +24,6 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmListScreen.AlarmContainer
-import com.coolApps.MultipleAlarmClock.logD
 import com.example.MultipleAlarmClock.Ui.Navigation.NavigationViewModel
 import com.example.MultipleAlarmClock.Ui.Navigation.Screen
 import com.example.MultipleAlarmClock.Ui.alarmFlow.AlarmFlowScreen
@@ -47,7 +42,6 @@ import kotlinx.coroutines.launch
 	val startKey = remember(deepLinkScreen, isFirstLaunch) {
 		deepLinkScreen ?: if (isFirstLaunch == true) Screen.OnboardingScreen else Screen.AlarmContainer
 	}
-	logD("the startKey screen is $startKey")
 	val backStack = rememberNavBackStack(startKey)
 	val coroutineScope = rememberCoroutineScope()
 

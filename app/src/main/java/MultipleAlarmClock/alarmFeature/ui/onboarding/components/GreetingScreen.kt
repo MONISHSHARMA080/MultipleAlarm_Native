@@ -17,7 +17,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -87,7 +89,8 @@ import androidx.compose.ui.unit.sp
 					verticalAlignment = Alignment.CenterVertically
 				) {
 					Button(
-						onClick = onClickNext
+						onClick = onClickNext,
+						shape = RoundedCornerShape(30.dp)
 					) { Text("Next", style = MaterialTheme.typography.titleMedium)}
 				}
 			}
@@ -116,7 +119,7 @@ import androidx.compose.ui.unit.sp
 					modifier = Modifier.graphicsLayer {
 						rotationZ = handRotation
 						// pivot near the wrist so it swings like a real wave
-						transformOrigin = TransformOrigin(0.7f, 0.75f)
+						transformOrigin = TransformOrigin(0.74f, 0.75f)
 					}
 				)
 			}

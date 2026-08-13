@@ -50,6 +50,22 @@
     <string name="permission_dialog_btn_open_settings">Open settings</string>
     <string name="permission_dialog_btn_allow">Allow</string>
 
+
+    <string name="onboarding_permission_reason">To send alarm notification and schedule alarm</string>
+
+<!-- Permission Steps -->
+    <string name="perm_notifications_title">Notifications</string>
+    <string name="perm_notifications_rationale">Required to show the alarm notification</string>
+
+    <string name="perm_exact_alarm_title">Exact Alarms</string>
+    <string name="perm_exact_alarm_rationale">Required to ensure your alarm rings exactly on time, even in power-saving mode.</string>
+
+    <string name="perm_fsi_title">Display over other apps</string>
+    <string name="perm_fsi_rationale">Required to show the alarm clock on your lock screen.</string>
+
+    <string name="perm_xiaomi_title">Autostart (Xiaomi)</string>
+    <string name="perm_xiaomi_rationale">Xiaomi devices require Autostart to schedule alarms, without this app will not function properly</string>
+
 <!-- Feedback Card -->
     <string name="feedback_title">Feedback</string>
     <string name="feedback_description">Tell us what you love and what needs work. From design tweaks to feature requests and bug fixes, help us improve the app for you and everyone</string>
