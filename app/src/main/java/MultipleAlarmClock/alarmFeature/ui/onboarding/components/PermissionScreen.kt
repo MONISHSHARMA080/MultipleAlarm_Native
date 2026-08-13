@@ -41,8 +41,7 @@ fun PermissionScreen(
     missingSteps: List<PermissionStep>,
     onAction: (PermissionStep) -> Unit,
     onNext: () -> Unit,
-    allCriticalGranted: Boolean,
-    notificationPermanentlyDenied: Boolean
+    allCriticalGranted: Boolean
 ) {
 
     Scaffold(
@@ -128,7 +127,7 @@ fun PermissionScreen(
                 items(missingSteps) { step ->
                     PermissionItem(
                         step = step,
-                        isPermanentlyDenied = step == PermissionStep.PostNotification && notificationPermanentlyDenied,
+
                         onAction = { onAction(step) }
                     )
                 }
@@ -141,7 +140,6 @@ fun PermissionScreen(
 @Composable
 private fun PermissionItem(
     step: PermissionStep,
-    isPermanentlyDenied: Boolean,
     onAction: () -> Unit
 ) {
     Surface(
@@ -176,10 +174,27 @@ private fun PermissionItem(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(
-                    text = if (isPermanentlyDenied) "Settings" else if (step.action != null) "Open" else "Allow",
+                    text = if (step.action != null) "Open" else "Allow",
                     style = MaterialTheme.typography.labelLarge
                 )
             }
         }
     }
 }
+//
+//@Preview(name = "Phone", device = Devices.PHONE, showBackground = true)
+//@Preview(name = "Tablet", device = Devices.TABLET, showBackground = true)
+//@Composable
+//fun PermissionScreenPreview() {
+//    MaterialTheme {
+//        PermissionScreen(
+//            missingSteps = listOf(
+//                PermissionStep.PostNotification,
+//                PermissionStep.ExactAlarm
+//            ),
+//            onAction = {},
+//            onNext = {},
+//            allCriticalGranted = false
+//        )
+//    }
+//}

@@ -11,6 +11,7 @@ import android.provider.Settings
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -48,6 +49,17 @@ import com.google.accompanist.permissions.shouldShowRationale
 
 	val notificationPermanentlyDenied = notificationRequested && !notificationPermState.status.isGranted && !notificationPermState.status.shouldShowRationale
 
+	// Automatic redirection to settings if permanently denied after a request
+	LaunchedEffect(notificationPermanentlyDenied) {
+		if (notificationPermanentlyDenied) {
+			context.startActivity(
+				Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+					data = Uri.fromParts("package", context.packageName, null)
+				}
+			)
+		}
+	}
+
 	DisposableEffect(lifecycleOwner) {
 		val observer = LifecycleEventObserver { _, event ->
 			if (event == Lifecycle.Event.ON_RESUME) {
@@ -66,7 +78,6 @@ import com.google.accompanist.permissions.shouldShowRationale
 			PermissionScreen(
 				missingSteps = missingSteps,
 				allCriticalGranted = allCriticalGranted,
-				notificationPermanentlyDenied = notificationPermanentlyDenied,
 				onNext = {
 					viewModel.onNextClicked()
 						 },
