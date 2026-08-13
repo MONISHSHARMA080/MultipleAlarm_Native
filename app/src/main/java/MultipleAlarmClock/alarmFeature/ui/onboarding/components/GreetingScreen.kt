@@ -1,8 +1,5 @@
-package MultipleAlarmClock.alarmFeature.ui.onboarding
+package MultipleAlarmClock.alarmFeature.ui.onboarding.components
 
-import MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
-import MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
-import android.view.HapticFeedbackConstants
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -21,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -36,11 +32,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.CancelAndDeleteButton
-import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.PrimaryActionButton
-import com.example.MultipleAlarmClock.Ui.alarmPicker.Progress
-import java.util.Calendar
 
 
 @Composable fun GreetingScreen(onClickNext:()->Unit) {

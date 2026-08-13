@@ -10,7 +10,7 @@ sealed class PermissionStep(
 ) {
 	object PostNotification : PermissionStep(
 		"Notifications",
-		"Required to show the alarm notification"
+		"Required to show the alarm notification "
 	)
 	object ExactAlarm : PermissionStep(
 		"Exact Alarms",
@@ -24,6 +24,6 @@ sealed class PermissionStep(
 	)
 	object XiaomiAutostart : PermissionStep(
 		"Autostart (Xiaomi)",
-		"Xiaomi devices require Autostart to schedule alarms, without this app might not function well"
+		"Xiaomi devices require Autostart to schedule alarms, without this app will not function properly"
 	)
 }

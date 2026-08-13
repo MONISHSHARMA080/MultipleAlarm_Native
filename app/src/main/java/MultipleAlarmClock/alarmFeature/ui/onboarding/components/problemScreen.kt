@@ -1,4 +1,4 @@
-package MultipleAlarmClock.alarmFeature.ui.onboarding
+package MultipleAlarmClock.alarmFeature.ui.onboarding.components
 
 
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -123,7 +123,7 @@ fun ProblemScreen(
 			text = if (phase == ProblemPhase.Crushing) {
 				"Select the time interval and how frequent you want the alarm and app handles the rest"
 			} else {
-				"Managing different alarms for a tasks takes time and effort."
+				"Managing multiple alarms for a task takes time and effort."
 			},
 			style = typography.bodyMedium,
 			textAlign = TextAlign.Center,
