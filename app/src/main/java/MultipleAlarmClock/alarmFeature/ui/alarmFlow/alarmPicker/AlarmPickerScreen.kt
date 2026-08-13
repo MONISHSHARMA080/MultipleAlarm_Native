@@ -186,7 +186,7 @@ fun AlarmPickerScreen(
                       navigationIcon = {
                         IconButton(
                                 onClick = {
-                                  alarmSetProceed()
+                                  settingAlarmCancelled()
                                 }
                         ) {
                           Icon(

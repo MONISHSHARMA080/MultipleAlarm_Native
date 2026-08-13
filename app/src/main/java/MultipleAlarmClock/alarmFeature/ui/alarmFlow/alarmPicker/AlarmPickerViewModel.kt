@@ -60,6 +60,7 @@ import java.util.Locale
 
 	val uiState: StateFlow<AlarmPickerUiState> = _uiState.map { state ->
 		val res = state.alarmObject.ifTimeIntervalPassedThenReturnRollOver()
+		logD("ui state before update is ${uiState.value} \n\n and roll over res is $res")
 		state.copy(
 			validationResult = res.alarmObject.validate(state.initialAlarm),
 			alarmObject = res.alarmObject

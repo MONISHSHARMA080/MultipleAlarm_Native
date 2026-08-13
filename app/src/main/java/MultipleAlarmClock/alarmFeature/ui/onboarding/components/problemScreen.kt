@@ -134,8 +134,6 @@ fun ProblemScreen(
 			modifier = Modifier
 				.fillMaxSize()
 				.padding(padding),
-//				.navigationBarsPadding()
-//				.padding(horizontal = 24.dp, vertical = 24.dp),
 			horizontalAlignment = Alignment.CenterHorizontally
 		) {
 			Spacer(modifier = Modifier.weight(0.8f))
