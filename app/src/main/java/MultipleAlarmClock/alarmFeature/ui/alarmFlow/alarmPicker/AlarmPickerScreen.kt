@@ -295,7 +295,8 @@ fun AlarmPickerScreen(
         Progress.StartTime -> {
           TimePickerWithoutDialog(
                   state = startTimePickerState,
-                  modifier = Modifier.padding(horizontal = horizontalPadding)
+                  modifier = Modifier.padding(horizontal = horizontalPadding),
+			  uiState= uiState
           )
         }
 
@@ -303,8 +304,8 @@ fun AlarmPickerScreen(
           TimePickerWithoutDialog(
                   state = endTimePickerState,
                   isCandidateInvalid = isCandidateInvalid,
-                  errorMessage = stringResource(R.string.alarm_error_time_range),
-                  modifier = Modifier.padding(horizontal = horizontalPadding)
+                  modifier = Modifier.padding(horizontal = horizontalPadding),
+			  uiState = uiState
           )
         }
 

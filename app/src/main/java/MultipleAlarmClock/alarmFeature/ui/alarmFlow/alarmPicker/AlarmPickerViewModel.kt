@@ -131,7 +131,6 @@ import java.util.Locale
 
 		stopPreview()
 		playAlarm.play(soundToPlay.soundUri)
-
 		_previewingSound.value = soundToPlay
 		_previewingRandom.value = sound == null
 	}
@@ -378,6 +377,47 @@ import java.util.Locale
 		}
 	}
 
+	private fun updateAlarm(
+		transform: (AlarmObject) -> AlarmObject
+	) {
+		_uiState.update { state ->
+			val alarm = transform(state.alarmObject)
+
+			state.copy(
+				alarmObject = alarm,
+				validationResult =
+					validateForCurrentStep(
+						state.progress,
+						alarm
+					)
+			)
+		}
+	}
+
+	private fun validateForCurrentStep(
+		progress: Progress,
+		alarm: AlarmObject
+	): ValidationResult {
+		return when (progress) {
+			Progress.StartTime -> {
+				ValidationResult.Success
+			}
+			Progress.EndTime -> {
+				if (alarm.endTime.timeInMillis <= alarm.startTime.timeInMillis) {
+					ValidationResult.Failure(
+						field = AlarmErrorField.Time,
+						message = "End time must be after start time."
+					)
+				} else {
+					ValidationResult.Success
+				}
+			}
+
+			Progress.FullEditor -> {
+				alarm.validate(uiState.value.initialAlarm)
+			}
+		}
+	}
 
 
 	/**[setAlarm] - here [AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/

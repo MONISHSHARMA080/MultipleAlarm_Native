@@ -31,7 +31,7 @@
     <string name="alarm_picker_date">date</string>
 
     <!-- Alarm Validation Errors -->
-    <string name="alarm_error_time_range">Select end time after the start time</string>
+    <string name="alarm_error_time_range">Select end time after the %1$s</string>
     <string name="alarm_error_frequency_range">Enter a value between 1 to 700 minutes</string>
     <string name="alarm_error_date_mismatch">Start and end times must be on the same day</string>
     <string name="alarm_error_past_date">Date value must be today or in the future.</string>

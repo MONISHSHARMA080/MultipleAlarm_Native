@@ -101,14 +101,6 @@ data class AlarmObject(
 			return ValidationResult.Failure(AlarmErrorField.DATE, "Date value must be today or in the future.")
 		}
 
-//		val currentTime = Calendar.getInstance()
-//		if (endTime.time.time < currentTime.timeInMillis){
-//			return ValidationResult.Failure(message = "The end time has already passed.", field = AlarmErrorField.AlarmTimePassed)
-
-		// will handle it by incrementing the date
-
-//		}
-
 		// 2. Check for Changes (If in Edit Mode)
 		if (alarmData != null) {
 			val hasChanged = startTime.timeInMillis != alarmData.startTime ||

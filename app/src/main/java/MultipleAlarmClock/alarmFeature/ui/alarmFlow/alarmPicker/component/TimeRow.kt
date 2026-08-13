@@ -150,8 +150,12 @@ fun TimeRow(
 						color = colorScheme.onSurfaceVariant,
 					)
 					AnimatedVisibility(visible = isCandidateInvalid) {
+						val locale = LocalLocale.current.platformLocale
+						val startTimeString = remember(startTime, locale) {
+							SimpleDateFormat("h:mm a", locale).format(startTime.time)
+						}
 						Text(
-							text = stringResource(R.string.alarm_error_time_range), // "Must be after start time"
+							text = stringResource(R.string.alarm_error_time_range, startTimeString),
 							style = typography.labelMedium,
 							color = colorScheme.error,
 							modifier = Modifier.padding(top = 4.dp)
