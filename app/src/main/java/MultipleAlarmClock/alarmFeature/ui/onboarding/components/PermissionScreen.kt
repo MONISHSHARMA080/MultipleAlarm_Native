@@ -128,7 +128,7 @@ fun PermissionScreen(
                         shape = MaterialTheme.shapes.extraLarge
                     ) {
                         Text(
-                            text = if (allCriticalGranted) "Continue" else "Grant permissions",
+							text = stringResource(if (allCriticalGranted)R.string.permission_continue else R.string.permission_grant_permissions),
                             style = MaterialTheme.typography.titleMedium
                         )
                     }
@@ -151,13 +151,13 @@ fun PermissionScreen(
 					(
 							fadeIn(
 								animationSpec = tween(
-									durationMillis = 220,
-									delayMillis = 100,
+									durationMillis = 320,
+									delayMillis = 180,
 									easing = FastOutSlowInEasing
 								)
 							) +
 									scaleIn(
-										initialScale = 0.75f,
+										initialScale = 0.79f,
 										animationSpec = spring(
 											dampingRatio = Spring.DampingRatioMediumBouncy,
 											stiffness = Spring.StiffnessMedium
@@ -166,12 +166,12 @@ fun PermissionScreen(
 							) togetherWith (
 							fadeOut(
 								animationSpec = tween(
-									durationMillis = 120,
+									durationMillis = 320,
 									easing = FastOutLinearInEasing
 								)
 							) +
 									scaleOut(
-										targetScale = 0.75f,
+										targetScale = 0.79f,
 										animationSpec = tween(
 											durationMillis = 120,
 											easing = FastOutLinearInEasing
@@ -197,14 +197,16 @@ fun PermissionScreen(
 			Spacer(modifier = Modifier.height(24.dp))
 
             Spacer(modifier = Modifier.height(24.dp))
-            
-            Text(
-                text =if (allCriticalGranted) "All set" else "Permissions" ,
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            
+
+			AnimatedContent(targetState = allCriticalGranted) { granted ->
+				Text(
+					text = stringResource(if (granted) R.string.permission_all_set else R.string.permission_title),
+					style = MaterialTheme.typography.headlineLarge,
+					fontWeight = FontWeight.SemiBold,
+					color = MaterialTheme.colorScheme.onBackground
+				)
+			}
+
             Spacer(modifier = Modifier.height(12.dp))
 
 			if (!allCriticalGranted){
@@ -317,7 +319,14 @@ private fun PermissionItem(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(
-                    text = if (isPermanentlyDenied) "Settings" else if (step.action != null) "Open" else "Allow",
+					text = stringResource(
+						when {
+							isPermanentlyDenied -> R.string.permission_btn_settings
+							step.action != null -> R.string.permission_btn_open
+							else -> R.string.permission_btn_allow
+						}
+					),
+
                     style = MaterialTheme.typography.labelLarge
                 )
             }

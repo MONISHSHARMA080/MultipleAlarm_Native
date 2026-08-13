@@ -50,6 +50,14 @@
     <string name="permission_dialog_btn_open_settings">Open settings</string>
     <string name="permission_dialog_btn_allow">Allow</string>
 
+    <!-- Onboarding Permission Screen -->
+    <string name="permission_continue">Continue</string>
+    <string name="permission_grant_permissions">Grant permissions</string>
+    <string name="permission_all_set">All set</string>
+    <string name="permission_title">Permissions</string>
+    <string name="permission_btn_settings">Settings</string>
+    <string name="permission_btn_open">Open</string>
+    <string name="permission_btn_allow">Allow</string>
 
     <string name="onboarding_permission_reason">To send alarm notification and schedule alarm</string>
 

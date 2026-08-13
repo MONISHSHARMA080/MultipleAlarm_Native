@@ -22,7 +22,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 	when(uiState.displaySate){
 		DisplaySate.Greeting -> GreetingScreen(onClickNext = {viewModel.onNextClicked()} )
 		DisplaySate.Problem -> ProblemScreen { viewModel.onNextClicked() }
-		DisplaySate.CreateFirstAlarm -> Text("--Open alarm Picker screen and allow then to create their first alarm--")
 		DisplaySate.Permission -> {
 			PermissionScreen(
 				missingSteps = missingSteps,
@@ -31,6 +30,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 				refreshPermissionUiState = {viewModel.refreshPermissions()},
 			)
 		}
+		DisplaySate.CreateFirstAlarm -> Text("--Open alarm Picker screen and allow then to create their first alarm--")
 		DisplaySate.AlarmResult -> Text("--show them a screen that shows them how many notification is scheduled--")
 	}
 }
