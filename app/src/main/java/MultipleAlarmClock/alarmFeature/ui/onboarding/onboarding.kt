@@ -7,7 +7,7 @@ import MultipleAlarmClock.alarmFeature.ui.onboarding.components.ProblemScreen
 import MultipleAlarmClock.alarmFeature.ui.onboarding.data.DisplaySate
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
@@ -54,21 +54,19 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 						// Going forward
 						slideIntoContainer(
 							towards = AnimatedContentTransitionScope.SlideDirection.Left,
-							animationSpec = tween(145, easing = LinearEasing)
-						) togetherWith
-								slideOutOfContainer(
+							animationSpec = tween(150, easing = FastOutSlowInEasing)
+						) togetherWith slideOutOfContainer(
 									towards = AnimatedContentTransitionScope.SlideDirection.Left,
-									animationSpec = tween(145, easing = LinearEasing)
+									animationSpec = tween(150, easing = FastOutSlowInEasing)
 								)
 					} else {
 						// Going back
 						slideIntoContainer(
 							towards = AnimatedContentTransitionScope.SlideDirection.Right,
-							animationSpec = tween(145, easing = LinearEasing)
-						) togetherWith
-								slideOutOfContainer(
+							animationSpec = tween(150, easing = FastOutSlowInEasing)
+						) togetherWith slideOutOfContainer(
 									towards = AnimatedContentTransitionScope.SlideDirection.Right,
-									animationSpec = tween(145, easing = LinearEasing)
+									animationSpec = tween(150, easing = FastOutSlowInEasing)
 								)
 					}
 				},
