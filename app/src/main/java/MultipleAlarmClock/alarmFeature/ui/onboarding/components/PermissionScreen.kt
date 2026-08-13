@@ -46,7 +46,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -90,21 +89,9 @@ fun PermissionScreen(
 
 	val notificationPermanentlyDenied = notificationRequested && !notificationPermState.status.isGranted && !notificationPermState.status.shouldShowRationale
 
-	// Automatic redirection to settings if permanently denied after a request
-	LaunchedEffect(notificationPermanentlyDenied) {
-		if (notificationPermanentlyDenied) {
-			context.startActivity(
-				Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-					data = Uri.fromParts("package", context.packageName, null)
-				}
-			)
-		}
-	}
-
 	DisposableEffect(lifecycleOwner) {
 		val observer = LifecycleEventObserver { _, event ->
 			if (event == Lifecycle.Event.ON_RESUME) {
-//				viewModel.refreshPermissions()
 				refreshPermissionUiState()
 			}
 		}
@@ -156,7 +143,7 @@ fun PermissionScreen(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-			Spacer(modifier = Modifier.weight(0.1f))
+			Spacer(modifier = Modifier.weight(0.2f))
 
 			AnimatedContent(
 				targetState = allCriticalGranted,
@@ -234,15 +221,20 @@ fun PermissionScreen(
             Spacer(modifier = Modifier.height(32.dp))
             
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 340.dp),
-                modifier = Modifier.fillMaxWidth(),
+                columns = GridCells.Adaptive(minSize = 300.dp),
+                modifier = Modifier
+					.fillMaxWidth()
+					.weight(1f, fill = false),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 contentPadding = PaddingValues(bottom = 24.dp)
             ) {
                 items(missingSteps) { step ->
+					val isPermanentlyDenied = step == PermissionStep.PostNotification && notificationPermanentlyDenied
+
                     PermissionItem(
                         step = step,
+						isPermanentlyDenied = isPermanentlyDenied,
                         onAction = {
 							when (step) {
 								PermissionStep.PostNotification -> {
@@ -290,6 +282,7 @@ fun PermissionScreen(
 @Composable
 private fun PermissionItem(
     step: PermissionStep,
+	isPermanentlyDenied: Boolean = false,
     onAction: () -> Unit
 ) {
     Surface(
@@ -324,7 +317,7 @@ private fun PermissionItem(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(
-                    text = if (step.action != null) "Open" else "Allow",
+                    text = if (isPermanentlyDenied) "Settings" else if (step.action != null) "Open" else "Allow",
                     style = MaterialTheme.typography.labelLarge
                 )
             }
