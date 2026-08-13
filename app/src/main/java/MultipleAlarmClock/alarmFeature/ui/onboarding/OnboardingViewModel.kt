@@ -48,18 +48,25 @@ import kotlinx.coroutines.launch
 		_displayState.update { value ->
 			when(value.displaySate){
 				DisplaySate.Greeting -> value.copy(displaySate = DisplaySate.Problem)
-				// -- spam for testing
 				DisplaySate.Problem -> value.copy(displaySate = DisplaySate.Permission)
-				DisplaySate.CreateFirstAlarm ->value.copy(displaySate = DisplaySate.AlarmResult)
 				DisplaySate.Permission -> value.copy(displaySate = DisplaySate.CreateFirstAlarm)
-				// -- spam for testing
-
-//				DisplaySate.Problem -> DisplaySate.CreateFirstAlarm
-//				DisplaySate.CreateFirstAlarm -> DisplaySate.Permission
-//				DisplaySate.Permission -> DisplaySate.AlarmResult
+				DisplaySate.CreateFirstAlarm ->value.copy(displaySate = DisplaySate.AlarmResult)
 				DisplaySate.AlarmResult -> value.copy(displaySate = DisplaySate.AlarmResult)
 			}
 		}
 	}
+	fun onPreviousClicked()  {
+		// increment the state
+		_displayState.update { value ->
+			when(value.displaySate){
+				DisplaySate.Greeting -> value.copy(displaySate = DisplaySate.Greeting)
+				DisplaySate.Problem -> value.copy(displaySate = DisplaySate.Greeting)
+				DisplaySate.Permission -> value.copy(displaySate = DisplaySate.Problem)
+				DisplaySate.CreateFirstAlarm ->value.copy(displaySate = DisplaySate.Permission)
+				DisplaySate.AlarmResult -> value.copy(displaySate = DisplaySate.CreateFirstAlarm)
+			}
+		}
+	}
+
 }
 

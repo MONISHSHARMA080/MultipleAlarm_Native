@@ -8,7 +8,12 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -41,6 +46,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.shapes
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -52,6 +60,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -102,38 +111,42 @@ fun PermissionScreen(
 
     Scaffold(
         bottomBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background)
-                    .navigationBarsPadding()
-                    .padding(26.dp)
-                    .padding(bottom = 20.dp)
-                    .animateContentSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Button(
-                        onClick = onNext,
-                        enabled = allCriticalGranted,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        ),
-                        modifier = Modifier.height(56.dp),
-                        shape = MaterialTheme.shapes.extraLarge
-                    ) {
-                        Text(
+			Box(
+				modifier =
+					Modifier.fillMaxWidth()
+						.background(colorScheme.background)
+						.navigationBarsPadding()
+						.padding(26.dp)
+						.padding(bottom = 20.dp)
+						.animateContentSize(),
+				contentAlignment = Alignment.Center,
+			) {
+				Row(
+					modifier = Modifier.fillMaxWidth(),
+					horizontalArrangement = Arrangement.End,
+					verticalAlignment = Alignment.CenterVertically
+				) {
+					Button(
+						onClick = onNext,
+						enabled = allCriticalGranted,
+						modifier = Modifier
+							.fillMaxWidth()
+							.height(56.dp),
+						shape = shapes.extraLarge,
+						colors = ButtonDefaults.buttonColors(
+							containerColor = colorScheme.primaryContainer,
+							contentColor = colorScheme.onPrimaryContainer
+						)
+					) {
+						Text(
 							text = stringResource(if (allCriticalGranted)R.string.permission_continue else R.string.permission_grant_permissions),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                }
-            }
+							style = typography.titleMedium
+						)
+					}
+
+
+				}
+			}
         }
     ) { padding ->
         Column(
@@ -144,6 +157,28 @@ fun PermissionScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 			Spacer(modifier = Modifier.weight(0.2f))
+
+			// Micro-interaction: Continuous floating animation for the shield icon
+			val infiniteTransition = rememberInfiniteTransition(label = "shield_floating")
+			val rawFloatingOffset by infiniteTransition.animateFloat(
+				initialValue = -6f,
+				targetValue = 6f,
+				animationSpec = infiniteRepeatable(
+					animation = tween(durationMillis = 1500, easing = FastOutSlowInEasing),
+					repeatMode = RepeatMode.Reverse
+				),
+				label = "float_offset_y"
+			)
+
+			// Smoothly settle the floating offset to 0.dp once all critical permissions are granted
+			val floatingOffsetY by animateDpAsState(
+				targetValue = if (allCriticalGranted) 0.dp else rawFloatingOffset.dp,
+				animationSpec = spring(
+					dampingRatio = Spring.DampingRatioMediumBouncy,
+					stiffness = Spring.StiffnessLow
+				),
+				label = "floating_y_offset"
+			)
 
 			AnimatedContent(
 				targetState = allCriticalGranted,
@@ -179,6 +214,9 @@ fun PermissionScreen(
 									)
 							)
 				},
+				modifier = Modifier.graphicsLayer {
+					translationY = floatingOffsetY.toPx()
+				},
 				label = "permission_icon_transition"
 			) { granted ->
 
@@ -195,8 +233,6 @@ fun PermissionScreen(
 			}
 
 			Spacer(modifier = Modifier.height(24.dp))
-
-            Spacer(modifier = Modifier.height(24.dp))
 
 			AnimatedContent(targetState = allCriticalGranted) { granted ->
 				Text(

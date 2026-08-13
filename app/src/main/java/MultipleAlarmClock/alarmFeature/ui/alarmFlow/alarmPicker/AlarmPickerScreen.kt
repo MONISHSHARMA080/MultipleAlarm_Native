@@ -73,10 +73,11 @@ import java.util.Calendar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmPickerScreen(
-        alarmSetGoBack: () -> Unit,
-        onNavigateToSoundList: () -> Unit,
-		forNewAlarm: Boolean,
-        viewModel: AlarmPickerViewModel
+	alarmSetProceed: () -> Unit,
+	settingAlarmCancelled: ()->Unit,
+	onNavigateToSoundList: () -> Unit,
+	forNewAlarm: Boolean,
+	viewModel: AlarmPickerViewModel
 ) {
 
   val uiState by viewModel.uiState.collectAsState()
@@ -91,7 +92,7 @@ fun AlarmPickerScreen(
 
   LaunchedEffect(uiState.alarmOperationCompletedGoBack) {
     if (uiState.alarmOperationCompletedGoBack) {
-      alarmSetGoBack()
+      alarmSetProceed()
     }
   }
 
@@ -158,7 +159,6 @@ fun AlarmPickerScreen(
     }
   }
 
-
   val isCandidateInvalid = currentProgress != Progress.StartTime &&  candidateEnd.timeInMillis <= uiState.alarmObject.startTime.timeInMillis
 
   Scaffold(
@@ -186,7 +186,7 @@ fun AlarmPickerScreen(
                       navigationIcon = {
                         IconButton(
                                 onClick = {
-                                  alarmSetGoBack()
+                                  alarmSetProceed()
                                 }
                         ) {
                           Icon(
@@ -219,7 +219,7 @@ fun AlarmPickerScreen(
                         isNewAlarm = forNewAlarm,
                         onClick = {
                           when (currentProgress) {
-                            Progress.StartTime -> alarmSetGoBack()
+                            Progress.StartTime -> settingAlarmCancelled()
                             Progress.EndTime -> viewModel.updateProgress(Progress.StartTime)
                             Progress.FullEditor -> {
                               if (forNewAlarm) {

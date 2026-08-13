@@ -1,6 +1,7 @@
 package MultipleAlarmClock.alarmFeature.ui.onboarding.components
 
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDp
@@ -9,6 +10,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -83,77 +86,100 @@ fun ProblemScreen(
 		delay(400.milliseconds)
 		phase = ProblemPhase.ShowingProblem
 	}
-
-	Column(
-		modifier = Modifier
-			.fillMaxSize()
-			.navigationBarsPadding()
-			.padding(horizontal = 24.dp, vertical = 24.dp),
-		horizontalAlignment = Alignment.CenterHorizontally
-	) {
-		Spacer(modifier = Modifier.weight(0.8f))
-
-		ProblemAnimation(
-			phase = phase,
-			alarms = alarms,
-			visibleAlarms = visibleAlarms,
-			cardHeight = cardHeight,
-			cardSpacing = cardSpacing,
-			modifier = Modifier
-				.fillMaxWidth()
-				.height(animationHeight)
-		)
-
-		Spacer(modifier = Modifier.height(34.dp)) // was 52dp — animationHeight already sized correctly now
-
-		Text(
-			text = if (phase == ProblemPhase.Crushing) {
-				"Better way"
-			} else {
-				"One task. So many alarms."
-			},
-			style = typography.headlineLarge,
-			textAlign = TextAlign.Center,
-			color = colorScheme.onBackground
-		)
-
-		Spacer(modifier = Modifier.height(10.dp))
-
-		Text(
-			text = if (phase == ProblemPhase.Crushing) {
-				"Select the time interval and how frequent you want the alarm and app handles the rest"
-			} else {
-				"Managing multiple alarms for a task takes time and effort."
-			},
-			style = typography.bodyMedium,
-			textAlign = TextAlign.Center,
-			color = colorScheme.onBackground.copy(alpha = 0.72f),
-			modifier = Modifier.fillMaxWidth(0.88f)
-		)
-
-		Spacer(modifier = Modifier.weight(1f))
-
-		Button(
-			onClick = {
-				when (phase) {
-					ProblemPhase.Crushing -> onComplete()
-					else -> phase = ProblemPhase.Crushing
+	Scaffold(
+		bottomBar = {
+			Box(
+				modifier =
+					Modifier.fillMaxWidth()
+						.background(colorScheme.background)
+						.navigationBarsPadding()
+						.padding(26.dp)
+						.padding(bottom = 20.dp)
+						.animateContentSize(),
+				contentAlignment = Alignment.Center,
+			) {
+				Row(
+					modifier = Modifier.fillMaxWidth(),
+					horizontalArrangement = Arrangement.End,
+					verticalAlignment = Alignment.CenterVertically
+				) {
+					Button(
+						onClick = {
+							when (phase) {
+								ProblemPhase.Crushing -> onComplete()
+								else -> phase = ProblemPhase.Crushing
+							}
+						},
+						enabled = phase != ProblemPhase.Building,
+						modifier = Modifier
+							.fillMaxWidth()
+							.height(56.dp),
+						shape = shapes.extraLarge,
+						colors = ButtonDefaults.buttonColors(
+							containerColor = colorScheme.primaryContainer,
+							contentColor = colorScheme.onPrimaryContainer
+						)
+					) {
+						Text(
+							text = if (phase == ProblemPhase.Crushing) "Set my own" else "Fix this",
+							style = typography.titleMedium
+						)
+					}
 				}
-			},
-			enabled = phase != ProblemPhase.Building,
+			}
+		}
+	) { padding ->
+
+		Column(
 			modifier = Modifier
-				.fillMaxWidth()
-				.height(56.dp),
-			shape = shapes.extraLarge,
-			colors = ButtonDefaults.buttonColors(
-				containerColor = colorScheme.primaryContainer,
-				contentColor = colorScheme.onPrimaryContainer
-			)
+				.fillMaxSize()
+				.padding(padding),
+//				.navigationBarsPadding()
+//				.padding(horizontal = 24.dp, vertical = 24.dp),
+			horizontalAlignment = Alignment.CenterHorizontally
 		) {
-			Text(
-				text = if (phase == ProblemPhase.Crushing) "Set my own" else "Fix this",
-				style = typography.titleMedium
+			Spacer(modifier = Modifier.weight(0.8f))
+
+			ProblemAnimation(
+				phase = phase,
+				alarms = alarms,
+				visibleAlarms = visibleAlarms,
+				cardHeight = cardHeight,
+				cardSpacing = cardSpacing,
+				modifier = Modifier
+					.fillMaxWidth()
+					.height(animationHeight)
 			)
+
+			Spacer(modifier = Modifier.height(34.dp)) // was 52dp — animationHeight already sized correctly now
+
+			Text(
+				text = if (phase == ProblemPhase.Crushing) {
+					"Better way"
+				} else {
+					"One task. So many alarms."
+				},
+				style = typography.headlineLarge,
+				textAlign = TextAlign.Center,
+				color = colorScheme.onBackground
+			)
+
+			Spacer(modifier = Modifier.height(10.dp))
+
+			Text(
+				text = if (phase == ProblemPhase.Crushing) {
+					"Select the time interval and how frequent you want the alarm and app handles the rest"
+				} else {
+					"Managing multiple alarms for a task takes time and effort."
+				},
+				style = typography.bodyMedium,
+				textAlign = TextAlign.Center,
+				color = colorScheme.onBackground.copy(alpha = 0.72f),
+				modifier = Modifier.fillMaxWidth(0.88f)
+			)
+
+			Spacer(modifier = Modifier.weight(1f))
+
 		}
 	}
 }

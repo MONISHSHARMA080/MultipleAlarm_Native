@@ -9,7 +9,7 @@
     <string name="clip_data_label">alarm message</string>
 
     <!-- Alarm Picker Screen -->
-    <string name="alarm_picker_title_set">Set alarm</string>
+    <string name="alarm_picker_title_set">New alarm</string>
     <string name="alarm_picker_title_edit">Edit alarm</string>
     <string name="alarm_picker_back_desc">Back</string>
     <string name="alarm_picker_btn_set">Set alarm</string>

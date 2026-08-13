@@ -1,5 +1,6 @@
 package MultipleAlarmClock.alarmFeature.ui.onboarding.components
 
+import android.R.attr.onClick
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -15,14 +16,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.shapes
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -90,8 +95,22 @@ import androidx.compose.ui.unit.sp
 				) {
 					Button(
 						onClick = onClickNext,
-						shape = RoundedCornerShape(30.dp)
-					) { Text("Next", style = MaterialTheme.typography.titleMedium)}
+						modifier = Modifier
+							.fillMaxWidth()
+							.height(56.dp),
+						shape = shapes.extraLarge,
+						colors = ButtonDefaults.buttonColors(
+							containerColor = colorScheme.primaryContainer,
+							contentColor = colorScheme.onPrimaryContainer
+						)
+					) {
+						Text(
+							text = "Next",
+							style = typography.titleMedium
+						)
+					}
+
+
 				}
 			}
 		}
