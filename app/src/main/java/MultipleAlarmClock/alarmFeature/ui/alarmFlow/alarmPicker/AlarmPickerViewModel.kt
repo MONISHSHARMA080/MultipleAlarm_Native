@@ -231,31 +231,62 @@ import java.util.Locale
 		}else null
 	}
 
+	/** created a default alarm object; either selects a time if [alarm] is null or else just puts the alarm in the alarmObject and will not increment the date that's not it's responsiblity*/
 	private fun createDefaultAlarmObject(alarm: AlarmData?): AlarmObject {
-		val now = Calendar.getInstance()
+		val selectedStartTime: Calendar
+		val selectedEndTime: Calendar
+		val selectedDate:Long
+		when(alarm){
+			null ->{
+				val now = Calendar.getInstance()
+				val startTime = Calendar.getInstance().apply {
+					add(Calendar.MINUTE, 1)
+				}
+				val endOfDay = Calendar.getInstance().apply {  // 11:59 is when we can set out last alarm
+					set(Calendar.HOUR_OF_DAY, 23)
+					set(Calendar.MINUTE, 59)
+					set(Calendar.SECOND, 0)
+					set(Calendar.MILLISECOND, 0)
+
+				}
+				val durationMin = 45
+				when{
+					startTime.after(endOfDay) -> {
+						selectedStartTime = (now.clone() as Calendar).apply {
+							add(Calendar.DAY_OF_YEAR, 1)
+							set(Calendar.HOUR_OF_DAY, 0)
+							set(Calendar.MINUTE, 0)
+						}
+						selectedEndTime = (startTime.clone() as Calendar).apply {
+							add(Calendar.MINUTE, durationMin)
+						}
+					}
+					else ->{
+						selectedStartTime = startTime
+						val requestedEnd = (startTime.clone() as Calendar).apply {
+							add(Calendar.MINUTE, durationMin)
+						}
+						// Case 1:
+						// Full duration fits today.
+						// Case 2:
+						// It doesn't fit, so cap at 11:59 PM.
+						selectedEndTime = if (requestedEnd.after(endOfDay)) endOfDay else requestedEnd
+					}
+				}
+				selectedDate = selectedStartTime.timeInMillis
+			}else -> {
+				selectedEndTime = Calendar.getInstance().apply { timeInMillis = alarm.endTime }
+				selectedStartTime = Calendar.getInstance().apply { timeInMillis = alarm.startTime }
+				selectedDate = alarm.startTime
+			}
+		}
 		return AlarmObject(
-			startTime = (now.clone() as Calendar).apply {
-				add(Calendar.MINUTE, 1)
-				if (get(Calendar.DAY_OF_YEAR) != now.get(Calendar.DAY_OF_YEAR)) {
-					set(Calendar.DAY_OF_YEAR, now.get(Calendar.DAY_OF_YEAR))
-					set(Calendar.HOUR_OF_DAY, 23)
-					set(Calendar.MINUTE, 59)
-				}
-				set(Calendar.SECOND, 0)
-			},
-			endTime = (now.clone() as Calendar).apply {
-				add(Calendar.MINUTE, 45)
-				if (get(Calendar.DAY_OF_YEAR) != now.get(Calendar.DAY_OF_YEAR)) {
-					set(Calendar.DAY_OF_YEAR, now.get(Calendar.DAY_OF_YEAR))
-					set(Calendar.HOUR_OF_DAY, 23)
-					set(Calendar.MINUTE, 59)
-				}
-				set(Calendar.SECOND, 0)
-			},
-			date = Calendar.getInstance().timeInMillis,
+			startTime = selectedStartTime,
+			endTime = selectedEndTime,
+			date = selectedDate,
 			message = alarm?.message ?: "",
 			freqGottenAfterCallback = alarm?.frequencyInMin ?: 1,
-			alarmSoundUri = alarm?.sound?.toUri(),
+			alarmSoundUri = alarm?.sound?.toUri()
 		)
 	}
 

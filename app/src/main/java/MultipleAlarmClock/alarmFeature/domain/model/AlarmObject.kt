@@ -30,6 +30,7 @@ data class AlarmObject(
 		)
 	}
 
+	// could remove this as this is done in the domain model  in alarmObject. roll over date()
 	fun incrementDateToCurrentDate(): AlarmObject {
 		val now = Calendar.getInstance()
 		val alarmDateCal = Calendar.getInstance().apply { timeInMillis = date }
@@ -130,14 +131,17 @@ data class AlarmObject(
 	 */
 
 	fun ifTimeIntervalPassedThenReturnRollOver(now: Calendar = Calendar.getInstance()): RolloverResult {
+		val durationMillis = endTime.timeInMillis - startTime.timeInMillis
 		val candidateStart = (startTime.clone() as Calendar)
-		val candidateEnd = (endTime.clone() as Calendar)
 		var rolled = false
 
-		if (candidateEnd.before(now)) {
+		if (endTime.before(now)) {
 			candidateStart.add(Calendar.DAY_OF_YEAR, 1)
-			candidateEnd.add(Calendar.DAY_OF_YEAR, 1)
 			rolled = true
+		}
+
+		val candidateEnd = (candidateStart.clone() as Calendar).apply {
+			timeInMillis = candidateStart.timeInMillis + durationMillis
 		}
 
 		return RolloverResult(
