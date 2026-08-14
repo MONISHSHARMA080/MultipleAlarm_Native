@@ -60,11 +60,12 @@ import java.util.Locale
 
 	val uiState: StateFlow<AlarmPickerUiState> = _uiState.map { state ->
 		val res = state.alarmObject.ifTimeIntervalPassedThenReturnRollOver()
-		logD("ui state before update is ${uiState.value} \n\n and roll over res is $res")
-		state.copy(
+		val updated = state.copy(
 			validationResult = res.alarmObject.validate(state.initialAlarm),
 			alarmObject = res.alarmObject
 		)
+		logD("raw state in: $state\nrollover res: $res\nemitting: $updated")
+		updated
 	}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AlarmPickerUiState())
 
 	private  val nonCancellableScope = CoroutineScope(NonCancellable)
@@ -186,7 +187,6 @@ import java.util.Locale
 
 	fun updateEndTime(newEndTime: Calendar) {
 		_uiState.update { state ->
-
 			state.copy(alarmObject = state.alarmObject.copy(endTime = newEndTime))
 		}
 	}
@@ -236,19 +236,22 @@ import java.util.Locale
 		val selectedStartTime: Calendar
 		val selectedEndTime: Calendar
 		val selectedDate:Long
+		logD("alarm is $alarm")
 		when(alarm){
 			null ->{
-				val now = Calendar.getInstance()
-				val startTime = Calendar.getInstance().apply {
+				val now = Calendar.getInstance().apply {
+
+				}
+				val startTime = (now.clone() as Calendar).apply  {
 					add(Calendar.MINUTE, 1)
 				}
-				val endOfDay = Calendar.getInstance().apply {  // 11:59 is when we can set out last alarm
+				val endOfDay = (now.clone() as Calendar).apply {   // 11:59 is when we can set out last alarm
 					set(Calendar.HOUR_OF_DAY, 23)
 					set(Calendar.MINUTE, 59)
 					set(Calendar.SECOND, 0)
 					set(Calendar.MILLISECOND, 0)
-
 				}
+				logD(" now:${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(now.timeInMillis)}, start:${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(startTime.timeInMillis)}, endOfDay:${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(endOfDay.timeInMillis)} ")
 				val durationMin = 45
 				when{
 					startTime.after(endOfDay) -> {
@@ -257,7 +260,7 @@ import java.util.Locale
 							set(Calendar.HOUR_OF_DAY, 0)
 							set(Calendar.MINUTE, 0)
 						}
-						selectedEndTime = (startTime.clone() as Calendar).apply {
+						selectedEndTime = (selectedStartTime.clone() as Calendar).apply {
 							add(Calendar.MINUTE, durationMin)
 						}
 					}
@@ -274,6 +277,8 @@ import java.util.Locale
 					}
 				}
 				selectedDate = selectedStartTime.timeInMillis
+				logD(" selectedStartTime:${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(selectedStartTime.timeInMillis)}, selectedEndTime:${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(selectedEndTime.timeInMillis)}, endOfDay:${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(endOfDay.timeInMillis)} ")
+
 			}else -> {
 				selectedEndTime = Calendar.getInstance().apply { timeInMillis = alarm.endTime }
 				selectedStartTime = Calendar.getInstance().apply { timeInMillis = alarm.startTime }

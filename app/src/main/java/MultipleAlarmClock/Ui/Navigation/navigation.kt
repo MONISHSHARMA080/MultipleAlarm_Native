@@ -14,10 +14,8 @@ import androidx.compose.foundation.layout.safeContent
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -36,9 +34,9 @@ import kotlinx.coroutines.launch
 	// 1.) if it's the first launch then I want to go to the app onboarding;
 	// 2.) if the deppLink intent is there then I want to ignore isFirstLaunch and go straight to that screen
 	// -----------------------------------------------------------------------------------------------------------
-	val isFirstLaunch by navViewModel.isFirstLaunch.collectAsStateWithLifecycle()
-	if (isFirstLaunch == null) return
-//	val isFirstLaunch = false
+//	val isFirstLaunch by navViewModel.isFirstLaunch.collectAsStateWithLifecycle()
+//	if (isFirstLaunch == null) return
+	val isFirstLaunch = false
 	val startKey = remember(deepLinkScreen, isFirstLaunch) {
 		deepLinkScreen ?: if (isFirstLaunch == true) Screen.OnboardingScreen else Screen.AlarmContainer
 	}
