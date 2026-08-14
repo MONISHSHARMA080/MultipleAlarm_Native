@@ -43,7 +43,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 			)
 		}
 		DisplaySate.CreateFirstAlarm -> {
-			val alarmPickerViewModel : AlarmPickerViewModel = hiltViewModel()
+			val alarmPickerViewModel : AlarmPickerViewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory -> factory.create(null) }
 			val selected by alarmPickerViewModel.selectedAlarmSound.collectAsStateWithLifecycle()
 			val previewing by alarmPickerViewModel.previewingSound.collectAsStateWithLifecycle()
 

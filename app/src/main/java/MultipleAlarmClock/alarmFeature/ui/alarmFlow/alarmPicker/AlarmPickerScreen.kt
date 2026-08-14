@@ -136,7 +136,8 @@ fun AlarmPickerScreen(
 
   val currentProgress = if (!forNewAlarm) Progress.FullEditor else uiState.progress
 
-  val startTimePickerState = key(currentProgress) {
+//  val startTimePickerState = key(currentProgress) {
+	val startTimePickerState = key(currentProgress, uiState.alarmObject.startTime.timeInMillis) {
     rememberTimePickerState(
             initialHour = uiState.alarmObject.startTime.get(Calendar.HOUR_OF_DAY),
             initialMinute = uiState.alarmObject.startTime.get(Calendar.MINUTE),

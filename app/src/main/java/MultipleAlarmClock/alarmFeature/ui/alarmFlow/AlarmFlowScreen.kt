@@ -11,7 +11,6 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -28,12 +27,10 @@ fun AlarmFlowScreen(
 	alarmData: AlarmData?,
 	onCloseFlow: () -> Unit
 ) {
-	val viewModel: AlarmPickerViewModel = hiltViewModel()
-	LaunchedEffect (alarmData) {
-		viewModel.setInitialAlarmObject(alarmData)
+	val viewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory ->
+		factory.create(alarmData)
 	}
 	val flowBackStack = rememberNavBackStack(AlarmFlowRoute.AlarmPicker)
-
 
 	NavDisplay(
 		backStack = flowBackStack,
