@@ -48,6 +48,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -124,6 +125,9 @@ private fun AlarmResultContent(
 	var cardVisible by remember {
 		mutableStateOf(false)
 	}
+	var visibleRows by remember {
+		mutableIntStateOf(0)
+	}
 
 	val haptic = LocalHapticFeedback.current
 
@@ -150,13 +154,14 @@ private fun AlarmResultContent(
 
 		delay(200.milliseconds)
 
-		// 3. Stagger initial timeline rows
-		repeat(
-			minOf(
-				notificationTimes.size,
-				MAX_VISIBLE_TIMELINE_ROWS
-			)
-		) {
+		// 3. Reveal timeline rows one by one
+		val initialRowCount = minOf(
+			notificationTimes.size,
+			MAX_VISIBLE_TIMELINE_ROWS
+		)
+
+		repeat(initialRowCount) { index ->
+			visibleRows = index + 1
 			delay(TIMELINE_ROW_STAGGER_MS)
 		}
 
@@ -308,7 +313,7 @@ private fun AlarmResultContent(
 							time = time,
 							formatter = timeFormatter,
 							zoneId = zoneId,
-							visible = true,
+							visible = expanded || index < visibleRows,
 							isLast = index == visibleTimes.lastIndex
 						)
 					}
