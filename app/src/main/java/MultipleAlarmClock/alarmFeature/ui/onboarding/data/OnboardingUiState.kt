@@ -1,5 +1,7 @@
 package MultipleAlarmClock.alarmFeature.ui.onboarding.data
 
+import MultipleAlarmClock.alarmFeature.data.local.AlarmData
+
 enum class DisplaySate {
 	Greeting,
 	Problem,
@@ -10,5 +12,6 @@ enum class DisplaySate {
 
 data class OnboardingUiState(
 	val displaySate: DisplaySate = DisplaySate.Greeting,
-	val askForNotificationPermission: Boolean = false
+	val askForNotificationPermission: Boolean = false,
+	val alarmData: AlarmData? = null
 )

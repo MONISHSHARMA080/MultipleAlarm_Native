@@ -1,7 +1,6 @@
 package com.example.MultipleAlarmClock.Ui.alarmPicker
 
 import MultipleAlarmClock.alarmFeature.data.local.AlarmData
-import MultipleAlarmClock.alarmFeature.data.local.toDomain
 import MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
 import MultipleAlarmClock.alarmFeature.domain.model.AlarmObject
 import MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
@@ -58,9 +57,9 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	}
 
 	private val _uiState = MutableStateFlow(AlarmPickerUiState(
-		alarmObject = alarmData?.toDomain()?.incrementDateToCurrentDate() ?: createDefaultAlarmObject(alarmData),
+		alarmObject =  createDefaultAlarmObject(alarmData),
 		initialAlarm = alarmData,
-		progress =if (alarmData == null) Progress.StartTime else Progress.FullEditor
+		progress = if (alarmData == null) Progress.StartTime else Progress.FullEditor
 	))
 
 	val uiState: StateFlow<AlarmPickerUiState> = _uiState.asStateFlow()
@@ -159,6 +158,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	fun updateProgress(newProgress: Progress) {
 		_uiState.update { it.copy(progress = newProgress) }
 	}
+
 	private fun updateAlarmObject(transform: (AlarmObject) -> AlarmObject) {
 		_uiState.update { state ->
 			val corrected = transform(state.alarmObject).ifTimeIntervalPassedThenReturnRollOver().alarmObject
@@ -198,19 +198,6 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		}
 		cursor.close()
 		return sounds
-	}
-
-	private fun getAlarmSoundFromAlarmData(alarm: AlarmData?): AlarmSound? {
-		return  if (alarm != null && alarm.sound != null){
-			try {
-				AlarmSound(
-					title = RingtoneManager.getRingtone(context, alarm.sound.toUri())?.getTitle(context)  ?: return null,
-					soundUri = alarm.sound.toUri()
-				)
-			} catch (_: Exception) {
-				null
-			}
-		}else null
 	}
 
 	/** created a default alarm object; either selects a time if [alarm] is null or else just puts the alarm in the alarmObject and will not increment the date that's not it's responsiblity*/
@@ -284,9 +271,6 @@ class AlarmPickerViewModel @AssistedInject constructor(
 			dataStore.updateData { currentVal ->  currentVal.copy {  allPermissionsGranted = liveCheck }}
 		}
 	}
-
-
-
 
 	fun dismissPermissionDialog() {
 		_uiState.update { it.copy(showPermissionDialog = false) }

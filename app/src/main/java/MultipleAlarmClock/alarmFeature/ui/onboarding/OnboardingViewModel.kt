@@ -1,5 +1,6 @@
 package MultipleAlarmClock.alarmFeature.ui.onboarding
 
+import MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import MultipleAlarmClock.alarmFeature.ui.onboarding.data.DisplaySate
 import MultipleAlarmClock.alarmFeature.ui.onboarding.data.OnboardingUiState
 import android.content.Context
@@ -12,18 +13,29 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 
 @HiltViewModel class OnboardingViewModel @Inject constructor(
 	val analytics: Analytics,
+	alarmRepository: AlarmRepository,
 	@ApplicationContext val context: Context
 ) : ViewModel() {
 
 	private val _displayState = MutableStateFlow(OnboardingUiState())
-	val displayState = _displayState.asStateFlow()
+
+	val displayState = combine(_displayState, alarmRepository.getAlarmsStream()){ uiState, alarmList ->
+		uiState.copy(alarmData = alarmList.firstOrNull(),)
+	}.stateIn(
+		scope = viewModelScope,
+		started = SharingStarted.WhileSubscribed(5_000),
+		initialValue = OnboardingUiState()
+	)
 
 	private val _missingSteps = MutableStateFlow<List<PermissionStep>>(emptyList())
 	val missingSteps = _missingSteps.asStateFlow()

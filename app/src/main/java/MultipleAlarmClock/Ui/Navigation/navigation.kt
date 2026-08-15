@@ -36,9 +36,10 @@ import kotlinx.coroutines.launch
 	// 1.) if it's the first launch then I want to go to the app onboarding;
 	// 2.) if the deppLink intent is there then I want to ignore isFirstLaunch and go straight to that screen
 	// -----------------------------------------------------------------------------------------------------------
-//	val isFirstLaunch by navViewModel.isFirstLaunch.collectAsStateWithLifecycle()
-//	if (isFirstLaunch == null) return
-	val isFirstLaunch = false
+	val isFirstLaunch by navViewModel.isFirstLaunch.collectAsStateWithLifecycle()
+	if (isFirstLaunch == null) return
+//	val isFirstLaunch = false
+	// debug
 	val startKey = remember(deepLinkScreen, isFirstLaunch) {
 		deepLinkScreen ?: if (isFirstLaunch == true) Screen.OnboardingScreen else Screen.AlarmContainer
 	}
