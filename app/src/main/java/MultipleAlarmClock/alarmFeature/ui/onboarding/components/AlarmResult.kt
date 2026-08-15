@@ -286,7 +286,7 @@ fun AlarmResultOpenAi(
 					)
 				)
 			) {
-				ScheduleCard(
+				AlarmCard(
 					startTime = alarmData.startTime,
 					endTime = alarmData.endTime,
 					frequencyInMin = alarmData.frequencyInMin
@@ -395,7 +395,7 @@ fun AlarmResultOpenAi(
 	}
 }
 @Composable
-private fun ScheduleCard(
+private fun AlarmCard(
 	startTime: Long,
 	endTime: Long,
 	frequencyInMin: Long

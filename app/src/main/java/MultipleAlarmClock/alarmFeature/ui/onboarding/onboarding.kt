@@ -1,7 +1,6 @@
 package MultipleAlarmClock.alarmFeature.ui.onboarding
 
 import MultipleAlarmClock.alarmFeature.ui.onboarding.components.AlarmResultClaude
-import MultipleAlarmClock.alarmFeature.ui.onboarding.components.GreetingScreen
 import MultipleAlarmClock.alarmFeature.ui.onboarding.components.PermissionScreen
 import MultipleAlarmClock.alarmFeature.ui.onboarding.components.ProblemScreen
 import MultipleAlarmClock.alarmFeature.ui.onboarding.data.DisplaySate
@@ -68,7 +67,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 						) togetherWith slideOutOfContainer(
 									towards = AnimatedContentTransitionScope.SlideDirection.Right,
 									animationSpec = tween(150, easing = FastOutSlowInEasing)
-								)
+						)
 					}
 				},
 				label = "alarm screen navigation"
