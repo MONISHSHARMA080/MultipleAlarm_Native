@@ -1,6 +1,7 @@
 package MultipleAlarmClock.alarmFeature.ui.onboarding
 
 import MultipleAlarmClock.alarmFeature.ui.onboarding.components.AlarmResultClaude
+import MultipleAlarmClock.alarmFeature.ui.onboarding.components.GreetingScreen
 import MultipleAlarmClock.alarmFeature.ui.onboarding.components.PermissionScreen
 import MultipleAlarmClock.alarmFeature.ui.onboarding.components.ProblemScreen
 import MultipleAlarmClock.alarmFeature.ui.onboarding.data.DisplaySate
@@ -31,9 +32,9 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 	var showAlarmSoundList by remember { mutableStateOf(false) }
 
 	when(uiState.displaySate){
-		DisplaySate.Greeting -> AlarmResultClaude(uiState.alarmData, onNextClick = {viewModel.onNextClicked()  } )
+//		DisplaySate.Greeting -> AlarmResultClaude(uiState.alarmData, onNextClick = {viewModel.onNextClicked()  } )
 //		DisplaySate.Greeting -> AlarmResultOpenAi (uiState.alarmData, onNextClick = {viewModel.onPreviousClicked()})
-//		DisplaySate.Greeting -> GreetingScreen(onClickNext = {viewModel.onNextClicked()} )
+		DisplaySate.Greeting -> GreetingScreen(onClickNext = {viewModel.onNextClicked()} )
 		DisplaySate.Problem -> ProblemScreen { viewModel.onNextClicked() }
 		DisplaySate.Permission -> {
 			PermissionScreen(
