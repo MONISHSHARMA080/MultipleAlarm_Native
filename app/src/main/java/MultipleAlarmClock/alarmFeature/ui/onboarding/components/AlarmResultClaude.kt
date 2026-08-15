@@ -11,6 +11,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
@@ -41,6 +42,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.MaterialTheme.typography
@@ -62,15 +64,18 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlin.time.Duration.Companion.milliseconds
 
 
 private const val MAX_VISIBLE_TIMELINE_ROWS = 6
-private const val TIMELINE_ROW_STAGGER_MS = 90L
+private val TIMELINE_ROW_STAGGER_MS = 90.milliseconds
 
 @Composable
 fun AlarmResultClaude(
@@ -102,8 +107,6 @@ private fun AlarmResultContent(
 	val timeFormatter = remember { DateTimeFormatter.ofPattern("h:mm a") }
 
 	val notificationTimes = remember(alarmData) { computeNotificationTimes(alarmData) }
-	val startLabel = remember(alarmData) { formatEpochMillis(alarmData.startTime, timeFormatter, zoneId) }
-	val endLabel = remember(alarmData) { formatEpochMillis(alarmData.endTime, timeFormatter, zoneId) }
 
 	val collapsedRowCount = minOf(notificationTimes.size, MAX_VISIBLE_TIMELINE_ROWS)
 	val hiddenCount = notificationTimes.size - collapsedRowCount
@@ -119,11 +122,11 @@ private fun AlarmResultContent(
 	LaunchedEffect(alarmData) {
 		checkVisible = true
 		haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-		delay(250)
+		delay(250.milliseconds)
 		headerVisible = true
-		delay(150)
+		delay(150.milliseconds)
 		cardVisible = true
-		delay(200)
+		delay(200.milliseconds)
 		repeat(collapsedRowCount) { index ->
 			visibleRows = index + 1
 			delay(TIMELINE_ROW_STAGGER_MS)
@@ -161,34 +164,91 @@ private fun AlarmResultContent(
 			}
 		}
 	) { padding ->
+
 		Column(
 			modifier = Modifier
 				.fillMaxSize()
 				.padding(padding)
-				.padding(horizontal = 24.dp)
 				.verticalScroll(rememberScrollState())
+				.padding(horizontal = 24.dp),
+			horizontalAlignment = Alignment.CenterHorizontally
 		) {
-			Spacer(modifier = Modifier.height(24.dp))
 
-			AlarmResultHeader(
-				checkVisible = checkVisible,
-				headerVisible = headerVisible,
-			)
+			Spacer(modifier = Modifier.height(32.dp))
+
+			/*
+			 * SUCCESS ICON
+			 */
+			AnimatedVisibility(
+				visible = headerVisible,
+				enter = scaleIn(
+					initialScale = 0.75f,
+					animationSpec = spring(
+						dampingRatio = Spring.DampingRatioMediumBouncy,
+						stiffness = Spring.StiffnessMedium
+					)
+				) + fadeIn(
+					animationSpec = tween(250)
+				)
+			) {
+				SuccessIcon()
+			}
 
 			Spacer(modifier = Modifier.height(20.dp))
 
-			AlarmSummaryCard(
-				visible = cardVisible,
-				startLabel = startLabel,
-				endLabel = endLabel,
-				frequencyInMin = alarmData.frequencyInMin,
-				notificationCount = notificationTimes.size,
-				message = alarmData.message
-			)
+			/*
+			 * TITLE
+			 */
+			AnimatedVisibility(
+				visible = headerVisible,
+				enter = fadeIn(
+					animationSpec = tween(
+						durationMillis = 350,
+						delayMillis = 100
+					)
+				) + slideInVertically(
+					initialOffsetY = { 12 },
+					animationSpec = tween(350)
+				)
+			) {
+				Column(
+					horizontalAlignment = Alignment.CenterHorizontally
+				) {
+					Text(
+						text = "You're all set!",
+						style = typography.headlineLarge,
+						fontWeight = FontWeight.SemiBold,
+						color = colorScheme.onBackground,
+						textAlign = TextAlign.Center
+					)
+
+					Spacer(modifier = Modifier.height(8.dp))
+
+					Text(
+						text = "Your alarm scheduled successfully",
+						style = typography.bodyMedium,
+						color = colorScheme.onBackground.copy(alpha = 0.72f),
+						textAlign = TextAlign.Center
+					)
+				}
+			}
+
+			Spacer(modifier = Modifier.height(28.dp))
+
+			ScheduleCard(alarmData.startTime, alarmData.endTime, alarmData.frequencyInMin)
 
 			Spacer(modifier = Modifier.height(24.dp))
 
 			Column {
+				Text(
+					text = "Notification would be sent on",
+					style = typography.titleSmall,
+					fontWeight = FontWeight.Normal,
+					color = colorScheme.onSurface.copy(alpha = 0.72f)
+				)
+
+				Spacer(modifier = Modifier.height(8.dp))
+
 				notificationTimes.take(collapsedRowCount).forEachIndexed { index, time ->
 					TimelineRow(
 						time = time,
@@ -210,7 +270,7 @@ private fun AlarmResultContent(
 					AnimatedVisibility(
 						visible = expanded,
 						enter = expandVertically(animationSpec = tween(250, easing = FastOutSlowInEasing)) + fadeIn(),
-						exit = shrinkVertically(animationSpec = tween(200, easing = FastOutSlowInEasing)) + fadeOut()
+						exit = shrinkVertically(animationSpec = tween(250, easing = FastOutSlowInEasing)) + fadeOut()
 					) {
 						Column {
 							val expandedTimes = notificationTimes.drop(collapsedRowCount)
@@ -322,67 +382,59 @@ private fun AlarmResultHeader(
 }
 
 @Composable
-private fun AlarmSummaryCard(
-	visible: Boolean,
-	startLabel: String,
-	endLabel: String,
-	frequencyInMin: Long,
-	notificationCount: Int,
-	message: String
+private fun ScheduleCard(
+	startTime: Long,
+	endTime: Long,
+	frequencyInMin: Long
 ) {
-	AnimatedVisibility(
-		visible = visible,
-		enter = fadeIn(tween(400)) + slideInVertically(
-			animationSpec = tween(400, easing = FastOutSlowInEasing),
-			initialOffsetY = { it / 4 }
-		)
+	val colorScheme = colorScheme
+	val typography = typography
+
+	Surface(
+		modifier = Modifier.fillMaxWidth(),
+		shape = shapes.extraLarge,
+		color = colorScheme.primaryContainer
 	) {
-		Surface(
-			modifier = Modifier.fillMaxWidth(),
-			shape = shapes.extraLarge,
-			color = colorScheme.primaryContainer
+		Column(
+			modifier = Modifier.padding(20.dp)
 		) {
+
 			Row(
-				modifier = Modifier
-					.fillMaxWidth()
-					.padding(horizontal = 20.dp, vertical = 16.dp),
+				modifier = Modifier.fillMaxWidth(),
 				verticalAlignment = Alignment.CenterVertically
 			) {
 				Surface(
-					modifier = Modifier.size(44.dp),
-					shape = shapes.large,
+					modifier = Modifier.size(48.dp),
+					shape = MaterialTheme.shapes.large,
 					color = colorScheme.primary.copy(alpha = 0.12f)
 				) {
-					Box(contentAlignment = Alignment.Center) {
+					Box(
+						contentAlignment = Alignment.Center
+					) {
 						Icon(
 							imageVector = Icons.Outlined.Alarm,
 							contentDescription = null,
 							tint = colorScheme.onPrimaryContainer,
-							modifier = Modifier.size(22.dp)
+							modifier = Modifier.size(25.dp)
 						)
 					}
 				}
 
 				Spacer(modifier = Modifier.width(14.dp))
 
-				Column(modifier = Modifier.weight(1f)) {
-					if (message.isNotBlank()) {
-						Text(
-							text = message,
-							style = typography.labelLarge,
-							color = colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-						)
-						Spacer(modifier = Modifier.height(2.dp))
-					}
+				Column {
 					Text(
-						text = "$startLabel - $endLabel",
-						style = typography.titleMedium,
+						text = "${startTime.formatAlarmTime()} → ${endTime.formatAlarmTime()}",
+						style = typography.titleLarge,
+						fontWeight = FontWeight.SemiBold,
 						color = colorScheme.onPrimaryContainer
 					)
-					Spacer(modifier = Modifier.height(2.dp))
+
+					Spacer(modifier = Modifier.height(3.dp))
+
 					Text(
-						text = "Every $frequencyInMin min - $notificationCount notifications",
-						style = typography.bodySmall,
+						text = "Every $frequencyInMin minutes",
+						style = typography.bodyMedium,
 						color = colorScheme.onPrimaryContainer.copy(alpha = 0.72f)
 					)
 				}
@@ -411,7 +463,7 @@ private fun TimelineRow(
 	val lineScale = remember { Animatable(0f) }
 	LaunchedEffect(visible) {
 		if (visible && !isLast) {
-			delay(120)
+			delay(120.milliseconds)
 			lineScale.animateTo(1f, animationSpec = tween(250, easing = FastOutSlowInEasing))
 		}
 	}
@@ -456,12 +508,7 @@ private fun TimelineRow(
 			Text(
 				text = formatEpochMillis(time, formatter, zoneId),
 				style = typography.titleMedium,
-				color = colorScheme.onBackground
-			)
-			Text(
-				text = "Notification",
-				style = typography.bodySmall,
-				color = colorScheme.onBackground.copy(alpha = 0.6f)
+				color = colorScheme.onBackground.copy(alpha = 0.82f)
 			)
 		}
 	}
@@ -538,4 +585,34 @@ private fun computeNotificationTimes(alarmData: AlarmData): List<Long> {
 
 private fun formatEpochMillis(millis: Long, formatter: DateTimeFormatter, zoneId: ZoneId): String {
 	return Instant.ofEpochMilli(millis).atZone(zoneId).format(formatter).lowercase()
+}
+
+@Composable private fun SuccessIcon() {
+	val colorScheme = colorScheme
+
+	Surface(
+		modifier = Modifier.size(72.dp),
+		shape = shapes.extraLarge,
+		color = colorScheme.primaryContainer
+	) {
+		Box(
+			contentAlignment = Alignment.Center
+		) {
+			Icon(
+				imageVector = Icons.Default.Check,
+				contentDescription = null,
+				tint = colorScheme.onPrimaryContainer,
+				modifier = Modifier.size(38.dp)
+			)
+		}
+	}
+}
+
+private fun Long.formatAlarmTime(): String {
+	return Instant
+		.ofEpochMilli(this)
+		.atZone(ZoneId.systemDefault())
+		.format(
+			DateTimeFormatter.ofPattern("h:mm a")
+		)
 }

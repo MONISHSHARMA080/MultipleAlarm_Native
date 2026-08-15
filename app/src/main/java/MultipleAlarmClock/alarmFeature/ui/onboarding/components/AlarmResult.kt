@@ -27,7 +27,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Alarm
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ColorScheme
@@ -259,7 +258,7 @@ fun AlarmResultOpenAi(
 						textAlign = TextAlign.Center
 					)
 
-					Spacer(modifier = Modifier.height(2.dp))
+					Spacer(modifier = Modifier.height(8.dp))
 
 					Text(
 						text = "Your alarm is scheduled",
@@ -371,38 +370,11 @@ fun AlarmResultOpenAi(
 
 			Spacer(modifier = Modifier.height(28.dp))
 
-			/*
-			 * NOTIFICATION PREVIEW
-			 */
-//			AnimatedVisibility(
-//				visible = showNotification,
-//				enter = fadeIn(
-//					animationSpec = tween(300)
-//				) + slideInVertically(
-//					initialOffsetY = { -20 },
-//					animationSpec = spring(
-//						dampingRatio = Spring.DampingRatioNoBouncy,
-//						stiffness = Spring.StiffnessMedium
-//					)
-//				) + scaleIn(
-//					initialScale = 0.97f,
-//					animationSpec = tween(300)
-//				)
-//			) {
-//				NotificationPreview(
-//					message = alarmData.message,
-//					time = alarmData.startTime,
-//					colorScheme = colorScheme,
-//					typography = typography
-//				)
-//			}
-
 			Spacer(modifier = Modifier.height(24.dp))
 		}
 	}
 }
-@Composable
-private fun SuccessIcon() {
+@Composable private fun SuccessIcon() {
 	val colorScheme = MaterialTheme.colorScheme
 
 	Surface(
@@ -532,85 +504,7 @@ private fun AlarmTimeRow(
 		)
 	}
 }
-@Composable
-private fun NotificationPreview(
-	message: String,
-	time: Long,
-	colorScheme: ColorScheme,
-	typography: Typography
-) {
-	Column(
-		modifier = Modifier.fillMaxWidth()
-	) {
 
-		Text(
-			text = "Your notification",
-			style = typography.titleMedium,
-			fontWeight = FontWeight.SemiBold,
-			color = colorScheme.onBackground
-		)
-
-		Spacer(modifier = Modifier.height(12.dp))
-
-		Surface(
-			modifier = Modifier.fillMaxWidth(),
-			shape = MaterialTheme.shapes.large,
-			color = colorScheme.surfaceContainerHigh,
-			tonalElevation = 2.dp
-		) {
-			Row(
-				modifier = Modifier.padding(16.dp),
-				verticalAlignment = Alignment.Top
-			) {
-
-				Surface(
-					modifier = Modifier.size(42.dp),
-					shape = MaterialTheme.shapes.medium,
-					color = colorScheme.primaryContainer
-				) {
-					Box(
-						contentAlignment = Alignment.Center
-					) {
-						Icon(
-							imageVector = Icons.Outlined.Notifications,
-							contentDescription = null,
-							tint = colorScheme.onPrimaryContainer,
-							modifier = Modifier.size(22.dp)
-						)
-					}
-				}
-
-				Spacer(modifier = Modifier.width(12.dp))
-
-				Column(
-					modifier = Modifier.weight(1f)
-				) {
-					Text(
-						text = "Multiple Alarm",
-						style = typography.labelLarge,
-						color = colorScheme.onSurfaceVariant
-					)
-
-					Spacer(modifier = Modifier.height(3.dp))
-
-					Text(
-						text = message.ifBlank { "Your alarm" },
-						style = typography.titleMedium,
-						color = colorScheme.onSurface
-					)
-
-					Spacer(modifier = Modifier.height(3.dp))
-
-					Text(
-						text = time.formatAlarmTime(),
-						style = typography.bodySmall,
-						color = colorScheme.onSurfaceVariant
-					)
-				}
-			}
-		}
-	}
-}
 private fun Long.toLocalTime(): LocalTime {
 	return Instant
 		.ofEpochMilli(this)
