@@ -76,12 +76,6 @@ import kotlinx.coroutines.launch
 	val alarmContainerViewModel :AlarmContainerViewModel = hiltViewModel()
 	val snackBarHostState = remember { SnackbarHostState() }
 
-
-//	val clipBoard =LocalClipboard.current
-//	val msgCopied = stringResource(R.string.msg_copied_clipboard)
-//	val msgNotPresent = stringResource(R.string.msg_not_present)
-//	val clipLabel = stringResource(R.string.clip_data_label)
-
 	val alarmList: List<AlarmData>? by alarmContainerViewModel.alarms.collectAsStateWithLifecycle()
 	var selectedAlarmId by remember { mutableStateOf<Int?>(null) }
 	ReportDrawnWhen { alarmList != null }
