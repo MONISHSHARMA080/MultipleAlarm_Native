@@ -320,7 +320,7 @@ private fun ScheduleCard(
 	Surface(
 		modifier = Modifier.fillMaxWidth(),
 		shape = shapes.extraLarge,
-		color = colorScheme.primaryContainer
+		color = colorScheme.surfaceContainer
 	) {
 		Column(
 			modifier = Modifier.padding(20.dp)
@@ -333,7 +333,7 @@ private fun ScheduleCard(
 				Surface(
 					modifier = Modifier.size(48.dp),
 					shape = shapes.large,
-					color = colorScheme.primary.copy(alpha = 0.12f)
+					color = colorScheme.primaryContainer
 				) {
 					Box(
 						contentAlignment = Alignment.Center
@@ -352,17 +352,15 @@ private fun ScheduleCard(
 				Column {
 					Text(
 						text = "${startTime.formatAlarmTime()} → ${endTime.formatAlarmTime()}",
-						style = typography.titleLarge,
-						fontWeight = FontWeight.SemiBold,
-						color = colorScheme.onPrimaryContainer
+						style = typography.titleMedium,
+						fontWeight = FontWeight.Normal,
+						color = colorScheme.onSurface
 					)
-
-					Spacer(modifier = Modifier.height(3.dp))
-
+					Spacer(modifier = Modifier.height(2.dp))
 					Text(
 						text = "Every $frequencyInMin minutes",
-						style = typography.bodyMedium,
-						color = colorScheme.onPrimaryContainer.copy(alpha = 0.72f)
+						style = typography.bodySmall,
+						color = colorScheme.onSurface.copy(alpha = 0.62f)
 					)
 				}
 			}
