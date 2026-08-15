@@ -17,7 +17,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -42,7 +41,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.MaterialTheme.typography
@@ -51,6 +49,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -67,7 +66,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.coolApps.MultipleAlarmClock.logD
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -82,6 +84,7 @@ fun AlarmResultClaude(
 	alarmData: AlarmData?,
 	onNextClick: () -> Unit
 ) {
+	logD("alarmData is $alarmData")
 	if (alarmData == null ) {
 		Box(
 			modifier = Modifier.fillMaxSize(),
@@ -95,7 +98,6 @@ fun AlarmResultClaude(
 			onNextClick = onNextClick
 		)
 	}
-
 }
 
 @Composable
@@ -104,12 +106,16 @@ private fun AlarmResultContent(
 	onNextClick: () -> Unit
 ) {
 	val zoneId = remember { ZoneId.systemDefault() }
-	val timeFormatter = remember { DateTimeFormatter.ofPattern("h:mm a") }
+	val timeFormatter =  DateTimeFormatter.ofPattern("h:mm a")
 
-	val notificationTimes = remember(alarmData) { computeNotificationTimes(alarmData) }
+	var notificationTimes by remember {mutableStateOf<List<Long>>(emptyList())}
 
-	val collapsedRowCount = minOf(notificationTimes.size, MAX_VISIBLE_TIMELINE_ROWS)
-	val hiddenCount = notificationTimes.size - collapsedRowCount
+	val collapsedRowCount by remember {
+		derivedStateOf { minOf(notificationTimes.size, MAX_VISIBLE_TIMELINE_ROWS) }
+	}
+	val hiddenCount by remember {
+		derivedStateOf { notificationTimes.size - collapsedRowCount }
+	}
 
 	var expanded by rememberSaveable { mutableStateOf(false) }
 	var checkVisible by remember { mutableStateOf(false) }
@@ -120,6 +126,12 @@ private fun AlarmResultContent(
 	val haptic = LocalHapticFeedback.current
 
 	LaunchedEffect(alarmData) {
+		// 1. Move computation to background thread
+		notificationTimes = withContext(Dispatchers.Default) {
+			computeNotificationTimes(alarmData)
+		}
+
+		// 2. Run sequential entrance animations after state updates
 		checkVisible = true
 		haptic.performHapticFeedback(HapticFeedbackType.LongPress)
 		delay(250.milliseconds)
@@ -127,13 +139,15 @@ private fun AlarmResultContent(
 		delay(150.milliseconds)
 		cardVisible = true
 		delay(200.milliseconds)
+
+		// 3. Stagger row entrances with the updated collapsedRowCount
 		repeat(collapsedRowCount) { index ->
 			visibleRows = index + 1
 			delay(TIMELINE_ROW_STAGGER_MS)
 		}
 		haptic.performHapticFeedback(HapticFeedbackType.LongPress)
 	}
-
+	
 	Scaffold(
 		bottomBar = {
 			Box(
@@ -157,7 +171,7 @@ private fun AlarmResultContent(
 					)
 				) {
 					Text(
-						text = "Done",
+						text = "Finish",
 						style = typography.titleMedium
 					)
 				}
@@ -222,7 +236,7 @@ private fun AlarmResultContent(
 						textAlign = TextAlign.Center
 					)
 
-					Spacer(modifier = Modifier.height(8.dp))
+					Spacer(modifier = Modifier.height(4.dp))
 
 					Text(
 						text = "Your alarm scheduled successfully",
@@ -260,13 +274,6 @@ private fun AlarmResultContent(
 				}
 
 				if (hiddenCount > 0) {
-					ExpandableMoreRow(
-						hiddenCount = hiddenCount,
-						expanded = expanded,
-						visible = visibleRows >= collapsedRowCount,
-						onToggle = { expanded = !expanded }
-					)
-
 					AnimatedVisibility(
 						visible = expanded,
 						enter = expandVertically(animationSpec = tween(250, easing = FastOutSlowInEasing)) + fadeIn(),
@@ -280,11 +287,18 @@ private fun AlarmResultContent(
 									formatter = timeFormatter,
 									zoneId = zoneId,
 									visible = true,
-									isLast = index == expandedTimes.size - 1
+									isLast = false
 								)
 							}
 						}
 					}
+					ExpandableMoreRow(
+						hiddenCount = hiddenCount,
+						expanded = expanded,
+						visible = visibleRows >= collapsedRowCount,
+						onToggle = { expanded = !expanded }
+					)
+
 				}
 			}
 
@@ -293,93 +307,6 @@ private fun AlarmResultContent(
 	}
 }
 
-@Composable
-private fun AlarmResultHeader(
-	checkVisible: Boolean,
-	headerVisible: Boolean,
-) {
-	Row(
-		verticalAlignment = Alignment.CenterVertically,
-		horizontalArrangement = Arrangement.spacedBy(10.dp)
-	) {
-		Box(
-			modifier = Modifier.size(36.dp),
-			contentAlignment = Alignment.Center
-		) {
-			val ringScale by animateFloatAsState(
-				targetValue = if (checkVisible) 2.4f else 0.8f,
-				animationSpec = tween(700, easing = FastOutSlowInEasing),
-				label = "ring_scale"
-			)
-			val ringAlpha by animateFloatAsState(
-				targetValue = if (checkVisible) 0f else 0.5f,
-				animationSpec = tween(700, easing = FastOutSlowInEasing),
-				label = "ring_alpha"
-			)
-
-			Box(
-				modifier = Modifier
-					.matchParentSize()
-					.graphicsLayer {
-						scaleX = ringScale
-						scaleY = ringScale
-						alpha = ringAlpha
-					}
-					.background(colorScheme.primary.copy(alpha = 0.16f), CircleShape)
-			)
-
-			val checkScale by animateFloatAsState(
-				targetValue = if (checkVisible) 1f else 0.4f,
-				animationSpec = spring(
-					dampingRatio = Spring.DampingRatioMediumBouncy,
-					stiffness = Spring.StiffnessMedium
-				),
-				label = "check_scale"
-			)
-			val checkAlpha by animateFloatAsState(
-				targetValue = if (checkVisible) 1f else 0f,
-				animationSpec = tween(250),
-			)
-
-			Surface(
-				modifier = Modifier
-					.matchParentSize()
-					.graphicsLayer {
-						scaleX = checkScale
-						scaleY = checkScale
-						alpha = checkAlpha
-					},
-				shape = CircleShape,
-				color = colorScheme.primaryContainer
-			) {
-				Box(contentAlignment = Alignment.Center) {
-					Icon(
-						imageVector = Icons.Default.Check,
-						contentDescription = null,
-						tint = colorScheme.onPrimaryContainer,
-						modifier = Modifier.size(18.dp)
-					)
-				}
-			}
-		}
-
-		AnimatedVisibility(
-			visible = headerVisible,
-			enter = fadeIn(tween(400)) + slideInVertically(
-				animationSpec = tween(400, easing = FastOutSlowInEasing),
-				initialOffsetY = { it / 3 }
-			)
-		) {
-			Column {
-				Text(
-					text = "You're all set",
-					style = typography.titleMedium,
-					color = colorScheme.onBackground
-				)
-			}
-		}
-	}
-}
 
 @Composable
 private fun ScheduleCard(
@@ -405,7 +332,7 @@ private fun ScheduleCard(
 			) {
 				Surface(
 					modifier = Modifier.size(48.dp),
-					shape = MaterialTheme.shapes.large,
+					shape = shapes.large,
 					color = colorScheme.primary.copy(alpha = 0.12f)
 				) {
 					Box(
@@ -532,7 +459,7 @@ private fun ExpandableMoreRow(
 
 	val chevronRotation by animateFloatAsState(
 		targetValue = if (expanded) 180f else 0f,
-		animationSpec = tween(200),
+		animationSpec = tween(180),
 		label = "chevron_rotation"
 	)
 
@@ -553,12 +480,11 @@ private fun ExpandableMoreRow(
 		)
 
 		Text(
-			text = if (expanded) "Show less" else "and $hiddenCount more",
+			text = if (expanded) "Show less" else "Show $hiddenCount more",
 			style = typography.bodySmall,
 			color = colorScheme.onBackground.copy(alpha = 0.7f),
-			modifier = Modifier.weight(1f)
 		)
-
+		Spacer(Modifier.size(8.dp))
 		Icon(
 			imageVector = Icons.Default.KeyboardArrowDown,
 			contentDescription = null,
