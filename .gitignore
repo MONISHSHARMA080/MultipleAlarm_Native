@@ -7,7 +7,7 @@
 /.idea/workspace.xml
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
-.idea
+.idea/*
 .DS_Store
 /build
 /captures
@@ -18,7 +18,6 @@ local.properties
 .apk
 app/src/main/res/raw/
 /app/src/main/res/raw/
-.idea/*
 *.keystore
 .artifacts/
 .codex/
