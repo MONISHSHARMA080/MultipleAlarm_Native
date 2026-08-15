@@ -29,7 +29,6 @@ class NavigationViewModel @Inject constructor(
 			initialValue = null
 		)
 
-	val scope = viewModelScope
 
 	fun captureEvent(eventName:String, properties: Map<String, Any>): Unit {
 		viewModelScope.launch {
@@ -42,9 +41,4 @@ class NavigationViewModel @Inject constructor(
 		}
 	}
 
-//	suspend fun onOnboardingComplete() {
-//		viewModelScope.launch {
-//			application.dataStore.updateData { it.copy(isFirstLaunch = false) }
-//		}
-//	}
 }

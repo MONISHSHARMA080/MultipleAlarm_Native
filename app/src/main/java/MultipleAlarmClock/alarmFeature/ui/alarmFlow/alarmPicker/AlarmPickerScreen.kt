@@ -73,10 +73,11 @@ import java.util.Calendar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmPickerScreen(
-        alarmSetGoBack: () -> Unit,
-        onNavigateToSoundList: () -> Unit,
-		forNewAlarm: Boolean,
-        viewModel: AlarmPickerViewModel
+	alarmSetProceed: () -> Unit,
+	settingAlarmCancelled: ()->Unit,
+	onNavigateToSoundList: () -> Unit,
+	forNewAlarm: Boolean,
+	viewModel: AlarmPickerViewModel
 ) {
 
   val uiState by viewModel.uiState.collectAsState()
@@ -91,7 +92,7 @@ fun AlarmPickerScreen(
 
   LaunchedEffect(uiState.alarmOperationCompletedGoBack) {
     if (uiState.alarmOperationCompletedGoBack) {
-      alarmSetGoBack()
+      alarmSetProceed()
     }
   }
 
@@ -135,7 +136,8 @@ fun AlarmPickerScreen(
 
   val currentProgress = if (!forNewAlarm) Progress.FullEditor else uiState.progress
 
-  val startTimePickerState = key(currentProgress) {
+//  val startTimePickerState = key(currentProgress) {
+	val startTimePickerState = key(currentProgress, uiState.alarmObject.startTime.timeInMillis) {
     rememberTimePickerState(
             initialHour = uiState.alarmObject.startTime.get(Calendar.HOUR_OF_DAY),
             initialMinute = uiState.alarmObject.startTime.get(Calendar.MINUTE),
@@ -157,7 +159,6 @@ fun AlarmPickerScreen(
       set(Calendar.MINUTE, endTimePickerState.minute)
     }
   }
-
 
   val isCandidateInvalid = currentProgress != Progress.StartTime &&  candidateEnd.timeInMillis <= uiState.alarmObject.startTime.timeInMillis
 
@@ -186,7 +187,7 @@ fun AlarmPickerScreen(
                       navigationIcon = {
                         IconButton(
                                 onClick = {
-                                  alarmSetGoBack()
+                                  settingAlarmCancelled()
                                 }
                         ) {
                           Icon(
@@ -219,7 +220,7 @@ fun AlarmPickerScreen(
                         isNewAlarm = forNewAlarm,
                         onClick = {
                           when (currentProgress) {
-                            Progress.StartTime -> alarmSetGoBack()
+                            Progress.StartTime -> settingAlarmCancelled()
                             Progress.EndTime -> viewModel.updateProgress(Progress.StartTime)
                             Progress.FullEditor -> {
                               if (forNewAlarm) {
@@ -295,7 +296,8 @@ fun AlarmPickerScreen(
         Progress.StartTime -> {
           TimePickerWithoutDialog(
                   state = startTimePickerState,
-                  modifier = Modifier.padding(horizontal = horizontalPadding)
+                  modifier = Modifier.padding(horizontal = horizontalPadding),
+			  uiState= uiState
           )
         }
 
@@ -303,8 +305,8 @@ fun AlarmPickerScreen(
           TimePickerWithoutDialog(
                   state = endTimePickerState,
                   isCandidateInvalid = isCandidateInvalid,
-                  errorMessage = stringResource(R.string.alarm_error_time_range),
-                  modifier = Modifier.padding(horizontal = horizontalPadding)
+                  modifier = Modifier.padding(horizontal = horizontalPadding),
+			  uiState = uiState
           )
         }
 

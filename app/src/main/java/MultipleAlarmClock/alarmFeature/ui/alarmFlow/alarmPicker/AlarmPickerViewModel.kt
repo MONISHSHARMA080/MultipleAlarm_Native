@@ -1,8 +1,6 @@
 package com.example.MultipleAlarmClock.Ui.alarmPicker
 
 import MultipleAlarmClock.alarmFeature.data.local.AlarmData
-import MultipleAlarmClock.alarmFeature.data.local.toDomain
-import MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
 import MultipleAlarmClock.alarmFeature.domain.model.AlarmObject
 import MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
@@ -19,7 +17,6 @@ import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController.AlarmValueForAlarmSeries
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
-import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.logD
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
@@ -29,42 +26,43 @@ import com.example.MultipleAlarmClock.Data.dataStore.Settings
 import com.example.MultipleAlarmClock.Data.dataStore.copy
 import com.example.MultipleAlarmClock.Ui.Permissions.PermissionUtils
 import com.example.MultipleAlarmClock.Ui.alarmPicker.data.AlarmSound
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Locale
 
-@HiltViewModel class AlarmPickerViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = AlarmPickerViewModel.Factory::class)
+class AlarmPickerViewModel @AssistedInject constructor(
 	val analytics: Analytics,
 	private val alarmManager: AlarmManager,
-	private val alarmRepository: AlarmRepository,
 	private val dataStore: DataStore<Settings>,
 	private val alarmsController: AlarmsController,
-	@ApplicationContext  val context: Context
+	@ApplicationContext val context: Context,
+	@Assisted private val alarmData: AlarmData?
 ) : ViewModel() {
 
-	private val _uiState = MutableStateFlow(AlarmPickerUiState())
+	@AssistedFactory
+	interface Factory {
+		fun create(alarmData: AlarmData?): AlarmPickerViewModel
+	}
 
-	val uiState: StateFlow<AlarmPickerUiState> = _uiState.map { state ->
-		val res = state.alarmObject.ifTimeIntervalPassedThenReturnRollOver()
-		state.copy(
-			validationResult = res.alarmObject.validate(state.initialAlarm),
-			alarmObject = res.alarmObject
-		)
-	}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AlarmPickerUiState())
+	private val _uiState = MutableStateFlow(AlarmPickerUiState(
+		alarmObject =  createDefaultAlarmObject(alarmData),
+		initialAlarm = alarmData,
+		progress = if (alarmData == null) Progress.StartTime else Progress.FullEditor
+	))
+
+	val uiState: StateFlow<AlarmPickerUiState> = _uiState.asStateFlow()
 
 	private  val nonCancellableScope = CoroutineScope(NonCancellable)
 
@@ -131,7 +129,6 @@ import java.util.Locale
 
 		stopPreview()
 		playAlarm.play(soundToPlay.soundUri)
-
 		_previewingSound.value = soundToPlay
 		_previewingRandom.value = sound == null
 	}
@@ -158,38 +155,23 @@ import java.util.Locale
 		)
 	}
 
-	fun setInitialAlarmObject(alarmData: AlarmData?) {
-		val initialAlarmObject = alarmData?.toDomain()?.incrementDateToCurrentDate() ?: createDefaultAlarmObject(alarmData)
-		val initialProgress = if (alarmData == null) Progress.StartTime else Progress.FullEditor
-		_uiState.update {
-			it.copy(
-				alarmObject = initialAlarmObject,
-				initialAlarm = alarmData,
-				progress = initialProgress
-			)
-		}
-		viewModelScope.launch {
-			_selectedAlarmSound.value = getAlarmSoundFromAlarmData(alarmData)
-		}
-	}
-
 	fun updateProgress(newProgress: Progress) {
 		_uiState.update { it.copy(progress = newProgress) }
 	}
 
-	fun updateStartTime(newStartTime: Calendar) {
+	private fun updateAlarmObject(transform: (AlarmObject) -> AlarmObject) {
 		_uiState.update { state ->
-			val updatedAlarm = state.alarmObject.copy(startTime = newStartTime)
-			state.copy(alarmObject = updatedAlarm)
+			val corrected = transform(state.alarmObject).ifTimeIntervalPassedThenReturnRollOver().alarmObject
+			state.copy(
+				alarmObject = corrected,
+				validationResult = corrected.validate(state.initialAlarm)
+			)
 		}
 	}
 
-	fun updateEndTime(newEndTime: Calendar) {
-		_uiState.update { state ->
+	fun updateStartTime(newStartTime: Calendar) = updateAlarmObject { it.copy(startTime = newStartTime) }
 
-			state.copy(alarmObject = state.alarmObject.copy(endTime = newEndTime))
-		}
-	}
+	fun updateEndTime(newEndTime: Calendar) = updateAlarmObject { it.copy(endTime = newEndTime) }
 
 	fun onAlarmSoundSelected(sound: AlarmSound?){
 		_selectedAlarmSound.value = sound
@@ -218,44 +200,67 @@ import java.util.Locale
 		return sounds
 	}
 
-	private fun getAlarmSoundFromAlarmData(alarm: AlarmData?): AlarmSound? {
-		return  if (alarm != null && alarm.sound != null){
-			try {
-				AlarmSound(
-					title = RingtoneManager.getRingtone(context, alarm.sound.toUri())?.getTitle(context)  ?: return null,
-					soundUri = alarm.sound.toUri()
-				)
-			} catch (_: Exception) {
-				null
-			}
-		}else null
-	}
-
+	/** created a default alarm object; either selects a time if [alarm] is null or else just puts the alarm in the alarmObject and will not increment the date that's not it's responsiblity*/
 	private fun createDefaultAlarmObject(alarm: AlarmData?): AlarmObject {
-		val now = Calendar.getInstance()
+		val selectedStartTime: Calendar
+		val selectedEndTime: Calendar
+		val selectedDate:Long
+		logD("alarm is $alarm")
+		when(alarm){
+			null ->{
+				val now = Calendar.getInstance()
+
+				val startTime = (now.clone() as Calendar).apply  {
+					add(Calendar.MINUTE, 1)
+				}
+
+				val endOfDay = (now.clone() as Calendar).apply {
+					set(Calendar.HOUR_OF_DAY, 23)
+					set(Calendar.MINUTE, 59)
+					set(Calendar.SECOND, 0)
+					set(Calendar.MILLISECOND, 0)
+				}
+
+				val durationMin = 45
+				when{
+					startTime.after(endOfDay) -> {
+						selectedStartTime = (now.clone() as Calendar).apply {
+							add(Calendar.DAY_OF_YEAR, 1)
+							set(Calendar.HOUR_OF_DAY, 0)
+							set(Calendar.MINUTE, 0)
+						}
+						selectedEndTime = (selectedStartTime.clone() as Calendar).apply {
+							add(Calendar.MINUTE, durationMin)
+						}
+					}
+					else ->{
+						selectedStartTime = startTime
+						val requestedEnd = (startTime.clone() as Calendar).apply {
+							add(Calendar.MINUTE, durationMin)
+						}
+						// Case 1:
+						// Full duration fits today.
+						// Case 2:
+						// It doesn't fit, so cap at 11:59 PM.
+						selectedEndTime = if (requestedEnd.after(endOfDay)) endOfDay else requestedEnd
+					}
+				}
+				selectedDate = selectedStartTime.timeInMillis
+				logD(" selectedStartTime:${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(selectedStartTime.timeInMillis)}, selectedEndTime:${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(selectedEndTime.timeInMillis)}, endOfDay:${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(endOfDay.timeInMillis)} ")
+
+			}else -> {
+				selectedEndTime = Calendar.getInstance().apply { timeInMillis = alarm.endTime }
+				selectedStartTime = Calendar.getInstance().apply { timeInMillis = alarm.startTime }
+				selectedDate = alarm.startTime
+			}
+		}
 		return AlarmObject(
-			startTime = (now.clone() as Calendar).apply {
-				add(Calendar.MINUTE, 1)
-				if (get(Calendar.DAY_OF_YEAR) != now.get(Calendar.DAY_OF_YEAR)) {
-					set(Calendar.DAY_OF_YEAR, now.get(Calendar.DAY_OF_YEAR))
-					set(Calendar.HOUR_OF_DAY, 23)
-					set(Calendar.MINUTE, 59)
-				}
-				set(Calendar.SECOND, 0)
-			},
-			endTime = (now.clone() as Calendar).apply {
-				add(Calendar.MINUTE, 45)
-				if (get(Calendar.DAY_OF_YEAR) != now.get(Calendar.DAY_OF_YEAR)) {
-					set(Calendar.DAY_OF_YEAR, now.get(Calendar.DAY_OF_YEAR))
-					set(Calendar.HOUR_OF_DAY, 23)
-					set(Calendar.MINUTE, 59)
-				}
-				set(Calendar.SECOND, 0)
-			},
-			date = Calendar.getInstance().timeInMillis,
+			startTime = selectedStartTime,
+			endTime = selectedEndTime,
+			date = selectedDate,
 			message = alarm?.message ?: "",
 			freqGottenAfterCallback = alarm?.frequencyInMin ?: 1,
-			alarmSoundUri = alarm?.sound?.toUri(),
+			alarmSoundUri = alarm?.sound?.toUri()
 		)
 	}
 
@@ -266,9 +271,6 @@ import java.util.Locale
 			dataStore.updateData { currentVal ->  currentVal.copy {  allPermissionsGranted = liveCheck }}
 		}
 	}
-
-
-
 
 	fun dismissPermissionDialog() {
 		_uiState.update { it.copy(showPermissionDialog = false) }
@@ -326,22 +328,6 @@ import java.util.Locale
 		_uiState.update { it.copy(alarmObject = it.alarmObject.copy(message = newMessage)) }
 	}
 
-	fun getFrequencyPreviewText(): String {
-		val state = uiState.value
-		val error = state.validationResult as? ValidationResult.Failure
-		val freqError =(uiState.value.validationResult as? ValidationResult.Failure)?.field == AlarmErrorField.FREQUENCY
-
-		logD("do we have freqError in $freqError and return value is ${error?.message}")
-		return when {
-			freqError -> error?.message ?: ""
-			state.alarmObject.freqGottenAfterCallback > 0 -> {
-				val previewAlarms = getPreviewAlarms(state.alarmObject, 4)
-				context.getString(R.string.alarm_picker_frequency_preview, previewAlarms)
-			}
-			else -> ""
-		}
-	}
-
 	fun captureEvent(name:String, properties: Map<String, Any>){
 		viewModelScope.launch {
 			analytics.captureEvent(name, properties)
@@ -355,29 +341,30 @@ import java.util.Locale
 	}
 
 
-	private fun getPreviewAlarms(alarm: AlarmObject, numberOfAlarmPreviewToReturn:Int = 3): String{
-		val alarmObj = alarm.deepCopy()
-		val stringBuilder= StringBuilder()
-		val timeFormat = SimpleDateFormat("h:mm", Locale.getDefault())
-		var index = 0
+	private fun validateForCurrentStep(
+		progress: Progress,
+		alarm: AlarmObject
+	): ValidationResult {
+		return when (progress) {
+			Progress.StartTime -> {
+				ValidationResult.Success
+			}
+			Progress.EndTime -> {
+				if (alarm.endTime.timeInMillis <= alarm.startTime.timeInMillis) {
+					ValidationResult.Failure(
+						field = AlarmErrorField.Time,
+						message = "End time must be after start time."
+					)
+				} else {
+					ValidationResult.Success
+				}
+			}
 
-		while (!alarmObj.startTime.after(alarmObj.endTime) && index < numberOfAlarmPreviewToReturn) {
-			stringBuilder.append(timeFormat.format(alarmObj.startTime.time))
-			alarmObj.startTime.timeInMillis += alarmObj.getFreqInMillisecond()
-			if (alarmObj.freqGottenAfterCallback <= 0) break
-			index ++
-			if (index < numberOfAlarmPreviewToReturn && !alarmObj.startTime.after(alarmObj.endTime)) {
-				stringBuilder.append(", ")
+			Progress.FullEditor -> {
+				alarm.validate(uiState.value.initialAlarm)
 			}
 		}
-
-		return if(alarmObj.startTime.after(alarmObj.endTime)){
-			stringBuilder.toString().trim()
-		}else{
-			stringBuilder.append(".....${timeFormat.format(alarmObj.endTime.time)}").toString().trim()
-		}
 	}
-
 
 
 	/**[setAlarm] - here [AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/

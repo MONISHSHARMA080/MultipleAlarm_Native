@@ -1,8 +1,6 @@
-package MultipleAlarmClock.alarmFeature.ui.onboarding
+package MultipleAlarmClock.alarmFeature.ui.onboarding.components
 
-import MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
-import MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
-import android.view.HapticFeedbackConstants
+import android.R.attr.onClick
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -18,13 +16,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.shapes
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,11 +39,6 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.CancelAndDeleteButton
-import com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker.PrimaryActionButton
-import com.example.MultipleAlarmClock.Ui.alarmPicker.Progress
-import java.util.Calendar
 
 
 @Composable fun GreetingScreen(onClickNext:()->Unit) {
@@ -96,8 +94,23 @@ import java.util.Calendar
 					verticalAlignment = Alignment.CenterVertically
 				) {
 					Button(
-						onClick = onClickNext
-					) { Text("Next", style = MaterialTheme.typography.titleMedium)}
+						onClick = onClickNext,
+						modifier = Modifier
+							.fillMaxWidth()
+							.height(56.dp),
+						shape = shapes.extraLarge,
+						colors = ButtonDefaults.buttonColors(
+							containerColor = colorScheme.primaryContainer,
+							contentColor = colorScheme.onPrimaryContainer
+						)
+					) {
+						Text(
+							text = "Next",
+							style = typography.titleMedium
+						)
+					}
+
+
 				}
 			}
 		}
@@ -125,7 +138,7 @@ import java.util.Calendar
 					modifier = Modifier.graphicsLayer {
 						rotationZ = handRotation
 						// pivot near the wrist so it swings like a real wave
-						transformOrigin = TransformOrigin(0.7f, 0.75f)
+						transformOrigin = TransformOrigin(0.74f, 0.75f)
 					}
 				)
 			}

@@ -29,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,7 +43,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.coolApps.MultipleAlarmClock.R
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -58,6 +61,23 @@ fun AlarmPermissionDialog(
                 rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
         } else null
 
+        var notificationRequested by rememberSaveable { mutableStateOf(false) }
+
+        val notificationPermanentlyDenied = notificationPermState != null &&
+                notificationRequested &&
+                !notificationPermState.status.isGranted &&
+                !notificationPermState.status.shouldShowRationale
+
+        LaunchedEffect(notificationPermanentlyDenied) {
+                if (notificationPermanentlyDenied) {
+                        context.startActivity(
+                                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                        data = Uri.fromParts("package", context.packageName, null)
+                                }
+                        )
+                }
+        }
+
         var actedSteps by remember { mutableStateOf(setOf<PermissionStep>()) }
 
         var allCriticalNowGranted by remember {
@@ -66,9 +86,8 @@ fun AlarmPermissionDialog(
 
         LaunchedEffect(allCriticalNowGranted) {
                 onTrackEvent(
-                        "permission_dialog_shown",
-                        mapOf(
-                                "permission name" to missingSteps.map { it.title },
+					"permission_dialog_shown", mapOf(
+                                "permission name" to missingSteps.map { it.id },
                                 "permission count" to missingSteps.size,
                         )
                 )
@@ -118,7 +137,16 @@ fun AlarmPermissionDialog(
                                                 onAction = {
                                                         when (step) {
                                                                 PermissionStep.PostNotification -> {
-                                                                        notificationPermState?.launchPermissionRequest()
+                                                                        if (notificationPermanentlyDenied) {
+                                                                                context.startActivity(
+                                                                                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                                                                                data = Uri.fromParts("package", context.packageName, null)
+                                                                                        }
+                                                                                )
+                                                                        } else {
+                                                                                notificationPermState?.launchPermissionRequest()
+                                                                                notificationRequested = true
+                                                                        }
                                                                         actedSteps = actedSteps + step
                                                                 }
                                                                 PermissionStep.ExactAlarm -> {
@@ -184,14 +212,14 @@ private fun PermissionStepRow(
         ) {
                 Column(modifier = Modifier.weight(1f)) {
                         Text(
-                                text = step.title,
+                                text = stringResource(step.titleRes),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.SemiBold
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                                text = step.rationale,
+                                text = stringResource(step.rationaleRes),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

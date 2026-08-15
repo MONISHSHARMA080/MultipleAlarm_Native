@@ -23,43 +23,6 @@ data class AlarmObject(
 		return this.freqGottenAfterCallback * 60000
 	}
 
-	fun deepCopy(): AlarmObject {
-		return this.copy(
-			startTime = (this.startTime.clone() as Calendar),
-			endTime = (this.endTime.clone() as Calendar)
-		)
-	}
-
-	fun incrementDateToCurrentDate(): AlarmObject {
-		val now = Calendar.getInstance()
-		val alarmDateCal = Calendar.getInstance().apply { timeInMillis = date }
-
-		val isSameDay = alarmDateCal.get(Calendar.YEAR) == now.get(Calendar.YEAR) &&
-				alarmDateCal.get(Calendar.DAY_OF_YEAR) == now.get(Calendar.DAY_OF_YEAR)
-
-		return if (!isSameDay && alarmDateCal.before(now)) {
-			val todayYear = now.get(Calendar.YEAR)
-			val todayDayOfYear = now.get(Calendar.DAY_OF_YEAR)
-
-			val newStartTime = (startTime.clone() as Calendar).apply {
-				set(Calendar.YEAR, todayYear)
-				set(Calendar.DAY_OF_YEAR, todayDayOfYear)
-			}
-			val newEndTime = (endTime.clone() as Calendar).apply {
-				set(Calendar.YEAR, todayYear)
-				set(Calendar.DAY_OF_YEAR, todayDayOfYear)
-			}
-
-			this.copy(
-				startTime = newStartTime,
-				endTime = newEndTime,
-				date = newStartTime.timeInMillis
-			)
-		} else {
-			this
-		}
-	}
-
 	/**
 	 * Yields startTime first, then each subsequent step up to and including endTime.
 	 */
@@ -101,14 +64,6 @@ data class AlarmObject(
 			return ValidationResult.Failure(AlarmErrorField.DATE, "Date value must be today or in the future.")
 		}
 
-//		val currentTime = Calendar.getInstance()
-//		if (endTime.time.time < currentTime.timeInMillis){
-//			return ValidationResult.Failure(message = "The end time has already passed.", field = AlarmErrorField.AlarmTimePassed)
-
-		// will handle it by incrementing the date
-
-//		}
-
 		// 2. Check for Changes (If in Edit Mode)
 		if (alarmData != null) {
 			val hasChanged = startTime.timeInMillis != alarmData.startTime ||
@@ -138,14 +93,17 @@ data class AlarmObject(
 	 */
 
 	fun ifTimeIntervalPassedThenReturnRollOver(now: Calendar = Calendar.getInstance()): RolloverResult {
+		val durationMillis = endTime.timeInMillis - startTime.timeInMillis
 		val candidateStart = (startTime.clone() as Calendar)
-		val candidateEnd = (endTime.clone() as Calendar)
 		var rolled = false
 
-		if (candidateEnd.before(now)) {
+		if (endTime.before(now)) {
 			candidateStart.add(Calendar.DAY_OF_YEAR, 1)
-			candidateEnd.add(Calendar.DAY_OF_YEAR, 1)
 			rolled = true
+		}
+
+		val candidateEnd = (candidateStart.clone() as Calendar).apply {
+			timeInMillis = candidateStart.timeInMillis + durationMillis
 		}
 
 		return RolloverResult(

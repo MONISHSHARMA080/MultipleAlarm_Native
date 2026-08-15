@@ -49,7 +49,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -206,13 +205,6 @@ class AlarmActivity : ComponentActivity() {
 		}
 	}
 
-	val configuration = LocalWindowInfo.current.containerSize
-
-	// Responsive scaling factors
-	val screenWidth = configuration.width.dp
-//	val timeFontSize = (screenWidth * 0.085f).value.sp // 25% of screen width
-//	val amPmFontSize = (screenWidth * 0.03f).value.sp // 7% of screen width
-//	logD("timeFontSize:$timeFontSize.sp and amPmFontSize:$amPmFontSize.sp")
 
 
     Scaffold(
@@ -230,7 +222,7 @@ class AlarmActivity : ComponentActivity() {
                     onClick = { onFinish() },
                     colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primaryContainer, contentColor = colorScheme.onPrimaryContainer),
                     shape = RoundedCornerShape(45.dp),
-                    modifier = Modifier.height(94.dp).width(327.dp)
+                    modifier = Modifier.height(83.dp).fillMaxWidth(0.92f)
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Cancel,

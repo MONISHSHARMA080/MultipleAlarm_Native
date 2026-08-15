@@ -19,15 +19,19 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
+import com.example.MultipleAlarmClock.Ui.alarmPicker.AlarmPickerUiState
 import com.example.MultipleAlarmClock.Ui.alarmPicker.Progress
+import java.text.SimpleDateFormat
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,8 +40,9 @@ fun TimePickerWithoutDialog(
 	state: TimePickerState,
 	modifier: Modifier = Modifier,
 	isCandidateInvalid: Boolean = false,
-	errorMessage: String? = null,
+	uiState: AlarmPickerUiState,
 ) {
+
 	Column(
 		modifier = modifier
 			.fillMaxSize()
@@ -48,8 +53,13 @@ fun TimePickerWithoutDialog(
 		TimePicker(state = state)
 
 		AnimatedVisibility(visible = isCandidateInvalid) {
+			val locale = LocalLocale.current.platformLocale
+			val startTimeString = remember(uiState.alarmObject.startTime, locale) {
+				SimpleDateFormat("h:mm a", locale).format(uiState.alarmObject.startTime.time)
+			}
+
 			Text(
-				text = errorMessage ?: stringResource(R.string.alarm_error_time_range),
+				text =  stringResource(R.string.alarm_error_time_range, startTimeString ),
 				style = typography.bodyMedium,
 				color = colorScheme.error,
 				modifier = Modifier.padding(top = 16.dp),
