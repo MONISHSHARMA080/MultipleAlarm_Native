@@ -46,6 +46,13 @@ import kotlinx.coroutines.launch
 	val backStack = rememberNavBackStack(startKey)
 	val coroutineScope = rememberCoroutineScope()
 
+	LaunchedEffect(isFirstLaunch) {
+		if (isFirstLaunch == false && deepLinkScreen == null) {
+			backStack.clear()
+			backStack.add(Screen.AlarmContainer)
+		}
+	}
+
 	Scaffold(
 		contentWindowInsets = WindowInsets.safeContent,
 	) { _ ->

@@ -114,6 +114,12 @@ private fun AlarmResultContent(
 		mutableStateOf(false)
 	}
 
+	val visibleTimes = if (expanded) {
+		notificationTimes
+	} else {
+		notificationTimes.take(MAX_VISIBLE_TIMELINE_ROWS)
+	}
+
 	var checkVisible by remember {
 		mutableStateOf(false)
 	}
@@ -130,6 +136,7 @@ private fun AlarmResultContent(
 	}
 
 	val haptic = LocalHapticFeedback.current
+
 
 	LaunchedEffect(alarmData) {
 		// 1. Move computation to background thread
@@ -293,19 +300,14 @@ private fun AlarmResultContent(
 				horizontalAlignment = Alignment.Start
 			) {
 				Text(
-					text = "Alarms would be sent on",
+					text = "  Alarms would ring on",
 					style = typography.titleSmall,
 					fontWeight = FontWeight.Normal,
-					color = colorScheme.onSurface.copy(alpha = 0.72f)
+					color = colorScheme.onSurface.copy(alpha = 0.67f)
 				)
 
-				Spacer(modifier = Modifier.height(8.dp))
+				Spacer(modifier = Modifier.height(12.dp))
 
-				val visibleTimes = if (expanded) {
-					notificationTimes
-				} else {
-					notificationTimes.take(MAX_VISIBLE_TIMELINE_ROWS)
-				}
 
 				visibleTimes.forEachIndexed { index, time ->
 					key(time) {
@@ -557,8 +559,7 @@ private fun ExpandableMoreRow(
 private fun computeNotificationTimes(
 	alarmData: AlarmData
 ): List<Long> {
-	val intervalMillis =
-		alarmData.frequencyInMin.coerceAtLeast(1) * 60_000L
+	val intervalMillis = alarmData.frequencyInMin.coerceAtLeast(1) * 60_000L
 
 	if (alarmData.endTime <= alarmData.startTime) {
 		return listOf(alarmData.startTime)

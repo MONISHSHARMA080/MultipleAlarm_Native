@@ -4,14 +4,19 @@ import MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import MultipleAlarmClock.alarmFeature.ui.onboarding.data.DisplaySate
 import MultipleAlarmClock.alarmFeature.ui.onboarding.data.OnboardingUiState
 import android.content.Context
+import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
+import com.example.MultipleAlarmClock.Data.dataStore.Settings
+import com.example.MultipleAlarmClock.Data.dataStore.copy
 import com.example.MultipleAlarmClock.Ui.Permissions.PermissionStep
 import com.example.MultipleAlarmClock.Ui.Permissions.PermissionUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,6 +29,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel class OnboardingViewModel @Inject constructor(
 	val analytics: Analytics,
 	alarmRepository: AlarmRepository,
+	private val settingsDataStore: DataStore<Settings>,
 	@ApplicationContext val context: Context
 ) : ViewModel() {
 
@@ -42,6 +48,8 @@ import kotlinx.coroutines.launch
 
 	private val _allCriticalGranted = MutableStateFlow(false)
 	val allCriticalGranted = _allCriticalGranted.asStateFlow()
+
+	val nonCancellableScope = CoroutineScope(NonCancellable)
 
 	init {
 		viewModelScope.launch {
@@ -63,7 +71,7 @@ import kotlinx.coroutines.launch
 				DisplaySate.Problem -> value.copy(displaySate = DisplaySate.Permission)
 				DisplaySate.Permission -> value.copy(displaySate = DisplaySate.CreateFirstAlarm)
 				DisplaySate.CreateFirstAlarm ->value.copy(displaySate = DisplaySate.AlarmResult)
-				DisplaySate.AlarmResult -> value.copy(displaySate = DisplaySate.AlarmResult)
+				DisplaySate.AlarmResult -> value.copy(displaySate = DisplaySate.AlarmResult);
 			}
 		}
 	}
@@ -80,5 +88,10 @@ import kotlinx.coroutines.launch
 		}
 	}
 
+	  fun finishedOnboarding(){
+		 viewModelScope.launch {
+			 settingsDataStore.updateData { data -> data.copy { isFirstLaunch = false }}
+		 }
+	}
 }
 

@@ -53,8 +53,8 @@ class AlarmContainerViewModel @Inject constructor(
 
 	fun dismissFeedback() {
 		viewModelScope.launch {
-			analytics.captureEvent("feedback board dismissed", mapOf())
 			dataStore.updateData { it.copy { feedbackShown = true } }
+			analytics.captureEvent("feedback board dismissed", mapOf())
 		}
 	}
 
