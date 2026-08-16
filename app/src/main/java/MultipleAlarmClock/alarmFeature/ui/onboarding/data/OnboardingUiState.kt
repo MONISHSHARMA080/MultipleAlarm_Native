@@ -10,13 +10,13 @@ enum class DisplaySate() {
 	AlarmResult;
 
 	override fun toString(): String {
-		return "DisplayState: " + when(this){
+		return  when(this){
 			Greeting -> "Greeting"
 			Problem -> "Problem"
 			CreateFirstAlarm -> "CreateFirstAlarm"
 			Permission -> "Permission"
 			AlarmResult -> "AlarmResult"
-		} + " "
+		}
 	}
 }
 
@@ -25,4 +25,8 @@ data class OnboardingUiState(
 	val displaySate: DisplaySate = DisplaySate.Greeting,
 	val askForNotificationPermission: Boolean = false,
 	val alarmData: AlarmData? = null
-)
+){
+	override fun toString(): String {
+		return "OnboardingUiState: DisplayState: $displaySate , askForNotificationPermission: $askForNotificationPermission, alarmData: $alarmData  "
+	}
+}

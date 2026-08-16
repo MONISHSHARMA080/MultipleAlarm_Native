@@ -114,20 +114,16 @@ fun AlarmPermissionDialog(
                         )
                 },
                 title = {
-                        Text(
-                                text = stringResource(R.string.permission_dialog_title),
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = MaterialTheme.colorScheme.onSurface
-                        )
+					Column(horizontalAlignment = Alignment.CenterHorizontally) {
+						Text(
+							text = stringResource(R.string.permission_dialog_title),
+							style = MaterialTheme.typography.headlineSmall,
+							color = MaterialTheme.colorScheme.onSurface
+						)
+					}
                 },
                 text = {
-                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                                Text(
-                                        text = stringResource(R.string.permission_dialog_description),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-
+                        Column() {
                                 missingSteps.forEach { step ->
                                         val isActedOn = actedSteps.contains(step)
 

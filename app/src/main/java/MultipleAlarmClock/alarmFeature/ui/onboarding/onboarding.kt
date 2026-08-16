@@ -48,7 +48,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 		},
 		) { state->
 		when(state){
-//		DisplaySate.Greeting -> AlarmResultClaude(uiState.alarmData, onNextClick = {viewModel.onPreviousClicked()  } )
 			DisplaySate.Greeting -> GreetingScreen(onClickNext = {viewModel.onNextClicked()} )
 			DisplaySate.Problem -> ProblemScreen { viewModel.onNextClicked() }
 			DisplaySate.Permission -> {

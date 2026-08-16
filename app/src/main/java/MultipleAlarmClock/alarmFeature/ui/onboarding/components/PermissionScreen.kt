@@ -45,7 +45,6 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.MaterialTheme.typography
@@ -228,7 +227,7 @@ fun PermissionScreen(
 					},
 					contentDescription = null,
 					modifier = Modifier.size(64.dp),
-					tint = MaterialTheme.colorScheme.primary
+					tint = colorScheme.primary
 				)
 			}
 
@@ -237,9 +236,9 @@ fun PermissionScreen(
 			AnimatedContent(targetState = allCriticalGranted) { granted ->
 				Text(
 					text = stringResource(if (granted) R.string.permission_all_set else R.string.permission_title),
-					style = MaterialTheme.typography.headlineLarge,
+					style = typography.headlineLarge,
 					fontWeight = FontWeight.SemiBold,
-					color = MaterialTheme.colorScheme.onBackground
+					color = colorScheme.onBackground
 				)
 			}
 
@@ -248,9 +247,9 @@ fun PermissionScreen(
 			if (!allCriticalGranted){
 				Text(
 					text = stringResource(R.string.onboarding_permission_reason),
-					style = MaterialTheme.typography.bodySmall,
+					style = typography.bodySmall,
 					textAlign = TextAlign.Center,
-					color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+					color = colorScheme.onBackground.copy(alpha = 0.7f),
 					modifier = Modifier.fillMaxWidth(0.9f)
 				)
 
@@ -324,8 +323,8 @@ private fun PermissionItem(
     onAction: () -> Unit
 ) {
     Surface(
-        shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        shape = shapes.large,
+        color = colorScheme.surfaceVariant.copy(alpha = 0.5f),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -337,13 +336,13 @@ private fun PermissionItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = stringResource(step.titleRes),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
                     text = stringResource(step.rationaleRes),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = typography.bodySmall,
+                    color = colorScheme.onSurfaceVariant
                 )
             }
             
@@ -363,7 +362,7 @@ private fun PermissionItem(
 						}
 					),
 
-                    style = MaterialTheme.typography.labelLarge
+                    style = typography.labelLarge
                 )
             }
         }

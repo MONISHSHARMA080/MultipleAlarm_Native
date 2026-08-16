@@ -65,7 +65,7 @@ import kotlinx.coroutines.launch
 
 	fun onNextClicked()  {
 		val currentStep = _displayState.value.displaySate.name
-		analytics.captureEvent("onboarding_next_clicked", mapOf("step" to currentStep))
+		analytics.captureEvent("onboarding_next_clicked", mapOf("step" to currentStep, "onBoardingUiState" to displayState.value.toString() ))
 		// increment the state
 		_displayState.update { value ->
 			when(value.displaySate){
