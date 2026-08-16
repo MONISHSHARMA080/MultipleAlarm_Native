@@ -209,7 +209,7 @@ private fun TimeDisplay(
 			text = formatTime12h(millis, "h:mm"),
 			style = textStyle,
 			fontWeight = if (isActive) FontWeight.Medium else FontWeight.Normal,
-			color = if (isActive)contentColor else contentColor.copy(alpha = 0.8f),
+			color = if (isActive)contentColor else contentColor.copy(alpha = 0.54f),
 			modifier = Modifier.alignByBaseline()
 		)
 		Spacer(modifier = Modifier.width(4.dp))
@@ -217,7 +217,7 @@ private fun TimeDisplay(
 			text = formatTime12h(millis, "a"),
 			style = typography.labelSmall,
 			fontWeight = FontWeight.Bold,
-			color = contentColor.copy(alpha = 0.8f),
+			color = if (isActive) contentColor.copy(alpha = 0.7f) else contentColor.copy(alpha = 0.50f),
 			modifier = Modifier.alignByBaseline()
 		)
 	}

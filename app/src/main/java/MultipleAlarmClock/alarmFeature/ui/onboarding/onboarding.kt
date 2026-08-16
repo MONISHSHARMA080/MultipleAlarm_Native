@@ -38,7 +38,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 	AnimatedContent( targetState = uiState.displaySate,
 		transitionSpec = {
-				// Going forward
 				slideIntoContainer(
 					towards = AnimatedContentTransitionScope.SlideDirection.Left,
 					animationSpec = tween(270, easing = FastOutSlowInEasing)

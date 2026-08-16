@@ -69,7 +69,6 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -87,7 +86,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.time.Duration.Companion.milliseconds
 
-private const val MAX_VISIBLE_TIMELINE_ROWS = 6
+private const val MAX_VISIBLE_TIMELINE_ROWS = 8
 private val TIMELINE_ROW_STAGGER_MS = 90.milliseconds
 
 // Note: Replace with your actual AlarmData class and logD implementation
@@ -131,7 +130,6 @@ private fun AlarmResultContent(
 	var visibleRows by remember { mutableIntStateOf(0) }
 
 	val haptic = LocalHapticFeedback.current
-	val configuration = LocalConfiguration.current
 
 	LaunchedEffect(alarmData) {
 		notificationTimes = withContext(Dispatchers.Default) {

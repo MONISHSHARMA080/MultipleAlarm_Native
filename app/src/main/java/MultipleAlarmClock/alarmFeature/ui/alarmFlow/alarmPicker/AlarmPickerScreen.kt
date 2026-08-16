@@ -535,7 +535,6 @@ fun PrimaryActionButton(
             Text(
                     when {
                       isValid -> stringResource(R.string.alarm_picker_btn_set)
-//                      isNotDiff -> stringResource(R.string.alarm_picker_btn_change)
                       else -> stringResource(R.string.alarm_picker_btn_fix)
                     },
                     style = typography.bodyLarge,

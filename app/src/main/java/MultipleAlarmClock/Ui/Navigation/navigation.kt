@@ -70,11 +70,11 @@ import kotlinx.coroutines.launch
 				slideInHorizontally(
 					animationSpec = tween(330, easing = FastOutSlowInEasing),
 					initialOffsetX = { it }
-				) + fadeIn(tween(190, easing = LinearEasing)) togetherWith
+				) + fadeIn(tween(210, easing = LinearEasing)) togetherWith
 						slideOutHorizontally(
 							animationSpec = tween(330, easing = FastOutSlowInEasing),
 							targetOffsetX = { -it }
-						) + fadeOut(tween(205, easing = LinearEasing))
+						) + fadeOut(tween(210, easing = LinearEasing))
 			},
 
 			popTransitionSpec = {
