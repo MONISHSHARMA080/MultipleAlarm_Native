@@ -4,7 +4,6 @@ enum class AlarmErrorField {
 	Time,
 	DATE,
 	FREQUENCY,
-//	AlarmIsNotDiff,
 	AlarmTimePassed
 }
 

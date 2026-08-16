@@ -47,7 +47,7 @@ data class AlarmObject(
 		)
 	}
 	/**checks if the alarmObject is valid */
-	fun validate(alarmData: AlarmData?): ValidationResult{
+	fun validate(): ValidationResult{
 		logD(" -- validation the alarm")
 		if (startTime.timeInMillis >= endTime.timeInMillis) {
 			return ValidationResult.Failure( message = "Start time must be less than end time.", field = AlarmErrorField.Time)
@@ -64,18 +64,6 @@ data class AlarmObject(
 			return ValidationResult.Failure(AlarmErrorField.DATE, "Date value must be today or in the future.")
 		}
 
-		// 2. Check for Changes (If in Edit Mode)
-//		if (alarmData != null) {
-//			val hasChanged = startTime.timeInMillis != alarmData.startTime ||
-//					endTime.timeInMillis != alarmData.endTime ||
-//					freqGottenAfterCallback != alarmData.frequencyInMin ||
-//					message != alarmData.message ||
-//					alarmSoundUri?.toString() != alarmData.sound
-
-//			if (!hasChanged) {
-//				return ValidationResult.Failure(AlarmErrorField.AlarmIsNotDiff, "No changes made. Change something to update the alarm.")
-//			}
-//		}
 		return ValidationResult.Success
 	}
 

@@ -98,7 +98,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 
 		val current = _uiState.value
 		val alarmToUse = current.alarmObject.ifTimeIntervalPassedThenReturnRollOver().alarmObject
-		val validationResult = alarmToUse.validate(current.initialAlarm)
+		val validationResult = alarmToUse.validate()
 
 		_uiState.update { it.copy(alarmObject = alarmToUse, validationResult = validationResult) }
 		logD("validation result after setAlarmCLicked is  $validationResult ")
@@ -165,7 +165,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 			val corrected = transform(state.alarmObject).ifTimeIntervalPassedThenReturnRollOver().alarmObject
 			state.copy(
 				alarmObject = corrected,
-				validationResult = corrected.validate(state.initialAlarm)
+				validationResult = corrected.validate()
 			)
 		}
 	}
@@ -362,7 +362,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 			}
 
 			Progress.FullEditor -> {
-				alarm.validate(uiState.value.initialAlarm)
+				alarm.validate()
 			}
 		}
 	}
