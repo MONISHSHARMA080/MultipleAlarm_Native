@@ -10,7 +10,6 @@ import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.example.MultipleAlarmClock.Data.dataStore.Settings
 import com.example.MultipleAlarmClock.Data.dataStore.copy
-import com.example.MultipleAlarmClock.Ui.Permissions.PermissionStep
 import com.example.MultipleAlarmClock.Ui.Permissions.PermissionUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -19,7 +18,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -43,11 +41,11 @@ import kotlinx.coroutines.launch
 		initialValue = OnboardingUiState()
 	)
 
-	private val _missingSteps = MutableStateFlow<List<PermissionStep>>(emptyList())
-	val missingSteps = _missingSteps.asStateFlow()
+//	private val _missingSteps = MutableStateFlow<List<PermissionStep>>(emptyList())
+//	val missingSteps = _missingSteps.asStateFlow()
 
-	private val _allCriticalGranted = MutableStateFlow(false)
-	val allCriticalGranted = _allCriticalGranted.asStateFlow()
+//	private val _allCriticalGranted = MutableStateFlow(false)
+//	val allCriticalGranted = _allCriticalGranted.asStateFlow()
 
 	val nonCancellableScope = CoroutineScope(NonCancellable)
 
@@ -59,8 +57,8 @@ import kotlinx.coroutines.launch
 
 	fun refreshPermissions() {
 		val missing = PermissionUtils.getRequiredPermissionSteps(context)
-		_missingSteps.update { missing }
-		_allCriticalGranted.update { PermissionUtils.allCriticalPermissionsGranted(context) }
+		val allCriticalGranted = PermissionUtils.allCriticalPermissionsGranted(context)
+		_displayState.update { it.copy(missingSteps = missing, allCriticalGranted = allCriticalGranted ) }
 	}
 
 	fun onNextClicked()  {

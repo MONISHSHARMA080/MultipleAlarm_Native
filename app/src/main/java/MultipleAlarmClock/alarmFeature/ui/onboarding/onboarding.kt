@@ -28,8 +28,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 @Composable fun OnboardingScreen() {
 	val viewModel : OnboardingViewModel = hiltViewModel()
 	val uiState by viewModel.displayState.collectAsStateWithLifecycle()
-	val missingSteps by viewModel.missingSteps.collectAsStateWithLifecycle()
-	val allCriticalGranted by viewModel.allCriticalGranted.collectAsStateWithLifecycle()
 	var showAlarmSoundList by remember { mutableStateOf(false) }
 
 	LaunchedEffect(uiState.displaySate) {
@@ -52,8 +50,8 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 			DisplaySate.Problem -> ProblemScreen { viewModel.onNextClicked() }
 			DisplaySate.Permission -> {
 				PermissionScreen(
-					missingSteps = missingSteps,
-					allCriticalGranted = allCriticalGranted,
+					missingSteps = uiState.missingSteps,
+					allCriticalGranted = uiState.allCriticalGranted,
 					onNext = { viewModel.onNextClicked() },
 					refreshPermissionUiState = {viewModel.refreshPermissions()},
 				)
@@ -117,7 +115,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 						)
 					}
 				}
-
 			}
 			DisplaySate.AlarmResult -> AlarmResultClaude(uiState.alarmData, onNextClick = {viewModel.finishedOnboarding() })
 		}
