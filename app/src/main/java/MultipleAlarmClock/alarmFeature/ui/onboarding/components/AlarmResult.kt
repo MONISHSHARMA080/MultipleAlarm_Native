@@ -45,9 +45,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.coolApps.MultipleAlarmClock.R
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.LocalTime
@@ -65,7 +67,7 @@ fun AlarmResultOpenAi(
 			contentAlignment = Alignment.Center
 		) {
 			Text(
-				text = "Something went wrong",
+				text = stringResource(R.string.error_generic),
 				style = MaterialTheme.typography.bodyLarge
 			)
 		}
@@ -192,7 +194,7 @@ fun AlarmResultOpenAi(
 						)
 					) {
 						Text(
-							text = "Done",
+							text = stringResource(R.string.onboarding_result_done),
 							style = typography.titleMedium
 						)
 					}
@@ -251,7 +253,7 @@ fun AlarmResultOpenAi(
 					horizontalAlignment = Alignment.CenterHorizontally
 				) {
 					Text(
-						text = "You're all set!",
+						text = stringResource(R.string.onboarding_result_title),
 						style = typography.headlineLarge,
 						fontWeight = FontWeight.SemiBold,
 						color = colorScheme.onBackground,
@@ -261,7 +263,7 @@ fun AlarmResultOpenAi(
 					Spacer(modifier = Modifier.height(8.dp))
 
 					Text(
-						text = "Your alarm is scheduled",
+						text = stringResource(R.string.onboarding_result_scheduled_subtitle),
 						style = typography.bodyMedium,
 						color = colorScheme.onBackground.copy(alpha = 0.72f),
 						textAlign = TextAlign.Center
@@ -307,7 +309,7 @@ fun AlarmResultOpenAi(
 				) {
 
 					Text(
-						text = "You'll receive notification on",
+						text = stringResource(R.string.onboarding_result_notifications_on),
 						style = typography.titleSmall,
 						fontWeight = FontWeight.Medium,
 						color = colorScheme.onBackground
@@ -352,7 +354,7 @@ fun AlarmResultOpenAi(
 									enter = fadeIn(tween(250))
 								) {
 									Text(
-										text = "$hiddenCount more notifications",
+										text = stringResource(R.string.onboarding_result_more_notifications, hiddenCount),
 										style = typography.bodyMedium,
 										color = colorScheme.onSurfaceVariant,
 										modifier = Modifier
@@ -446,7 +448,7 @@ private fun AlarmCard(
 					Spacer(modifier = Modifier.height(3.dp))
 
 					Text(
-						text = "Every $frequencyInMin minutes",
+						text = stringResource(R.string.onboarding_result_every_min, frequencyInMin),
 						style = typography.bodyMedium,
 						color = colorScheme.onPrimaryContainer.copy(alpha = 0.72f)
 					)

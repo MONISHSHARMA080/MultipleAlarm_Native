@@ -70,9 +70,11 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.coolApps.MultipleAlarmClock.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -183,7 +185,10 @@ private fun AlarmResultContent(
 							contentColor = colorScheme.onPrimaryContainer
 						)
 					) {
-						Text(text = "Finish", style = typography.titleMedium)
+						Text(
+							text = stringResource(R.string.onboarding_result_finish),
+							style = typography.titleMedium
+						)
 					}
 				}
 			}
@@ -236,7 +241,7 @@ private fun AlarmResultContent(
 				) {
 					Column(horizontalAlignment = Alignment.CenterHorizontally) {
 						Text(
-							text = "You're all set!",
+							text = stringResource(R.string.onboarding_result_title),
 							style = typography.headlineLarge,
 							fontWeight = FontWeight.SemiBold,
 							color = colorScheme.onBackground,
@@ -244,7 +249,7 @@ private fun AlarmResultContent(
 						)
 						Spacer(modifier = Modifier.height(4.dp))
 						Text(
-							text = "Your alarm was scheduled successfully",
+							text = stringResource(R.string.onboarding_result_subtitle),
 							style = typography.bodyMedium,
 							color = colorScheme.onBackground.copy(alpha = 0.72f),
 							textAlign = TextAlign.Center
@@ -269,7 +274,7 @@ private fun AlarmResultContent(
 						)
 						Spacer(modifier = Modifier.height(24.dp))
 						Text(
-							text = "Alarms would ring on",
+							text = stringResource(R.string.onboarding_result_ring_on),
 							style = typography.titleSmall,
 							fontWeight = FontWeight.Normal,
 							color = colorScheme.onSurface.copy(alpha = 0.67f)
@@ -426,14 +431,18 @@ private fun AlarmCard(
 
 			Column {
 				Text(
-					text = "${formatEpochMillis(startTime, formatter, zoneId)} - ${formatEpochMillis(endTime, formatter, zoneId)}",
+					text = stringResource(
+						R.string.onboarding_result_time_range,
+						formatEpochMillis(startTime, formatter, zoneId),
+						formatEpochMillis(endTime, formatter, zoneId)
+					),
 					style = typography.titleMedium,
 					fontWeight = FontWeight.Normal,
 					color = colorScheme.onSurface
 				)
 				Spacer(modifier = Modifier.height(2.dp))
 				Text(
-					text = "Every $frequencyInMin minutes",
+					text = stringResource(R.string.onboarding_result_every_min, frequencyInMin),
 					style = typography.bodySmall,
 					color = colorScheme.onSurface.copy(alpha = 0.62f)
 				)
@@ -534,7 +543,11 @@ private fun ExpandableMoreRow(
 				.border(1.dp, colorScheme.outline, CircleShape)
 		)
 		Text(
-			text = if (expanded) "Show less" else "Show $hiddenCount more",
+			text = if (expanded) {
+				stringResource(R.string.onboarding_result_show_less)
+			} else {
+				stringResource(R.string.onboarding_result_show_more, hiddenCount)
+			},
 			style = typography.bodySmall,
 			color = colorScheme.onBackground.copy(alpha = 0.7f)
 		)

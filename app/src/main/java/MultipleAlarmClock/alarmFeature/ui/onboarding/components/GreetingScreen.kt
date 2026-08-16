@@ -37,7 +37,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.coolApps.MultipleAlarmClock.R
 import androidx.compose.ui.unit.sp
 
 
@@ -105,7 +107,7 @@ import androidx.compose.ui.unit.sp
 						)
 					) {
 						Text(
-							text = "Next",
+							text = stringResource(R.string.onboarding_greeting_next),
 							style = typography.titleMedium
 						)
 					}
@@ -126,7 +128,7 @@ import androidx.compose.ui.unit.sp
 				horizontalArrangement = Arrangement.Center
 			) {
 				Text(
-					text = "Hello",
+					text = stringResource(R.string.onboarding_greeting_hello),
 					style = MaterialTheme.typography.displayLarge,
 					fontWeight = FontWeight.SemiBold,
 					color = colorScheme.onBackground

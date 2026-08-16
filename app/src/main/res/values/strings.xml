@@ -59,7 +59,7 @@
     <string name="permission_btn_open">Open</string>
     <string name="permission_btn_allow">Allow</string>
 
-    <string name="onboarding_permission_reason">To send alarm notification and schedule alarm</string>
+    <string name="onboarding_permission_reason">To send alarm notifications and schedule alarms</string>
 
 <!-- Permission Steps -->
     <string name="perm_notifications_title">Notifications</string>
@@ -72,11 +72,11 @@
     <string name="perm_fsi_rationale">Required to show the alarm clock on your lock screen.</string>
 
     <string name="perm_xiaomi_title">Autostart (Xiaomi)</string>
-    <string name="perm_xiaomi_rationale">Xiaomi devices require Autostart to schedule alarms, without this app will not function properly</string>
+    <string name="perm_xiaomi_rationale">Xiaomi devices require Autostart to schedule alarms; without this, the app will not function properly</string>
 
 <!-- Feedback Card -->
     <string name="feedback_title">Feedback</string>
-    <string name="feedback_description">Tell us what you love and what needs work. From design tweaks to feature requests and bug fixes, help us improve the app for you and everyone</string>
+    <string name="feedback_description">Tell us what you love and what needs work. From design tweaks to feature requests and bug fixes, help us improve the app for you and everyone.</string>
     <string name="feedback_placeholder">Tell us what you think…</string>
     <string name="feedback_char_count">%1$d / %2$d</string>
     <string name="feedback_btn_maybe_later">Maybe later</string>
@@ -107,7 +107,37 @@
     <string name="error_alarm_already_exists">An alarm is already set for this time.</string>
     <string name="error_alarm_not_found">The alarm was not found.</string>
     <string name="error_database_failure">Database operation failed. Please try again.</string>
-    <string name="error_internal">An internal error occurred. Please try again</string>
+    <string name="error_internal">An internal error occurred. Please try again.</string>
     <string name="error_invalid_settings">The alarm settings are invalid.</string>
+
+    <!-- Onboarding Greeting Screen -->
+    <string name="onboarding_greeting_next">Next</string>
+    <string name="onboarding_greeting_hello">Hello</string>
+
+    <!-- Onboarding Problem Screen -->
+    <string name="onboarding_problem_btn_set">Set my own</string>
+    <string name="onboarding_problem_btn_fix">Fix this</string>
+    <string name="onboarding_problem_wake_up">Wake up</string>
+    <string name="onboarding_problem_title">One task. So many alarms.</string>
+    <string name="onboarding_problem_subtitle">Managing multiple alarms for a task takes time and effort.</string>
+    <string name="onboarding_problem_better_way_title">Better way</string>
+    <string name="onboarding_problem_better_way_subtitle">Select the time interval and how frequent you want the alarm and app handles the rest</string>
+    <string name="onboarding_problem_preview_interval">7:00 → 7:40</string>
+    <string name="onboarding_problem_preview_frequency">every 10 minutes</string>
+
+    <!-- Onboarding Result Screen -->
+    <string name="onboarding_result_finish">Finish</string>
+    <string name="onboarding_result_done">Done</string>
+    <string name="onboarding_result_title">You\'re all set!</string>
+    <string name="onboarding_result_subtitle">Your alarm was scheduled successfully.</string>
+    <string name="onboarding_result_scheduled_subtitle">Your alarm is scheduled.</string>
+    <string name="onboarding_result_ring_on">Alarms will ring at</string>
+    <string name="onboarding_result_notifications_on">You\'ll receive notifications at</string>
+    <string name="onboarding_result_every_min">Every %1$d minutes</string>
+    <string name="onboarding_result_show_more">Show %1$d more</string>
+    <string name="onboarding_result_show_less">Show less</string>
+    <string name="onboarding_result_more_notifications">%1$d more notifications</string>
+    <string name="onboarding_result_time_range">%1$s - %2$s</string>
+    <string name="onboarding_result_time_range_arrow">%1$s → %2$s</string>
 
 </resources>

@@ -47,9 +47,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.coolApps.MultipleAlarmClock.R
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -119,9 +121,14 @@ fun ProblemScreen(
 							containerColor = colorScheme.primaryContainer,
 							contentColor = colorScheme.onPrimaryContainer
 						)
-					) {
+					)
+					{
 						Text(
-							text = if (phase == ProblemPhase.Crushing) "Set my own" else "Fix this",
+							text = if (phase == ProblemPhase.Crushing) {
+								stringResource(R.string.onboarding_problem_btn_set)
+							} else {
+								stringResource(R.string.onboarding_problem_btn_fix)
+							},
 							style = typography.titleMedium
 						)
 					}
@@ -153,9 +160,9 @@ fun ProblemScreen(
 
 			Text(
 				text = if (phase == ProblemPhase.Crushing) {
-					"Better way"
+					stringResource(R.string.onboarding_problem_better_way_title)
 				} else {
-					"One task. So many alarms."
+					stringResource(R.string.onboarding_problem_title)
 				},
 				style = typography.headlineLarge,
 				textAlign = TextAlign.Center,
@@ -166,9 +173,9 @@ fun ProblemScreen(
 
 			Text(
 				text = if (phase == ProblemPhase.Crushing) {
-					"Select the time interval and how frequent you want the alarm and app handles the rest"
+					stringResource(R.string.onboarding_problem_better_way_subtitle)
 				} else {
-					"Managing multiple alarms for a task takes time and effort."
+					stringResource(R.string.onboarding_problem_subtitle)
 				},
 				style = typography.bodyMedium,
 				textAlign = TextAlign.Center,
@@ -345,7 +352,7 @@ private fun CrushingAlarm(
 					color = colorScheme.onSurface
 				)
 				Text(
-					text = "Wake up",
+					text = stringResource(R.string.onboarding_problem_wake_up),
 					style = typography.bodyMedium,
 					color = colorScheme.onSurfaceVariant
 				)
@@ -401,13 +408,13 @@ private fun CrushingAlarm(
 			}
 			Column {
 				Text(
-					text = "7:00 → 7:40",
+					text = stringResource(R.string.onboarding_problem_preview_interval),
 					style = typography.titleLarge,
 					color = colorScheme.onPrimaryContainer
 				)
 				Spacer(modifier = Modifier.height(3.dp))
 				Text(
-					text = "every 10 minutes",
+					text = stringResource(R.string.onboarding_problem_preview_frequency),
 					style = typography.bodyMedium,
 					color = colorScheme.onPrimaryContainer.copy(alpha = 0.72f)
 				)
