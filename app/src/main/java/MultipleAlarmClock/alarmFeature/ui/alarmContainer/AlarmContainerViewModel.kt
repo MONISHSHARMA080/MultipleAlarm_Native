@@ -21,7 +21,6 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -42,9 +41,9 @@ class AlarmContainerViewModel @Inject constructor(
 
 	val showFeedbackUIState: StateFlow<Boolean> = dataStore.data
 		.map { settings ->
-			settings.firstAlarmSet && !settings.feedbackShown
+			settings.feedbackShown // show it when it's turned on, probably remotely
 		}
-		.distinctUntilChanged()
+//		.distinctUntilChanged()
 		.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
 	fun dismissFeedback() {

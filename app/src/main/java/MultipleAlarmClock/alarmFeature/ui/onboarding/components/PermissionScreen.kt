@@ -256,7 +256,7 @@ fun PermissionScreen(
 			}
 
             Spacer(modifier = Modifier.height(32.dp))
-            
+
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 300.dp),
                 modifier = Modifier

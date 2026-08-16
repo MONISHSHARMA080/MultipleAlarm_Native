@@ -80,7 +80,7 @@ import kotlinx.coroutines.launch
 	var selectedAlarmId by remember { mutableStateOf<Int?>(null) }
 	ReportDrawnWhen { alarmList != null }
 	val coroutineScope = rememberCoroutineScope()
-	val colorScheme = MaterialTheme.colorScheme
+	val colorScheme = colorScheme
 	val showFeedbackCard by alarmContainerViewModel.showFeedbackUIState.collectAsStateWithLifecycle()
 
 	Scaffold(

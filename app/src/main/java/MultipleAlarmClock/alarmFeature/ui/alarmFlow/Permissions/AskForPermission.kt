@@ -50,191 +50,208 @@ import com.google.accompanist.permissions.shouldShowRationale
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun AlarmPermissionDialog(
-        missingSteps: List<PermissionStep>,
-        onAllCriticalGranted: () -> Unit,
-        onDismiss: () -> Unit,
-        onTrackEvent: (String, Map<String, Any>) -> Unit
+	missingSteps: List<PermissionStep>,
+	onAllCriticalGranted: () -> Unit,
+	onDismiss: () -> Unit,
+	onTrackEvent: (String, Map<String, Any>) -> Unit
 ) {
-        val context = LocalContext.current
+	val context = LocalContext.current
+	val lifecycleOwner = LocalLifecycleOwner.current
 
-        val notificationPermState = if (missingSteps.contains(PermissionStep.PostNotification)) {
-                rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
-        } else null
+	// Dynamically track remaining missing steps when coming back from settings
+	var currentMissingSteps by remember(missingSteps) {
+		mutableStateOf(PermissionUtils.getRequiredPermissionSteps(context))
+	}
 
-        var notificationRequested by rememberSaveable { mutableStateOf(false) }
+	val notificationPermState = rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
 
-        val notificationPermanentlyDenied = notificationPermState != null &&
-                notificationRequested &&
-                !notificationPermState.status.isGranted &&
-                !notificationPermState.status.shouldShowRationale
+	var notificationRequested by rememberSaveable { mutableStateOf(false) }
 
-        LaunchedEffect(notificationPermanentlyDenied) {
-                if (notificationPermanentlyDenied) {
-                        context.startActivity(
-                                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                        data = Uri.fromParts("package", context.packageName, null)
-                                }
-                        )
-                }
-        }
+	val notificationPermanentlyDenied = notificationRequested &&
+			!notificationPermState.status.isGranted &&
+			!notificationPermState.status.shouldShowRationale
 
-        var actedSteps by remember { mutableStateOf(setOf<PermissionStep>()) }
+	var allCriticalNowGranted by remember {
+		mutableStateOf(PermissionUtils.allCriticalPermissionsGranted(context))
+	}
 
-        var allCriticalNowGranted by remember {
-                mutableStateOf(PermissionUtils.allCriticalPermissionsGranted(context))
-        }
+	// Refresh permission statuses on resume (e.g. after returning from Settings)
+	DisposableEffect(lifecycleOwner) {
+		val observer = LifecycleEventObserver { _, event ->
+			if (event == Lifecycle.Event.ON_RESUME) {
+				currentMissingSteps = PermissionUtils.getRequiredPermissionSteps(context)
+				allCriticalNowGranted = PermissionUtils.allCriticalPermissionsGranted(context)
+			}
+		}
+		lifecycleOwner.lifecycle.addObserver(observer)
+		onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+	}
 
-        LaunchedEffect(allCriticalNowGranted) {
-                onTrackEvent(
-					"permission_dialog_shown", mapOf(
-                                "permission name" to missingSteps.map { it.id },
-                                "permission count" to missingSteps.size,
-                        )
-                )
-        }
+	// Auto-dismiss or call callback if all critical permissions were granted while in Settings
+	LaunchedEffect(allCriticalNowGranted) {
+		if (allCriticalNowGranted) {
+			onAllCriticalGranted()
+		}
+	}
 
-        val lifecycleOwner = LocalLifecycleOwner.current
-        DisposableEffect(lifecycleOwner) {
-                val observer = LifecycleEventObserver { _, event ->
-                        if (event == Lifecycle.Event.ON_RESUME) {
-                                allCriticalNowGranted = PermissionUtils.allCriticalPermissionsGranted(context)
-                        }
-                }
-                lifecycleOwner.lifecycle.addObserver(observer)
-                onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-        }
+	LaunchedEffect(Unit) {
+		onTrackEvent(
+			"permission_dialog_shown", mapOf(
+				"permission name" to currentMissingSteps.map { it.id },
+				"permission count" to currentMissingSteps.size,
+			)
+		)
+	}
 
-        AlertDialog(
-                onDismissRequest = onDismiss,
-                icon = {
-                        Icon(
-                                imageVector = Icons.Default.Security,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
-                        )
-                },
-                title = {
-					Column(horizontalAlignment = Alignment.CenterHorizontally) {
-						Text(
-							text = stringResource(R.string.permission_dialog_title),
-							style = MaterialTheme.typography.headlineSmall,
-							color = MaterialTheme.colorScheme.onSurface
-						)
+	AlertDialog(
+		onDismissRequest = onDismiss,
+		icon = {
+			Icon(
+				imageVector = Icons.Default.Security,
+				contentDescription = null,
+				tint = MaterialTheme.colorScheme.primary
+			)
+		},
+		title = {
+			Column(horizontalAlignment = Alignment.CenterHorizontally) {
+				Text(
+					text = stringResource(R.string.permission_dialog_title),
+					style = MaterialTheme.typography.headlineSmall,
+					color = MaterialTheme.colorScheme.onSurface
+				)
+			}
+		},
+		text = {
+			Column(
+				verticalArrangement = Arrangement.spacedBy(12.dp)
+			) {
+				currentMissingSteps.forEach { step ->
+					val isGranted = when (step) {
+						PermissionStep.PostNotification -> notificationPermState.status.isGranted
+						else -> !currentMissingSteps.contains(step)
 					}
-                },
-                text = {
-                        Column() {
-                                missingSteps.forEach { step ->
-                                        val isActedOn = actedSteps.contains(step)
 
-                                        PermissionStepRow(
-                                                step = step,
-                                                isActedOn = isActedOn,
-                                                onAction = {
-                                                        when (step) {
-                                                                PermissionStep.PostNotification -> {
-                                                                        if (notificationPermanentlyDenied) {
-                                                                                context.startActivity(
-                                                                                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                                                                                data = Uri.fromParts("package", context.packageName, null)
-                                                                                        }
-                                                                                )
-                                                                        } else {
-                                                                                notificationPermState?.launchPermissionRequest()
-                                                                                notificationRequested = true
-                                                                        }
-                                                                        actedSteps = actedSteps + step
-                                                                }
-                                                                PermissionStep.ExactAlarm -> {
-                                                                        context.startActivity(
-                                                                                Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                                                                                        data = Uri.fromParts("package", context.packageName, null)
-                                                                                }
-                                                                        )
-                                                                        actedSteps = actedSteps + step
-                                                                }
-                                                                PermissionStep.FullScreenIntent -> {
-                                                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                                                                                context.startActivity(
-                                                                                        Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT).apply {
-                                                                                                data = Uri.fromParts("package", context.packageName, null)
-                                                                                        }
-                                                                                )
-                                                                        }
-                                                                        actedSteps = actedSteps + step
-                                                                }
-                                                                PermissionStep.XiaomiAutostart -> {
-                                                                        PermissionUtils.launchXiaomiSettings(context)
-                                                                        actedSteps = actedSteps + step
-                                                                }
-                                                        }
-                                                }
-                                        )
-                                }
+					PermissionStepRow(
+						step = step,
+						isGranted = isGranted,
+						isPermanentlyDenied = step == PermissionStep.PostNotification && notificationPermanentlyDenied,
+						onAction = {
+							when (step) {
+								PermissionStep.PostNotification -> {
+									if (notificationPermState.status.isGranted) {
+										// Update state immediately if already granted
+										currentMissingSteps = PermissionUtils.getRequiredPermissionSteps(context)
+									} else if (notificationPermanentlyDenied) {
+										context.startActivity(
+											Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+												data = Uri.fromParts("package", context.packageName, null)
+											}
+										)
+									} else {
+										notificationPermState.launchPermissionRequest()
+										notificationRequested = true
+									}
+								}
+								PermissionStep.ExactAlarm -> {
+									context.startActivity(
+										Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+											data = Uri.fromParts("package", context.packageName, null)
+										}
+									)
+								}
+								PermissionStep.FullScreenIntent -> {
+									if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+										context.startActivity(
+											Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT).apply {
+												data = Uri.fromParts("package", context.packageName, null)
+											}
+										)
+									}
+								}
+								PermissionStep.XiaomiAutostart -> {
+									PermissionUtils.launchXiaomiSettings(context)
+								}
+							}
+						}
+					)
+				}
 
-                                if (missingSteps.any { it == PermissionStep.XiaomiAutostart } && missingSteps.size == 1) {
-                                        Text(
-                                                text = stringResource(R.string.permission_dialog_autostart_advisory),
-                                                style = MaterialTheme.typography.labelMedium,
-                                                fontStyle = FontStyle.Italic,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                }
-                        }
-                },
-                confirmButton = {
-                        TextButton(
-                                onClick = { if (allCriticalNowGranted) onAllCriticalGranted() else onDismiss() },
-                        ) {
-                                Text(
-                                        text = if (allCriticalNowGranted) stringResource(R.string.permission_dialog_btn_done) else stringResource(R.string.permission_dialog_btn_cancel),
-                                        color = if (allCriticalNowGranted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
-                                )
-                        }
-                },
-        )
+				if (currentMissingSteps.any { it == PermissionStep.XiaomiAutostart } && currentMissingSteps.size == 1) {
+					Text(
+						text = stringResource(R.string.permission_dialog_autostart_advisory),
+						style = MaterialTheme.typography.labelMedium,
+						fontStyle = FontStyle.Italic,
+						color = MaterialTheme.colorScheme.onSurfaceVariant
+					)
+				}
+			}
+		},
+		confirmButton = {
+			TextButton(
+				onClick = { if (allCriticalNowGranted) onAllCriticalGranted() else onDismiss() },
+			) {
+				Text(
+					text = if (allCriticalNowGranted) stringResource(R.string.permission_dialog_btn_done) else stringResource(R.string.permission_dialog_btn_cancel),
+					color = if (allCriticalNowGranted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+				)
+			}
+		},
+	)
 }
 
 @Composable
 private fun PermissionStepRow(
-        step: PermissionStep,
-        isActedOn: Boolean,
-        onAction: () -> Unit
+	step: PermissionStep,
+	isGranted: Boolean,
+	isPermanentlyDenied: Boolean,
+	onAction: () -> Unit
 ) {
-        Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-                Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                                text = stringResource(step.titleRes),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.SemiBold
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                                text = stringResource(step.rationaleRes),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                }
-                Spacer(Modifier.width(16.dp))
+	Row(
+		modifier = Modifier.fillMaxWidth(),
+		verticalAlignment = Alignment.CenterVertically,
+		horizontalArrangement = Arrangement.SpaceBetween
+	) {
+		Column(modifier = Modifier.weight(1f)) {
+			Text(
+				text = stringResource(step.titleRes),
+				style = MaterialTheme.typography.titleMedium,
+				color = MaterialTheme.colorScheme.onSurface,
+				fontWeight = FontWeight.SemiBold
+			)
+			Spacer(modifier = Modifier.height(2.dp))
+			Text(
+				text = stringResource(step.rationaleRes),
+				style = MaterialTheme.typography.bodySmall,
+				color = MaterialTheme.colorScheme.onSurfaceVariant
+			)
+		}
+		Spacer(Modifier.width(16.dp))
 
-                if (isActedOn) {
-                        Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = stringResource(R.string.permission_dialog_done_desc),
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
-                        )
-                } else {
-                        Button(onClick = {onAction()}, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer)) {
-                                Text(
-                                        text = if (step.action != null || step == PermissionStep.XiaomiAutostart) stringResource(R.string.permission_dialog_btn_open_settings) else stringResource(R.string.permission_dialog_btn_allow),
-                                )
-                        }
-                }
-        }
+		if (isGranted) {
+			Icon(
+				imageVector = Icons.Default.CheckCircle,
+				contentDescription = stringResource(R.string.permission_dialog_done_desc),
+				tint = MaterialTheme.colorScheme.primary,
+				modifier = Modifier.size(24.dp)
+			)
+		} else {
+			Button(
+				onClick = onAction,
+				colors = ButtonDefaults.buttonColors(
+					containerColor = MaterialTheme.colorScheme.primaryContainer,
+					contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+				)
+			) {
+				Text(
+					text = stringResource(
+						when {
+							isPermanentlyDenied -> R.string.permission_dialog_btn_open_settings
+							step.action != null || step == PermissionStep.XiaomiAutostart -> R.string.permission_dialog_btn_open_settings
+							else -> R.string.permission_dialog_btn_allow
+						}
+					)
+				)
+			}
+		}
+	}
 }
