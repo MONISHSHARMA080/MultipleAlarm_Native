@@ -27,9 +27,9 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -47,7 +47,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -104,77 +103,38 @@ private fun AlarmResultContent(
 	onNextClick: () -> Unit
 ) {
 	val zoneId = remember { ZoneId.systemDefault() }
-	val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
+	val timeFormatter = remember { DateTimeFormatter.ofPattern("h:mm a") }
 
-	var notificationTimes by remember {
-		mutableStateOf<List<Long>>(emptyList())
-	}
-
-	var expanded by rememberSaveable {
-		mutableStateOf(false)
-	}
-
-	val visibleTimes = if (expanded) {
-		notificationTimes
-	} else {
-		notificationTimes.take(MAX_VISIBLE_TIMELINE_ROWS)
-	}
-
-	var checkVisible by remember {
-		mutableStateOf(false)
-	}
-
-	var headerVisible by remember {
-		mutableStateOf(false)
-	}
-
-	var cardVisible by remember {
-		mutableStateOf(false)
-	}
-	var visibleRows by remember {
-		mutableIntStateOf(0)
-	}
+	var notificationTimes by remember { mutableStateOf<List<Long>>(emptyList()) }
+	var expanded by rememberSaveable { mutableStateOf(false) }
+	var headerVisible by remember { mutableStateOf(false) }
+	var visibleRows by remember { mutableIntStateOf(0) }
 
 	val haptic = LocalHapticFeedback.current
 
-
 	LaunchedEffect(alarmData) {
-		// 1. Move computation to background thread
 		notificationTimes = withContext(Dispatchers.Default) {
 			computeNotificationTimes(alarmData)
 		}
 
-		// 2. Run sequential entrance animations after state updates
-		checkVisible = true
-
-		haptic.performHapticFeedback(
-			HapticFeedbackType.LongPress
-		)
-
+		haptic.performHapticFeedback(HapticFeedbackType.LongPress)
 		delay(250.milliseconds)
 
 		headerVisible = true
+		delay(350.milliseconds)
 
-		delay(150.milliseconds)
-
-		cardVisible = true
-
-		delay(200.milliseconds)
-
-		// 3. Reveal timeline rows one by one
-		val initialRowCount = minOf(
-			notificationTimes.size,
-			MAX_VISIBLE_TIMELINE_ROWS
-		)
-
+		val initialRowCount = minOf(notificationTimes.size, MAX_VISIBLE_TIMELINE_ROWS)
 		repeat(initialRowCount) { index ->
 			visibleRows = index + 1
 			delay(TIMELINE_ROW_STAGGER_MS)
 		}
 
-		haptic.performHapticFeedback(
-			HapticFeedbackType.LongPress
-		)
+		haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+	}
+
+	// Determine displayed subset efficiently
+	val visibleTimes = remember(expanded, notificationTimes) {
+		if (expanded) notificationTimes else notificationTimes.take(MAX_VISIBLE_TIMELINE_ROWS)
 	}
 
 	Scaffold(
@@ -184,8 +144,7 @@ private fun AlarmResultContent(
 					.fillMaxWidth()
 					.background(colorScheme.background)
 					.navigationBarsPadding()
-					.padding(26.dp)
-					.padding(bottom = 20.dp),
+					.padding(horizontal = 26.dp, vertical = 20.dp),
 				contentAlignment = Alignment.Center
 			) {
 				Button(
@@ -199,143 +158,115 @@ private fun AlarmResultContent(
 						contentColor = colorScheme.onPrimaryContainer
 					)
 				) {
-					Text(
-						text = "Finish",
-						style = typography.titleMedium
-					)
+					Text(text = "Finish", style = typography.titleMedium)
 				}
 			}
 		}
 	) { padding ->
-
-		Column(
+		// Use LazyColumn instead of Column + verticalScroll
+		LazyColumn(
 			modifier = Modifier
 				.fillMaxSize()
 				.padding(padding)
-				.verticalScroll(rememberScrollState())
 				.padding(horizontal = 24.dp),
-			horizontalAlignment = Alignment.CenterHorizontally
+			// Align column children horizontally to the START (left)
+			horizontalAlignment = Alignment.Start
 		) {
-
-			Spacer(
-				modifier = Modifier.height(32.dp)
-			)
-
-			/*
-			 * SUCCESS ICON
-			 */
-			AnimatedVisibility(
-				visible = headerVisible,
-				enter = scaleIn(
-					initialScale = 0.75f,
-					animationSpec = spring(
-						dampingRatio = Spring.DampingRatioMediumBouncy,
-						stiffness = Spring.StiffnessMedium
-					)
-				) + fadeIn(
-					animationSpec = tween(250)
-				)
-			) {
-				SuccessIcon()
-			}
-
-			Spacer(
-				modifier = Modifier.height(20.dp)
-			)
-
-			/*
-			 * TITLE
-			 */
-			AnimatedVisibility(
-				visible = headerVisible,
-				enter = fadeIn(
-					animationSpec = tween(
-						durationMillis = 350,
-						delayMillis = 100
-					)
-				) + slideInVertically(
-					initialOffsetY = { 12 },
-					animationSpec = tween(350)
-				)
-			) {
-				Column(
-					horizontalAlignment = Alignment.CenterHorizontally
+			/* TITLE - Kept centered via Box */
+			item(key = "header_title") {
+				Spacer(modifier = Modifier.height(32.dp))
+				Box(
+					modifier = Modifier.fillMaxWidth(),
+					contentAlignment = Alignment.Center
 				) {
-					Text(
-						text = "You're all set!",
-						style = typography.headlineLarge,
-						fontWeight = FontWeight.SemiBold,
-						color = colorScheme.onBackground,
-						textAlign = TextAlign.Center
-					)
-
-					Spacer(
-						modifier = Modifier.height(4.dp)
-					)
-
-					Text(
-						text = "Your alarm was scheduled successfully",
-						style = typography.bodyMedium,
-						color = colorScheme.onBackground.copy(alpha = 0.72f),
-						textAlign = TextAlign.Center
-					)
+					AnimatedVisibility(
+						visible = headerVisible,
+						enter = scaleIn(
+							initialScale = 0.75f,
+							animationSpec = spring(
+								dampingRatio = Spring.DampingRatioMediumBouncy,
+								stiffness = Spring.StiffnessMedium
+							)
+						) + fadeIn(animationSpec = tween(250))
+					) {
+						SuccessIcon()
+					}
 				}
-			}
-
-			Spacer(
-				modifier = Modifier.height(28.dp)
-			)
-
-			AlarmCard(
-				alarmData.startTime,
-				alarmData.endTime,
-				alarmData.frequencyInMin
-			)
-
-			Spacer(
-				modifier = Modifier.height(24.dp)
-			)
-
-			Column(
-				horizontalAlignment = Alignment.Start
-			) {
+				Spacer(modifier = Modifier.height(20.dp))
+				Box(
+					modifier = Modifier.fillMaxWidth(),
+					contentAlignment = Alignment.Center
+				) {
+					AnimatedVisibility(
+						visible = headerVisible,
+						enter = fadeIn(animationSpec = tween(350, delayMillis = 100)) +
+								slideInVertically(initialOffsetY = { 12 }, animationSpec = tween(350))
+					) {
+						Column(horizontalAlignment = Alignment.CenterHorizontally) {
+							Text(
+								text = "You're all set!",
+								style = typography.headlineLarge,
+								fontWeight = FontWeight.SemiBold,
+								color = colorScheme.onBackground,
+								textAlign = TextAlign.Center
+							)
+							Spacer(modifier = Modifier.height(4.dp))
+							Text(
+								text = "Your alarm was scheduled successfully",
+								style = typography.bodyMedium,
+								color = colorScheme.onBackground.copy(alpha = 0.72f),
+								textAlign = TextAlign.Center
+							)
+						}
+					}
+				}
+				Spacer(modifier = Modifier.height(28.dp))
+				AlarmCard(
+					startTime = alarmData.startTime,
+					endTime = alarmData.endTime,
+					frequencyInMin = alarmData.frequencyInMin,
+					formatter = timeFormatter,
+					zoneId = zoneId
+				)
+				Spacer(modifier = Modifier.height(24.dp))
 				Text(
-					text = "  Alarms would ring on",
+					text = "Alarms would ring on",
 					style = typography.titleSmall,
 					fontWeight = FontWeight.Normal,
 					color = colorScheme.onSurface.copy(alpha = 0.67f)
 				)
-
 				Spacer(modifier = Modifier.height(12.dp))
+			}
 
 
-				visibleTimes.forEachIndexed { index, time ->
-					key(time) {
-						TimelineRow(
-							time = time,
-							formatter = timeFormatter,
-							zoneId = zoneId,
-							visible = expanded || index < visibleRows,
-							isLast = index == visibleTimes.lastIndex
-						)
-					}
-				}
+			/* TIMELINE ROWS - Automatically align Start */
+			itemsIndexed(
+				items = visibleTimes,
+				key = { index, time -> "$time-$index" }
+			) { index, time ->
+				TimelineRow(
+					time = time,
+					formatter = timeFormatter,
+					zoneId = zoneId,
+					visible = expanded || index < visibleRows,
+					isLast = index == visibleTimes.lastIndex
+				)
+			}
 
-				if (notificationTimes.size > MAX_VISIBLE_TIMELINE_ROWS) {
+			/* SHOW MORE / SHOW LESS BUTTON */
+			if (notificationTimes.size > MAX_VISIBLE_TIMELINE_ROWS) {
+				item(key = "expand_button") {
 					ExpandableMoreRow(
 						hiddenCount = notificationTimes.size - MAX_VISIBLE_TIMELINE_ROWS,
 						expanded = expanded,
-						visible = true,
-						onToggle = {
-							expanded = !expanded
-						}
+						onToggle = { expanded = !expanded }
 					)
 				}
 			}
 
-			Spacer(
-				modifier = Modifier.height(24.dp)
-			)
+			item(key = "bottom_spacer") {
+				Spacer(modifier = Modifier.height(24.dp))
+			}
 		}
 	}
 }
@@ -344,16 +275,16 @@ private fun AlarmResultContent(
 private fun AlarmCard(
 	startTime: Long,
 	endTime: Long,
-	frequencyInMin: Long
+	frequencyInMin: Long,
+	formatter: DateTimeFormatter,
+	zoneId: ZoneId
 ) {
 	Surface(
 		modifier = Modifier.fillMaxWidth(),
 		shape = shapes.extraLarge,
 		color = colorScheme.surfaceContainer
 	) {
-		Column(
-			modifier = Modifier.padding(20.dp)
-		) {
+		Column(modifier = Modifier.padding(20.dp)) {
 			Row(
 				modifier = Modifier.fillMaxWidth(),
 				verticalAlignment = Alignment.CenterVertically
@@ -363,9 +294,7 @@ private fun AlarmCard(
 					shape = shapes.large,
 					color = colorScheme.primaryContainer
 				) {
-					Box(
-						contentAlignment = Alignment.Center
-					) {
+					Box(contentAlignment = Alignment.Center) {
 						Icon(
 							imageVector = Icons.Outlined.Alarm,
 							contentDescription = null,
@@ -375,21 +304,17 @@ private fun AlarmCard(
 					}
 				}
 
-				Spacer(
-					modifier = Modifier.width(14.dp)
-				)
+				Spacer(modifier = Modifier.width(14.dp))
 
 				Column {
 					Text(
-						text = "${startTime.formatAlarmTime()} ? ${endTime.formatAlarmTime()}",
+						text = "${formatEpochMillis(startTime, formatter, zoneId)} - ${formatEpochMillis(endTime, formatter, zoneId)}",
 						style = typography.titleMedium,
 						fontWeight = FontWeight.Normal,
 						color = colorScheme.onSurface
 					)
 
-					Spacer(
-						modifier = Modifier.height(2.dp)
-					)
+					Spacer(modifier = Modifier.height(2.dp))
 
 					Text(
 						text = "Every $frequencyInMin minutes",
@@ -410,6 +335,11 @@ private fun TimelineRow(
 	visible: Boolean,
 	isLast: Boolean
 ) {
+	// Format once per timestamp change
+	val formattedTime = remember(time, formatter, zoneId) {
+		formatEpochMillis(time, formatter, zoneId)
+	}
+
 	val entrance by animateFloatAsState(
 		targetValue = if (visible) 1f else 0f,
 		animationSpec = spring(
@@ -435,6 +365,7 @@ private fun TimelineRow(
 				translationX = (1f - entrance) * -24f
 			}
 	) {
+		// Timeline Dot & Line
 		Column(
 			horizontalAlignment = Alignment.CenterHorizontally,
 			modifier = Modifier
@@ -465,7 +396,7 @@ private fun TimelineRow(
 
 		Column(modifier = Modifier.padding(bottom = 16.dp)) {
 			Text(
-				text = formatEpochMillis(time, formatter, zoneId),
+				text = formattedTime,
 				style = typography.titleMedium,
 				color = colorScheme.onBackground
 			)
@@ -473,23 +404,12 @@ private fun TimelineRow(
 	}
 }
 
-
 @Composable
 private fun ExpandableMoreRow(
 	hiddenCount: Int,
 	expanded: Boolean,
-	visible: Boolean,
 	onToggle: () -> Unit
 ) {
-	val entrance by animateFloatAsState(
-		targetValue = if (visible) 1f else 0f,
-		animationSpec = spring(
-			dampingRatio = Spring.DampingRatioMediumBouncy,
-			stiffness = Spring.StiffnessLow
-		),
-		label = "more_row_entrance"
-	)
-
 	val chevronRotation by animateFloatAsState(
 		targetValue = if (expanded) 180f else 0f,
 		animationSpec = tween(180),
@@ -499,80 +419,49 @@ private fun ExpandableMoreRow(
 	Row(
 		modifier = Modifier
 			.fillMaxWidth()
-			.graphicsLayer {
-				alpha = entrance
-			}
 			.clip(shapes.large)
-			.clickable(
-				enabled = visible,
-				onClick = onToggle
-			)
+			.clickable(onClick = onToggle)
 			.padding(vertical = 8.dp),
 		verticalAlignment = Alignment.CenterVertically
 	) {
-
 		Box(
 			modifier = Modifier
-				.padding(
-					start = 6.dp,
-					end = 12.dp
-				)
+				.padding(start = 6.dp, end = 12.dp)
 				.size(8.dp)
-				.border(
-					1.dp,
-					colorScheme.outline,
-					CircleShape
-				)
+				.border(1.dp, colorScheme.outline, CircleShape)
 		)
 
 		Text(
-			text = if (expanded) {
-				"Show less"
-			} else {
-				"Show $hiddenCount more"
-			},
+			text = if (expanded) "Show less" else "Show $hiddenCount more",
 			style = typography.bodySmall,
-			color = colorScheme.onBackground.copy(
-				alpha = 0.7f
-			)
+			color = colorScheme.onBackground.copy(alpha = 0.7f)
 		)
 
-		Spacer(
-			Modifier.size(8.dp)
-		)
+		Spacer(Modifier.size(8.dp))
 
 		Icon(
 			imageVector = Icons.Default.KeyboardArrowDown,
 			contentDescription = null,
-			tint = colorScheme.onBackground.copy(
-				alpha = 0.6f
-			),
+			tint = colorScheme.onBackground.copy(alpha = 0.6f),
 			modifier = Modifier
 				.size(18.dp)
-				.graphicsLayer {
-					rotationZ = chevronRotation
-				}
+				.graphicsLayer { rotationZ = chevronRotation }
 		)
 	}
 }
 
-private fun computeNotificationTimes(
-	alarmData: AlarmData
-): List<Long> {
+private fun computeNotificationTimes(alarmData: AlarmData): List<Long> {
 	val intervalMillis = alarmData.frequencyInMin.coerceAtLeast(1) * 60_000L
-
 	if (alarmData.endTime <= alarmData.startTime) {
 		return listOf(alarmData.startTime)
 	}
 
 	val times = mutableListOf<Long>()
 	var current = alarmData.startTime
-
 	while (current <= alarmData.endTime) {
 		times.add(current)
 		current += intervalMillis
 	}
-
 	return times
 }
 
@@ -587,9 +476,7 @@ private fun SuccessIcon() {
 		shape = shapes.extraLarge,
 		color = colorScheme.primaryContainer
 	) {
-		Box(
-			contentAlignment = Alignment.Center
-		) {
+		Box(contentAlignment = Alignment.Center) {
 			Icon(
 				imageVector = Icons.Default.Check,
 				contentDescription = null,
@@ -598,13 +485,4 @@ private fun SuccessIcon() {
 			)
 		}
 	}
-}
-
-private fun Long.formatAlarmTime(): String {
-	return Instant
-		.ofEpochMilli(this)
-		.atZone(ZoneId.systemDefault())
-		.format(
-			DateTimeFormatter.ofPattern("h:mm a")
-		)
 }
