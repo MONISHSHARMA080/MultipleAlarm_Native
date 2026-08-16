@@ -41,7 +41,6 @@ class AlarmContainerViewModel @Inject constructor(
 
 	val showFeedbackUIState: StateFlow<Boolean> = dataStore.data
 		.map { settings ->
-//			!settings.feedbackShown // show it when it's turned on, probably remotely
 			settings.firstAlarmSet && !settings.feedbackShown
 		}
 		.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)

@@ -103,7 +103,7 @@ import kotlinx.coroutines.launch
 					modifier = Modifier.fillMaxWidth()
 				)
 			}
-			if (showFeedbackCard){
+			if (showFeedbackCard && false){
 				FeedbackPopUpCard({review->
 					logD("Feedback given is $review");
 					alarmContainerViewModel.captureFeedback(review)
