@@ -30,7 +30,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class AlarmContainerViewModel @Inject constructor(
 	val analytics: Analytics,
-	private val alarmRepository: AlarmRepository,
+	alarmRepository: AlarmRepository,
 	private val alarmManager: AlarmManager,
 	private val dataStore: DataStore<Settings>,
 	private val alarmsController: AlarmsController,
@@ -41,9 +41,9 @@ class AlarmContainerViewModel @Inject constructor(
 
 	val showFeedbackUIState: StateFlow<Boolean> = dataStore.data
 		.map { settings ->
-			settings.feedbackShown // show it when it's turned on, probably remotely
+//			!settings.feedbackShown // show it when it's turned on, probably remotely
+			settings.firstAlarmSet && !settings.feedbackShown
 		}
-//		.distinctUntilChanged()
 		.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
 	fun dismissFeedback() {
