@@ -44,4 +44,13 @@ sealed class PermissionStep(
 		R.string.perm_xiaomi_title,
 		R.string.perm_xiaomi_rationale
 	)
+
+	override fun toString(): String {
+		return when(this){
+			ExactAlarm -> "ExactAlarm"
+			PostNotification -> "PostNotification"
+			FullScreenIntent -> "FullScreenIntent"
+			XiaomiAutostart -> "XiaomiAutostart"
+		}
+	}
 }

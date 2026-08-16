@@ -36,6 +36,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material3.Button
@@ -49,6 +50,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -68,11 +70,13 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
 import kotlinx.coroutines.Dispatchers
@@ -403,49 +407,66 @@ private fun AlarmCard(
 	formatter: DateTimeFormatter,
 	zoneId: ZoneId
 ) {
-	Surface(
-		modifier = Modifier.fillMaxWidth(),
-		shape = shapes.extraLarge,
-		color = colorScheme.surfaceContainer
+	CompositionLocalProvider(
+		LocalDensity provides Density(
+			density = LocalDensity.current.density,
+			fontScale = 1f
+		)
 	) {
-		Row(
-			modifier = Modifier.padding(20.dp).fillMaxWidth(),
-			verticalAlignment = Alignment.CenterVertically
+		Surface(
+			modifier = Modifier.fillMaxWidth(),
+			shape = shapes.extraLarge,
+			color = colorScheme.surfaceContainer
 		) {
-			Surface(
-				modifier = Modifier.size(48.dp),
-				shape = shapes.large,
-				color = colorScheme.primaryContainer
+			Row(
+				modifier = Modifier.padding(20.dp).fillMaxWidth(),
+				verticalAlignment = Alignment.CenterVertically
 			) {
-				Box(contentAlignment = Alignment.Center) {
-					Icon(
-						imageVector = Icons.Outlined.Alarm,
-						contentDescription = null,
-						tint = colorScheme.onPrimaryContainer,
-						modifier = Modifier.size(25.dp)
+				Surface(
+					modifier = Modifier.size(48.dp),
+					shape = shapes.large,
+					color = colorScheme.primaryContainer
+				) {
+					Box(contentAlignment = Alignment.Center) {
+						Icon(
+							imageVector = Icons.Outlined.Alarm,
+							contentDescription = null,
+							tint = colorScheme.onPrimaryContainer,
+							modifier = Modifier.size(25.dp)
+						)
+					}
+				}
+
+				Spacer(modifier = Modifier.width(14.dp))
+
+				Column {
+					Row(verticalAlignment = Alignment.CenterVertically) {
+						Text(
+							text = formatEpochMillis(startTime, formatter, zoneId),
+							style = typography.titleMedium,
+							fontWeight = FontWeight.Normal,
+							color = colorScheme.onSurface
+						)
+						Icon(
+							imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+							contentDescription = null,
+							modifier = Modifier.padding(horizontal = 10.dp).size(18.dp),
+							tint = colorScheme.onSurface.copy(alpha = 0.6f)
+						)
+						Text(
+							text = formatEpochMillis(endTime, formatter, zoneId),
+							style = typography.titleMedium,
+							fontWeight = FontWeight.Normal,
+							color = colorScheme.onSurface
+						)
+					}
+					Spacer(modifier = Modifier.height(2.dp))
+					Text(
+						text = stringResource(R.string.onboarding_result_every_min, frequencyInMin),
+						style = typography.bodySmall,
+						color = colorScheme.onSurface.copy(alpha = 0.62f)
 					)
 				}
-			}
-
-			Spacer(modifier = Modifier.width(14.dp))
-
-			Column {
-				Text(
-					text = stringResource(
-						R.string.onboarding_result_time_range,
-						formatEpochMillis(startTime, formatter, zoneId),
-						formatEpochMillis(endTime, formatter, zoneId)
-					),
-					style = typography.titleMedium,
-					fontWeight = FontWeight.Normal,
-					color = colorScheme.onSurface
-				)
-				Spacer(modifier = Modifier.height(2.dp))
-				Text(
-					text = stringResource(R.string.onboarding_result_every_min, frequencyInMin),
-					style = typography.bodySmall,
-					color = colorScheme.onSurface.copy(alpha = 0.62f)
-				)
 			}
 		}
 	}

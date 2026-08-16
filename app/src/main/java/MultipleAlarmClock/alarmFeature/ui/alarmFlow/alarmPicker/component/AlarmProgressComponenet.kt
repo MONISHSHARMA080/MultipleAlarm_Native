@@ -1,7 +1,9 @@
 package MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,7 +60,6 @@ fun TimePickerWithoutDialog(
 			val startTimeString = remember(uiState.alarmObject.startTime, locale) {
 				SimpleDateFormat("h:mm a", locale).format(uiState.alarmObject.startTime.time)
 			}
-
 			Text(
 				text =  stringResource(R.string.alarm_error_time_range, startTimeString ),
 				style = typography.bodyMedium,
@@ -69,19 +71,25 @@ fun TimePickerWithoutDialog(
 	}
 }
 
+
+
 @Composable
 fun LinearProgressForNewAlarm(modifier: Modifier = Modifier, progress: Progress) {
-	val (step, total) =
-		when (progress) {
-			Progress.StartTime -> 1 to 3
-			Progress.EndTime -> 2 to 3
-			Progress.FullEditor -> 3 to 3
-		}
-	val progressFraction = step / total.toFloat()
+	val (step, total) = when (progress) {
+		Progress.StartTime -> 1 to 3
+		Progress.EndTime -> 2 to 3
+		Progress.FullEditor -> 3 to 3
+	}
+
+	// Add the Material 3 animation spec here to make it glide smoothly
+	val progressFraction by animateFloatAsState(
+		targetValue = step / total.toFloat(),
+		animationSpec = tween(durationMillis = 190, easing = FastOutSlowInEasing),
+		label = "progress_animation"
+	)
 
 	Column(
-		modifier =
-			modifier.fillMaxWidth().widthIn(max = 600.dp).padding(horizontal = 24.dp),
+		modifier = modifier.fillMaxWidth().widthIn(max = 600.dp).padding(horizontal = 24.dp),
 		horizontalAlignment = Alignment.CenterHorizontally
 	) {
 		Row(
@@ -99,11 +107,10 @@ fun LinearProgressForNewAlarm(modifier: Modifier = Modifier, progress: Progress)
 		Spacer(modifier = Modifier.height(8.dp))
 		LinearProgressIndicator(
 			progress = { progressFraction },
-			modifier = Modifier.fillMaxWidth().height(5.dp).animateContentSize(),
+			modifier = Modifier.fillMaxWidth().height(4.dp),
 			color = colorScheme.secondary,
 			trackColor = colorScheme.surfaceContainerLow,
 			strokeCap = StrokeCap.Round
 		)
 	}
 }
-

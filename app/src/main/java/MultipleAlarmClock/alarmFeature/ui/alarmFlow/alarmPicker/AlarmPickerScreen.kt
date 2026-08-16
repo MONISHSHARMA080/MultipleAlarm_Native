@@ -7,10 +7,18 @@ import MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.TimePi
 import MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.TimeRow
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -170,18 +178,38 @@ fun AlarmPickerScreen(
             ) {
               TopAppBar(
                       title = {
-                        Text(
-                                when (currentProgress) {
-                                  Progress.StartTime -> stringResource(R.string.alarm_picker_select_start_time)
-                                  Progress.EndTime -> stringResource(R.string.alarm_picker_select_end_time)
-                                  Progress.FullEditor -> if (uiState.initialAlarm == null) stringResource(R.string.alarm_picker_title_set) else stringResource(R.string.alarm_picker_title_edit)
-                                },
-                                style = timeStyle,
-                                color = colorScheme.onBackground,
-                                modifier = Modifier.padding(horizontal = 7.dp),
-                                maxLines = 1,
-                                softWrap = false,
-                        )
+						  AnimatedContent(
+							  targetState = currentProgress,
+							  transitionSpec = {
+								  fadeIn(
+									  animationSpec = tween(210)
+								  ) + slideInVertically(
+									  initialOffsetY = { it / 2 },
+									  animationSpec = tween(220)
+								  ) togetherWith
+										  fadeOut(
+											  animationSpec = tween(150)
+										  ) + slideOutVertically(
+									  targetOffsetY = { -it / 2 },
+									  animationSpec = tween(190)
+								  )
+							  },
+							  label = "alarm_picker_title"
+						  ) { progress ->
+							  Text(
+								  when (progress) {
+									  Progress.StartTime -> stringResource(R.string.alarm_picker_select_start_time)
+									  Progress.EndTime -> stringResource(R.string.alarm_picker_select_end_time)
+									  Progress.FullEditor -> if (uiState.initialAlarm == null) stringResource(R.string.alarm_picker_title_set) else stringResource(R.string.alarm_picker_title_edit)
+								  },
+								  style = timeStyle,
+								  color = colorScheme.onBackground,
+								  modifier = Modifier.padding(horizontal = 7.dp),
+								  maxLines = 1,
+								  softWrap = false,
+							  )
+
+						  }
                       },
                       navigationIcon = {
                         IconButton(
@@ -274,66 +302,96 @@ fun AlarmPickerScreen(
             }
           }
   ) { screenPadding ->
-    AnimatedContent(
-            targetState = currentProgress,
-            modifier = Modifier.fillMaxSize().padding(screenPadding).consumeWindowInsets(screenPadding),
-            transitionSpec = {
-              fadeIn() togetherWith fadeOut() using SizeTransform()
-            },
-            label = "progress_content"
-    ) { currentProgress ->
+    Column(
+      modifier = Modifier
+        .fillMaxSize()
+        .padding(screenPadding)
+        .consumeWindowInsets(screenPadding)
+        .animateContentSize(),
+      horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+      AnimatedVisibility(
+        visible = currentProgress != Progress.FullEditor,
+        enter = expandVertically() + fadeIn(),
+        exit = shrinkVertically() + fadeOut()
+      ) {
+        LinearProgressForNewAlarm(
+          progress = currentProgress,
+          modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 5.dp)
+        )
+      }
 
-		if (currentProgress != Progress.FullEditor) {
-			LinearProgressForNewAlarm(
-				progress = currentProgress,
-				modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 5.dp)
-			)
-		}
-
-      when (currentProgress) {
-
-        Progress.StartTime -> {
-          TimePickerWithoutDialog(
-                  state = startTimePickerState,
-                  modifier = Modifier.padding(horizontal = horizontalPadding),
-			  uiState= uiState
-          )
-        }
-
-        Progress.EndTime -> {
-          TimePickerWithoutDialog(
-                  state = endTimePickerState,
-                  isCandidateInvalid = isCandidateInvalid,
-                  modifier = Modifier.padding(horizontal = horizontalPadding),
-			  uiState = uiState
-          )
-        }
-
-        Progress.FullEditor -> {
-          Column(
-                  modifier = Modifier.fillMaxSize()
-					  .padding(horizontal = horizontalPadding)
-					  .animateContentSize(),
-                  horizontalAlignment = Alignment.CenterHorizontally
-          ) {
-            Spacer(modifier = Modifier.weight(0.44f))
-            TimeRow(
-                    uiState,
-                    {
-                      viewModel.updateStartTime(it)
-                    },
-                    {
-						viewModel.updateEndTime(it)
-					},
+      AnimatedContent(
+        targetState = currentProgress,
+        modifier = Modifier.weight(1f).fillMaxWidth(),
+        transitionSpec = {
+			  val direction = if (targetState.ordinal > initialState.ordinal) {
+				AnimatedContentTransitionScope.SlideDirection.Left
+			  } else {
+				AnimatedContentTransitionScope.SlideDirection.Right
+			  }
+			  slideIntoContainer(
+				towards = direction,
+				animationSpec = tween(
+				  270,
+				  easing = FastOutSlowInEasing
+				)
+			  ) + fadeIn(
+				animationSpec = tween(250)
+			  ) togetherWith
+				  slideOutOfContainer(
+					towards = direction,
+					animationSpec = tween(
+					  110,
+					  easing = FastOutSlowInEasing
+					)
+				  ) + fadeOut(
+				animationSpec = tween(180)
+			  )
+			},
+        label = "alarm_picker_navigation"
+      ) { progress ->
+        when (progress) {
+          Progress.StartTime -> {
+            TimePickerWithoutDialog(
+              state = startTimePickerState,
+              modifier = Modifier.padding(horizontal = horizontalPadding),
+              uiState = uiState
             )
-            Spacer(modifier = Modifier.weight(0.44f))
-	    	 SettingsCard(
-				 uiState = uiState, updateFrequency = {viewModel.updateFrequency(it)} ,
-				 messageValueChanged = {viewModel.updateMessage(it) },
-				 calenderButtonClicked = {showCalendar = true},
-				 selectSoundButtonClicked =onNavigateToSoundList,
-				 selectedSoundName =selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random)
-			 )
+          }
+
+          Progress.EndTime -> {
+            TimePickerWithoutDialog(
+              state = endTimePickerState,
+              isCandidateInvalid = isCandidateInvalid,
+              modifier = Modifier.padding(horizontal = horizontalPadding),
+              uiState = uiState
+            )
+          }
+
+          Progress.FullEditor -> {
+            Column(
+              modifier = Modifier.fillMaxSize()
+                .padding(horizontal = horizontalPadding)
+                .animateContentSize(),
+              horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+              Spacer(modifier = Modifier.weight(0.44f))
+              TimeRow(
+                uiState,
+                { viewModel.updateStartTime(it) },
+                { viewModel.updateEndTime(it) },
+              )
+              Spacer(modifier = Modifier.weight(0.44f))
+              SettingsCard(
+                uiState = uiState,
+                updateFrequency = { viewModel.updateFrequency(it) },
+                messageValueChanged = { viewModel.updateMessage(it) },
+                calenderButtonClicked = { showCalendar = true },
+                selectSoundButtonClicked = onNavigateToSoundList,
+                selectedSoundName = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random)
+              )
+            }
           }
         }
       }
@@ -456,17 +514,10 @@ fun PrimaryActionButton(
                     )
                   }
                   uiState.validationResult is ValidationResult.Failure -> {
-//                    if (isNotDiff) {
-//                      ButtonDefaults.buttonColors(
-//                              containerColor = colorScheme.surfaceVariant,
-//                              contentColor = colorScheme.onSurfaceVariant
-//                      )
-//                    } else {
                       ButtonDefaults.buttonColors(
                               containerColor = colorScheme.errorContainer,
                               contentColor = colorScheme.onErrorContainer
                       )
-//                    }
                   }
                   else -> ButtonDefaults.buttonColors()
                 },
