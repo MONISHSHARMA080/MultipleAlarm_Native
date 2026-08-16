@@ -33,7 +33,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 	var showAlarmSoundList by remember { mutableStateOf(false) }
 
 	LaunchedEffect(uiState.displaySate) {
-		viewModel.analytics.screen("onboarding_${uiState.displaySate.name.lowercase()}")
+		viewModel.analytics.screen("Onboarding_${uiState.displaySate.name.lowercase()}")
 	}
 
 	when(uiState.displaySate){
