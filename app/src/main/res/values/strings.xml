@@ -23,7 +23,7 @@
     <string name="alarm_picker_ok">Select</string>
     <string name="alarm_picker_cancel">Cancel</string>
     <string name="alarm_picker_delete_alarm">Delete</string>
-    <string name="alarm_picker_previous">Previous</string>
+    <string name="alarm_picker_previous">Back</string>
     <string name="alarm_picker_select_start_time">Select start time</string>
     <string name="alarm_picker_select_end_time">Select end time</string>
     <string name="alarm_picker_decrease_desc">Decrease</string>

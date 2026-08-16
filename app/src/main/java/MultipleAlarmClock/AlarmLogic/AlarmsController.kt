@@ -344,21 +344,6 @@ class AlarmsController @Inject constructor(
         }
     }
 
-//    /** try to delete the alarm fom the DB */
-//    suspend fun deleteAlarm(
-//        alarmData: AlarmData, context: Context, alarmManager: AlarmManager
-//    ): ResultCustom<Unit, DeleteAlarmInDbError> {
-//        return ResultCustom.runCatching(
-//            defaultErrorMessage = DeleteAlarmInDbError.GenericError("Sorry, an error occurred. Please try again")
-//        ){
-//            // try to delete the alarm(and cancel it) if error then put it back, and also reschedule it and display the message
-//            val rowsDeleted = alarmRepository.deleteAlarmById(alarmData.id)
-//            // since I have marked it unique that means the rows deleted will one or none(0) nothing else
-//            if (rowsDeleted == 0){
-//                return ResultCustom.Failure(DeleteAlarmInDbError.NoAlarmDeleted(), internalException = Exception("the alarm $alarmData was not found in the DB so we can't delete it"))
-//            }
-//        }
-//    }
 
     suspend fun rescheduleAlarm(
         alarmManager: AlarmManager,
@@ -418,9 +403,7 @@ class AlarmsController @Inject constructor(
             })
             if (this.getDateOnly(nextAlarmInfo.newSeriesStartTime) != this.getDateOnly(nextAlarmInfo.newSeriesEndTime) ) return ResultCustom.Failure(errorMessageToDisplayUser = ResetAlarmError.ProgrammerError(), internalException = Exception( "startDate: ${this.getDateOnly(nextAlarmInfo.newSeriesStartTime) }   and EndTime: ${ this.getDateOnly(nextAlarmInfo.newSeriesEndTime) } of alarmSeries are not equal"))
             if (this.getDateForDisplay(nextAlarmInfo.newSeriesStartTime) != this.getDateForDisplay(nextAlarmInfo.newSeriesEndTime)) return ResultCustom.Failure(ResetAlarmError.ProgrammerError(), internalException = Exception(" startDate from new startSeries time is ${this.getDateForDisplay(nextAlarmInfo.newSeriesStartTime)} and the end date from the new endSeries time is ${this.getDateForDisplay(nextAlarmInfo.newSeriesEndTime)}") )
-            val newAlarm = alarmData.copy(startTime = nextAlarmInfo.newSeriesStartTime, endTime = nextAlarmInfo.newSeriesEndTime, isReadyToUse = true,
-//                date = nextAlarmInfo.newSeriesStartTime
-            )
+            val newAlarm = alarmData.copy(startTime = nextAlarmInfo.newSeriesStartTime, endTime = nextAlarmInfo.newSeriesEndTime, isReadyToUse = true,)
 
             val updatingAlarmStateJob = this.scope.async {this@AlarmsController.updateAlarmStateInDb(newAlarm)  }
             val scheduleAlarmJob = scope.async { scheduleAlarm(nextAlarmInfo.nextAlarmTriggerTime, nextAlarmInfo.newSeriesEndTime, alarmManager, activityContext, receiverClass = alarmReceiverClass, startTimeForAlarmSeries = nextAlarmInfo.newSeriesStartTime , alarmMessage = alarmData.message, alarmData = newAlarm) }

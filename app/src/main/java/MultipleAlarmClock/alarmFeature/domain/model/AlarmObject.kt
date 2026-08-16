@@ -46,7 +46,7 @@ data class AlarmObject(
 			sound = alarmSoundUri?.toString()
 		)
 	}
-	// when we get a weGood == false then we can call this function to see what value produced an error and then display it
+	/**checks if the alarmObject is valid */
 	fun validate(alarmData: AlarmData?): ValidationResult{
 		logD(" -- validation the alarm")
 		if (startTime.timeInMillis >= endTime.timeInMillis) {
@@ -65,17 +65,17 @@ data class AlarmObject(
 		}
 
 		// 2. Check for Changes (If in Edit Mode)
-		if (alarmData != null) {
-			val hasChanged = startTime.timeInMillis != alarmData.startTime ||
-					endTime.timeInMillis != alarmData.endTime ||
-					freqGottenAfterCallback != alarmData.frequencyInMin ||
-					message != alarmData.message ||
-					alarmSoundUri?.toString() != alarmData.sound
+//		if (alarmData != null) {
+//			val hasChanged = startTime.timeInMillis != alarmData.startTime ||
+//					endTime.timeInMillis != alarmData.endTime ||
+//					freqGottenAfterCallback != alarmData.frequencyInMin ||
+//					message != alarmData.message ||
+//					alarmSoundUri?.toString() != alarmData.sound
 
-			if (!hasChanged) {
-				return ValidationResult.Failure(AlarmErrorField.AlarmIsNotDiff, "No changes made. Change something to update the alarm.")
-			}
-		}
+//			if (!hasChanged) {
+//				return ValidationResult.Failure(AlarmErrorField.AlarmIsNotDiff, "No changes made. Change something to update the alarm.")
+//			}
+//		}
 		return ValidationResult.Success
 	}
 

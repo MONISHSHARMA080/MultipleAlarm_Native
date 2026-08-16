@@ -1,6 +1,5 @@
 package com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmPicker
 
-import MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
 import MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
 import MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.LinearProgressForNewAlarm
 import MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.SettingsCard
@@ -258,9 +257,9 @@ fun AlarmPickerScreen(
                             }
 
                             Progress.FullEditor -> {
-                              val isNotDiff = uiState.validationResult is ValidationResult.Failure &&
-                                      (uiState.validationResult as ValidationResult.Failure).field == AlarmErrorField.AlarmIsNotDiff
-                              val isInactiveEdit = isNotDiff && uiState.initialAlarm?.isReadyToUse == false
+//                              val isNotDiff = uiState.validationResult is ValidationResult.Failure &&
+//                                      (uiState.validationResult as ValidationResult.Failure).field == AlarmErrorField.AlarmIsNotDiff
+                              val isInactiveEdit =  uiState.initialAlarm?.isReadyToUse == false
                               val canSetAlarm = uiState.validationResult == ValidationResult.Success || isInactiveEdit
 
                               if (canSetAlarm) {
@@ -442,9 +441,9 @@ fun PrimaryActionButton(
       }
 
       Progress.FullEditor -> {
-        val isNotDiff = uiState.validationResult is ValidationResult.Failure &&
-                uiState.validationResult.field == AlarmErrorField.AlarmIsNotDiff
-        val isInactiveEdit = isNotDiff && uiState.initialAlarm?.isReadyToUse == false
+//        val isNotDiff = uiState.validationResult is ValidationResult.Failure &&
+//                uiState.validationResult.field == AlarmErrorField.AlarmIsNotDiff
+        val isInactiveEdit =  uiState.initialAlarm?.isReadyToUse == false
         val canSetAlarm = uiState.validationResult == ValidationResult.Success || isInactiveEdit
 
         Button(
@@ -457,17 +456,17 @@ fun PrimaryActionButton(
                     )
                   }
                   uiState.validationResult is ValidationResult.Failure -> {
-                    if (isNotDiff) {
-                      ButtonDefaults.buttonColors(
-                              containerColor = colorScheme.surfaceVariant,
-                              contentColor = colorScheme.onSurfaceVariant
-                      )
-                    } else {
+//                    if (isNotDiff) {
+//                      ButtonDefaults.buttonColors(
+//                              containerColor = colorScheme.surfaceVariant,
+//                              contentColor = colorScheme.onSurfaceVariant
+//                      )
+//                    } else {
                       ButtonDefaults.buttonColors(
                               containerColor = colorScheme.errorContainer,
                               contentColor = colorScheme.onErrorContainer
                       )
-                    }
+//                    }
                   }
                   else -> ButtonDefaults.buttonColors()
                 },
@@ -485,7 +484,7 @@ fun PrimaryActionButton(
             Text(
                     when {
                       isValid -> stringResource(R.string.alarm_picker_btn_set)
-                      isNotDiff -> stringResource(R.string.alarm_picker_btn_change)
+//                      isNotDiff -> stringResource(R.string.alarm_picker_btn_change)
                       else -> stringResource(R.string.alarm_picker_btn_fix)
                     },
                     style = typography.bodyLarge,

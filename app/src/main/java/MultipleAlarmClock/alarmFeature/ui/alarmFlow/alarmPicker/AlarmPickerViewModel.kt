@@ -101,17 +101,18 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		val validationResult = alarmToUse.validate(current.initialAlarm)
 
 		_uiState.update { it.copy(alarmObject = alarmToUse, validationResult = validationResult) }
+		logD("validation result after setAlarmCLicked is  $validationResult ")
 
 		if (validationResult is ValidationResult.Failure) return
+		if (!current.areAllPermissionsGranted) {
+			val missing = PermissionUtils.getRequiredPermissionSteps(context)
+			_uiState.update { it.copy(showPermissionDialog = true, missingSteps = missing) }
+			return
+		}
 
 		viewModelScope.launch {
-			if (!current.areAllPermissionsGranted) {
-				val missing = PermissionUtils.getRequiredPermissionSteps(context)
-				_uiState.update { it.copy(showPermissionDialog = true, missingSteps = missing) }
-			} else {
-				setAlarm(alarmToUse, current.initialAlarm)
-				_uiState.update { it.copy(alarmOperationCompletedGoBack = true) }
-			}
+					setNewOrUpdateAlarm(alarmToUse, current.initialAlarm)
+					_uiState.update { it.copy(alarmOperationCompletedGoBack = true) }
 		}
 	}
 
@@ -367,16 +368,14 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	}
 
 
-	/**[setAlarm] - here [AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
-	private fun setAlarm(newAlarmObject: AlarmObject, oldAlarm: AlarmData? ){
+	/**[setNewOrUpdateAlarm] - here [AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
+	private fun setNewOrUpdateAlarm(newAlarmObject: AlarmObject, oldAlarm: AlarmData? ){
 		when (oldAlarm) {
 			null -> {
 				//  oldAlarm was not there so setting a new alarm
 				viewModelScope.launch {
 					launch {
-						analytics.captureEvent("user setting new alarm", mapOf(
-							"alarmObject" to newAlarmObject.toString()
-						))
+						analytics.captureEvent("user setting new alarm", mapOf("alarmObject" to newAlarmObject.toString() ) )
 					}
 					logD("the alarm data confirmed is $newAlarmObject, and is  oldAlarm == newAlarmObject ->  ")
 					val exception = alarmsController.startAlarmSeriesHandler(

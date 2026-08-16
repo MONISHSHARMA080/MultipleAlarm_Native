@@ -42,7 +42,6 @@ class AlarmContainerViewModel @Inject constructor(
 
 	val showFeedbackUIState: StateFlow<Boolean> = dataStore.data
 		.map { settings ->
-			logD("data from datastore, feedbackShown: ${settings.feedbackShown} firstAlarmSet: ${settings.firstAlarmSet}")
 			settings.firstAlarmSet && !settings.feedbackShown
 		}
 		.distinctUntilChanged()
