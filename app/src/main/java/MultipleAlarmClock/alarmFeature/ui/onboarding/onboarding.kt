@@ -11,6 +11,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +31,10 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 	val missingSteps by viewModel.missingSteps.collectAsStateWithLifecycle()
 	val allCriticalGranted by viewModel.allCriticalGranted.collectAsStateWithLifecycle()
 	var showAlarmSoundList by remember { mutableStateOf(false) }
+
+	LaunchedEffect(uiState.displaySate) {
+		viewModel.analytics.screen("onboarding_${uiState.displaySate.name.lowercase()}")
+	}
 
 	when(uiState.displaySate){
 //		DisplaySate.Greeting -> AlarmResultClaude(uiState.alarmData, onNextClick = {viewModel.onPreviousClicked()  } )

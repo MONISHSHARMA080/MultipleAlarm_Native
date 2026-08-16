@@ -64,6 +64,8 @@ import kotlinx.coroutines.launch
 	}
 
 	fun onNextClicked()  {
+		val currentStep = _displayState.value.displaySate.name
+		analytics.captureEvent("onboarding_next_clicked", mapOf("step" to currentStep))
 		// increment the state
 		_displayState.update { value ->
 			when(value.displaySate){
@@ -76,6 +78,8 @@ import kotlinx.coroutines.launch
 		}
 	}
 	fun onPreviousClicked()  {
+		val currentStep = _displayState.value.displaySate.name
+		analytics.captureEvent("onboarding_previous_clicked", mapOf("step" to currentStep))
 		// increment the state
 		_displayState.update { value ->
 			when(value.displaySate){
@@ -89,6 +93,7 @@ import kotlinx.coroutines.launch
 	}
 
 	  fun finishedOnboarding(){
+		 analytics.captureEvent("onboarding_finished", emptyMap())
 		 viewModelScope.launch {
 			 settingsDataStore.updateData { data -> data.copy { isFirstLaunch = false }}
 		 }
