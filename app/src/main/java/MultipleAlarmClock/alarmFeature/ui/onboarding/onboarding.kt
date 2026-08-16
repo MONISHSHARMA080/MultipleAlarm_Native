@@ -1,6 +1,7 @@
 package MultipleAlarmClock.alarmFeature.ui.onboarding
 
 import MultipleAlarmClock.alarmFeature.ui.onboarding.components.AlarmResultClaude
+import MultipleAlarmClock.alarmFeature.ui.onboarding.components.GreetingScreen
 import MultipleAlarmClock.alarmFeature.ui.onboarding.components.PermissionScreen
 import MultipleAlarmClock.alarmFeature.ui.onboarding.components.ProblemScreen
 import MultipleAlarmClock.alarmFeature.ui.onboarding.data.DisplaySate
