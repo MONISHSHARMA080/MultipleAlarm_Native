@@ -14,7 +14,8 @@ object SettingsSerializer : Serializer<Settings> {
 		allPermissionsGranted = false
 		firstAlarmSet = false
 		firstAlarmNotificationReceived = false
-		feedbackShown = false
+		// this should be shouldWeShowFeedbackCard
+		shouldWeShowFeedbackCard = false
 	}
 	override suspend fun readFrom(input: InputStream): Settings {
 		try {

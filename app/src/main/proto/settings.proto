@@ -8,5 +8,5 @@ message Settings {
   bool all_permissions_granted = 2;
   bool first_alarm_set = 3;
   bool first_alarm_notification_received = 4;
-  bool feedback_shown = 5;
+  bool should_we_show_feedback_card = 5;
 }

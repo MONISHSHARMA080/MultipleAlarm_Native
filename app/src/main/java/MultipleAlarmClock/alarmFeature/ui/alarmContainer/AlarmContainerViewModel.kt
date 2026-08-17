@@ -41,13 +41,16 @@ class AlarmContainerViewModel @Inject constructor(
 
 	val showFeedbackUIState: StateFlow<Boolean> = dataStore.data
 		.map { settings ->
-			settings.firstAlarmSet && !settings.feedbackShown
+//			settings.firstAlarmSet && !settings.feedbackShown
+//			logD("shouldWeShowFeedbackCard:${settings.shouldWeShowFeedbackCard}")
+			settings.shouldWeShowFeedbackCard
 		}
 		.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
 	fun dismissFeedback() {
 		viewModelScope.launch {
-			dataStore.updateData { it.copy { feedbackShown = true } }
+//			dataStore.updateData { it.copy { feedbackShown = true } }
+			dataStore.updateData { it.copy { shouldWeShowFeedbackCard = false } }
 			analytics.captureEvent("feedback board dismissed", mapOf())
 		}
 	}
@@ -55,7 +58,7 @@ class AlarmContainerViewModel @Inject constructor(
 	fun captureFeedback(feedback: String) {
 		viewModelScope.launch {
 			analytics.captureEvent("feedback given", mapOf("feedback" to feedback))
-			dataStore.updateData { it.copy { feedbackShown = true } }
+			dataStore.updateData { it.copy { shouldWeShowFeedbackCard = false } }
 		}
 	}
 
