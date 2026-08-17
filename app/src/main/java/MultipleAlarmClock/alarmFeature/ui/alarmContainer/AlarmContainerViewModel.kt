@@ -57,8 +57,8 @@ class AlarmContainerViewModel @Inject constructor(
 
 	fun captureFeedback(feedback: String) {
 		viewModelScope.launch {
-			analytics.captureEvent("feedback given", mapOf("feedback" to feedback))
 			dataStore.updateData { it.copy { shouldWeShowFeedbackCard = false } }
+			analytics.captureEvent("feedback given", mapOf("feedback" to feedback))
 		}
 	}
 

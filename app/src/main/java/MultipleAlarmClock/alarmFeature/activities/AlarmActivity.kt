@@ -288,7 +288,7 @@ class AlarmActivity : ComponentActivity() {
 								Text(
 									text = message,
 									color = colorScheme.onSurface,
-									style = MaterialTheme.typography.displaySmall,
+									style = typography.headlineLarge,
 									fontWeight = FontWeight.Normal,
 									lineHeight = 35.sp
 								)
