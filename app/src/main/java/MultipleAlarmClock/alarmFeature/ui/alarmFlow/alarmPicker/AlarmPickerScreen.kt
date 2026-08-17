@@ -259,43 +259,41 @@ fun AlarmPickerScreen(
                 )
 
                 PrimaryActionButton(
-                        currentProgress = currentProgress,
-                        uiState = uiState,
-                        isCandidateInvalid = isCandidateInvalid,
-                        onAction = {
-                          when (currentProgress) {
-                            Progress.StartTime -> {
-                              val selectedStartTime = (uiState.alarmObject.startTime.clone() as Calendar).apply {
-                                set(Calendar.HOUR_OF_DAY, startTimePickerState.hour)
-                                set(Calendar.MINUTE, startTimePickerState.minute)
-                              }
-                              viewModel.updateStartTime(selectedStartTime)
-                              viewModel.updateProgress(Progress.EndTime)
-                              view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                            }
+					currentProgress = currentProgress,
+					uiState = uiState,
+					isCandidateInvalid = isCandidateInvalid,
+					onAction = {
+					  when (currentProgress) {
+						Progress.StartTime -> {
+						  val selectedStartTime = (uiState.alarmObject.startTime.clone() as Calendar).apply {
+							set(Calendar.HOUR_OF_DAY, startTimePickerState.hour)
+							set(Calendar.MINUTE, startTimePickerState.minute)
+						  }
+						  viewModel.updateStartTime(selectedStartTime)
+						  viewModel.updateProgress(Progress.EndTime)
+						  view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+						}
 
-                            Progress.EndTime -> {
-                              if (!isCandidateInvalid) {
-                                viewModel.updateEndTime(candidateEnd)
-                                viewModel.updateProgress(Progress.FullEditor)
-                                view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                              }
-                            }
+						Progress.EndTime -> {
+						  if (!isCandidateInvalid) {
+							viewModel.updateEndTime(candidateEnd)
+							viewModel.updateProgress(Progress.FullEditor)
+							view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+						  }
+						}
 
-                            Progress.FullEditor -> {
-//                              val isNotDiff = uiState.validationResult is ValidationResult.Failure &&
-//                                      (uiState.validationResult as ValidationResult.Failure).field == AlarmErrorField.AlarmIsNotDiff
-                              val isInactiveEdit =  uiState.initialAlarm?.isReadyToUse == false
-                              val canSetAlarm = uiState.validationResult == ValidationResult.Success || isInactiveEdit
+						Progress.FullEditor -> {
+						  val isInactiveEdit =  uiState.initialAlarm?.isReadyToUse == false
+						  val canSetAlarm = uiState.validationResult == ValidationResult.Success || isInactiveEdit
 
-                              if (canSetAlarm) {
-                                viewModel.onSetAlarmClicked()
-                                view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                              }
-                            }
-                          }
-                        }
-                )
+						  if (canSetAlarm) {
+							viewModel.onSetAlarmClicked()
+							view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+						  }
+						}
+					  }
+					}
+				)
               }
             }
           }
