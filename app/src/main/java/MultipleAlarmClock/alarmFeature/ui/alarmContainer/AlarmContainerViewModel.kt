@@ -73,9 +73,7 @@ class AlarmContainerViewModel @Inject constructor(
 	fun stopAlarm(alarmData: AlarmData){
 		viewModelScope.launch {
 			launch {
-				analytics.captureEvent("user stopped the alarm", mapOf(
-					"alarmData" to alarmData.toString()
-				))
+				analytics.captureEvent("user stopped the alarm", mapOf("alarmData" to alarmData.toString()))
 			}
 			logD("user asked to stop the alarm $alarmData")
 			alarmsController.cancelAlarmHandler(alarmData,  context, alarmManager).fold(onSuccess = {}, onError = { messageToDisplayUser, exception ->
