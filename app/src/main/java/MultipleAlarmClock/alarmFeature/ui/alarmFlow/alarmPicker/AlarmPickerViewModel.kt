@@ -141,9 +141,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	}
 
 	fun captureUiStateAndSendAnalytics(state: AlarmPickerUiState): Unit {
-		val isNotificationsEnabled =
-			ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
-					PackageManager.PERMISSION_GRANTED
+		val isNotificationsEnabled = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
 		captureEvent(
 			"alarmPickerUi_state_change",
 			mapOf(
