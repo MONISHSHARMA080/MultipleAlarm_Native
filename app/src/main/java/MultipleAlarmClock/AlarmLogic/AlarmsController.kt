@@ -295,7 +295,7 @@ class AlarmsController @Inject constructor(
 		}
 	}
 
-	private inline fun cancelPendingIntentReceiver(
+	private fun cancelPendingIntentReceiver(
 			baseIntent: Intent, context: Context, intentData: AlarmActivityIntentData, alarmReceiverClass:Class<out BroadcastReceiver>, alarmManager: AlarmManager, intentRequestCode: Int
 	){
 		baseIntent.apply {
@@ -320,7 +320,7 @@ class AlarmsController @Inject constructor(
 
 	suspend fun rescheduleAlarm(
 			alarmManager: AlarmManager,
-			freqAfterCallback:Long, activityContext: Context, alarmData:AlarmData,
+			 activityContext: Context, alarmData:AlarmData,
 			receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, nextAlarmInfo: NextAlarmInfo
 	): ResultCustom<Unit, RescheduleAlarmError> {
 		return ResultCustom.runCatching(
@@ -347,7 +347,7 @@ class AlarmsController @Inject constructor(
 				alarmDataForDeleting = newAlarm
 				val alarmSchedule = scope.async {
 					scheduleAlarm(
-						alarmManager = alarmManager, componentActivity = activityContext, alarmData = newAlarm, alarmTriggerTime = nextAlarmInfo.nextAlarmTriggerTime
+						alarmManager = alarmManager, componentActivity = activityContext, alarmData = newAlarm, alarmTriggerTime = nextAlarmInfo.nextAlarmTriggerTime, receiverClass = receiverClass
 					)
 				}
 				alarmSchedule.await().fold(
@@ -363,7 +363,6 @@ class AlarmsController @Inject constructor(
 					}
 				)
 			} catch (e: Exception) {
-				// if we have gotten an error then we will need to cancel the alarmcancelAlarmByCancelingPendingIntent and return the exception and also delete the alarm
 				this.cancelAlarm(alarmDataForDeleting, activityContext, alarmManager,)
 				logD("error occurred in the schedule multiple alarms, so we are going to cancel the alarm whole, in scheduleAlarm2-->${e}")
 				logD("[UNEXPECTED ERROR] in reschedule alarm failed to account for exception/error (exception here) -> $e")
