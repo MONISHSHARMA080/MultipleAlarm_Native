@@ -76,9 +76,9 @@ class AlarmContainerViewModel @Inject constructor(
 				analytics.captureEvent("user stopped the alarm", mapOf("alarmData" to alarmData.toString()))
 			}
 			logD("user asked to stop the alarm $alarmData")
-			alarmsController.cancelAlarmHandler(alarmData,  context, alarmManager).fold(onSuccess = {}, onError = { messageToDisplayUser, exception ->
-				errorHandler.handleError(Result.Failure(messageToDisplayUser, exception))
-				logD("there is a error/Exception in making new alarm-->${exception.message}")
+			alarmsController.cancelAlarmHandler(alarmData,  context, alarmManager).fold(onSuccess = {}, onError = { error ->
+				errorHandler.handleError(Result.Failure(error))
+				logD("there is a error in cancelling alarm-->${error.internalErrorMessage}")
 			})
 		}
 	}
@@ -108,9 +108,9 @@ class AlarmContainerViewModel @Inject constructor(
 						))
 					}
 				},
-				onError = { messageToDisplayUser, exception->
-					errorHandler.handleError(Result.Failure(messageToDisplayUser, exception))
-					logD("error/exception in the reset alarm -->${exception.message}")
+				onError = { error ->
+					errorHandler.handleError(Result.Failure(error))
+					logD("error in the reset alarm -->${error.internalErrorMessage}")
 				}
 			)
 		}
@@ -126,9 +126,9 @@ class AlarmContainerViewModel @Inject constructor(
 				)
 			}
 			logD("deleting the alarm $alarmData")
-			alarmsController.deleteAlarmHandler(alarmData, context, alarmManager).fold(onSuccess = {}, onError = { messageToDisplayUser, exception ->
-				logD("there is a error in deleting the alarm  that is $exception ")
-				errorHandler.handleError(Result.Failure(messageToDisplayUser, exception))
+			alarmsController.deleteAlarmHandler(alarmData, context, alarmManager).fold(onSuccess = {}, onError = { error ->
+				logD("there is a error in deleting the alarm that is $error")
+				errorHandler.handleError(Result.Failure(error))
 			})
 		}
 

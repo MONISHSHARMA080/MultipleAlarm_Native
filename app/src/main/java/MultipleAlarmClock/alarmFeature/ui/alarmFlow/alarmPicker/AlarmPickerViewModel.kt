@@ -284,9 +284,9 @@ class AlarmPickerViewModel @AssistedInject constructor(
 					analytics.captureEvent("alarm successfully deleted", mapOf("alarmId" to alarmData.id))
 					_uiState.update { it.copy(alarmOperationCompletedGoBack = true) }
 				},
-				onError = { messageToDisplayUser, exception ->
-					logD("error while deleting alarm: ${exception.message}")
-					errorHandler.handleError(Result.Failure(messageToDisplayUser, exception))
+				onError = { error ->
+					logD("error while deleting alarm: ${error.internalErrorMessage}")
+					errorHandler.handleError(Result.Failure(error))
 				}
 			)
 		}
@@ -389,9 +389,9 @@ class AlarmPickerViewModel @AssistedInject constructor(
 								analytics.captureEvent("new alarm successfully set", mapOf("alarmObject" to newAlarmObject.toString()))
 							}
 						},
-						onError = {messageToDisplayUser, exception ->
-							logD("there is a error in making new alarm  that is $exception ")
-							errorHandler.handleError(Result.Failure(messageToDisplayUser, exception))
+						onError = { error ->
+							logD("there is a error in making new alarm  that is $error")
+							errorHandler.handleError(Result.Failure(error))
 						}
 					)
 				}
@@ -400,10 +400,10 @@ class AlarmPickerViewModel @AssistedInject constructor(
 				//  oldAlarm was there so editing an existing alarm
 				viewModelScope.launch {
 					logD("deleting the alarm $ oldAlarm")
-					alarmsController.updateAlarmStateInDb( oldAlarm).fold(onSuccess = {}, onError = { messageToDisplayUser, exception  ->
+					alarmsController.updateAlarmStateInDb( oldAlarm).fold(onSuccess = {}, onError = { error ->
 						// no such alarm exist in DB so can't update it
-						logD("there is a error while editing the alarm and updating it's state in DB and  that is ${exception.message} ")
-						errorHandler.handleError(Result.Failure(messageToDisplayUser, exception))
+						logD("there is a error while editing the alarm and updating it's state in DB and  that is ${error.internalErrorMessage}")
+						errorHandler.handleError(Result.Failure(error))
 					}
 					)
 					val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(
@@ -426,9 +426,9 @@ class AlarmPickerViewModel @AssistedInject constructor(
 								)
 							}
 						},
-						onError = { messageToDisplayUser, exception ->
-							errorHandler.handleError(Result.Failure(messageToDisplayUser, exception))
-							logD("there is a error/Exception in editing new alarm-->${exception.message}")
+						onError = { error ->
+							errorHandler.handleError(Result.Failure(error))
+							logD("there is a error in editing new alarm-->${error.internalErrorMessage}")
 						}
 					)
 

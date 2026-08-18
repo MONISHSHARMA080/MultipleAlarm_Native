@@ -56,8 +56,8 @@ class ResetAlarmAfterBoot @AssistedInject constructor(
 		val hasError = results.any { it.isErr() }
 
 		results.forEach { result ->
-			result.fold(onSuccess = {}, onError = {errorToDisplayUser, exception ->
-				ErrorHandler(NotificationHandler(applicationContext), Analytics(applicationContext)).handleError(ResultsCustom.Failure(errorToDisplayUser, exception))
+			result.fold(onSuccess = {}, onError = { error ->
+				ErrorHandler(NotificationHandler(applicationContext), Analytics(applicationContext)).handleError(ResultsCustom.Failure(error))
 			})
 		}
 		return if (hasError) Result.failure() else Result.success()

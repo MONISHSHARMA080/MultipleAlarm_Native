@@ -10,8 +10,6 @@ import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.notification.NotificationChannelType
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
-import com.coolApps.MultipleAlarmClock.utils.Result.Error
-import com.coolApps.MultipleAlarmClock.utils.Result.Result
 import com.coolApps.MultipleAlarmClock.utils.UiText
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
@@ -23,12 +21,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-sealed interface AlarmInfoNotificationError: Error{
-    data class GenericError(
-        override val messageToDisplayUser: UiText,
-        override val titleToDisplayUser: UiText = UiText.StringResource(R.string.error_title_generic)
-    ): AlarmInfoNotificationError
-}
 
 @AndroidEntryPoint
 class AlarmInfoNotification: BroadcastReceiver()  {
@@ -59,7 +51,14 @@ class AlarmInfoNotification: BroadcastReceiver()  {
         coroutineScope.launch {
             val notificationHandler =NotificationHandler(context)
             val errorHandler = ErrorHandler(notificationHandler, analytics )
-            errorHandler.handleError(Result.Failure(AlarmInfoNotificationError.GenericError(UiText.DynamicString("there was an error in displaying the alarm info ")), Exception(error)))
+			val displayErrorTitle: String = UiText.StringResource(R.string.error_title_generic).toString()
+			val displayErrorMessage: String = UiText.StringResource(R.string.error_generic).toString()
+            errorHandler.handleError(
+				displayMessage = displayErrorMessage,
+				displayTitle = displayErrorTitle,
+				internalErrorMessage = error,
+				errorClassName = "AlarmInfoNotification",
+			)
         }
     }
 
