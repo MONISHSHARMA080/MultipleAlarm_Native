@@ -65,16 +65,14 @@ class AlarmsController @Inject constructor(
 
 	suspend fun scheduleAlarm(
 			alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, alarmData: AlarmData, alarmTriggerTime:Long
-	): ResultCustom<Unit, scheduleAlarmError>{
-		return ResultCustom.runCatching(
-			defaultErrorMessage = scheduleAlarmError.GenericError()
-		){
+	): ResultCustom<Unit, AlarmControllerError>{
+		return ResultCustom.runCatching(defaultErrorMessage = AlarmControllerError.Unknown()){
 			val res =alarmData.validate()
-			if (res != AlarmDataValidationResult.Success) return ResultCustom.Failure(errorMessageToDisplayUser = scheduleAlarmError.ProgrammerError(), internalException = Exception("AlarmData validation failed, and res:$res"))
+			if (res != AlarmDataValidationResult.Success) return ResultCustom.Failure(errorClass = AlarmControllerError.ValidationFailed(), internalException = Exception("AlarmData validation failed, and res:$res"))
 			val resultForAlarmOpr = getPendingIntentForAlarm(receiverClass = receiverClass, context = componentActivity, alarmTriggerTime, alarmData = alarmData)
 			val PIForAlarm = resultForAlarmOpr.fold(
 				onSuccess = {PI -> PI},
-				onError = {failureRes, exception-> return ResultCustom.Failure(errorMessageToDisplayUser = scheduleAlarmError.PendingIntentNotFound(failureRes.messageToDisplayUser), internalException = Exception(exception)) }
+				onError = {failureRes, exception-> return ResultCustom.Failure(errorClass = AlarmControllerError.PendingIntentNotFound(failureRes.messageToDisplayUser), internalException = Exception(exception)) }
 			)
 			val alarmClockInfoObject = AlarmManager.AlarmClockInfo(alarmTriggerTime, PIForAlarm.pendingIntentToGiveUserUpcommingAlarmInfoWhenAsked)
 			alarmManager.setAlarmClock(alarmClockInfoObject, PIForAlarm.pendingIntentForAlarm)
@@ -99,7 +97,7 @@ class AlarmsController @Inject constructor(
 			// this is for the alarm receiver
 			var pendingIntentForAlarm = PendingIntent.getBroadcast(context, alarmTriggerTime.toInt(), intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE)
 			if(pendingIntentForAlarm != null){
-				return ResultCustom.Failure(errorMessageToDisplayUser = GetPendingIntentForAlarmError.PendingIntentAlreadyExist(), internalException = Exception( "Alarm on (${getTimeInHumanReadableFormat(alarmData.startTime)}) already exists"))
+				return ResultCustom.Failure(errorClass = GetPendingIntentForAlarmError.PendingIntentAlreadyExist(), internalException = Exception( "Alarm on (${getTimeInHumanReadableFormat(alarmData.startTime)}) already exists"))
 			}
 			pendingIntentForAlarm = PendingIntent.getBroadcast(context, alarmId, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 			// meaning that the pending intent does not exist, and it is safe to create one
@@ -128,7 +126,7 @@ class AlarmsController @Inject constructor(
 		){
 			val currentTIme = Calendar.getInstance()
 			alarmData.validate().let {
-				if (it != AlarmDataValidationResult.Success) return ResultCustom.Failure(errorMessageToDisplayUser = StartAlarmSeriesError.ProgrammerError(), internalException = Exception("AlarmData validation failed, and res:$it") )
+				if (it != AlarmDataValidationResult.Success) return ResultCustom.Failure(errorClass = StartAlarmSeriesError.ProgrammerError(), internalException = Exception("AlarmData validation failed, and res:$it") )
 			}
 			// since I could have startTime < now < endTime
 			val timeReturned =alarmData.alarmTimeSequence().firstOrNull{ it > currentTIme.timeInMillis }
@@ -141,7 +139,7 @@ class AlarmsController @Inject constructor(
 			// TODO: last db update is handled in alarmReceiver, alarmReceiver rewrite, it should just receive the intent and schedule next alarm and not make decisions, that code should  be in this class
 
 			scheduleAlarmHandler.await().fold(onSuccess = {}, onError = {errorMessageForUser, exception ->
-				return ResultCustom.Failure(errorMessageToDisplayUser = StartAlarmSeriesError.ErrorSchedulingAlarm(errorMessageForUser.messageToDisplayUser), internalException = Exception(exception))
+				return ResultCustom.Failure(errorClass = StartAlarmSeriesError.ErrorSchedulingAlarm(errorMessageForUser.messageToDisplayUser), internalException = Exception(exception))
 			})
 		}
 	}
@@ -165,7 +163,7 @@ class AlarmsController @Inject constructor(
 					// ToDo: fix this error in all alarmController, if the alarmValidation(some cases) doesn't have problem then we don't need to delete it, better for user experience
 					alarmRepository.deleteAlarm(insertedAlarmData)
 					this@AlarmsController.cancelAlarmHandler(insertedAlarmData, activityContext, alarmManager)
-					return ResultCustom.Failure(errorMessageToDisplayUser = StartAlarmSeriesHandlerError.ErrorSchedulingAlarm(messageForUser.messageToDisplayUser), internalException= exception )
+					return ResultCustom.Failure(errorClass = StartAlarmSeriesHandlerError.ErrorSchedulingAlarm(messageForUser.messageToDisplayUser), internalException= exception )
 				}
 			)
 		}
@@ -184,7 +182,7 @@ class AlarmsController @Inject constructor(
 			})
 			cancelAlarm(alarmData, context,alarmManager).fold(onSuccess = {}, onError = {errorToDisplayUser, exception ->
 				alarmRepository.upsertAlarm(alarmData.copy(isReadyToUse = false))
-				return ResultCustom.Failure(errorMessageToDisplayUser = CancelAlarmHandlerError.CancellingAlarmError(errorToDisplayUser.messageToDisplayUser), internalException = exception)
+				return ResultCustom.Failure(errorClass = CancelAlarmHandlerError.CancellingAlarmError(errorToDisplayUser.messageToDisplayUser), internalException = exception)
 			})
 		}
 	}
@@ -212,7 +210,7 @@ class AlarmsController @Inject constructor(
 						//  error exist since we let there be a state in db(/app) that should not be and now when the user wants to delete it then we should let them and not insert it over here
 					}
 				}
-				return ResultCustom.Failure(errorMessageToDisplayUser = DeleteAlarmHandlerError.AlarmNotInDbToDelete(messageToDisplayUser.messageToDisplayUser), internalException = exception)
+				return ResultCustom.Failure(errorClass = DeleteAlarmHandlerError.AlarmNotInDbToDelete(messageToDisplayUser.messageToDisplayUser), internalException = exception)
 			})
 		}
 	}
@@ -323,14 +321,14 @@ class AlarmsController @Inject constructor(
 				}
 				alarmSchedule.await().fold(onSuccess = {}, onError = {errorToDisplayUser, exception ->
 					this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarmData.startTime, activityContext, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", alarmData.endTime, LastAlarmUpdateDBReceiver())
-					return  ResultCustom.Failure(errorMessageToDisplayUser = RescheduleAlarmError.AlarmScheduleError(errorToDisplayUser.messageToDisplayUser), internalException = Exception(exception))
+					return  ResultCustom.Failure(errorClass = RescheduleAlarmError.AlarmScheduleError(errorToDisplayUser.messageToDisplayUser), internalException = Exception(exception))
 				})
 			} catch (e: Exception) {
 				// if we have gotten an error then we will need to cancel the alarmcancelAlarmByCancelingPendingIntent and return the exception and also delete the alarm
 				this.cancelAlarm(alarmDataForDeleting, activityContext, alarmManager,)
 				logD("error occurred in the schedule multiple alarms, so we are going to cancel the alarm whole, in scheduleAlarm2-->${e}")
 				logD("[UNEXPECTED ERROR] in reschedule alarm failed to account for exception/error (exception here) -> $e")
-				return ResultCustom.Failure(errorMessageToDisplayUser = RescheduleAlarmError.GenericError(), internalException = e)
+				return ResultCustom.Failure(errorClass = RescheduleAlarmError.GenericError(), internalException = e)
 			}
 		}
 	}
@@ -347,7 +345,7 @@ class AlarmsController @Inject constructor(
 			val nextAlarmInfo = res.fold(onSuccess = {nextAlarmInfo-> nextAlarmInfo}, onError = {errorMessageToShowUser, throwable->
 				return ResultCustom.Failure(ResetAlarmError.CalculateNextAlarmError(errorMessageToShowUser.messageToDisplayUser), internalException = Exception(throwable))
 			})
-			if (this.getDateOnly(nextAlarmInfo.newSeriesStartTime) != this.getDateOnly(nextAlarmInfo.newSeriesEndTime) ) return ResultCustom.Failure(errorMessageToDisplayUser = ResetAlarmError.ProgrammerError(), internalException = Exception( "startDate: ${this.getDateOnly(nextAlarmInfo.newSeriesStartTime) }   and EndTime: ${ this.getDateOnly(nextAlarmInfo.newSeriesEndTime) } of alarmSeries are not equal"))
+			if (this.getDateOnly(nextAlarmInfo.newSeriesStartTime) != this.getDateOnly(nextAlarmInfo.newSeriesEndTime) ) return ResultCustom.Failure(errorClass = ResetAlarmError.ProgrammerError(), internalException = Exception( "startDate: ${this.getDateOnly(nextAlarmInfo.newSeriesStartTime) }   and EndTime: ${ this.getDateOnly(nextAlarmInfo.newSeriesEndTime) } of alarmSeries are not equal"))
 			if (this.getDateForDisplay(nextAlarmInfo.newSeriesStartTime) != this.getDateForDisplay(nextAlarmInfo.newSeriesEndTime)) return ResultCustom.Failure(ResetAlarmError.ProgrammerError(), internalException = Exception(" startDate from new startSeries time is ${this.getDateForDisplay(nextAlarmInfo.newSeriesStartTime)} and the end date from the new endSeries time is ${this.getDateForDisplay(nextAlarmInfo.newSeriesEndTime)}") )
 			val newAlarm = alarmData.copy(startTime = nextAlarmInfo.newSeriesStartTime, endTime = nextAlarmInfo.newSeriesEndTime, isReadyToUse = true,)
 

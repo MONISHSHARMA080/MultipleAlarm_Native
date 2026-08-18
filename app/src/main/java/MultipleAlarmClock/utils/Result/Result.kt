@@ -1,17 +1,13 @@
 package com.coolApps.MultipleAlarmClock.utils.Result
 
-import com.coolApps.MultipleAlarmClock.utils.UiText
+import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmControllerError
 
-interface Error {
-    val messageToDisplayUser: UiText
-    val titleToDisplayUser: UiText
-}
 
-sealed class Result<out SuccessType, out ErrorType : Error> {
+sealed class Result<out SuccessType, out ErrorType : AlarmControllerError> {
     data class Success<out T>(val value: T) : Result<T, Nothing>()
-    data class Failure<out E : Error>(
-        val errorMessageToDisplayUser: E,
-        val internalException: Throwable
+    data class Failure<out E : AlarmControllerError>(
+			val errorClass: E,
+		    val internalException: Throwable
     ) : Result<Nothing, E>() {
         // Secondary constructor that creates exception from error message
         constructor(errorMessageToDisplayUser: E) : this(
@@ -26,20 +22,20 @@ sealed class Result<out SuccessType, out ErrorType : Error> {
 
     inline fun <R> map(transform: (SuccessType) -> R): Result<R, ErrorType> = when (this) {
         is Success -> Success(transform(value))
-        is Failure -> Failure(errorMessageToDisplayUser, internalException)
+        is Failure -> Failure(errorClass, internalException)
     }
     inline fun <R>fold(
         onSuccess: (SuccessType) -> R,
         onError: (ErrorType, Throwable) -> R
     ):R = when(this){
         is Success -> onSuccess(value)
-        is Failure -> onError(errorMessageToDisplayUser, internalException)
+        is Failure -> onError(errorClass, internalException)
     }
 
     companion object{
         /** a run catching fun, eg if got an exception then will still display an default error.
          * [defaultErrorMessage] - here you give me a generic error and the exception will be included for you  */
-        inline  fun <SuccessType, ErrorType : Error > runCatching(defaultErrorMessage:ErrorType, codeBlock: () -> SuccessType  ): Result<SuccessType, ErrorType>{
+        inline  fun <SuccessType, ErrorType : AlarmControllerError > runCatching(defaultErrorMessage:ErrorType, codeBlock: () -> SuccessType  ): Result<SuccessType, ErrorType>{
             return try {
                 Result.Success(codeBlock())
             }catch (e: Exception){
@@ -48,14 +44,14 @@ sealed class Result<out SuccessType, out ErrorType : Error> {
         }
         /** a run catching fun, eg if got an exception then will still display an default error.
          * [defaultErrorMessage] - here you give me a generic error and the exception will be included for you  */
-        inline  fun <SuccessType, ErrorType : Error > runCatching(defaultErrorMessage:(Throwable)->ErrorType, codeBlock: () -> SuccessType  ): Result<SuccessType, ErrorType>{
+        inline  fun <SuccessType, ErrorType : AlarmControllerError > runCatching(defaultErrorMessage:(Throwable)->ErrorType, codeBlock: () -> SuccessType  ): Result<SuccessType, ErrorType>{
+			// have it such that the defaultErrorMessage  is a error class/type and we init it here with the error being generic but the message for me would be in the class.ErrorMessage
             return try {
-                Result.Success(codeBlock())
+                Success(codeBlock())
             }catch (e: Exception){
-                Result.Failure(defaultErrorMessage(e), e)
+                Failure(errorClass = defaultErrorMessage(e), e,  )
             }
         }
 
     }
-
 }
