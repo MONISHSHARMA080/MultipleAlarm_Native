@@ -65,14 +65,19 @@ class AlarmsController @Inject constructor(
 
 	suspend fun scheduleAlarm(
 			alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, alarmData: AlarmData, alarmTriggerTime:Long
-	): ResultCustom<Unit, AlarmControllerError>{
-		return ResultCustom.runCatching(defaultErrorMessage = AlarmControllerError.Unknown()){
+	): ResultCustom<Unit, ScheduleAlarmError>{
+		return ResultCustom.runCatching({ exception ->AlarmControllerErrorSet.Unknown(internalErrorMessage = exception.toString()) }){
 			val res =alarmData.validate()
-			if (res != AlarmDataValidationResult.Success) return ResultCustom.Failure(errorClass = AlarmControllerError.ValidationFailed(), internalException = Exception("AlarmData validation failed, and res:$res"))
+			if (res != AlarmDataValidationResult.Success) return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed (internalErrorMessage ="AlarmData validation failed, and res:$res" ))
 			val resultForAlarmOpr = getPendingIntentForAlarm(receiverClass = receiverClass, context = componentActivity, alarmTriggerTime, alarmData = alarmData)
 			val PIForAlarm = resultForAlarmOpr.fold(
 				onSuccess = {PI -> PI},
-				onError = {failureRes, exception-> return ResultCustom.Failure(errorClass = AlarmControllerError.PendingIntentNotFound(failureRes.messageToDisplayUser), internalException = Exception(exception)) }
+				onError = {failureRes->
+					return when(failureRes){
+						is AlarmControllerErrorSet.Unknown -> ResultCustom.Failure(errorClass = failureRes )
+						is AlarmControllerErrorSet.PendingIntentAlreadyExist -> ResultCustom.Failure(errorClass = failureRes )
+					}
+				}
 			)
 			val alarmClockInfoObject = AlarmManager.AlarmClockInfo(alarmTriggerTime, PIForAlarm.pendingIntentToGiveUserUpcommingAlarmInfoWhenAsked)
 			alarmManager.setAlarmClock(alarmClockInfoObject, PIForAlarm.pendingIntentForAlarm)
@@ -84,7 +89,9 @@ class AlarmsController @Inject constructor(
 			receiverClass:Class<out BroadcastReceiver>, context: Context, alarmTriggerTime:Long, alarmData: AlarmData,
 	): ResultCustom<PendingIntentCreated, GetPendingIntentForAlarmError> {
 		return ResultCustom.runCatching(
-			defaultErrorMessage = GetPendingIntentForAlarmError.GenericError()
+			defaultError = AlarmControllerErrorSet.Unknown(
+				internalErrorMessage = "Unknown error while creating PendingIntent"
+			)
 		){
 			val alarmId = alarmData.id
 			val intent = Intent(ALARM_ACTION)
@@ -97,7 +104,7 @@ class AlarmsController @Inject constructor(
 			// this is for the alarm receiver
 			var pendingIntentForAlarm = PendingIntent.getBroadcast(context, alarmTriggerTime.toInt(), intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE)
 			if(pendingIntentForAlarm != null){
-				return ResultCustom.Failure(errorClass = GetPendingIntentForAlarmError.PendingIntentAlreadyExist(), internalException = Exception( "Alarm on (${getTimeInHumanReadableFormat(alarmData.startTime)}) already exists"))
+				return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.PendingIntentAlreadyExist(internalErrorMessage = "Alarm on (${getTimeInHumanReadableFormat(alarmData.startTime)}) already exists" ))
 			}
 			pendingIntentForAlarm = PendingIntent.getBroadcast(context, alarmId, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 			// meaning that the pending intent does not exist, and it is safe to create one
@@ -107,9 +114,7 @@ class AlarmsController @Inject constructor(
 			val intentForAlarmMetaData:Intent = intent.clone() as Intent
 			intentForAlarmMetaData.setClass(context, alarmInfoNotificationClass)
 			pendingIntentForAlarmInfo = PendingIntent.getBroadcast(
-				context,
-				alarmTriggerTime.toInt(),
-				intentForAlarmMetaData,
+				context, alarmTriggerTime.toInt(), intentForAlarmMetaData,
 				PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
 			)
 			return ResultCustom.Success(PendingIntentCreated(pendingIntentForAlarmInfo, pendingIntentForAlarm))
