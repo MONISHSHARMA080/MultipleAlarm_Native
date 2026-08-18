@@ -113,4 +113,13 @@ sealed interface AlarmDataValidationResult{
 			is Frequency -> "Frequency"
 		}
 	}
+	fun getErrorMessage(): String{
+		return when(this){
+			Success ->""
+			is TimeIntervalError -> this.errorMessage
+			is IntervalNotInFuture ->this.errorMessage
+			is DifferentDate ->this.errorMessage
+			is Frequency ->this.errorMessage
+		}
+	}
 }

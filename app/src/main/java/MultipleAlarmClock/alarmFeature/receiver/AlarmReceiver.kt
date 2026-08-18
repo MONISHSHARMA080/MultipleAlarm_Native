@@ -2,7 +2,6 @@ package MultipleAlarmClock.alarmFeature.receiver
 
 import MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import MultipleAlarmClock.alarmFeature.domain.AlarmRepository
-import MultipleAlarmClock.alarmFeature.domain.getFreqInMillisecond
 import android.app.AlarmManager
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -74,15 +73,9 @@ class AlarmReceiver : BroadcastReceiver() {
     }
 
     private suspend fun scheduleNextAlarm(context: Context, intent: Intent) {
-        val intentData =
-                IntentCompat.getParcelableExtra(
-                        intent,
-                        "intentData",
-                        AlarmActivityIntentData::class.java
-                )
-                        ?: return
+        val intentData = IntentCompat.getParcelableExtra(intent, "intentData", AlarmActivityIntentData::class.java) ?: return
 
-        val currentTimeAlarmFired = intentData.startTime
+        val currentTimeAlarmFired = intentData.alarmTriggerTime
         val alarmData: AlarmData? = alarmRepository.getAlarmById(intentData.alarmIdInDb)
 
         if (alarmData == null) {
