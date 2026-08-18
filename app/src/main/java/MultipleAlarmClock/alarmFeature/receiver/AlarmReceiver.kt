@@ -92,14 +92,15 @@ class AlarmReceiver : BroadcastReceiver() {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val res =
                     alarmsController.scheduleAlarm(
-                            startTime = nextAlarmTime,
-                            endTime = alarmData.endTime,
+//                            startTime = nextAlarmTime,
+//                            endTime = alarmData.endTime,
                             alarmManager = alarmManager,
                             componentActivity = context,
                             receiverClass = AlarmReceiver::class.java,
-                            startTimeForAlarmSeries = alarmData.startTime,
+//                            startTimeForAlarmSeries = alarmData.startTime,
                             alarmData = alarmData,
-                            alarmMessage = alarmData.message
+						alarmTriggerTime = nextAlarmTime
+//                            alarmMessage = alarmData.message
                     )
 
             res.fold(

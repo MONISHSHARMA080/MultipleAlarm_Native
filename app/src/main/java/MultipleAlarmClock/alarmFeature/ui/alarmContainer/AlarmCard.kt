@@ -1,6 +1,9 @@
 package com.coolApps.MultipleAlarmClock.Components_for_ui_compose.alarmListScreen
 
 import MultipleAlarmClock.alarmFeature.data.local.AlarmData
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -57,13 +61,26 @@ fun AlarmCard(
 
 	val isActive = alarmData.isReadyToUse
 
+	val containerColor by animateColorAsState(
+		targetValue = if (isActive) colorScheme.primaryContainer else colorScheme.surfaceContainer,
+		label = "containerColor"
+	)
+
+	val contentColor by animateColorAsState(
+		targetValue = if (isActive) colorScheme.onPrimaryContainer else colorScheme.onSurface,
+		label = "contentColor"
+	)
+
+	val animatedVerticalPadding by animateDpAsState(
+		targetValue = if (isActive) 8.dp else 4.dp,
+		label = "verticalPadding"
+	)
+
 	val dismissState = rememberSwipeToDismissBoxState()
 
 	val cardShape = RoundedCornerShape(45.dp)
 
-	// Determine padding based on active state to satisfy user requirement for different spacing
 	val horizontalPadding = 10.dp
-	val verticalPadding = if (isActive) 12.dp else 5.dp
 
 	SwipeToDismissBox(
 		state = dismissState,
@@ -80,7 +97,7 @@ fun AlarmCard(
 			Box(
 				Modifier
 					.fillMaxSize()
-					.padding(horizontal = horizontalPadding, vertical = verticalPadding)
+					.padding(horizontal = horizontalPadding, vertical = animatedVerticalPadding)
 					.background(color, cardShape)
 					.padding(horizontal = 24.dp)
 				,
@@ -97,16 +114,6 @@ fun AlarmCard(
 		},
 		modifier = modifier
 	) {
-		val containerColor = when {
-			isActive -> colorScheme.primaryContainer
-			else -> colorScheme.surfaceContainer
-		}
-
-		val contentColor = when {
-			isActive -> colorScheme.onPrimaryContainer
-			else -> colorScheme.onSurface
-		}
-
 		val secondaryContentColor = contentColor.copy(alpha = 0.7f)
 
 		// 🔑 Lock font scale to ensure the card looks identical on all devices as per AGENTS.md
@@ -119,7 +126,7 @@ fun AlarmCard(
 			Card(
 				modifier = Modifier
 					.fillMaxWidth()
-					.padding(horizontal = horizontalPadding, vertical = verticalPadding)
+					.padding(horizontal = horizontalPadding, vertical = animatedVerticalPadding)
 					.combinedClickable(
 						onClick = { onEdit(alarmData) },
 						onLongClick = { onLongPress(alarmData) }
@@ -201,6 +208,15 @@ private fun TimeDisplay(
 	contentColor: Color,
 	isActive: Boolean
 ) {
+	val timeAlpha by animateFloatAsState(
+		targetValue = if (isActive) 1f else 0.54f,
+		label = "timeAlpha"
+	)
+	val amPmAlpha by animateFloatAsState(
+		targetValue = if (isActive) 0.7f else 0.50f,
+		label = "amPmAlpha"
+	)
+
 	Row(
 		modifier = modifier,
 		verticalAlignment = Alignment.Bottom
@@ -209,7 +225,7 @@ private fun TimeDisplay(
 			text = formatTime12h(millis, "h:mm"),
 			style = textStyle,
 			fontWeight = if (isActive) FontWeight.Medium else FontWeight.Normal,
-			color = if (isActive)contentColor else contentColor.copy(alpha = 0.54f),
+			color = contentColor.copy(alpha = timeAlpha),
 			modifier = Modifier.alignByBaseline()
 		)
 		Spacer(modifier = Modifier.width(4.dp))
@@ -217,7 +233,7 @@ private fun TimeDisplay(
 			text = formatTime12h(millis, "a"),
 			style = typography.labelSmall,
 			fontWeight = FontWeight.Bold,
-			color = if (isActive) contentColor.copy(alpha = 0.7f) else contentColor.copy(alpha = 0.50f),
+			color = contentColor.copy(alpha = amPmAlpha),
 			modifier = Modifier.alignByBaseline()
 		)
 	}

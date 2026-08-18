@@ -15,7 +15,6 @@ import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
-import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController.AlarmValueForAlarmSeries
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.logD
@@ -377,7 +376,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 					}
 					logD("the alarm data confirmed is $newAlarmObject, and is  oldAlarm == newAlarmObject ->  ")
 					val exception = alarmsController.startAlarmSeriesHandler(
-						alarm = AlarmValueForAlarmSeries.AlarmObjectType(newAlarmObject),
+						alarm =newAlarmObject.toAlarmData(isReadyToUse = true, id = 0) ,
 						alarmManager = alarmManager,
 						activityContext = context,
 					)
@@ -408,7 +407,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 					}
 					)
 					val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(
-						alarm = AlarmValueForAlarmSeries.AlarmDataType(newAlarmObject.toAlarmData(oldAlarm.id) ),
+						alarm = newAlarmObject.toAlarmData(oldAlarm.id)  ,
 						alarmManager, context
 					)
 					// now the error case is handled there

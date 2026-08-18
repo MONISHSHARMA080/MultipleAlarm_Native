@@ -96,28 +96,38 @@ data class AlarmData(
 
 
 /**[IntervalNotInFuture]-increment the date to fix that*/
-sealed interface AlarmDataValidationResult{
-	data object Success: AlarmDataValidationResult
+sealed class AlarmDataValidationResult(
+		private val errorMessage: String? = null
+){
+	data object Success: AlarmDataValidationResult()
 	/** startTime must be less than end time*/
-	data class TimeIntervalError(val errorMessage: String):AlarmDataValidationResult
-	data class IntervalNotInFuture(val errorMessage: String):AlarmDataValidationResult
-	data class DifferentDate(val errorMessage: String): AlarmDataValidationResult // for end time and start time
-	data class Frequency(val errorMessage: String): AlarmDataValidationResult
+	data class TimeIntervalError( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
+	data class IntervalNotInFuture( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
+	data class DifferentDate( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
+	data class Frequency( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
 
-	fun className(): String{
-		return when(this){
+	override fun toString(): String {
+		var err = errorMessage
+		err = if (err?.isEmpty() == true){
+			""
+		}else{
+			"ErrorMessage: $err"
+		}
+		val className = when(this){
 			Success ->"Success"
 			is TimeIntervalError -> "TimeIntervalError"
 			is IntervalNotInFuture ->"IntervalNotInFuture"
 			is DifferentDate -> "DifferentDate"
 			is Frequency -> "Frequency"
 		}
+		return "$className, $err "
 	}
-	fun getErrorMessage(): String{
+
+	fun errorMessage():String{
 		return when(this){
 			Success ->""
 			is TimeIntervalError -> this.errorMessage
-			is IntervalNotInFuture ->this.errorMessage
+			is IntervalNotInFuture -> this.errorMessage
 			is DifferentDate ->this.errorMessage
 			is Frequency ->this.errorMessage
 		}
