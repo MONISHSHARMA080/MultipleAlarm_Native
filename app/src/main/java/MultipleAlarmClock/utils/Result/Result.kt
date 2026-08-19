@@ -1,6 +1,7 @@
 package com.coolApps.MultipleAlarmClock.utils.Result
 
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmControllerError
+import com.coolApps.MultipleAlarmClock.AlarmLogic.toDebugString
 
 sealed class Result<out SuccessType, out ErrorType : AlarmControllerError> {
 
@@ -9,6 +10,13 @@ sealed class Result<out SuccessType, out ErrorType : AlarmControllerError> {
 
 	fun isOk(): Boolean = this is Success
 	fun isErr(): Boolean = this is Failure
+
+	override fun toString(): String {
+		return  when(this){
+			is Failure -> "Result_Failure: errorClass:${errorClass.toDebugString()}"
+			is Success -> "Result_Success: value:${value.toString()}"
+		}
+	}
 
 	inline fun <R> map(transform: (SuccessType) -> R): Result<R, ErrorType> = when (this) {
 		is Success -> Success(transform(value))

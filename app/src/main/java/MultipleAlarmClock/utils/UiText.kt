@@ -26,4 +26,8 @@ sealed class UiText {
             is StringResource -> context.getString(resId, *args)
         }
     }
+
+	override fun toString(): String {
+		return super.toString()
+	}
 }

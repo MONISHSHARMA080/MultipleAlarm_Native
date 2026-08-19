@@ -35,10 +35,10 @@ class AlarmReceiver : BroadcastReceiver() {
         logD("onReceive: intent action = ${intent.action}")
         val pendingResult = goAsync()
 
+		startAlarmService(context, intent)
         coroutineScope.launch {
             try {
                 // 1. Start the AlarmService to play the alarm
-                startAlarmService(context, intent)
 
                 // 2. Schedule the next alarm instance if applicable
                 scheduleNextAlarm(context, intent)
@@ -46,12 +46,11 @@ class AlarmReceiver : BroadcastReceiver() {
                 logD("Error in onReceive: ${e.message}")
                 Analytics(context)
                         .captureEvent(
-                                "Error in AlarmReceiver",
-                                mapOf(
+							"Error in AlarmReceiver", mapOf(
                                         "exception" to e.toString(),
                                         "stackTrace" to e.stackTraceToString()
-                                )
-                        )
+							)
+						)
             } finally {
                 pendingResult.finish()
             }
@@ -84,23 +83,17 @@ class AlarmReceiver : BroadcastReceiver() {
         }
 
         val nextAlarmTime = currentTimeAlarmFired + alarmData.getFreqInMillisecond()
-        logD(
-                "Current: ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeAlarmFired)}, Next: ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTime)}"
-        )
+        logD("Current: ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeAlarmFired)}, Next: ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTime)}")
 
         if (nextAlarmTime < alarmData.endTime) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val res =
                     alarmsController.scheduleAlarm(
-//                            startTime = nextAlarmTime,
-//                            endTime = alarmData.endTime,
                             alarmManager = alarmManager,
                             componentActivity = context,
                             receiverClass = AlarmReceiver::class.java,
-//                            startTimeForAlarmSeries = alarmData.startTime,
                             alarmData = alarmData,
-						alarmTriggerTime = nextAlarmTime
-//                            alarmMessage = alarmData.message
+							alarmTriggerTime = nextAlarmTime
                     )
 
             res.fold(

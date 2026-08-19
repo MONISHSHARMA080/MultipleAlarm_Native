@@ -72,14 +72,12 @@ fun AlarmCard(
 	)
 
 	val animatedVerticalPadding by animateDpAsState(
-		targetValue = if (isActive) 8.dp else 4.dp,
+		targetValue = if (isActive) 6.dp else 4.dp,
 		label = "verticalPadding"
 	)
 
 	val dismissState = rememberSwipeToDismissBoxState()
-
 	val cardShape = RoundedCornerShape(45.dp)
-
 	val horizontalPadding = 10.dp
 
 	SwipeToDismissBox(

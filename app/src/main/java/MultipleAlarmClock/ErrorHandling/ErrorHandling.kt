@@ -13,7 +13,7 @@ import com.coolApps.MultipleAlarmClock.utils.Result.Result
 // also follow single responsibility principle
 class ErrorHandler(val notificationHandler: NotificationHandler, val analytics: Analytics) {
 
-	fun <E : AlarmControllerError> handleError(error: Result.Failure<E>): Unit {
+	fun  handleError(error: Result.Failure<AlarmControllerError>): Unit {
 		logD("got an error messageToDisplay to user:${error.errorClass} and internalErrorMessage:${error.errorClass.internalErrorMessage}")
 		val resolvedMessage = error.errorClass.messageToDisplayUser.asString(notificationHandler.context)
 		val resolvedTitle = error.errorClass.titleToDisplayUser.asString(notificationHandler.context)

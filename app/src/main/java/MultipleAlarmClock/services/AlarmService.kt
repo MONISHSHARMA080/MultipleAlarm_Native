@@ -19,7 +19,6 @@ import androidx.core.net.toUri
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivity
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -78,15 +77,20 @@ class AlarmService: Service() {
 
     /** launches the notification with full screen intent, plays the alarm sound , and puts intent in the hashMap if required*/
     private fun startPlayingAlarm(intent: Intent):Int{
+		logD("a")
         val res = buildNotification(this, intent).getOrElse { exception ->
             logD(" Error building notification: ${exception.message} ")
             return problemSoStopTheService(" Error building notification: ${exception.message} ", mapOf("function" to "startPlayingAlarm"))
         }
-		// get the alarmData from Db and then play the alarm or if error then play random
+		logD("b, res:$res")
+
         val notification: Notification = res.first
         val alarmIntentData: AlarmActivityIntentData = res.second
+		// alarmIntentData.alarmIdInDb shouldn't be 0
 		ServiceCompat.startForeground(this, alarmIntentData.alarmIdInDb, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
         intentHashMap.putIfAbsent(alarmIntentData.alarmIdInDb, intent)
+		logD("c,  and hashMapSize:${intentHashMap.size}")
+
 		coroutineScope.launch {
 			val alarmData = alarmDao.getAlarmById(alarmIntentData.alarmIdInDb)
 			val soundUri = alarmData?.sound?.toUri() ?: getRandomAlarm()
@@ -119,6 +123,8 @@ class AlarmService: Service() {
     private  fun handleStartAlarm(intent:Intent):Int{
         val intentData = IntentCompat.getParcelableExtra(intent, "intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService("intentData parsed is null", mapOf("fun" to "handleStartAlarm() "))
         val isFirstAlarm = intentHashMap.isEmpty()
+		logD("the alarm action in the service is ${intent.action} and he hashMap size is ${intentHashMap.size}")
+
         intentHashMap.putIfAbsent(intentData.alarmIdInDb, intent)
 
         coroutineScope.launch {
@@ -131,6 +137,7 @@ class AlarmService: Service() {
             )
         }
 
+		logD("isFirstAlarm:$isFirstAlarm")
 
         if (isFirstAlarm){
             startPlayingAlarm(intent)

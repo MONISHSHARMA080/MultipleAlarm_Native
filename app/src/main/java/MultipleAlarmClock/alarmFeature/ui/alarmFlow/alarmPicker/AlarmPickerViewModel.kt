@@ -118,9 +118,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	fun previewSound(sound: AlarmSound?) {
 		val soundToPlay = sound ?: listOfAlarms.value.randomOrNull() ?: return
 
-		val sameItemTapped =
-			(sound == null && _previewingRandom.value) ||
-					(sound != null && _previewingSound.value?.soundUri == sound.soundUri)
+		val sameItemTapped = (sound == null && _previewingRandom.value) || (sound != null && _previewingSound.value?.soundUri == sound.soundUri)
 
 		if (sameItemTapped) {
 			stopPreview()
@@ -210,6 +208,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 
 				val startTime = (now.clone() as Calendar).apply  {
 					add(Calendar.MINUTE, 1)
+					set(Calendar.SECOND, 0)
 				}
 
 				val endOfDay = (now.clone() as Calendar).apply {
@@ -226,15 +225,19 @@ class AlarmPickerViewModel @AssistedInject constructor(
 							add(Calendar.DAY_OF_YEAR, 1)
 							set(Calendar.HOUR_OF_DAY, 0)
 							set(Calendar.MINUTE, 0)
+							set(Calendar.SECOND, 0)
 						}
 						selectedEndTime = (selectedStartTime.clone() as Calendar).apply {
 							add(Calendar.MINUTE, durationMin)
+							set(Calendar.SECOND, 0)
+
 						}
 					}
 					else ->{
 						selectedStartTime = startTime
 						val requestedEnd = (startTime.clone() as Calendar).apply {
 							add(Calendar.MINUTE, durationMin)
+							set(Calendar.SECOND, 0)
 						}
 						// Case 1:
 						// Full duration fits today.

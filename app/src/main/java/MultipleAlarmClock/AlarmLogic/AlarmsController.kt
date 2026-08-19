@@ -160,8 +160,12 @@ class AlarmsController @Inject constructor(
 		return ResultCustom.runCatching(
 			{ exception ->AlarmControllerErrorSet.Unknown(internalErrorMessage = exception.toString()) }
 		) {
-			alarmRepository.upsertAlarm(alarm.copy(isReadyToUse = true))
-			val insertedAlarmData: AlarmData =	alarm.copy(isReadyToUse = true)
+			val upsertResult = alarmRepository.upsertAlarm(alarm.copy(isReadyToUse = true))
+			val insertedAlarmData: AlarmData =	if (upsertResult == -1L){
+				alarm.copy(isReadyToUse = true) // updated the alarm
+			}else {
+				alarm.copy(id = upsertResult.toInt(), isReadyToUse = true )
+			}
 			val alarmResult = this@AlarmsController.startAlarmSeries(
 				insertedAlarmData,
 				alarmManager,
