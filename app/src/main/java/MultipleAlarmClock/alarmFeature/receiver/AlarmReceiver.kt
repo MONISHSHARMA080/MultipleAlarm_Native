@@ -35,12 +35,11 @@ class AlarmReceiver : BroadcastReceiver() {
         logD("onReceive: intent action = ${intent.action}")
         val pendingResult = goAsync()
 
-		startAlarmService(context, intent)
         coroutineScope.launch {
+			launch {
+				startAlarmService(context, intent)
+			}
             try {
-                // 1. Start the AlarmService to play the alarm
-
-                // 2. Schedule the next alarm instance if applicable
                 scheduleNextAlarm(context, intent)
             } catch (e: Exception) {
                 logD("Error in onReceive: ${e.message}")
