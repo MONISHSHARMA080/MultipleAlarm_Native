@@ -7,13 +7,15 @@ plugins {
     id("kotlin-kapt")
     id("com.google.devtools.ksp") version "2.3.9"
     id ("kotlin-parcelize")
-    id("com.posthog.android") version "1.2.0"
+    id("com.posthog.android") version "1.4.0"
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.baselineprofile)
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.3.21"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.4.10"
 	id("com.google.protobuf") version "0.10.0"
     id("com.google.dagger.hilt.android")
 	id("androidx.room")
+//	id("com.android.application")
+	id("com.google.gms.google-services")
 }
 
 val myAppName="Multiple alarms"
@@ -78,7 +80,6 @@ fun Project.configureAndroid() {
                 signingConfig = signingConfigs.getByName("release")
             }
             debug {
-                applicationIdSuffix = ".debug"
                 resValue("string", "app_name", "debug-$myAppName")
                 buildConfigField("boolean", "SKIP_POSTHOG", "false")
             }
@@ -151,19 +152,21 @@ dependencies {
 	configurations.configureEach {
 		exclude(group = "com.google.protobuf", module = "protobuf-lite")
 	}
-    implementation("com.google.dagger:hilt-android:2.59.2")
+	implementation(platform(libs.firebase.bom))
+    implementation("com.google.dagger:hilt-android:2.60.1")
 	implementation(libs.androidx.compose.animation.core)
 	implementation(libs.androidx.compose.ui)
 	implementation(libs.androidx.datastore.core)
 	implementation(libs.androidx.hilt.work)
+	implementation(libs.firebase.messaging)
 	implementation(libs.play.services.appset)
 	ksp(libs.androidx.hilt.compiler)
-	ksp("com.google.dagger:hilt-android-compiler:2.59.2")
-	implementation("androidx.hilt:hilt-navigation-compose:1.3.0")
+	ksp("com.google.dagger:hilt-android-compiler:2.60.1")
+	implementation("androidx.hilt:hilt-navigation-compose:1.4.0")
 
     implementation("com.google.accompanist:accompanist-permissions:0.37.3")
 
-    implementation ("com.posthog:posthog-android:3.45.1")
+    implementation ("com.posthog:posthog-android:3.58.2")
     implementation("androidx.core:core-splashscreen:1.2.0")
 
 	implementation(libs.androidx.media3.common)
@@ -182,11 +185,11 @@ dependencies {
 	implementation(libs.androidx.ui.text)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.profileinstaller)
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.7.1")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.12.0")
     "baselineProfile"(project(":baselineprofile"))
     implementation(libs.androidx.junit.ktx)
-    implementation("androidx.navigation:navigation-compose:2.9.7")
-    implementation("androidx.work:work-runtime-ktx:2.11.1")
+    implementation("androidx.navigation:navigation-compose:2.9.8")
+    implementation("androidx.work:work-runtime-ktx:2.11.2")
 
     // -- roboelectric tests ---
     testImplementation("junit:junit")
@@ -202,6 +205,7 @@ dependencies {
     implementation(libs.androidx.ui.test.android)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 
+//	val roomVersion = "3.0.1"
     val roomVersion = "2.8.4"
     implementation("androidx.room:room-runtime:$roomVersion")
 //    annotationProcessor("androidx.room:room-compiler:$roomVersion")

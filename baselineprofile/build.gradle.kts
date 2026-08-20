@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-	namespace = "com.example.baselineprofile"
+	namespace = "com.coolApps.baselineprofile"
 	compileSdk = 37
 
 	compileOptions {

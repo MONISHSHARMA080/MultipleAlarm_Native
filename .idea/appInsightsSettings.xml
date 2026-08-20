@@ -37,10 +37,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.coolApps.MultipleAlarmClock" />
+                  <option name="mobileSdkAppId" value="1:507706419060:android:058b232fe41981cd672e21" />
+                  <option name="projectId" value="tryingnative-11017cb2" />
+                  <option name="projectNumber" value="507706419060" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
