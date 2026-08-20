@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.google.firebase.FirebaseApp
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.HiltAndroidApp
 import jakarta.inject.Inject
 
@@ -22,16 +23,16 @@ class AlarmApp : Application(), Configuration.Provider {
 		super.onCreate()
 		val options = FirebaseApp.getInstance().options
 		logD("Options:$options, ")
-//		FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-//			if (!task.isSuccessful) {
-//				logD( "Fetching FCM registration token failed ${task.exception?.message}\n result:${task.result}, stackTrace:${task.exception?.stackTrace},  " )
-//				return@addOnCompleteListener
-//			}
-//
-//			// Get new FCM registration token
-//			val token = task.result
-//			logD( "FCM Token: $token")
-//			// Send this token to your server if required
-//		}
+		FirebaseMessaging.getInstance().register().addOnCompleteListener { task ->
+			if (!task.isSuccessful) {
+				logD( "Fetching FCM registration token failed ${task.exception?.message}\n result:${task.result}, stackTrace:${task.exception?.stackTrace},  " )
+				return@addOnCompleteListener
+			}
+
+			// Get new FCM registration token
+			val token = task.result
+			logD( "FCM Token: $token")
+			// Send this token to your server if required
+		}
 	}
 }

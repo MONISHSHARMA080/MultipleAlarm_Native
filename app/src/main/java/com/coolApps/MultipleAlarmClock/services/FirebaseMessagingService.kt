@@ -4,7 +4,7 @@ import android.util.Log
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
-class MyFirebaseMessagingService : FirebaseMessagingService() {
+class FirebaseMessagingService : FirebaseMessagingService() {
 
 	override fun onRegistered(installationId: String) {
 		super.onRegistered(installationId)
@@ -42,7 +42,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     private fun sendRegistrationToServer(fid: String) {
 //         TODO: Implement sending FID to server in future prompt
 			logD("in sendRegistrationToServer")
-		   TODO()
+//		   TODO()
     }
 
 	fun logD(message: String){
