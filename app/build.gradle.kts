@@ -69,7 +69,8 @@ fun Project.configureAndroid() {
                 val appName = if (isProductionBuild) {
                     myAppName
                 } else {
-                    "debug-$myAppName"
+					myAppName
+//                    "debug-$myAppName"
                 }
                 val skipPostHog = project.findProperty("skipPostHog")?.toString() == "true"
                 buildConfigField("boolean", "SKIP_POSTHOG", skipPostHog.toString())
@@ -80,7 +81,8 @@ fun Project.configureAndroid() {
                 signingConfig = signingConfigs.getByName("release")
             }
             debug {
-                resValue("string", "app_name", "debug-$myAppName")
+//                resValue("string", "app_name", "debug-$myAppName")
+				resValue("string", "app_name", myAppName)
                 buildConfigField("boolean", "SKIP_POSTHOG", "false")
             }
         }
@@ -153,12 +155,12 @@ dependencies {
 		exclude(group = "com.google.protobuf", module = "protobuf-lite")
 	}
 	implementation(platform(libs.firebase.bom))
+	implementation(libs.firebase.messaging)
     implementation("com.google.dagger:hilt-android:2.60.1")
 	implementation(libs.androidx.compose.animation.core)
 	implementation(libs.androidx.compose.ui)
 	implementation(libs.androidx.datastore.core)
 	implementation(libs.androidx.hilt.work)
-	implementation(libs.firebase.messaging)
 	implementation(libs.play.services.appset)
 	ksp(libs.androidx.hilt.compiler)
 	ksp("com.google.dagger:hilt-android-compiler:2.60.1")

@@ -6,11 +6,11 @@ import com.google.firebase.messaging.RemoteMessage
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
-	override fun onRegistered(newToken: String) {
-		super.onRegistered(newToken)
+	override fun onRegistered(installationId: String) {
+		super.onRegistered(installationId)
 		// send this to server
-		logD("got new token $newToken")
-		sendRegistrationToServer(newToken)
+		logD("got new token $installationId")
+		sendRegistrationToServer(installationId)
 	}
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
@@ -21,7 +21,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 //            ?: getString(R.string.app_name)
 			?: return
 
-        val message = remoteMessage.notification?.body
+		val message = remoteMessage.notification?.body
             ?: remoteMessage.data["body"]
             ?: remoteMessage.data["message"]
             ?: return
@@ -33,6 +33,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     private fun showNotification(title: String, message: String, data: Map<String, String>) {
 		// use notification handler to handle it later
     }
+
 
     /**
      * Send the Firebase Installation ID (FID) to your application server.

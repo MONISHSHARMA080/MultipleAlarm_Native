@@ -26,7 +26,7 @@ import java.util.Locale
 class AlarmInfoNotification: BroadcastReceiver()  {
     private val coroutineScope = CoroutineScope( Dispatchers.IO)
     private lateinit var context: Context
-    val analytics by lazy {Analytics(context)}
+	@Inject lateinit var analytics: Analytics
 	@Inject lateinit var alarmDao: AlarmDao
 
 

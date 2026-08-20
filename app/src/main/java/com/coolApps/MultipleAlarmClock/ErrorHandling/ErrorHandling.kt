@@ -7,11 +7,12 @@ import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.notification.NotificationChannelType
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.utils.Result.Result
+import jakarta.inject.Inject
 
 
 // class will init, and take in the error message to display user and the exception, make the notification and log it and report it to the server
 // also follow single responsibility principle
-class ErrorHandler(val notificationHandler: NotificationHandler, val analytics: Analytics) {
+class ErrorHandler @Inject constructor(val notificationHandler: NotificationHandler, val analytics: Analytics) {
 
 	fun  handleError(error: Result.Failure<AlarmControllerError>): Unit {
 		logD("got an error messageToDisplay to user:${error.errorClass} and internalErrorMessage:${error.errorClass.internalErrorMessage}")

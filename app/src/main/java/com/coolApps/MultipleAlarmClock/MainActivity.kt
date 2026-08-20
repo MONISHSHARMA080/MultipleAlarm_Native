@@ -15,10 +15,10 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.coolApps.MultipleAlarmClock.Ui.Navigation.NavigationStack
-import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.Ui.Navigation.NavigationViewModel
 import com.coolApps.MultipleAlarmClock.Ui.Navigation.Screen
+import com.coolApps.MultipleAlarmClock.analytics.Analytics
+import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -30,8 +30,8 @@ class MainActivity : ComponentActivity() {
 
 	private val navViewModel: NavigationViewModel by viewModels()
 	@Inject lateinit var analytics: Analytics
+	@Inject lateinit var notificationHandler: NotificationHandler
 	private val coroutineScope = CoroutineScope(Dispatchers.Main)
-	private val notificationHandler by lazy { NotificationHandler(this) }
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		val splashScreen = installSplashScreen()

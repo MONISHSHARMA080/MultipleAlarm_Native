@@ -37,8 +37,8 @@ class AlarmService: Service() {
     // if we receive more intents than we will use this; if the intent is from same alarm(see id) then we will replace it /not put it in / dismiss it as
     // it is same and no need to display same message again; if it is diff then we will put it in and when dismissed then we might need to display it
     val intentHashMap: LinkedHashMap<Int,Intent> = LinkedHashMap(20)
-    val analytics by lazy { Analytics(this) }
-    val playAlarm by lazy { PlayAlarm(this, analytics) }
+	@Inject lateinit var analytics: Analytics
+	@Inject lateinit var playAlarm: PlayAlarm
 	val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 	@Inject lateinit var alarmDao: AlarmDao
 	var context: Context = this

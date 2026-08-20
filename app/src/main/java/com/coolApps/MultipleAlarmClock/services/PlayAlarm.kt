@@ -8,6 +8,8 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.util.Log
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
+import dagger.hilt.android.qualifiers.ApplicationContext
+import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -18,8 +20,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
-class PlayAlarm(
-	context: Context,
+class PlayAlarm @Inject constructor(
+	@ApplicationContext context: Context,
 	private val analytics: Analytics,
 ) {
 	private val appContext = context.applicationContext

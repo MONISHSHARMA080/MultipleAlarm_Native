@@ -33,7 +33,6 @@ baselineprofile = "1.4.1"
 profileinstaller = "1.4.1"
 coreKtxVersion = "1.19.0"
 coreKtx = "1.19.0"
-
 hiltWork = "1.4.0"
 datastoreCore = "1.2.1"
 playServicesAppset = "16.1.0"
