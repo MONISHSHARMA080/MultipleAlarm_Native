@@ -12,11 +12,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 		logD("got new token $newToken")
 		sendRegistrationToServer(newToken)
 	}
-	override fun onNewToken(token: String) {
-		super.onNewToken(token)
-		logD("got new token $token")
-		sendRegistrationToServer(token)
-	}
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         super.onMessageReceived(remoteMessage)

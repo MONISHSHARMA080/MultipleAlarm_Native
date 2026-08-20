@@ -30,7 +30,8 @@
         >
         <provider
             android:name="androidx.startup.InitializationProvider"
-            android:authorities="${applicationId}.androidx-startup" />
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false" />
 
         <service
             android:name="com.coolApps.MultipleAlarmClock.services.AlarmService"
@@ -87,7 +88,7 @@
         </receiver>
 
         <receiver
-            android:name="com.coolApps.MultipleAlarmClock.BroadCastReceivers.AlarmInfoNotification"
+            android:name="com.coolApps.MultipleAlarmClock.alarmFeature.receiver.AlarmInfoNotification"
             android:exported="false" >
         </receiver>
 
