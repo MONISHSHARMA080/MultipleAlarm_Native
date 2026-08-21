@@ -58,6 +58,14 @@ class Analytics(val context: Context){
 		)
 	}
 
+	fun setFcmToken(fid: String) {
+		PostHog.capture(
+			event = "fcm_token_updated",
+			properties = mapOf("fcm_token" to fid),
+			userProperties = mapOf("fcm_token" to fid) // maps to $set under the hood
+		)
+	}
+
 	fun screen(screenName: String, properties: Map<String, Any>? = null){
 		PostHog.screen(screenName, properties)
 	}

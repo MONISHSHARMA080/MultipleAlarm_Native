@@ -31,8 +31,15 @@ sealed class NotificationChannelType(val channelId: String, val channelName: Str
 		importance = NotificationManager.IMPORTANCE_DEFAULT ,
 		description = "Alarm notification channel"
 	)
+	data object PushNotification : NotificationChannelType(
+		channelId = "push_notification",
+		channelName = "General",
+		importance = NotificationManager.IMPORTANCE_DEFAULT ,
+		description = "Updates related to the app"
+	)
+
 	companion object {
-		val values:List<NotificationChannelType> = listOf(AlarmNotification, ErrorChannel, GeneralNotification)
+		val values:List<NotificationChannelType> = listOf(AlarmNotification, ErrorChannel, GeneralNotification, PushNotification )
 	}
 }
 
@@ -51,7 +58,7 @@ class NotificationHandler @Inject constructor(@ApplicationContext val context: C
 			.build()
 	}
 
-	fun createNotificationChannel(notificationChannelDetail: NotificationChannelType){
+	private fun createNotificationChannel(notificationChannelDetail: NotificationChannelType){
 		val channel = NotificationChannel(
 			 notificationChannelDetail.channelId, notificationChannelDetail.channelName,  notificationChannelDetail.importance
 		).apply {
