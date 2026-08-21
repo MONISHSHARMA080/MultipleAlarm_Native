@@ -405,7 +405,7 @@ class AlarmsController @Inject constructor(
 
 			val updatingAlarmStateJob = this.scope.async {this@AlarmsController.updateAlarmStateInDb(newAlarm)  }
 			val scheduleAlarmJob =  scheduleAlarm(
-				alarmManager =alarmManager, componentActivity = activityContext, receiverClass = alarmReceiverClass, alarmData = alarmData, alarmTriggerTime = nextAlarmInfo.nextAlarmTriggerTime
+				alarmManager =alarmManager, componentActivity = activityContext, receiverClass = alarmReceiverClass, alarmData = newAlarm, alarmTriggerTime = nextAlarmInfo.nextAlarmTriggerTime
 			)
 			scheduleAlarmJob.fold(
 				onSuccess = {},

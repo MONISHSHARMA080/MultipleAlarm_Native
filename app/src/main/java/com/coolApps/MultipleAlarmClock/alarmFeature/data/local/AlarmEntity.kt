@@ -76,7 +76,7 @@ data class AlarmData(
 		val startCalendar = Calendar.getInstance().apply { timeInMillis = startTime }
 		val endCalendar = Calendar.getInstance().apply { timeInMillis = endTime }
 
-		if (startCalendar.get(Calendar.DAY_OF_YEAR) !=endCalendar.get(Calendar.DAY_OF_YEAR)  &&   startCalendar.get(Calendar.YEAR) != endCalendar.get(Calendar.YEAR)  ) {
+		if (startCalendar.get(Calendar.DAY_OF_YEAR) != endCalendar.get(Calendar.DAY_OF_YEAR) || startCalendar.get(Calendar.YEAR) != endCalendar.get(Calendar.YEAR)) {
 			return AlarmDataValidationResult.DifferentDate("StartTime:${timeFormatted(startTime)} and endTime:${timeFormatted(endTime)} must have same date")
 		}
 
