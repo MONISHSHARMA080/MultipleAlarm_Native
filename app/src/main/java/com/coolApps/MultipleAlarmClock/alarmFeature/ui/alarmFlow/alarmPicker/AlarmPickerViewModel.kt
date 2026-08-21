@@ -372,9 +372,6 @@ class AlarmPickerViewModel @AssistedInject constructor(
 			null -> {
 				//  oldAlarm was not there so setting a new alarm
 				viewModelScope.launch {
-					launch {
-						analytics.captureEvent("user setting new alarm", mapOf("alarmObject" to newAlarmObject.toString() ) )
-					}
 					logD("the alarm data confirmed is $newAlarmObject, and is  oldAlarm == newAlarmObject ->  ")
 					val exception = alarmsController.startAlarmSeriesHandler(
 						alarm =newAlarmObject.toAlarmData(isReadyToUse = true, id = 0) ,

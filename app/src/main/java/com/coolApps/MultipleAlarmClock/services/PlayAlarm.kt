@@ -156,7 +156,7 @@ class PlayAlarm @Inject constructor(
 					logD(" repeat audio focus res:$focusResult, AudioManager.AUDIOFOCUS_REQUEST_GRANTED:${AudioManager.AUDIOFOCUS_REQUEST_GRANTED},AudioManager.AUDIOFOCUS_REQUEST_DELAYED:${AudioManager.AUDIOFOCUS_REQUEST_DELAYED}, AudioManager.AUDIOFOCUS_REQUEST_FAILED:${AudioManager.AUDIOFOCUS_REQUEST_FAILED}      ")
 
 					if (focusResult != AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
-						scope.launch { analytics.captureEvent("audio focus acquired on retry", mapOf("attempt" to attempt)) }
+//						scope.launch { analytics.captureEvent("audio focus acquired on retry", mapOf("attempt" to attempt)) }
 						break
 					}
 				}

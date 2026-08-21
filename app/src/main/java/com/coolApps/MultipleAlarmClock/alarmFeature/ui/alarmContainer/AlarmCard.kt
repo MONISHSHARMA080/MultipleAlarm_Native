@@ -1,6 +1,5 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmContainer
 
-import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -24,7 +23,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -43,6 +42,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -56,8 +56,8 @@ fun AlarmCard(
 	modifier: Modifier = Modifier,
 	onLongPress: (AlarmData) -> Unit = {}
 ) {
-	val colorScheme = MaterialTheme.colorScheme
-	val typography = MaterialTheme.typography
+	val colorScheme = colorScheme
+	val typography = typography
 
 	val isActive = alarmData.isReadyToUse
 
@@ -171,7 +171,7 @@ fun AlarmCard(
 							Icon(
 								imageVector = Icons.AutoMirrored.Filled.ArrowForward,
 								contentDescription = null,
-								modifier = Modifier.padding(horizontal = 12.dp).size(20.dp),
+								modifier = Modifier.padding(horizontal = 8.dp).size(20.dp),
 								tint = secondaryContentColor
 							)
 							TimeDisplay(
@@ -224,7 +224,9 @@ private fun TimeDisplay(
 			style = textStyle,
 			fontWeight = if (isActive) FontWeight.Medium else FontWeight.Normal,
 			color = contentColor.copy(alpha = timeAlpha),
-			modifier = Modifier.alignByBaseline()
+			modifier = Modifier.alignByBaseline(),
+			softWrap = false,
+			maxLines = 1
 		)
 		Spacer(modifier = Modifier.width(4.dp))
 		Text(
@@ -232,7 +234,9 @@ private fun TimeDisplay(
 			style = typography.labelSmall,
 			fontWeight = FontWeight.Bold,
 			color = contentColor.copy(alpha = amPmAlpha),
-			modifier = Modifier.alignByBaseline()
+			modifier = Modifier.alignByBaseline(),
+			softWrap = false,
+			maxLines = 1
 		)
 	}
 }
