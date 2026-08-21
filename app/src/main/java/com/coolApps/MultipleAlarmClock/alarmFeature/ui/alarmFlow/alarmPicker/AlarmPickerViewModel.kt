@@ -18,7 +18,6 @@ import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.logD
-import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.services.PlayAlarm
 import com.coolApps.MultipleAlarmClock.utils.Result.Result
 import com.coolApps.MultipleAlarmClock.Data.dataStore.Settings
@@ -46,6 +45,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	private val alarmManager: AlarmManager,
 	private val dataStore: DataStore<Settings>,
 	private val alarmsController: AlarmsController,
+	private val errorHandler: ErrorHandler,
 	@ApplicationContext val context: Context,
 	@Assisted private val alarmData: AlarmData?
 ) : ViewModel() {
@@ -76,7 +76,6 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	val previewingSound = _previewingSound.asStateFlow()
 	private val _previewingRandom = MutableStateFlow(false)
 	val previewingRandom = _previewingRandom.asStateFlow()
-	private val errorHandler = ErrorHandler(notificationHandler = NotificationHandler(context),analytics)
 	private val playAlarm = PlayAlarm(context, analytics)
 
 

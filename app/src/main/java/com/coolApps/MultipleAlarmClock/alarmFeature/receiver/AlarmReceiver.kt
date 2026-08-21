@@ -1,8 +1,5 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.receiver
 
-import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
-import android.app.AlarmManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -11,10 +8,9 @@ import androidx.core.content.IntentCompat
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
+import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.services.AlarmService
-import com.coolApps.MultipleAlarmClock.utils.Result.Result
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -29,6 +25,10 @@ class AlarmReceiver : BroadcastReceiver() {
 
     @Inject lateinit var alarmsController: AlarmsController
 
+    @Inject lateinit var errorHandler: ErrorHandler
+
+    @Inject lateinit var analytics: Analytics
+
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -36,20 +36,21 @@ class AlarmReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
 
         coroutineScope.launch {
-			launch {
-				startAlarmService(context, intent)
-			}
             try {
-                scheduleNextAlarm(context, intent)
+                startAlarmService(context, intent)
+                
+                val intentData = IntentCompat.getParcelableExtra(intent, "intentData", AlarmActivityIntentData::class.java)
+                if (intentData != null) {
+                    alarmsController.scheduleNextAlarmInSeries(intentData)
+                }
             } catch (e: Exception) {
                 logD("Error in onReceive: ${e.message}")
-                Analytics(context)
-                        .captureEvent(
-							"Error in AlarmReceiver", mapOf(
-                                        "exception" to e.toString(),
-                                        "stackTrace" to e.stackTraceToString()
-							)
-						)
+                analytics.captureEvent(
+                    "Error in AlarmReceiver", mapOf(
+                        "exception" to e.toString(),
+                        "stackTrace" to e.stackTraceToString()
+                    )
+                )
             } finally {
                 pendingResult.finish()
             }
@@ -67,46 +68,6 @@ class AlarmReceiver : BroadcastReceiver() {
             context.startForegroundService(serviceIntent)
         } catch (e: Exception) {
             logD("Failed to start AlarmService: $e")
-        }
-    }
-
-    private suspend fun scheduleNextAlarm(context: Context, intent: Intent) {
-        val intentData = IntentCompat.getParcelableExtra(intent, "intentData", AlarmActivityIntentData::class.java) ?: return
-
-        val currentTimeAlarmFired = intentData.alarmTriggerTime
-        val alarmData: AlarmData? = alarmRepository.getAlarmById(intentData.alarmIdInDb)
-
-        if (alarmData == null) {
-            logD("AlarmData not found for ID: ${intentData.alarmIdInDb}")
-            return
-        }
-
-        val nextAlarmTime = currentTimeAlarmFired + alarmData.getFreqInMillisecond()
-        logD("Current: ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(currentTimeAlarmFired)}, Next: ${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTime)}")
-
-        if (nextAlarmTime < alarmData.endTime) {
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val res =
-                    alarmsController.scheduleAlarm(
-                            alarmManager = alarmManager,
-                            componentActivity = context,
-                            receiverClass = AlarmReceiver::class.java,
-                            alarmData = alarmData,
-							alarmTriggerTime = nextAlarmTime
-                    )
-
-            res.fold(
-                    onSuccess = { logD("Scheduled next alarm successfully") },
-                    onError = { error ->
-                        logD("Error scheduling next alarm: ${error.internalErrorMessage}")
-                        val errorHandler =
-                                ErrorHandler(NotificationHandler(context), Analytics(context))
-                        errorHandler.handleError(Result.Failure(error))
-                        alarmRepository.updateAlarm(alarmData.copy(isReadyToUse = false))
-                    }
-            )
-        } else {
-            logD("No more instances to schedule for this alarm series")
         }
     }
 

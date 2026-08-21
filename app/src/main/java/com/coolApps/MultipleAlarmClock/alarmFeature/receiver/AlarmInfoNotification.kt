@@ -1,12 +1,12 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.receiver
 
-import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDao
-import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDao
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.notification.NotificationChannelType
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
@@ -28,10 +28,11 @@ class AlarmInfoNotification: BroadcastReceiver()  {
     private lateinit var context: Context
 	@Inject lateinit var analytics: Analytics
 	@Inject lateinit var alarmDao: AlarmDao
+    @Inject lateinit var notificationHandler: NotificationHandler
+    @Inject lateinit var errorHandler: ErrorHandler
 
 
     private fun displayAlarmsMetadataInNotification(alarmData: AlarmData){
-        val notificationHandler =NotificationHandler(context)
         val title = "Upcoming alarm info"
         val notificationText ="Alarm:${alarmData.id} will go from  ${getTimeInHumanReadableFormatProtectFrom0Included(alarmData.startTime)} --->  ${getTimeInHumanReadableFormatProtectFrom0Included(alarmData.endTime)} after every ${alarmData.frequencyInMin} min  "
         val notification = notificationHandler.build(NotificationChannelType.GeneralNotification,title, notificationText)
@@ -49,8 +50,6 @@ class AlarmInfoNotification: BroadcastReceiver()  {
      * */
     private fun errorOccurred(error: String){
         coroutineScope.launch {
-            val notificationHandler =NotificationHandler(context)
-            val errorHandler = ErrorHandler(notificationHandler, analytics )
 			val displayErrorTitle: String = UiText.StringResource(R.string.error_title_generic).toString()
 			val displayErrorMessage: String = UiText.StringResource(R.string.error_generic).toString()
             errorHandler.handleError(

@@ -1,32 +1,34 @@
 package com.coolApps.MultipleAlarmClock.AlarmLogic
 
-	import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
-	import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDataValidationResult
-	import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.toDomain
-	import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
-	import com.coolApps.MultipleAlarmClock.alarmFeature.receiver.AlarmReceiver
-	import com.coolApps.MultipleAlarmClock.alarmFeature.receiver.LastAlarmUpdateDBReceiver
 	import android.app.AlarmManager
-	import android.app.PendingIntent
-	import android.content.BroadcastReceiver
-	import android.content.Context
-	import android.content.Intent
-	import android.util.Log
-	import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
-	import com.coolApps.MultipleAlarmClock.alarmFeature.receiver.AlarmInfoNotification
-	import jakarta.inject.Inject
-	import kotlinx.coroutines.CoroutineScope
-	import kotlinx.coroutines.Dispatchers
-	import kotlinx.coroutines.SupervisorJob
-	import kotlinx.coroutines.async
-	import java.text.SimpleDateFormat
-	import java.time.ZoneId
-	import java.time.format.DateTimeFormatter
-	import java.util.Calendar
-	import java.util.Date
-	import java.util.Locale
-	import kotlin.jvm.java
-	import com.coolApps.MultipleAlarmClock.utils.Result.Result as ResultCustom
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.util.Log
+import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
+import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDataValidationResult
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.toDomain
+import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
+import com.coolApps.MultipleAlarmClock.alarmFeature.receiver.AlarmInfoNotification
+import com.coolApps.MultipleAlarmClock.alarmFeature.receiver.AlarmReceiver
+import com.coolApps.MultipleAlarmClock.alarmFeature.receiver.LastAlarmUpdateDBReceiver
+	import com.coolApps.MultipleAlarmClock.analytics.Analytics
+	import dagger.hilt.android.qualifiers.ApplicationContext
+import jakarta.inject.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import java.text.SimpleDateFormat
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import com.coolApps.MultipleAlarmClock.utils.Result.Result as ResultCustom
 
 const val ALARM_ACTION = "com.coolApps.trying_native.ALARM_TRIGGERED"
 
@@ -39,7 +41,11 @@ class TimeProviderImpl : TimeProvider {
 
 class AlarmsController @Inject constructor(
 		private val alarmRepository: AlarmRepository,
-		private val timeProvider: TimeProvider
+		private val timeProvider: TimeProvider,
+		private val alarmManager: AlarmManager,
+		val analytics: Analytics,
+		private val errorHandler: ErrorHandler,
+		@ApplicationContext  val context: Context
 ) {
 	var scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 	private val alarmInfoNotificationClass:Class<out BroadcastReceiver> = AlarmInfoNotification::class.java
@@ -419,6 +425,48 @@ class AlarmsController @Inject constructor(
 			updatingAlarmStateJob.await()
 		}
 	}
+
+
+	// schedule the next alarm and if error notify the user
+	suspend fun  scheduleNextAlarmInSeries(alarmIntent: AlarmActivityIntentData) {
+		val alarmData: AlarmData? = alarmRepository.getAlarmById(alarmIntent.alarmIdInDb)
+
+		if (alarmData == null) {
+			logD("AlarmData not found for ID: ${alarmIntent.alarmIdInDb}")
+			// ERROR: this shouldn't be true
+			return
+		}
+		val currentTimeAlarmFired = alarmIntent.alarmTriggerTime
+		val nextAlarmTime = currentTimeAlarmFired + alarmData.getFreqInMillisecond()
+		logD("Current: ${getTimeInHumanReadableFormatProtectFrom0Included(currentTimeAlarmFired)}, Next: ${getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTime)}")
+
+		if (nextAlarmTime < alarmData.endTime) {
+			// put this logic in alarmController (end time calc too)
+			val res = scheduleAlarm(
+				alarmManager = alarmManager,
+				componentActivity = context,
+				receiverClass = AlarmReceiver::class.java,
+				alarmData = alarmData,
+				alarmTriggerTime = nextAlarmTime
+			)
+
+			res.fold(
+				onSuccess = { logD("Scheduled next alarm successfully") },
+				onError = { error ->
+					logD("Error scheduling next alarm: ${error.internalErrorMessage}")
+					errorHandler.handleError(ResultCustom.Failure(error))
+					if (error is AlarmControllerErrorSet.ValidationFailed) {
+						alarmRepository.updateAlarm(alarmData.copy(isReadyToUse = false))
+					}
+				}
+			)
+		} else {
+			logD("No more instances to schedule for this alarm series")
+		}
+
+
+	}
+
 
 	private fun calculateNextAlarmInfo(
 			alarmData: AlarmData

@@ -1,6 +1,5 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.activities
 
-import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import android.content.Intent
 import android.os.Bundle
 import android.os.PowerManager
@@ -55,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.IntentCompat
 import androidx.lifecycle.lifecycleScope
+import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.logD
 import com.coolApps.MultipleAlarmClock.services.AlarmService
@@ -103,10 +103,6 @@ class AlarmActivity : ComponentActivity() {
                         messageVarToSet = intentDataAccessed.message
                     }
                     logD("the message from intent we got is $messageVarToSet ")
-                    analytics.captureEvent("alarm activity created", mapOf(
-                        "intentData" to intentDataAccessed.toString(),
-                        "class" to "AlarmActivity"
-                    ))
                 }
                 LaunchedEffect(Unit) {
                     if (dismissIntent == null) dismissIntent = makeDismissIntent()

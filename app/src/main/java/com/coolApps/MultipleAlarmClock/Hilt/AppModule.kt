@@ -6,14 +6,16 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import androidx.room.Room
-import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.MIGRATION_1_2
 import com.coolApps.MultipleAlarmClock.Data.dataStore.Settings
 import com.coolApps.MultipleAlarmClock.Data.dataStore.SettingsSerializer
+import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDao
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDatabase
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.MIGRATION_1_2
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.repository.AlarmRepositoryImpl
 import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
+import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -65,5 +67,15 @@ object AppModule {
 	@Singleton
 	fun provideAnalytics(@ApplicationContext context: Context): Analytics {
 		return Analytics(context)
+	}
+
+	@Provides
+	fun provideNotificationHandler(@ApplicationContext context: Context): NotificationHandler {
+		return NotificationHandler(context)
+	}
+
+	@Provides
+	fun provideErrorHandler(notificationHandler: NotificationHandler, analytics: Analytics): ErrorHandler {
+		return ErrorHandler(notificationHandler, analytics)
 	}
 }

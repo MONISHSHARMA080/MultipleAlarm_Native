@@ -1,20 +1,19 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmContainer
 
-import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import android.app.AlarmManager
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
-import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
-import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import com.coolApps.MultipleAlarmClock.logD
-import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
-import com.coolApps.MultipleAlarmClock.utils.Result.Result
 import com.coolApps.MultipleAlarmClock.Data.dataStore.Settings
 import com.coolApps.MultipleAlarmClock.Data.dataStore.copy
+import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
+import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
+import com.coolApps.MultipleAlarmClock.analytics.Analytics
+import com.coolApps.MultipleAlarmClock.logD
+import com.coolApps.MultipleAlarmClock.utils.Result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
@@ -34,10 +33,9 @@ class AlarmContainerViewModel @Inject constructor(
 	private val alarmManager: AlarmManager,
 	private val dataStore: DataStore<Settings>,
 	private val alarmsController: AlarmsController,
+	private val errorHandler: ErrorHandler,
 	@ApplicationContext  val context: Context
 ) : ViewModel(){
-
-	private val errorHandler = ErrorHandler(notificationHandler = NotificationHandler(context),analytics)
 
 	val showFeedbackUIState: StateFlow<Boolean> = dataStore.data
 		.map { settings ->

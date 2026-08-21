@@ -10,7 +10,6 @@ import androidx.work.WorkerParameters
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.async
@@ -24,7 +23,8 @@ class ResetAlarmAfterBoot @AssistedInject constructor(
 	@Assisted workerParams: WorkerParameters,
 	private val analytics: Analytics,           // injected
 	private val alarmsController: AlarmsController ,// injected
-	private val alarmRepository: AlarmRepository
+	private val alarmRepository: AlarmRepository,
+	private val errorHandler: ErrorHandler
 ) : CoroutineWorker(appContext, workerParams) {
 
 	val alarmManager = applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -57,7 +57,7 @@ class ResetAlarmAfterBoot @AssistedInject constructor(
 
 		results.forEach { result ->
 			result.fold(onSuccess = {}, onError = { error ->
-				ErrorHandler(NotificationHandler(applicationContext), Analytics(applicationContext)).handleError(ResultsCustom.Failure(error))
+				errorHandler.handleError(ResultsCustom.Failure(error))
 			})
 		}
 		return if (hasError) Result.failure() else Result.success()
