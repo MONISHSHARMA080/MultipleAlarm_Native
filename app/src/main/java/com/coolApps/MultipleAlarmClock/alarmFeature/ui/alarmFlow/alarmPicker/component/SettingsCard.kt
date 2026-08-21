@@ -1,7 +1,5 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component
 
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -35,6 +33,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,11 +44,17 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
+import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerUiState
 import java.text.SimpleDateFormat
 
@@ -217,11 +225,12 @@ import java.text.SimpleDateFormat
 		val doWeHaveFrequencyError =
 			(uiState.validationResult as? ValidationResult.Failure)?.field ==
 					AlarmErrorField.FREQUENCY
-		val doWeHaveErrorOtherThanFrequency =
-			(uiState.validationResult as? ValidationResult.Failure) != null &&
-					uiState.validationResult.field != AlarmErrorField.FREQUENCY
+//		val doWeHaveErrorOtherThanFrequency =
+//			(uiState.validationResult as? ValidationResult.Failure) != null &&
+//					uiState.validationResult.field != AlarmErrorField.FREQUENCY
 
 		val view = LocalView.current
+		var textValue by remember(value) { mutableStateOf(if (value == 0L) "" else value.toString()) }
 
 		Column(
 			modifier =
@@ -271,11 +280,30 @@ import java.text.SimpleDateFormat
 						)
 					}
 
+					val minSuffixTransformation = remember {
+						VisualTransformation { text ->
+							val display = if (text.isEmpty()) text else AnnotatedString(text.text + " min")
+							TransformedText(
+								display,
+								object : OffsetMapping {
+									override fun originalToTransformed(offset: Int) = offset
+									override fun transformedToOriginal(offset: Int) = offset.coerceAtMost(text.text.length)
+								}
+							)
+						}
+					}
+
 					BasicTextField(
-						value = if (value == 0L) "" else "$value min",
+						value = textValue,
 						onValueChange = { newValue ->
-							newValue.toLongOrNull()?.let { onValueChange(it) } ?: onValueChange(0)
+							val digitsOnly = newValue.filter { it.isDigit() }
+//							digitsOnly.toLongOrNull()?.let { onValueChange(it) } ?: onValueChange(0)
+							// Only propagate when we actually have a parseable value.
+							// Empty (e.g. user backspaced everything) stays local-only.
+							textValue = digitsOnly
+							digitsOnly.toLongOrNull()?.let { onValueChange(it) }
 						},
+						visualTransformation = minSuffixTransformation,
 						modifier = Modifier.width(55.dp),
 						textStyle =
 							typography.titleMedium.copy(
