@@ -114,7 +114,7 @@ class AlarmActivity : ComponentActivity() {
             }
         }
         lifecycleScope.launch { delay(AUTO_FINISH_DELAY); stopAlarmAndFinish() }
-        lifecycleScope.launch(Dispatchers.IO) {keepScreenON()  }
+        lifecycleScope.launch(Dispatchers.Main) {keepScreenON()  }
     }
 
     /** this  function will get the message form the intent and will set it on the mutable State  that is  passed in */
