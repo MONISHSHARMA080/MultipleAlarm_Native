@@ -44,7 +44,7 @@ class Analytics(val context: Context){
 			sessionReplayConfig.screenshot = true
 		}
 		PostHogAndroid.setup(context, postHogConfig)
-		logD("the buildConfig.Debug is ${BuildConfig.DEBUG}")
+		logD("the buildConfig.Debug is ${BuildConfig.DEBUG} and SkipPosthog:${BuildConfig.SKIP_POSTHOG}")
 		config = postHogConfig
 		coroutineScope.launch {
 			identifyAnonymousUser()

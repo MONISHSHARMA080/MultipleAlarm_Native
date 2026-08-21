@@ -1,10 +1,21 @@
 package com.coolApps.MultipleAlarmClock.services
 
 import android.util.Log
+import com.coolApps.MultipleAlarmClock.analytics.Analytics
+import com.coolApps.MultipleAlarmClock.notification.NotificationChannelType
+import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class FirebaseMessagingService : FirebaseMessagingService() {
+	@Inject
+	lateinit var analytics: Analytics
+
+	@Inject
+	lateinit var notificationHandler: NotificationHandler
 
 	override fun onRegistered(installationId: String) {
 		super.onRegistered(installationId)
@@ -18,20 +29,26 @@ class FirebaseMessagingService : FirebaseMessagingService() {
 
         val title = remoteMessage.notification?.title
             ?: remoteMessage.data["title"]
-//            ?: getString(R.string.app_name)
-			?: return
+            ?: return
 
-		val message = remoteMessage.notification?.body
+        val message = remoteMessage.notification?.body
             ?: remoteMessage.data["body"]
             ?: remoteMessage.data["message"]
             ?: return
 
-		logD("title:$title, message: $message")
+        logD("title:$title, message: $message")
+//        analytics.captureEvent("fcm_message_received", mapOf("title" to title))
+
         showNotification(title, message, remoteMessage.data)
     }
 
     private fun showNotification(title: String, message: String, data: Map<String, String>) {
-		// use notification handler to handle it later
+        val notification = notificationHandler.build(
+            notificationChannel = NotificationChannelType.GeneralNotification,
+            notificationTitle = title,
+            notificationText = message
+        )
+        notificationHandler.show(notification)
     }
 
 

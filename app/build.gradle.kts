@@ -81,9 +81,8 @@ fun Project.configureAndroid() {
                 signingConfig = signingConfigs.getByName("release")
             }
             debug {
-//                resValue("string", "app_name", "debug-$myAppName")
 				resValue("string", "app_name", myAppName)
-                buildConfigField("boolean", "SKIP_POSTHOG", "false")
+                buildConfigField("boolean", "SKIP_POSTHOG", "true")
             }
         }
 
