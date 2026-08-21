@@ -16,6 +16,7 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -35,27 +36,33 @@ class AlarmReceiver : BroadcastReceiver() {
         logD("onReceive: intent action = ${intent.action}")
         val pendingResult = goAsync()
 
-        coroutineScope.launch {
-            try {
-                startAlarmService(context, intent)
-                
-                val intentData = IntentCompat.getParcelableExtra(intent, "intentData", AlarmActivityIntentData::class.java)
-                if (intentData != null) {
-                    alarmsController.scheduleNextAlarmInSeries(intentData)
-                }
-            } catch (e: Exception) {
-                logD("Error in onReceive: ${e.message}")
-                analytics.captureEvent(
-                    "Error in AlarmReceiver", mapOf(
-                        "exception" to e.toString(),
-                        "stackTrace" to e.stackTraceToString()
-                    )
-                )
-            } finally {
-                pendingResult.finish()
-            }
-        }
-    }
+		coroutineScope.launch {
+			try {
+				coroutineScope {
+					launch {
+						startAlarmService(context, intent)
+					}
+
+					launch {
+						val intentData = IntentCompat.getParcelableExtra(intent, "intentData", AlarmActivityIntentData::class.java)?:return@launch
+						alarmsController.scheduleNextAlarmInSeries(intentData)
+					}
+				}
+			} catch (e: Exception) {
+				logD("Error in onReceive: ${e.message}")
+
+				analytics.captureEvent(
+					"Error in AlarmReceiver",
+					mapOf(
+						"exception" to e.toString(),
+						"stackTrace" to e.stackTraceToString()
+					)
+				)
+			} finally {
+				pendingResult.finish()
+			}
+		}
+	}
 
     private fun startAlarmService(context: Context, intent: Intent) {
         try {
