@@ -61,7 +61,7 @@ fun TimePickerWithoutDialog(
 				SimpleDateFormat("h:mm a", locale).format(uiState.alarmObject.startTime.time)
 			}
 			Text(
-				text =  stringResource(R.string.alarm_error_time_range, startTimeString ),
+				text =  stringResource(R.string.alarm_error_end_time_greater, startTimeString ),
 				style = typography.bodyMedium,
 				color = colorScheme.error,
 				modifier = Modifier.padding(top = 16.dp),
