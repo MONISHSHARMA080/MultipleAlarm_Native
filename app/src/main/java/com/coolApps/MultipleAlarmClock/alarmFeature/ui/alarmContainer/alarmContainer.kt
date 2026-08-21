@@ -1,6 +1,5 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmContainer
 
-import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -64,9 +63,9 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.R
-import com.coolApps.MultipleAlarmClock.logD
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmContainer.AlarmContainerViewModel
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmContainer.utils.FeedbackPopUpCard
+import com.coolApps.MultipleAlarmClock.logD
 import kotlinx.coroutines.launch
 
 
@@ -164,13 +163,6 @@ import kotlinx.coroutines.launch
 							onDelete = { alarmData -> alarmContainerViewModel.deleteAlarm(alarmData) },
 							onLongPress = { alarmData ->
 								selectedAlarmId = if (selectedAlarmId == alarmData.id) null else alarmData.id
-								coroutineScope.launch {
-									alarmContainerViewModel.captureEvent(
-										"user long pressed the alarm", mapOf(
-											"selecting alarm" to (selectedAlarmId != null)
-										)
-									)
-								}
 							},
 							modifier = Modifier.animateItem()
 						)
@@ -195,9 +187,6 @@ import kotlinx.coroutines.launch
 				AddAlarmButton(
 					onClick = {
 						onNavigateToCreate()
-						coroutineScope.launch {
-							alarmContainerViewModel.captureEvent("Plus Icon clicked", mapOf("round plus icon " to "new alarm"))
-						}
 				  },
 				)
 			}

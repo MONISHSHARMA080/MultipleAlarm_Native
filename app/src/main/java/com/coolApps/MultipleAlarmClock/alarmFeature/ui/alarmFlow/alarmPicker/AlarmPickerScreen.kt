@@ -1,10 +1,5 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker
 
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.LinearProgressForNewAlarm
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.SettingsCard
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.TimePickerWithoutDialog
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.TimeRow
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -71,9 +66,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.Permissions.AlarmPermissionDialog
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerViewModel
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.Progress
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.LinearProgressForNewAlarm
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.SettingsCard
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.TimePickerWithoutDialog
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.TimeRow
 import java.util.Calendar
 
 
@@ -107,12 +105,6 @@ fun AlarmPickerScreen(
     viewModel.checkPermissions(context)
     onPauseOrDispose {
       // Optional cleanup when the screen pauses/disposes
-    }
-  }
-
-  LaunchedEffect(uiState.showPermissionDialog) {
-    if (uiState.showPermissionDialog) {
-      viewModel.captureEvent("ask for permission dialog opened", mapOf())
     }
   }
 

@@ -1,6 +1,5 @@
 package com.coolApps.MultipleAlarmClock.services
 
-import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDao
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -16,8 +15,9 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.IntentCompat
 import androidx.core.net.toUri
-import com.coolApps.MultipleAlarmClock.alarmFeature.activities.AlarmActivity
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
+import com.coolApps.MultipleAlarmClock.alarmFeature.activities.AlarmActivity
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDao
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
@@ -107,10 +107,6 @@ class AlarmService: Service() {
 		}
 		val cursor = ringtoneManager.cursor
 		val count = cursor.count
-
-		coroutineScope.launch {
-			analytics.captureEvent("alarm sounds fetched", mapOf("total_alarms" to count))
-		}
 
 		return if (count > 0) {
 			ringtoneManager.getRingtoneUri(Random.nextInt(count))

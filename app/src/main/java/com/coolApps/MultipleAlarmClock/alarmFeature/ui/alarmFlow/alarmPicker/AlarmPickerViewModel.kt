@@ -1,9 +1,5 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker
 
-import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmObject
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
 import android.Manifest
 import android.app.AlarmManager
 import android.content.Context
@@ -15,15 +11,19 @@ import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
+import com.coolApps.MultipleAlarmClock.Data.dataStore.Settings
+import com.coolApps.MultipleAlarmClock.Data.dataStore.copy
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
+import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
+import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmObject
+import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.Permissions.PermissionUtils
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.data.AlarmSound
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.logD
 import com.coolApps.MultipleAlarmClock.services.PlayAlarm
 import com.coolApps.MultipleAlarmClock.utils.Result.Result
-import com.coolApps.MultipleAlarmClock.Data.dataStore.Settings
-import com.coolApps.MultipleAlarmClock.Data.dataStore.copy
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.Permissions.PermissionUtils
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.data.AlarmSound
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -279,7 +279,6 @@ class AlarmPickerViewModel @AssistedInject constructor(
 
 	fun onDeleteClicked() {
 		val alarmData: AlarmData  = uiState.value.initialAlarm ?: return
-		analytics.captureEvent("delete alarm clicked", mapOf("alarmId" to alarmData.id))
 		nonCancellableScope.launch {
 			alarmsController.deleteAlarmHandler(alarmData, context, alarmManager).fold(
 				onSuccess = {

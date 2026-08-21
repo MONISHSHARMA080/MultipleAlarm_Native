@@ -88,11 +88,6 @@ class AlarmContainerViewModel @Inject constructor(
 	fun resetAlarm(alarmData: AlarmData){
 		viewModelScope.launch {
 			logD("about to reset the alarm-+")
-			launch {
-				analytics.captureEvent("user reset the alarm", mapOf(
-					"new alarmData" to alarmData.toString()
-				))
-			}
 			val exception = alarmsController.resetAlarms(
 				alarmData = alarmData,
 				alarmManager = alarmManager,
@@ -101,7 +96,7 @@ class AlarmContainerViewModel @Inject constructor(
 			exception.fold(
 				onSuccess = {
 					viewModelScope.launch {
-						analytics.captureEvent("alarm successfully reset", mapOf(
+						analytics.captureEvent("alarm_reset", mapOf(
 							"alarmData" to alarmData.toString()
 						))
 					}
