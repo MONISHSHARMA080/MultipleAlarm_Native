@@ -399,9 +399,11 @@ class AlarmsController @Inject constructor(
 					}
 				}
 			)
-			if (this.getDateOnly(nextAlarmInfo.newSeriesStartTime) != this.getDateOnly(nextAlarmInfo.newSeriesEndTime) ) return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "startDate: ${this.getDateOnly(nextAlarmInfo.newSeriesStartTime) } and EndTime: ${ this.getDateOnly(nextAlarmInfo.newSeriesEndTime) } of alarmSeries are not equal"))
-			if (this.getDateForDisplay(nextAlarmInfo.newSeriesStartTime) != this.getDateForDisplay(nextAlarmInfo.newSeriesEndTime)) return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "startDate from new startSeries time is ${this.getDateForDisplay(nextAlarmInfo.newSeriesStartTime)} and the end date from the new endSeries time is ${this.getDateForDisplay(nextAlarmInfo.newSeriesEndTime)}"))
+//			if (this.getDateOnly(nextAlarmInfo.newSeriesStartTime) != this.getDateOnly(nextAlarmInfo.newSeriesEndTime) ) return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "startDate: ${this.getDateOnly(nextAlarmInfo.newSeriesStartTime) } and EndTime: ${ this.getDateOnly(nextAlarmInfo.newSeriesEndTime) } of alarmSeries are not equal"))
+//			if (this.getDateForDisplay(nextAlarmInfo.newSeriesStartTime) != this.getDateForDisplay(nextAlarmInfo.newSeriesEndTime)) return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "startDate from new startSeries time is ${this.getDateForDisplay(nextAlarmInfo.newSeriesStartTime)} and the end date from the new endSeries time is ${this.getDateForDisplay(nextAlarmInfo.newSeriesEndTime)}"))
 			val newAlarm = alarmData.copy(startTime = nextAlarmInfo.newSeriesStartTime, endTime = nextAlarmInfo.newSeriesEndTime, isReadyToUse = true,)
+			val validationRes = newAlarm.validate()
+			if (validationRes != AlarmDataValidationResult.Success){ return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = validationRes.errorMessage())) }
 
 			val updatingAlarmStateJob = this.scope.async {this@AlarmsController.updateAlarmStateInDb(newAlarm)  }
 			val scheduleAlarmJob =  scheduleAlarm(
