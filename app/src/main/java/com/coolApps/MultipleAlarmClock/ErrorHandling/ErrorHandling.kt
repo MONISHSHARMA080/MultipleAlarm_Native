@@ -23,7 +23,7 @@ class ErrorHandler @Inject constructor(val notificationHandler: NotificationHand
 			displayMessage = resolvedMessage,
 			displayTitle = resolvedTitle,
 			internalErrorMessage = internalErrorMessage,
-			errorClassName = error.errorClass.toDebugString()
+			errorClassName = error.errorClass.toDebugString(notificationHandler.context)
 		)
 	}
 	fun  handleError(displayMessage:String, displayTitle:String, internalErrorMessage: String, errorClassName:String ): Unit {
