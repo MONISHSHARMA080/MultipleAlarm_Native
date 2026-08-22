@@ -1,5 +1,7 @@
-import { onSchedule } from "firebase-functions/v2/scheduler";
+import { initializeApp } from "firebase-admin/app";
+initializeApp();
 import { defineSecret } from "firebase-functions/params";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
 import { COHORT_TARGETS } from "./config";
 import { fetchTokensForCohort } from "./fetchTokensForCohort";
