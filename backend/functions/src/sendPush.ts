@@ -17,6 +17,7 @@ interface SendResult {
   staleTokenCount: number;
 }
 
+// eslint-disable-next-line valid-jsdoc
 /**
  * Sends the same title/body/data payload to every token, chunking into
  * batches of FCM_MULTICAST_CHUNK_SIZE (FCM's hard per-call limit).
@@ -27,7 +28,7 @@ export async function sendPushToTokens(
   payload: { title: string; body: string; data?: Record<string, string> }
 ): Promise<SendResult> {
   const messaging = getMessaging();
-  const total: SendResult = { successCount: 0, failureCount: 0, staleTokenCount: 0 };
+  const total: SendResult = {successCount: 0, failureCount: 0, staleTokenCount: 0};
 
   const chunks: string[][] = [];
   for (let i = 0; i < tokens.length; i += FCM_MULTICAST_CHUNK_SIZE) {
