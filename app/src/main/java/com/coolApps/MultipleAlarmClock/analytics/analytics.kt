@@ -2,22 +2,35 @@ package com.coolApps.MultipleAlarmClock.analytics
 
 import android.content.Context
 import androidx.core.content.edit
+import androidx.datastore.core.DataStore
 import com.coolApps.MultipleAlarmClock.BuildConfig
+import com.coolApps.MultipleAlarmClock.Data.dataStore.InAppReviewState
+import com.coolApps.MultipleAlarmClock.Data.dataStore.Settings
+import com.coolApps.MultipleAlarmClock.Data.dataStore.copy
 import com.coolApps.MultipleAlarmClock.logD
 import com.google.android.gms.appset.AppSet
 import com.google.android.gms.appset.AppSetIdInfo
 import com.google.android.gms.tasks.Task
 import com.posthog.PersonProfiles
 import com.posthog.PostHog
+import com.posthog.PostHogOnFeatureFlags
 import com.posthog.android.PostHogAndroid
 import com.posthog.android.PostHogAndroidConfig
+import com.posthog.logs.PostHogLogSeverity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+object FeatureFlagKeys {
+	const val IN_APP_REVIEW = "in-app-review-prompt-show"
+}
 
-class Analytics(val context: Context){
+
+class Analytics(
+		val context: Context,
+		private val dataStore: DataStore<Settings>
+	){
 	companion object {
 		const val POSTHOG_API_KEY = "phc_wFUsQjwTmEznOhwyNUeAD0fe70cGWr5MuWRSjJMh5Cb"
 		const val POSTHOG_HOST = "https://us.i.posthog.com"
@@ -41,7 +54,27 @@ class Analytics(val context: Context){
 				debug = BuildConfig.DEBUG
 				optOut = BuildConfig.DEBUG || BuildConfig.SKIP_POSTHOG
 				sessionReplayConfig.captureLogcat = true
-			sessionReplayConfig.screenshot = true
+				sessionReplayConfig.screenshot = true
+				onFeatureFlags = PostHogOnFeatureFlags {
+					coroutineScope.launch {
+						val featureEnabled = PostHog.isFeatureEnabled(FeatureFlagKeys.IN_APP_REVIEW, defaultValue = false)
+						logD("PostHog feature flag ${FeatureFlagKeys.IN_APP_REVIEW} = $featureEnabled")
+						// State transitions,
+						// NOT_ELIGIBLE -> default,
+						// ELIGIBLE -> using feature flag and show the ui,
+						// CONSUMED -> Users have seen the popUp, and now we are waiting for the isFeatureEnabled to return false, so we can turn it off / NOT_ELIGIBLE
+						// b) when the user have seen the Popup the shouldWeShowInAppReview = Consumed and featureEnabled == true, then I to not make it Eligible, so for that
+						dataStore.updateData { it.copy {
+							shouldWeShowInAppReview = when{
+								!featureEnabled -> InAppReviewState.NOT_ELIGIBLE
+								shouldWeShowInAppReview == InAppReviewState.NOT_ELIGIBLE && featureEnabled -> InAppReviewState.ELIGIBLE
+								else -> shouldWeShowInAppReview
+							}
+						}
+						}
+					}
+				}
+
 		}
 		PostHogAndroid.setup(context, postHogConfig)
 		logD("the buildConfig.Debug is ${BuildConfig.DEBUG} and SkipPosthog:${BuildConfig.SKIP_POSTHOG}")
@@ -56,6 +89,17 @@ class Analytics(val context: Context){
 			event = event,
 			properties = properties
 		)
+	}
+
+	fun captureLog(message: String, severity: PostHogLogSeverity = PostHogLogSeverity.DEBUG) {
+		when (severity) {
+			PostHogLogSeverity.TRACE -> PostHog.logger.trace(message)
+			PostHogLogSeverity.DEBUG -> PostHog.logger.debug(message)
+			PostHogLogSeverity.INFO -> PostHog.logger.info(message)
+			PostHogLogSeverity.WARN -> PostHog.logger.warn(message)
+			PostHogLogSeverity.ERROR -> PostHog.logger.error(message)
+			PostHogLogSeverity.FATAL -> PostHog.logger.fatal(message)
+		}
 	}
 
 	fun setFcmToken(fid: String) {

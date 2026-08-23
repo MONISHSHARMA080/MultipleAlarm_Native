@@ -1,5 +1,6 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmContainer
 
+import android.app.Activity
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -51,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
@@ -66,6 +68,7 @@ import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmContainer.utils.FeedbackPopUpCard
 import com.coolApps.MultipleAlarmClock.logD
+import com.google.android.play.core.review.ReviewManagerFactory
 import kotlinx.coroutines.launch
 
 
@@ -78,9 +81,32 @@ import kotlinx.coroutines.launch
 	val alarmList: List<AlarmData>? by alarmContainerViewModel.alarms.collectAsStateWithLifecycle()
 	var selectedAlarmId by remember { mutableStateOf<Int?>(null) }
 	ReportDrawnWhen { alarmList != null }
-	val coroutineScope = rememberCoroutineScope()
 	val colorScheme = colorScheme
 	val showFeedbackCard by alarmContainerViewModel.showFeedbackUIState.collectAsStateWithLifecycle()
+	val inAppReviewState by alarmContainerViewModel.showInAppReview.collectAsStateWithLifecycle()
+	val context = LocalContext.current
+
+	LaunchedEffect(inAppReviewState) {
+		val activity = context as? Activity
+		if (inAppReviewState  && (activity != null)) {
+			val manager = ReviewManagerFactory.create(context)
+			val request = manager.requestReviewFlow()
+			logD("asking for  review, ")
+			request.addOnCompleteListener { task ->
+				if (task.isSuccessful) {
+					val reviewInfo = task.result
+					val flow = manager.launchReviewFlow(activity, reviewInfo)
+					logD("review successful, $task")
+					flow.addOnCompleteListener {
+						alarmContainerViewModel.setInAppReviewConsumed(true, task)
+					}
+				} else {
+					logD("review unSuccessful, $task")
+					alarmContainerViewModel.setInAppReviewConsumed(false, task)
+				}
+			}
+		}
+	}
 
 	Scaffold(
 		containerColor = colorScheme.surface,
@@ -102,11 +128,12 @@ import kotlinx.coroutines.launch
 					modifier = Modifier.fillMaxWidth()
 				)
 			}
-			if (showFeedbackCard ){
-				FeedbackPopUpCard({review->
-					logD("Feedback given is $review");
-					alarmContainerViewModel.captureFeedback(review)
-				},
+			if (showFeedbackCard) {
+				FeedbackPopUpCard(
+					onReviewGiven = { review ->
+						logD("Feedback given is $review")
+						alarmContainerViewModel.captureFeedback(review)
+					},
 					onDismiss = { alarmContainerViewModel.dismissFeedback() }
 				)
 				LaunchedEffect(Unit) {

@@ -9,4 +9,11 @@ message Settings {
   bool first_alarm_set = 3;
   bool first_alarm_notification_received = 4;
   bool should_we_show_feedback_card = 5;
+  InAppReviewState should_we_show_in_app_review = 6;
+}
+
+enum InAppReviewState {
+    NOT_ELIGIBLE = 0;
+    ELIGIBLE = 1;
+    CONSUMED = 2;
 }

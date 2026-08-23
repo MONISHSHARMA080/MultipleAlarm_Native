@@ -165,6 +165,11 @@ dependencies {
 	ksp("com.google.dagger:hilt-android-compiler:2.60.1")
 	implementation("androidx.hilt:hilt-navigation-compose:1.4.0")
 
+
+	implementation("com.google.android.play:review:2.0.2")
+	implementation("com.google.android.play:review-ktx:2.0.2")
+
+
     implementation("com.google.accompanist:accompanist-permissions:0.37.3")
 
     implementation ("com.posthog:posthog-android:3.58.2")
