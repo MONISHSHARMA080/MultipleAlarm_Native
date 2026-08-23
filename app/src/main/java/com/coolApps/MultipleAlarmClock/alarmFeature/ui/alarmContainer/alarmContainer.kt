@@ -88,21 +88,22 @@ import kotlinx.coroutines.launch
 
 	LaunchedEffect(inAppReviewState) {
 		val activity = context as? Activity
+		logD("asking for  review inAppReviewState:$inAppReviewState, :) ")
 		if (inAppReviewState  && (activity != null)) {
 			val manager = ReviewManagerFactory.create(context)
 			val request = manager.requestReviewFlow()
-			logD("asking for  review, ")
+			logD("asking for  review inAppReviewState:$inAppReviewState ")
 			request.addOnCompleteListener { task ->
 				if (task.isSuccessful) {
 					val reviewInfo = task.result
 					val flow = manager.launchReviewFlow(activity, reviewInfo)
 					logD("review successful, $task")
 					flow.addOnCompleteListener {
-						alarmContainerViewModel.setInAppReviewConsumed(true, task)
+						alarmContainerViewModel.setInAppReviewConsumed( task)
 					}
 				} else {
 					logD("review unSuccessful, $task")
-					alarmContainerViewModel.setInAppReviewConsumed(false, task)
+					alarmContainerViewModel.setInAppReviewConsumed(task)
 				}
 			}
 		}

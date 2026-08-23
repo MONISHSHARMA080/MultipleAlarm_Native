@@ -18,6 +18,7 @@ import com.coolApps.MultipleAlarmClock.utils.Result.Result
 import com.google.android.gms.tasks.Task
 import com.google.android.play.core.review.ReviewException
 import com.google.android.play.core.review.ReviewInfo
+import com.google.android.play.core.review.model.ReviewErrorCode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
@@ -60,22 +61,49 @@ class AlarmContainerViewModel @Inject constructor(
 			started = SharingStarted.WhileSubscribed(5000 ),
 		)
 
-	fun setInAppReviewConsumed(isSuccessful:Boolean, task: Task<ReviewInfo>) {
+	fun setInAppReviewConsumed(task: Task<ReviewInfo>) {
 		viewModelScope.launch {
 			// if the isSuccessful == false or true that doesn't mean that the user saw the popup and failure could be
 			// due to any reason, so better to back of and not get rate limited as the api can change any time
-			val errorCode = (task.exception as? ReviewException)?.errorCode?.toString() ?: ""
-			logD("review consumed, and error_code: $errorCode")
-			dataStore.updateData { it.copy { shouldWeShowInAppReview = InAppReviewState.CONSUMED } }
-			analytics.captureEvent("in_app_review_consumed", mapOf(
+
+			val isSuccessful = task.isSuccessful
+			val reviewException = task.exception as? ReviewException
+			val message = reviewException?.message ?: ""
+			val statusCode = reviewException?.statusCode ?: ""
+			val stackTrace = reviewException?.stackTrace ?: ""
+			val cause= reviewException?.cause ?: ""
+			val status = reviewException?.status ?: ""
+			val errorCode = reviewException?.errorCode ?: ""
+			val isTransientFailure = !isSuccessful && errorCode == ReviewErrorCode.INTERNAL_ERROR
+
+			logD("review flow completed, success=$isSuccessful, error_code=$errorCode, left_state_unchanged=$isTransientFailure")
+
+			analytics.captureEvent(
+				"in_app_review_shown",
+				mapOf(
 					"success" to isSuccessful,
-					"error" to errorCode,
-			))
+					"error_code" to errorCode,
+					"error_message" to message,
+					"left_state_unchanged" to isTransientFailure,
+					"status_code" to statusCode,
+					"stack_trace" to stackTrace,
+					"cause" to cause,
+					"status" to status,
+					"error_code" to errorCode
+				)
+			)
+			// isSuccessful == true doesn't mean the user saw the dialog (quota can
+			// silently block it with no error), and isSuccessful == false doesn't
+			// mean we should give up permanently - only INTERNAL_ERROR is transient.
+			// INVALID_REQUEST/PLAY_STORE_NOT_FOUND will fail identically next time too,
+			// so there's no point holding eligibility open for those.
+			if (! isTransientFailure){
+				dataStore.updateData { it.copy { shouldWeShowInAppReview = InAppReviewState.CONSUMED } }
+			}
 		}
 	}
 	
 	
-
 	fun dismissFeedback() {
 		viewModelScope.launch {
 			dataStore.updateData { it.copy { shouldWeShowFeedbackCard = false } }
