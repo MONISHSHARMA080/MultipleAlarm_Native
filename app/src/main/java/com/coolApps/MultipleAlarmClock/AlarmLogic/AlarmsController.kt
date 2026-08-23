@@ -266,9 +266,8 @@ class AlarmsController @Inject constructor(
 		){
 			val cal = Calendar.getInstance()
 			val currentTime = cal.timeInMillis
-
-			val validationResult = alarmData.validate()
-			if (validationResult != AlarmDataValidationResult.Success) return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = validationResult.errorMessage()))
+//			val validationResult = alarmData.validate()
+//			if (validationResult != AlarmDataValidationResult.Success) return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = validationResult.errorMessage()))
 			val alarmObj = alarmData.toDomain()
 			alarmObj.alarmTimeSequence()
 				.dropWhile { it > currentTime }
