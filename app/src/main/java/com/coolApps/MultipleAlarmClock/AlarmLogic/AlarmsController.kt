@@ -550,10 +550,6 @@ class AlarmsController @Inject constructor(
 		return SimpleDateFormat("yyyy-MM-dd h:mm:ss a", Locale.getDefault()).format(Date(t))
 	}
 
-	private  fun getDateOnly(t:Long): String{
-		return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(t))
-	}
-
 	fun getTimeInHumanReadableFormatProtectFrom0Included(t:Long): String{
 		if (t == 0L) return "--the time here(probablyFromTheIntent) is 0--"
 		return SimpleDateFormat("h:mm:ss a yyyy-MM-dd", Locale.getDefault()).format(Date(t))
