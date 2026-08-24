@@ -89,6 +89,7 @@ import kotlinx.coroutines.launch
 
 	LaunchedEffect(inAppReviewState) {
 		val activity = context as? Activity
+
 		logD("asking for  review inAppReviewState:$inAppReviewState, :) ")
 		if (inAppReviewState  && (activity != null)) {
 			val manager = ReviewManagerFactory.create(context)

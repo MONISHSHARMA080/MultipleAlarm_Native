@@ -454,9 +454,8 @@ class AlarmsController @Inject constructor(
 			)
 		} else {
 			logD("No more instances to schedule for this alarm series")
+			this.updateAlarmStateInDb(alarmData.copy(isReadyToUse = false))
 		}
-
-
 	}
 
 

@@ -69,7 +69,6 @@ class AlarmContainerViewModel @Inject constructor(
 					lastReviewAttemptEpochTimeMs = settingsData.lastReviewAttemptedAt,
 					config = featureFlag
 				)
-				logD("review popup eligibility result is $res")
 				when(res){
 					is InAppReviewEligibilityChecker.Result.Eligible ->{
 						AlarmContainerUiState(
