@@ -135,14 +135,8 @@ class AlarmsController @Inject constructor(
 			// since I could have startTime < now < endTime
 			val timeReturned = alarmData.alarmTimeSequence().firstOrNull{ it > currentTIme.timeInMillis }
 				?: return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "Can't get first alarm to start the series\n alarmData:$alarmData"))
-			val scheduleAlarmHandler  =   scope.async {
-				scheduleAlarm(
-					alarmData = alarmData, alarmManager = alarmManager, alarmTriggerTime = timeReturned, componentActivity = activityContext, receiverClass = receiverClass
-				)
-			}
 			// TODO: last db update is handled in alarmReceiver, alarmReceiver rewrite, it should just receive the intent and schedule next alarm and not make decisions, that code should  be in this class
-
-			scheduleAlarmHandler.await().fold(
+			scheduleAlarm(alarmData = alarmData, alarmManager = alarmManager, alarmTriggerTime = timeReturned, componentActivity = activityContext, receiverClass = receiverClass).fold(
 				onSuccess = {},
 				onError = { failureRes ->
 					return when (failureRes) {
@@ -337,23 +331,14 @@ class AlarmsController @Inject constructor(
 			if (this.getDateForDisplay(nextAlarmInfo.newSeriesStartTime) != this.getDateForDisplay(nextAlarmInfo.newSeriesEndTime)) return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "startDate from new startSeries time is ${this.getDateForDisplay(nextAlarmInfo.newSeriesStartTime)} and the end date from the new endSeries time is ${this.getDateForDisplay(nextAlarmInfo.newSeriesEndTime)}"))
 			// cause I want to see if there is a error and if there is then I want to react
 			try {
-				val res = scope.async {
-					val updatedAlarm =alarmData.copy(
-						isReadyToUse = true,
-						startTime = nextAlarmInfo.newSeriesStartTime,
-						endTime = nextAlarmInfo.newSeriesEndTime
-					)
-					alarmRepository.updateAlarm(updatedAlarm)
-					return@async updatedAlarm
-				}
-				val newAlarm = res.await()
+				val newAlarm =alarmData.copy(
+					isReadyToUse = true,
+					startTime = nextAlarmInfo.newSeriesStartTime,
+					endTime = nextAlarmInfo.newSeriesEndTime
+				)
+				alarmRepository.updateAlarm(newAlarm)
 				alarmDataForDeleting = newAlarm
-				val alarmSchedule = scope.async {
-					scheduleAlarm(
-						alarmManager = alarmManager, componentActivity = activityContext, alarmData = newAlarm, alarmTriggerTime = nextAlarmInfo.nextAlarmTriggerTime, receiverClass = receiverClass
-					)
-				}
-				alarmSchedule.await().fold(
+				scheduleAlarm(alarmManager = alarmManager, componentActivity = activityContext, alarmData = newAlarm, alarmTriggerTime = nextAlarmInfo.nextAlarmTriggerTime, receiverClass = receiverClass).fold(
 					onSuccess = {},
 					onError = { failureRes ->
 						this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarmData.startTime, activityContext, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", alarmData.endTime, LastAlarmUpdateDBReceiver())
