@@ -106,14 +106,9 @@ class AlarmsController @Inject constructor(
 			)
 			intent.setClass(context, receiverClass)
 			intent.putExtra("intentData", intentData)
-			// this is for the alarm receiver
-			var pendingIntentForAlarm = PendingIntent.getBroadcast(context, alarmTriggerTime.toInt(), intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE)
-			if(pendingIntentForAlarm != null){
-				return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.PendingIntentAlreadyExist(internalErrorMessage = "Alarm on (${getTimeInHumanReadableFormat(alarmData.startTime)}) already exists" ))
-			}
-			pendingIntentForAlarm = PendingIntent.getBroadcast(context, alarmId, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-			// meaning that the pending intent does not exist, and it is safe to create one
 			intent.putExtra("alarmIdInDb", alarmId)
+			val pendingIntentForAlarm = PendingIntent.getBroadcast(context, alarmId, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+			// meaning that the pending intent does not exist, and it is safe to create one
 			var pendingIntentForAlarmInfo: PendingIntent
 			val intentForAlarmMetaData:Intent = intent.clone() as Intent
 			intentForAlarmMetaData.setClass(context, alarmInfoNotificationClass)
@@ -266,12 +261,10 @@ class AlarmsController @Inject constructor(
 		){
 			val cal = Calendar.getInstance()
 			val currentTime = cal.timeInMillis
-//			val validationResult = alarmData.validate()
-//			if (validationResult != AlarmDataValidationResult.Success) return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = validationResult.errorMessage()))
 			val alarmObj = alarmData.toDomain()
 			alarmObj.alarmTimeSequence()
 				.dropWhile { it > currentTime }
-				.take(5)
+				.take(3)
 				.forEach { alarmIterVal ->
 					logD("the time value gotten in iterating is ${getTimeInHumanReadableFormatProtectFrom0Included(alarmIterVal)}")
 
@@ -285,7 +278,7 @@ class AlarmsController @Inject constructor(
 
 					val baseIntent = Intent(ALARM_ACTION)
 					cancelPendingIntentReceiver(baseIntent, context, intentData, alarmReceiverClass, alarmManager, alarmData.id)
-					cancelPendingIntentReceiver(baseIntent, context, intentData, alarmReceiverClass, alarmManager, alarmData.startTime.toInt())
+					cancelPendingIntentReceiver(baseIntent, context, intentData, alarmReceiverClass, alarmManager, alarmIterVal.toInt())
 				}
 
 			// cancel the lastPi that is there to stop the alarm

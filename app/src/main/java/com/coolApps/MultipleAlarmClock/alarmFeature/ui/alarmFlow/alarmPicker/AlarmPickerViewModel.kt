@@ -157,8 +157,18 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	private fun updateAlarmObject(transform: (AlarmObject) -> AlarmObject) {
 		_uiState.update { state ->
 			val corrected = transform(state.alarmObject).ifTimeIntervalPassedThenReturnRollOver().alarmObject
+
+			val newStartTime =(state.alarmObject.startTime.clone() as Calendar).apply {
+				set(Calendar.SECOND, 0)
+				set(Calendar.MILLISECOND, 0)
+			}
+			val newEndTime =(state.alarmObject.endTime.clone() as Calendar).apply {
+				set(Calendar.SECOND, 0)
+				set(Calendar.MILLISECOND, 0)
+			}
+
 			state.copy(
-				alarmObject = corrected,
+				alarmObject = corrected.copy(startTime = newStartTime, endTime = newEndTime),
 				validationResult = corrected.validate()
 			)
 		}
