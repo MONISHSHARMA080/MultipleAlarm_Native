@@ -6,12 +6,12 @@ import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
-import com.coolApps.MultipleAlarmClock.Data.dataStore.InAppReviewState
 import com.coolApps.MultipleAlarmClock.Data.dataStore.Settings
 import com.coolApps.MultipleAlarmClock.Data.dataStore.copy
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
+import com.coolApps.MultipleAlarmClock.alarmFeature.domain.InAppReviewEligibilityChecker
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.logD
 import com.coolApps.MultipleAlarmClock.utils.Result.Result
@@ -22,11 +22,10 @@ import com.google.android.play.core.review.model.ReviewErrorCode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -44,28 +43,69 @@ class AlarmContainerViewModel @Inject constructor(
 	@ApplicationContext  val context: Context
 ) : ViewModel(){
 
+	private val eligibilityChecker: InAppReviewEligibilityChecker = InAppReviewEligibilityChecker()
+
+	val alarmControllerUi: StateFlow<AlarmContainerUiState> = combine(dataStore.data, alarmRepository.getAlarmsStream(), analytics.featureFlagsData){ settingsData , alarmList, featureFlag->
+		when{
+			featureFlag == null -> {
+				AlarmContainerUiState(
+					alarmList = alarmList,
+					reviewInelligiblityReason = null,
+					showReviewUi = false
+				)
+			}
+			alarmList.isEmpty() -> {
+				AlarmContainerUiState(
+					alarmList = alarmList,
+					reviewInelligiblityReason = null,
+					showReviewUi = false
+				)
+			}
+			else ->{
+				val highestIdAlarm = alarmList.maxBy { it.id }
+				val res = eligibilityChecker.evaluate(
+					installEpochTimeMs = settingsData.installEpochTimeMs,
+					alarmCount = highestIdAlarm.id,
+					lastReviewAttemptEpochTimeMs = settingsData.lastReviewAttemptedAt,
+					config = featureFlag
+				)
+				logD("review popup eligibility result is $res")
+				when(res){
+					is InAppReviewEligibilityChecker.Result.Eligible ->{
+						AlarmContainerUiState(
+							alarmList = alarmList,
+							reviewInelligiblityReason = null,
+							showReviewUi = true
+						)
+					}
+					is InAppReviewEligibilityChecker.Result.NotEligible -> {
+						AlarmContainerUiState(
+							alarmList = alarmList,
+							reviewInelligiblityReason = res.reason,
+							showReviewUi = false
+						)
+					}
+				}
+			}
+		}
+	}.stateIn(
+		scope = viewModelScope,
+		started = SharingStarted.WhileSubscribed(5_000),
+		initialValue = AlarmContainerUiState()
+	)
+
+
+
 	val showFeedbackUIState: StateFlow<Boolean> = dataStore.data
 		.map { settings ->
 			settings.shouldWeShowFeedbackCard
 		}
 		.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), false)
 
-	val showInAppReview: StateFlow<Boolean> = dataStore.data
-		.map { it.shouldWeShowInAppReview == InAppReviewState.ELIGIBLE }
-		.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), false)
-
-	val alarms: StateFlow<List<AlarmData>?> = alarmRepository.getAlarmsStream()
-		.flowOn(Dispatchers.IO)
-		.stateIn(
-			scope = viewModelScope,initialValue = null,
-			started = SharingStarted.WhileSubscribed(5000 ),
-		)
-
 	fun setInAppReviewConsumed(task: Task<ReviewInfo>) {
 		viewModelScope.launch {
 			// if the isSuccessful == false or true that doesn't mean that the user saw the popup and failure could be
 			// due to any reason, so better to back of and not get rate limited as the api can change any time
-
 			val isSuccessful = task.isSuccessful
 			val reviewException = task.exception as? ReviewException
 			val message = reviewException?.message ?: ""
@@ -76,7 +116,7 @@ class AlarmContainerViewModel @Inject constructor(
 			val errorCode = reviewException?.errorCode ?: ""
 			val isTransientFailure = !isSuccessful && errorCode == ReviewErrorCode.INTERNAL_ERROR
 
-			logD("review flow completed, success=$isSuccessful, error_code=$errorCode, left_state_unchanged=$isTransientFailure")
+			logD("review flow completed, success=$isSuccessful, error_code=$errorCode, left_state_unchanged/isTransientFailure =$isTransientFailure")
 
 			analytics.captureEvent(
 				"in_app_review_shown",
@@ -98,12 +138,13 @@ class AlarmContainerViewModel @Inject constructor(
 			// INVALID_REQUEST/PLAY_STORE_NOT_FOUND will fail identically next time too,
 			// so there's no point holding eligibility open for those.
 			if (! isTransientFailure){
-				dataStore.updateData { it.copy { shouldWeShowInAppReview = InAppReviewState.CONSUMED } }
+				dataStore.updateData {
+					it.copy {lastReviewAttemptedAt = System.currentTimeMillis() }
+				}
 			}
 		}
 	}
-	
-	
+
 	fun dismissFeedback() {
 		viewModelScope.launch {
 			dataStore.updateData { it.copy { shouldWeShowFeedbackCard = false } }

@@ -16,7 +16,9 @@ object SettingsSerializer : Serializer<Settings> {
 		firstAlarmNotificationReceived = false
 		// this should be shouldWeShowFedbackCard
 		shouldWeShowFeedbackCard = false
-		shouldWeShowInAppReview = InAppReviewState.NOT_ELIGIBLE
+		shouldWeShowInAppReview = false
+		installEpochTimeMs= 0L
+		lastReviewAttemptedAt = 0L
 	}
 	override suspend fun readFrom(input: InputStream): Settings {
 		try {

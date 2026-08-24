@@ -78,12 +78,13 @@ import kotlinx.coroutines.launch
 	val alarmContainerViewModel :AlarmContainerViewModel = hiltViewModel()
 	val snackBarHostState = remember { SnackbarHostState() }
 
-	val alarmList: List<AlarmData>? by alarmContainerViewModel.alarms.collectAsStateWithLifecycle()
+	val uiState by alarmContainerViewModel.alarmControllerUi.collectAsStateWithLifecycle()
+	val alarmList = uiState.alarmList
 	var selectedAlarmId by remember { mutableStateOf<Int?>(null) }
 	ReportDrawnWhen { alarmList != null }
 	val colorScheme = colorScheme
 	val showFeedbackCard by alarmContainerViewModel.showFeedbackUIState.collectAsStateWithLifecycle()
-	val inAppReviewState by alarmContainerViewModel.showInAppReview.collectAsStateWithLifecycle()
+	val inAppReviewState = uiState.showReviewUi
 	val context = LocalContext.current
 
 	LaunchedEffect(inAppReviewState) {

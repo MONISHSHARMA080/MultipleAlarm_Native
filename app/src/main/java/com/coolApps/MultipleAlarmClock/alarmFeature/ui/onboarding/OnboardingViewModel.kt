@@ -1,21 +1,19 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding
 
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data.DisplaySate
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data.OnboardingUiState
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.Data.dataStore.Settings
 import com.coolApps.MultipleAlarmClock.Data.dataStore.copy
+import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.Permissions.PermissionUtils
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data.DisplaySate
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data.OnboardingUiState
+import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -40,14 +38,6 @@ import kotlinx.coroutines.launch
 		started = SharingStarted.WhileSubscribed(5_000),
 		initialValue = OnboardingUiState()
 	)
-
-//	private val _missingSteps = MutableStateFlow<List<PermissionStep>>(emptyList())
-//	val missingSteps = _missingSteps.asStateFlow()
-
-//	private val _allCriticalGranted = MutableStateFlow(false)
-//	val allCriticalGranted = _allCriticalGranted.asStateFlow()
-
-	val nonCancellableScope = CoroutineScope(NonCancellable)
 
 	init {
 		viewModelScope.launch {
@@ -93,8 +83,18 @@ import kotlinx.coroutines.launch
 	  fun finishedOnboarding(){
 		 analytics.captureEvent("onboarding_finished", emptyMap())
 		 viewModelScope.launch {
-			 settingsDataStore.updateData { data -> data.copy { isFirstLaunch = false }}
+			 settingsDataStore.updateData { data ->
+				 if (data.installEpochTimeMs == 0L){
+					 data.copy {
+						 isFirstLaunch = false
+						 installEpochTimeMs = System.currentTimeMillis()
+					 }
+				 }else{
+					 data.copy {
+						 isFirstLaunch = false
+					 }
+				 }
+			 }
 		 }
 	}
 }
-

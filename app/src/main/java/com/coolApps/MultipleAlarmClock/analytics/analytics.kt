@@ -2,11 +2,7 @@ package com.coolApps.MultipleAlarmClock.analytics
 
 import android.content.Context
 import androidx.core.content.edit
-import androidx.datastore.core.DataStore
 import com.coolApps.MultipleAlarmClock.BuildConfig
-import com.coolApps.MultipleAlarmClock.Data.dataStore.InAppReviewState
-import com.coolApps.MultipleAlarmClock.Data.dataStore.Settings
-import com.coolApps.MultipleAlarmClock.Data.dataStore.copy
 import com.coolApps.MultipleAlarmClock.logD
 import com.google.android.gms.appset.AppSet
 import com.google.android.gms.appset.AppSetIdInfo
@@ -19,22 +15,32 @@ import com.posthog.android.PostHogAndroidConfig
 import com.posthog.logs.PostHogLogSeverity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
 
 object FeatureFlagKeys {
-	const val IN_APP_REVIEW = "in-app-review-prompt-show"
+	const val IN_APP_REVIEW_ENABLED = "in_app_review_enabled"
+	const val MIN_ALARMS_CREATED = "min_alarms_created"
+	const val COOLDOWN_DAYS = "cooldown_days"
+	const val MIN_DAYS_SINCE_INSTALL = "min_days_since_install"
 }
 
 
 class Analytics(
 		val context: Context,
-		private val dataStore: DataStore<Settings>
 	){
+	private var isFeatureFlagsLoaded = false
 	companion object {
 		const val POSTHOG_API_KEY = "phc_wFUsQjwTmEznOhwyNUeAD0fe70cGWr5MuWRSjJMh5Cb"
 		const val POSTHOG_HOST = "https://us.i.posthog.com"
 	}
+
+	private val _featureFlagsData  = MutableStateFlow<FeatureFlagsData?>(null)
+	// null means not loaded
+	val featureFlagsData: StateFlow<FeatureFlagsData?> = _featureFlagsData.asStateFlow()
 
 	var config: PostHogAndroidConfig
 	val coroutineScope = CoroutineScope(Dispatchers.IO)
@@ -56,32 +62,54 @@ class Analytics(
 				sessionReplayConfig.captureLogcat = true
 				sessionReplayConfig.screenshot = true
 				onFeatureFlags = PostHogOnFeatureFlags {
+					isFeatureFlagsLoaded = true
 					coroutineScope.launch {
-						val featureEnabled = PostHog.isFeatureEnabled(FeatureFlagKeys.IN_APP_REVIEW, defaultValue = false)
-						logD("PostHog feature flag ${FeatureFlagKeys.IN_APP_REVIEW} = $featureEnabled")
-						// State transitions,
-						// NOT_ELIGIBLE -> default,
-						// ELIGIBLE -> using feature flag and show the ui,
-						// CONSUMED -> Users have seen the popUp, and now we are waiting for the isFeatureEnabled to return false, so we can turn it off / NOT_ELIGIBLE
-						// b) when the user have seen the Popup the shouldWeShowInAppReview = Consumed and featureEnabled == true, then I to not make it Eligible, so for that
-						dataStore.updateData { it.copy {
-							shouldWeShowInAppReview = when{
-								!featureEnabled -> InAppReviewState.NOT_ELIGIBLE
-								shouldWeShowInAppReview == InAppReviewState.NOT_ELIGIBLE && featureEnabled -> InAppReviewState.ELIGIBLE
-								else -> shouldWeShowInAppReview
-							}
-						}
-						}
+						loadFeatureFlagsFromPostHog()
 					}
 				}
 
 		}
 		PostHogAndroid.setup(context, postHogConfig)
-		logD("the buildConfig.Debug is ${BuildConfig.DEBUG} and SkipPosthog:${BuildConfig.SKIP_POSTHOG}")
+		logD("the buildConfig.Debug is ${BuildConfig.DEBUG} and SkipPostHog:${BuildConfig.SKIP_POSTHOG}")
 		config = postHogConfig
 		coroutineScope.launch {
 			identifyAnonymousUser()
 		}
+	}
+
+	private fun getIntFeatureFlag(key: String): Int? {
+		val value = PostHog.getFeatureFlagResult(key, sendFeatureFlagEvent = true) ?: return  null
+		return when (val payload = value.payload) {
+			is Number -> payload.toInt()   // remote config numbers come back as Double from JSON
+			is String -> payload.toIntOrNull()
+			else -> null
+		}
+	}
+
+
+	private fun loadFeatureFlagsFromPostHog() {
+		val enabled = PostHog.isFeatureEnabled(FeatureFlagKeys.IN_APP_REVIEW_ENABLED, defaultValue = true)
+		val minAlarms = getIntFeatureFlag(FeatureFlagKeys.MIN_ALARMS_CREATED)
+		val cooldownDays = getIntFeatureFlag(FeatureFlagKeys.COOLDOWN_DAYS)
+		val minDaysSinceInstall = getIntFeatureFlag(FeatureFlagKeys.MIN_DAYS_SINCE_INSTALL)
+
+		logD("loading feature flag for posthog, got enabled:$enabled, minAlarm:$minAlarms, coolDownDays:$cooldownDays, minDaysSinceInstall:$minDaysSinceInstall")
+		if (minAlarms == null || cooldownDays == null || minDaysSinceInstall == null) {
+			this.captureEvent( "loading_featureFlags_failed",
+				mapOf(
+					"minAlarms" to minAlarms.toString(),
+					"coolDownDays" to cooldownDays.toString(),
+					"minDaysSinceInstall" to minDaysSinceInstall.toString()
+				)
+			)
+			return
+		}
+		_featureFlagsData.value = FeatureFlagsData(
+					inAppReviewEnabled = enabled,
+					minAlarmsCreated = minAlarms,
+					cooldownDays = cooldownDays,
+					minDaysSinceInstall = minDaysSinceInstall
+		)
 	}
 
 	fun captureEvent(event: String, properties: Map<String, Any>): Unit {
@@ -101,6 +129,7 @@ class Analytics(
 			PostHogLogSeverity.FATAL -> PostHog.logger.fatal(message)
 		}
 	}
+
 
 	fun setFcmToken(fid: String) {
 		PostHog.capture(
