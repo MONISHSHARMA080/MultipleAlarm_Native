@@ -10,7 +10,7 @@
 
 
     <!-- Alarm Validation Errors -->
-    <string name="alarm_error_end_time_greater">Choose an end time after <xliff:g id="start_time">%1$s</xliff:g></string>
+    <string name="alarm_error_fix_alarm_time">Choose an end time after <xliff:g id="start_time">%1$s</xliff:g></string>
     <string name="alarm_error_frequency_range">Enter a value between 1 to 700 minutes</string>
     <string name="alarm_error_date_mismatch">Start and end times must be on the same day</string>
     <string name="alarm_error_past_date">Date value must be today or in the future.</string>

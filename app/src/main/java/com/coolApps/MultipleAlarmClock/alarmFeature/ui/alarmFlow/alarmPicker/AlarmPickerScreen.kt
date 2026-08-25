@@ -334,7 +334,7 @@ fun AlarmPickerScreen(
 					  easing = FastOutSlowInEasing
 					)
 				  ) + fadeOut(
-				animationSpec = tween(180)
+				animationSpec = tween(190)
 			  )
 			},
         label = "alarm_picker_navigation"

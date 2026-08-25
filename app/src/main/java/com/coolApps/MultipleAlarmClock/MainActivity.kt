@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
 
 			setContent {
 				val colorScheme = if (isSystemInDarkTheme()) { dynamicDarkColorScheme(LocalContext.current) } else { dynamicLightColorScheme(LocalContext.current) }
-				MaterialTheme(colorScheme = colorScheme,   ) {
+				MaterialTheme(colorScheme = colorScheme ) {
 					NavigationStack(
 						navViewModel = navViewModel,
 						deepLinkScreen = deepLinkScreen
@@ -88,4 +88,3 @@ class MainActivity : ComponentActivity() {
 fun logD(message: String): Unit {
 	Log.d("AAAAA", message)
 }
-

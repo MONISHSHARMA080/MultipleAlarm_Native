@@ -1,7 +1,5 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component
 
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -42,6 +40,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
+import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerUiState
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -155,7 +155,7 @@ fun TimeRow(
 							SimpleDateFormat("h:mm a", locale).format(startTime.time)
 						}
 						Text(
-							text = stringResource(R.string.alarm_error_end_time_greater, startTimeString),
+							text = stringResource(R.string.alarm_error_fix_alarm_time, startTimeString),
 							style = typography.labelMedium,
 							color = colorScheme.error,
 							modifier = Modifier.padding(top = 4.dp)
