@@ -12,7 +12,6 @@ import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.notification.offline.OfflineNotificationScheduler
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
@@ -26,7 +25,7 @@ class EngagementWorker @AssistedInject constructor(
 		@Assisted workerParams: WorkerParameters,
 		private val alarmDao: AlarmDao,
 		private val analytics: Analytics,
-		@ApplicationContext val context: Context,
+//		@ApplicationContext val context: Context,
 ) : CoroutineWorker(appContext, workerParams) {
 
 	override suspend fun doWork(): Result {
@@ -62,7 +61,7 @@ class EngagementWorker @AssistedInject constructor(
 
 		// send notification
 		OfflineNotificationScheduler.scheduleNotification(
-			context = context, slot = config.notificationTimeSlot
+			context = applicationContext, slot = config.notificationTimeSlot
 		)
 
 		scheduleNextCheck(now + config.cooldownDays.daysToMillis)

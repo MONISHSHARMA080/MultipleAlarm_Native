@@ -6,9 +6,12 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.core.app.NotificationCompat
+import androidx.core.net.toUri
 import com.coolApps.MultipleAlarmClock.MainActivity
 import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.Ui.Navigation.Screen
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import kotlin.random.Random
@@ -58,35 +61,44 @@ class NotificationHandler @Inject constructor(@ApplicationContext val context: C
 	 private var notificationManager: NotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
 	fun build(
-			contentIntent: PendingIntent? = createDefaultPendingIntent(),
-			notificationChannel: NotificationChannelType, notificationTitle: String, notificationText: String,
+		notificationChannel: NotificationChannelType,
+		notificationTitle: String,
+		notificationText: String,
+		targetScreen: Screen = Screen.AlarmContainer,
 	): Notification {
+		val deepLinkUri = getDeepLinkUriForScreen(targetScreen)
+		val contentIntent = createPendingIntent(deepLinkUri)
 
 		return NotificationCompat.Builder(context, notificationChannel.channelId)
 			.setSmallIcon(R.mipmap.app_icon)
 			.setContentTitle(notificationTitle)
 			.setContentText(notificationText)
 			.setPriority(NotificationCompat.PRIORITY_DEFAULT)
-			.setAutoCancel(true) // Automatically dismisses notification when tapped
-			.apply {
-				if (contentIntent != null) {
-					setContentIntent(contentIntent) // Launches app when tapped
-				}
-			}
+			.setAutoCancel(true)
+			.setContentIntent(contentIntent)
 			.build()
 	}
 
-	private fun createDefaultPendingIntent(): PendingIntent? {
-		val intent = Intent(context, MainActivity::class.java).apply {
+	private fun getDeepLinkUriForScreen(screen: Screen): Uri {
+		return when (screen) {
+			is Screen.AlarmContainer -> "alarmapp://home".toUri()
+			is Screen.SettingsScreen -> "alarmapp://settings".toUri()
+			is Screen.AlarmFlow -> "alarmapp://create".toUri()
+			is Screen.OnboardingScreen -> "alarmapp://onboarding".toUri()
+		}
+	}
+
+	private fun createPendingIntent(uri: Uri): PendingIntent {
+		val intent = Intent(Intent.ACTION_VIEW, uri, context, MainActivity::class.java).apply {
 			flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
 		}
+
 		return PendingIntent.getActivity(
 			context,
-			0,
+			uri.hashCode(),
 			intent,
 			PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
 		)
-
 	}
 
 	private fun createNotificationChannel(notificationChannelDetail: NotificationChannelType){
@@ -107,6 +119,5 @@ class NotificationHandler @Inject constructor(@ApplicationContext val context: C
 	fun show(notification: Notification){
 		notificationManager.notify(Random.nextInt(1, 100_000_000), notification)
 	}
-
 
 }

@@ -70,12 +70,15 @@ class MainActivity : ComponentActivity() {
 		setIntent(intent)
 	}
 
-	fun parseDeepLinkIntent(intent: Intent?): Screen?{
+	fun parseDeepLinkIntent(intent: Intent?): Screen? {
 		if (intent == null || intent.action != Intent.ACTION_VIEW) return null
 		val data: Uri = intent.data ?: return null
-		logD("Deep link is data:$data and  intent.data:${intent.data} intent.action: ${intent.action} and intent:$intent ")
-		return when {
-			data.scheme == "alarmapp" && data.host == "home" -> Screen.AlarmContainer
+		logD("Deep link is data:$data and intent.data:${intent.data} intent.action: ${intent.action} and intent:$intent")
+		return when (data.scheme) {
+			"alarmapp" if data.host == "home" -> Screen.AlarmContainer
+			"alarmapp" if data.host == "settings" -> Screen.SettingsScreen
+			"alarmapp" if data.host == "create" -> Screen.AlarmFlow(null)
+			"alarmapp" if data.host == "onboarding" -> Screen.OnboardingScreen
 			else -> null
 		}
 	}
