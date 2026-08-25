@@ -105,6 +105,14 @@
             android:exported="false" >
         </receiver>
 
+        <receiver
+            android:name="com.coolApps.MultipleAlarmClock.notification.offline.OfflinePushNotificationReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.coolApps.MultipleAlarmClock.ACTION_SHOW_OFFLINE_NOTIFICATION" />
+            </intent-filter>
+        </receiver>
+
         <meta-data
             android:name="firebase_messaging_installation_id_enabled"
             android:value="true" />

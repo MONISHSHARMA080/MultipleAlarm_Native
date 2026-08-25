@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.core.content.edit
 import com.coolApps.MultipleAlarmClock.BuildConfig
 import com.coolApps.MultipleAlarmClock.logD
+import com.coolApps.MultipleAlarmClock.notification.offline.OfflineNotificationTimeSlot
 import com.google.android.gms.appset.AppSet
 import com.google.android.gms.appset.AppSetIdInfo
 import com.google.android.gms.tasks.Task
@@ -31,7 +32,7 @@ object FeatureFlagKeys {
 	const val ENGAGEMENT_INACTIVE_DAYS = "engagement_inactive_days"
 	const val ENGAGEMENT_COOLDOWN_DAYS = "engagement_cooldown_days"
 	const val ENGAGEMENT_CHECK_INTERVAL_HOURS = "engagement_check_interval_hours"
-
+	const val ENGAGEMENT_TIME_SLOT = "engagement_time_slot"
 }
 
 
@@ -141,11 +142,24 @@ class Analytics(
 				FeatureFlagKeys.ENGAGEMENT_CHECK_INTERVAL_HOURS
 			)?.toLong() ?: 12L
 
+		val slot =
+			getIntFeatureFlag(
+				FeatureFlagKeys.ENGAGEMENT_TIME_SLOT
+			)?: 3
+
+
+		val timeSlot = when(slot){
+			1-> OfflineNotificationTimeSlot.Morning
+			2-> OfflineNotificationTimeSlot.Evening
+			else-> OfflineNotificationTimeSlot.Night
+		}
+
 		return EngagementConfig(
 			enabled = enabled,
 			inactiveDays = inactiveDays,
 			cooldownDays = cooldownDays,
-			checkIntervalHours = checkIntervalHours
+			checkIntervalHours = checkIntervalHours,
+			notificationTimeSlot = timeSlot
 		)
 	}
 

@@ -9,9 +9,10 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDao
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
+import com.coolApps.MultipleAlarmClock.notification.offline.OfflineNotificationScheduler
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
@@ -25,7 +26,7 @@ class EngagementWorker @AssistedInject constructor(
 		@Assisted workerParams: WorkerParameters,
 		private val alarmDao: AlarmDao,
 		private val analytics: Analytics,
-		private val notificationHandler: NotificationHandler,
+		@ApplicationContext val context: Context,
 ) : CoroutineWorker(appContext, workerParams) {
 
 	override suspend fun doWork(): Result {
@@ -59,7 +60,10 @@ class EngagementWorker @AssistedInject constructor(
 			return Result.success()
 		}
 
-		this.showEngagementNotification()
+		// send notification
+		OfflineNotificationScheduler.scheduleNotification(
+			context = context, slot = config.notificationTimeSlot
+		)
 
 		scheduleNextCheck(now + config.cooldownDays.daysToMillis)
 
@@ -67,7 +71,8 @@ class EngagementWorker @AssistedInject constructor(
 			"engagement_notification_sent",
 			mapOf(
 				"inactive_days" to config.inactiveDays,
-				"cooldown_days" to config.cooldownDays
+				"cooldown_days" to config.cooldownDays,
+				"notificaton_time_slot" to config.notificationTimeSlot
 			)
 		)
 
@@ -80,8 +85,7 @@ class EngagementWorker @AssistedInject constructor(
 
 		val workInfo = withContext(Dispatchers.IO) {
 				workManager.getWorkInfosForUniqueWork("engagement-worker").get()
-		}
-			.firstOrNull() ?: return
+		}.firstOrNull() ?: return
 
 		val updatedRequest = PeriodicWorkRequestBuilder<EngagementWorker>(12, TimeUnit.HOURS)
 			.setId(workInfo.id)
@@ -93,9 +97,6 @@ class EngagementWorker @AssistedInject constructor(
 		}
 	}
 
-	private fun showEngagementNotification(){
-		// ideally shuffle  through notification and show them here
-	}
 }
 
 private val Long.hoursToMillis: Long

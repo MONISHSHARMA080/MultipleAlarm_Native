@@ -1,5 +1,7 @@
 package com.coolApps.MultipleAlarmClock.analytics
 
+import com.coolApps.MultipleAlarmClock.notification.offline.OfflineNotificationTimeSlot
+
 data class FeatureFlagsData(
 		val minDaysSinceInstall: Int = 7,
 		val minAlarmsCreated: Int = 3,
@@ -12,4 +14,5 @@ data class EngagementConfig(
 		val inactiveDays: Long,
 		val cooldownDays: Long,
 		val checkIntervalHours: Long,
+		val notificationTimeSlot: OfflineNotificationTimeSlot
 )

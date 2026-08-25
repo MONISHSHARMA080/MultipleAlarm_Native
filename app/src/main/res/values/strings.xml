@@ -141,4 +141,39 @@
     <string name="onboarding_result_time_range">%1$s - %2$s</string>
     <string name="onboarding_result_time_range_arrow">%1$s → %2$s</string>
 
+    <!-- Offline Engagement / Push Notifications -->
+    <!-- Morning -->
+    <string name="offline_notification_morning_title_1">Good Morning</string>
+    <string name="offline_notification_morning_msg_1">Get an alarm every 5 min to be on time</string>
+    <string name="offline_notification_morning_title_2">Morning routine check</string>
+    <string name="offline_notification_morning_msg_2">Don\'t let snoozing slow you down. Make sure your intervals are active.</string>
+    <string name="offline_notification_morning_title_3">Good morning!</string>
+    <string name="offline_notification_morning_msg_3">A productive day starts with timely alarms. Plan your morning.</string>
+    <string name="offline_notification_morning_title_4">Start your day right</string>
+    <string name="offline_notification_morning_msg_4">Get an alarm every 5 min to be on time.</string>
+
+    <!-- Evening -->
+    <string name="offline_notification_evening_title_1">Evening wind-down</string>
+    <string name="offline_notification_evening_msg_1">Getting ready for tomorrow? Set up your wake-up intervals before you relax.</string>
+    <string name="offline_notification_evening_title_2">Plan ahead tonight</string>
+    <string name="offline_notification_evening_msg_2">Avoid the morning rush by setting your alarms ahead of time.</string>
+<!--    <string name="offline_notification_evening_title_3">Evening reminder</string>-->
+<!--    <string name="offline_notification_evening_msg_3">Stay ahead of your schedule. Prepare your alarms for tomorrow.</string>-->
+<!--    <string name="offline_notification_evening_title_4">Wrap up your day</string>-->
+<!--    <string name="offline_notification_evening_msg_4">Time to organize tomorrow\'s routine. Make sure your alarms are ready.</string>-->
+    <string name="offline_notification_evening_title_5">Reminder</string>
+    <string name="offline_notification_evening_msg_5">Set your alarms tonight so you can wake up stress-free.</string>
+
+    <!-- Night -->
+    <string name="offline_notification_night_title_1">Reminder</string>
+    <string name="offline_notification_night_msg_1">schedule alarm for tomorrow morning.</string>
+    <string name="offline_notification_night_title_2">Reminder</string>
+    <string name="offline_notification_night_msg_2">Make sure your alarms are active</string>
+<!--    <string name="offline_notification_night_title_3">Sweet dreams</string>-->
+<!--    <string name="offline_notification_night_msg_3">Need an extra push tomorrow morning? Make sure your interval alarms are active.</string>-->
+<!--    <string name="offline_notification_night_title_4">Bedtime checklist</string>-->
+<!--    <string name="offline_notification_night_msg_4">Phone on charge? Alarms set? Have a restful night of sleep.</string>-->
+<!--    <string name="offline_notification_night_title_5">Recharge for tomorrow</string>-->
+<!--    <string name="offline_notification_night_msg_5">Get quality rest tonight. Your alarms will take care of waking you up.</string>-->
+
 </resources>
