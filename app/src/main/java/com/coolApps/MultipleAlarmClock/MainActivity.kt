@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
 
 		coroutineScope.launch(Dispatchers.Main) {
 			notificationHandler.createNotificationChannels()
-			EngagementScheduler.ensureScheduled(this@MainActivity)
+			EngagementScheduler.ensureScheduled(this@MainActivity, analytics.getEngagementConfig())
 		}
 
 		try {
