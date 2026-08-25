@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.size
@@ -47,7 +48,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -87,7 +87,6 @@ class AlarmActivity : ComponentActivity() {
          logD("about to create a new alarm")
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        window.isNavigationBarContrastEnforced = false
 		this.intentReceived = intent
         setContent {
 			val colorScheme = if (isSystemInDarkTheme()) { dynamicDarkColorScheme(LocalContext.current) } else { dynamicLightColorScheme(LocalContext.current) }
@@ -186,7 +185,6 @@ class AlarmActivity : ComponentActivity() {
 @Composable fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modifier) {
     var currentTime by remember { mutableStateOf(getCurrentTime()) }
     var amPm by remember { mutableStateOf(getAmPm()) }
-    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 	val colorScheme = MaterialTheme.colorScheme
 
     LaunchedEffect(Unit) {
@@ -212,7 +210,8 @@ class AlarmActivity : ComponentActivity() {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom =  screenHeight / 26) ,
+                    .navigationBarsPadding()
+                    .padding(bottom = 24.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Button(
@@ -231,12 +230,12 @@ class AlarmActivity : ComponentActivity() {
                 }
             }
         }
-    ) { edgeToEdgePadding ->
+    ) { innerPadding ->
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .padding(edgeToEdgePadding)
-				.padding(top = edgeToEdgePadding.calculateTopPadding()+21.dp)
+                .padding(innerPadding)
+				.padding(top = 21.dp)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = if (message.isEmpty()) Arrangement.Center else Arrangement.Top
