@@ -86,7 +86,7 @@ class EngagementWorker @AssistedInject constructor(
 				workManager.getWorkInfosForUniqueWork("engagement-worker").get()
 		}.firstOrNull() ?: return
 
-		val updatedRequest = PeriodicWorkRequestBuilder<EngagementWorker>(12, TimeUnit.HOURS)
+		val updatedRequest = PeriodicWorkRequestBuilder<EngagementWorker>(24, TimeUnit.HOURS)
 			.setId(workInfo.id)
 			.setNextScheduleTimeOverride(nextRunAt)
 			.build()
