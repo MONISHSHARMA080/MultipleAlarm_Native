@@ -28,11 +28,11 @@ object FeatureFlagKeys {
 	const val COOLDOWN_DAYS = "cooldown_days"
 	const val MIN_DAYS_SINCE_INSTALL = "min_days_since_install"
 
-	const val ENGAGEMENT_ENABLED = "engagement_enabled"
-	const val ENGAGEMENT_INACTIVE_DAYS = "engagement_inactive_days"
-	const val ENGAGEMENT_COOLDOWN_DAYS = "engagement_cooldown_days"
-	const val ENGAGEMENT_CHECK_INTERVAL_HOURS = "engagement_check_interval_hours"
-	const val ENGAGEMENT_TIME_SLOT = "engagement_time_slot"
+	const val PUSH_NOTIFICATION_ENABLED = "push_notification_enabled"
+	const val PUSH_NOTIFICATION_INACTIVE_DAYS = "push_notification_inactive_days"
+	const val PUSH_NOTIFICATION_COOLDOWN_DAYS = "push_notification_cooldown_days"
+	const val PUSH_NOTIFICATION_INTERVAL_HOURS = "push_notification_check_interval_hours"
+	const val PUSH_NOTIFICATION_TIME_SLOT = "push_notification_time_slot"
 }
 
 
@@ -123,28 +123,28 @@ class Analytics(
 
 		val enabled =
 			PostHog.isFeatureEnabled(
-				FeatureFlagKeys.ENGAGEMENT_ENABLED,
+				FeatureFlagKeys.PUSH_NOTIFICATION_ENABLED,
 				defaultValue = false
 			)
 
 		val inactiveDays =
 			getIntFeatureFlag(
-				FeatureFlagKeys.ENGAGEMENT_INACTIVE_DAYS
+				FeatureFlagKeys.PUSH_NOTIFICATION_INACTIVE_DAYS
 			)?.toLong() ?: 3L
 
 		val cooldownDays =
 			getIntFeatureFlag(
-				FeatureFlagKeys.ENGAGEMENT_COOLDOWN_DAYS
+				FeatureFlagKeys.PUSH_NOTIFICATION_COOLDOWN_DAYS
 			)?.toLong() ?: 7L
 
 		val checkIntervalHours =
 			getIntFeatureFlag(
-				FeatureFlagKeys.ENGAGEMENT_CHECK_INTERVAL_HOURS
+				FeatureFlagKeys.PUSH_NOTIFICATION_INTERVAL_HOURS
 			)?.toLong() ?: 12L
 
 		val slot =
 			getIntFeatureFlag(
-				FeatureFlagKeys.ENGAGEMENT_TIME_SLOT
+				FeatureFlagKeys.PUSH_NOTIFICATION_TIME_SLOT
 			)?: 3
 
 
@@ -201,7 +201,7 @@ class Analytics(
 
 		 task.addOnSuccessListener {
 			 // Determine current scope of app set ID.
-			 val scope: Int = it.scope // idk if the id is only for the same app or for  same for distinct apps  just give it to me
+			 val scope: Int = it.scope // IDK if the id is only for the same app or for  same for distinct apps  just give it to me
 			 // Read app set ID value, which uses version 4 of the
 			 // universally unique identifier (UUID) format.
 			 val id: String = it.id
