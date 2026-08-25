@@ -6,3 +6,10 @@ data class FeatureFlagsData(
 		val cooldownDays: Int = 8,
 		val inAppReviewEnabled: Boolean = true,
 )
+
+data class EngagementConfig(
+		val enabled: Boolean,
+		val inactiveDays: Long,
+		val cooldownDays: Long,
+		val checkIntervalHours: Long,
+)

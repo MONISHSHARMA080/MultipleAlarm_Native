@@ -17,6 +17,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.coolApps.MultipleAlarmClock.Ui.Navigation.NavigationStack
 import com.coolApps.MultipleAlarmClock.Ui.Navigation.NavigationViewModel
 import com.coolApps.MultipleAlarmClock.Ui.Navigation.Screen
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.background.engagement.EngagementScheduler
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import dagger.hilt.android.AndroidEntryPoint
@@ -36,13 +37,12 @@ class MainActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		val splashScreen = installSplashScreen()
 		super.onCreate(savedInstanceState)
-
-
 		val deepLinkScreen: Screen? = parseDeepLinkIntent(intent)
+
 		coroutineScope.launch(Dispatchers.Main) {
 			notificationHandler.createNotificationChannels()
+			EngagementScheduler.ensureScheduled(this@MainActivity)
 		}
-
 
 		try {
 			enableEdgeToEdge()

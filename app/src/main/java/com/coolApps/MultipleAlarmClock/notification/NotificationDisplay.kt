@@ -38,8 +38,15 @@ sealed class NotificationChannelType(val channelId: String, val channelName: Str
 		description = "Updates related to the app"
 	)
 
+	data object Engagement : NotificationChannelType(
+		channelId = "engagement_channel",
+		channelName = "Reminders",
+		importance = NotificationManager.IMPORTANCE_DEFAULT,
+		description = "Re-engagement reminders when you haven't used alarms recently"
+	)
+
 	companion object {
-		val values:List<NotificationChannelType> = listOf(AlarmNotification, ErrorChannel, GeneralNotification, PushNotification )
+		val values:List<NotificationChannelType> = listOf(AlarmNotification, ErrorChannel, GeneralNotification, PushNotification, Engagement)
 	}
 }
 
@@ -76,5 +83,6 @@ class NotificationHandler @Inject constructor(@ApplicationContext val context: C
 	fun show(notification: Notification){
 		notificationManager.notify(Random.nextInt(1, 100_000_000), notification)
 	}
+
 
 }

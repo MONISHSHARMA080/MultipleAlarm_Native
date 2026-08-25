@@ -59,4 +59,22 @@ interface AlarmDao {
 
 	@Query("DELETE  FROM AlarmData")
 	suspend fun deleteAllAlarmsFromDb()
+
+	@Query("""
+        SELECT *
+        FROM AlarmData
+        WHERE is_ready_to_use = 1
+          AND endTime > :now
+        ORDER BY endTime ASC
+        LIMIT 1
+    """)
+	suspend fun getNextUpcomingAlarm(now: Long): AlarmData?
+
+	@Query("""
+        SELECT MAX(endTime)
+        FROM AlarmData
+        WHERE is_ready_to_use = 0
+          AND endTime <= :now
+    """)
+	suspend fun getLastCompletedAlarmTime(now: Long): Long?
 }

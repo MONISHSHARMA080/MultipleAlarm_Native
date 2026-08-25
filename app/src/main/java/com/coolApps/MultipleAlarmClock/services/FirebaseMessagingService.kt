@@ -1,5 +1,6 @@
 package com.coolApps.MultipleAlarmClock.services
 
+import android.annotation.SuppressLint
 import android.util.Log
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.notification.NotificationChannelType
@@ -9,6 +10,7 @@ import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
+@SuppressLint("MissingFirebaseInstanceTokenRefresh")
 @AndroidEntryPoint
 class FirebaseMessagingService : FirebaseMessagingService() {
 	@Inject

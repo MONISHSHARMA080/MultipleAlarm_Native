@@ -38,6 +38,7 @@ datastoreCore = "1.2.1"
 playServicesAppset = "16.1.0"
 animationCore = "1.12.0"
 ui = "1.12.0"
+#firebaseFunctionsKtx = "22.1.1"
 
 [libraries]
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3Core" }
@@ -87,6 +88,7 @@ play-services-appset = { group = "com.google.android.gms", name = "play-services
 androidx-compose-animation-core = { group = "androidx.compose.animation", name = "animation-core", version.ref = "animationCore" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
+#firebase-functions-ktx = { group = "com.google.firebase", name = "firebase-functions-ktx", version.ref = "firebaseFunctionsKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

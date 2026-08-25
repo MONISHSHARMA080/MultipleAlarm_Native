@@ -154,6 +154,7 @@ dependencies {
 		exclude(group = "com.google.protobuf", module = "protobuf-lite")
 	}
 	implementation(platform(libs.firebase.bom))
+//	implementation(libs.firebase.functions.ktx)
 	implementation(libs.firebase.messaging)
     implementation("com.google.dagger:hilt-android:2.60.1")
 	implementation(libs.androidx.compose.animation.core)

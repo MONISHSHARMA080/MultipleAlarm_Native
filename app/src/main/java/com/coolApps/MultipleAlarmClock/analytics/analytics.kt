@@ -26,6 +26,12 @@ object FeatureFlagKeys {
 	const val MIN_ALARMS_CREATED = "min_alarms_created"
 	const val COOLDOWN_DAYS = "cooldown_days"
 	const val MIN_DAYS_SINCE_INSTALL = "min_days_since_install"
+
+	const val ENGAGEMENT_ENABLED = "engagement_enabled"
+	const val ENGAGEMENT_INACTIVE_DAYS = "engagement_inactive_days"
+	const val ENGAGEMENT_COOLDOWN_DAYS = "engagement_cooldown_days"
+	const val ENGAGEMENT_CHECK_INTERVAL_HOURS = "engagement_check_interval_hours"
+
 }
 
 
@@ -109,6 +115,37 @@ class Analytics(
 					minAlarmsCreated = minAlarms,
 					cooldownDays = cooldownDays,
 					minDaysSinceInstall = minDaysSinceInstall
+		)
+	}
+
+	fun getEngagementConfig(): EngagementConfig {
+
+		val enabled =
+			PostHog.isFeatureEnabled(
+				FeatureFlagKeys.ENGAGEMENT_ENABLED,
+				defaultValue = false
+			)
+
+		val inactiveDays =
+			getIntFeatureFlag(
+				FeatureFlagKeys.ENGAGEMENT_INACTIVE_DAYS
+			)?.toLong() ?: 3L
+
+		val cooldownDays =
+			getIntFeatureFlag(
+				FeatureFlagKeys.ENGAGEMENT_COOLDOWN_DAYS
+			)?.toLong() ?: 7L
+
+		val checkIntervalHours =
+			getIntFeatureFlag(
+				FeatureFlagKeys.ENGAGEMENT_CHECK_INTERVAL_HOURS
+			)?.toLong() ?: 12L
+
+		return EngagementConfig(
+			enabled = enabled,
+			inactiveDays = inactiveDays,
+			cooldownDays = cooldownDays,
+			checkIntervalHours = checkIntervalHours
 		)
 	}
 

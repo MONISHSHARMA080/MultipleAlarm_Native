@@ -3,6 +3,7 @@ package com.coolApps.MultipleAlarmClock
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.background.engagement.EngagementScheduler
 import dagger.hilt.android.HiltAndroidApp
 import jakarta.inject.Inject
 
@@ -15,4 +16,9 @@ class AlarmApp : Application(), Configuration.Provider {
 	override val workManagerConfiguration: Configuration get() = Configuration.Builder()
 			.setWorkerFactory(workerFactory)
 			.build()
+
+	override fun onCreate() {
+		super.onCreate()
+		EngagementScheduler.ensureScheduled(this)
+	}
 }
