@@ -1,6 +1,7 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmContainer
 
 import android.app.Activity
+import android.view.HapticFeedbackConstants
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -55,6 +56,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -77,7 +79,7 @@ import kotlinx.coroutines.launch
 ){
 	val alarmContainerViewModel :AlarmContainerViewModel = hiltViewModel()
 	val snackBarHostState = remember { SnackbarHostState() }
-
+	val view = LocalView.current
 	val uiState by alarmContainerViewModel.alarmControllerUi.collectAsStateWithLifecycle()
 	val alarmList = uiState.alarmList
 	var selectedAlarmId by remember { mutableStateOf<Int?>(null) }
@@ -216,6 +218,7 @@ import kotlinx.coroutines.launch
 			) {
 				AddAlarmButton(
 					onClick = {
+						view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
 						onNavigateToCreate()
 				  },
 				)

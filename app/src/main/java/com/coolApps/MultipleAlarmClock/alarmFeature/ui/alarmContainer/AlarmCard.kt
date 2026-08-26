@@ -1,5 +1,7 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmContainer
 
+import android.os.Build
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -38,15 +40,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.util.AlarmFormatter.formatDate
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+//@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun AlarmCard(
 	alarmData: AlarmData,
@@ -75,7 +80,7 @@ fun AlarmCard(
 		targetValue = if (isActive) 6.dp else 4.dp,
 		label = "verticalPadding"
 	)
-
+	val view = LocalView.current
 	val dismissState = rememberSwipeToDismissBoxState()
 	val cardShape = RoundedCornerShape(45.dp)
 	val horizontalPadding = 10.dp
@@ -183,7 +188,16 @@ fun AlarmCard(
 
 						Switch(
 							checked = isActive,
-							onCheckedChange = { onToggle(alarmData, it) },
+							onCheckedChange = { value->
+								onToggle(alarmData, value)
+								if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+									if (value){
+										view.performHapticFeedback(HapticFeedbackConstants.TOGGLE_ON)
+									}else{
+										view.performHapticFeedback(HapticFeedbackConstants.TOGGLE_OFF)
+									}
+								}
+							},
 							colors = SwitchDefaults.colors(
 								checkedThumbColor = colorScheme.onPrimary,
 								checkedTrackColor = colorScheme.primary,

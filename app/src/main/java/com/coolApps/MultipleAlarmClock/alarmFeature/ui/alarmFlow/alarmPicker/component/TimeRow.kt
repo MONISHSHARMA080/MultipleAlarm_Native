@@ -2,6 +2,7 @@ package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.co
 
 //import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
 //import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -28,6 +29,7 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -121,7 +124,18 @@ fun TimeRow(
 					Spacer(modifier = Modifier.height(titleSpacing))
 				}
 			}
-		) { TimePicker(state = timePickerState) }
+		) {
+			val view = LocalView.current
+			var isFirstRun by remember { mutableStateOf(true) }
+			LaunchedEffect(timePickerState.hour, timePickerState.minute) {
+				if (isFirstRun) {
+					isFirstRun = false
+				} else {
+					view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+				}
+			}
+			TimePicker(state = timePickerState)
+		}
 	}
 
 	if (showEndTimePicker) {
@@ -167,7 +181,18 @@ fun TimeRow(
 					Spacer(modifier = Modifier.height(titleSpacing))
 				}
 			}
-		) { TimePicker(state = endTimePickerState) }
+		) {
+			val view = LocalView.current
+			var isFirstRun by remember { mutableStateOf(true) }
+			LaunchedEffect(endTimePickerState.hour, endTimePickerState.minute) {
+				if (isFirstRun) {
+					isFirstRun = false
+				} else {
+					view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+				}
+			}
+			TimePicker(state = endTimePickerState)
+		}
 	}
 
 	Row(

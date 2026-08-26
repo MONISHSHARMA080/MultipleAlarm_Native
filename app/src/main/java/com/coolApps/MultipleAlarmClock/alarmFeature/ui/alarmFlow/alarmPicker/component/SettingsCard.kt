@@ -87,7 +87,6 @@ import java.text.SimpleDateFormat
 						}
 					}
 				},
-//				previewText = frequencyText,
 				uiState,
 			)
 			HorizontalDivider(
@@ -262,7 +261,6 @@ import java.text.SimpleDateFormat
 							if (value - 1 > 0) {
 								onValueChange(value - 1)
 							} else {
-								// Semantic "Expressive" Reject haptic for limit reached (Android 14/15+)
 								view.performHapticFeedback(HapticFeedbackConstants.REJECT)
 							}
 						},
