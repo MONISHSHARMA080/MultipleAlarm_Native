@@ -1,5 +1,7 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component
 
+//import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
+//import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -40,8 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerUiState
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -53,8 +54,8 @@ fun TimeRow(
 	onStartTimeChange: (Calendar) -> Unit,
 	onEndTimeChange: (Calendar) -> Unit
 ) {
-	val startTime = uiState.alarmObject.startTime
-	val endTime = uiState.alarmObject.endTime
+	val startTime = uiState.alarmData.startTimeCalendar
+	val endTime = uiState.alarmData.endTimeCalendar
 
 	val density = LocalDensity.current
 	val containerSize = LocalWindowInfo.current.containerSize
@@ -82,8 +83,10 @@ fun TimeRow(
 	var showStartTimePicker by remember { mutableStateOf(false) }
 	var showEndTimePicker by remember { mutableStateOf(false) }
 
-	val doWeHaveError = uiState.validationResult != ValidationResult.Success && (uiState.validationResult as? ValidationResult.Failure)?.field == AlarmErrorField.Time
-	val errorMessage = (uiState.validationResult as? ValidationResult.Failure)?.message
+//	val doWeHaveError = uiState.validationResult != AlarmDataValidationResult.Success && (uiState.validationResult as? AlarmDataValidationResult.Failure)?.field == AlarmErrorField.Time
+//	val errorMessage = (uiState.validationResult as? AlarmDataValidationResult.Failure)?.message
+	val doWeHaveError = uiState.validationResult is AlarmDataValidationResult.TimeIntervalError
+	val errorMessage = if (uiState.validationResult is AlarmDataValidationResult.TimeIntervalError) uiState.validationResult.errorMessage else ""
 	val timeColor = if (doWeHaveError) colorScheme.error else colorScheme.onBackground
 	val amPmColor = if (doWeHaveError) colorScheme.error else colorScheme.onBackground
 

@@ -28,6 +28,10 @@ data class AlarmData(
 		return "AlarmData: startTime:${getDateTimeFormatted(startTime)}, endTime:${getDateTimeFormatted(endTime)}, message:$message freqGottenAfterCallback:$frequencyInMin alarmSoundUri:$sound"
 	}
 
+	val startTimeCalendar: Calendar get() = Calendar.getInstance().apply { timeInMillis = startTime }
+
+	val endTimeCalendar: Calendar get() = Calendar.getInstance().apply { timeInMillis = endTime }
+
 	fun rollOverIfTimeIntervalPassed(now: Calendar = Calendar.getInstance()): AlarmData{
 		val durationMillis = endTime - startTime
 		val startCalendar = Calendar.getInstance().apply {timeInMillis = startTime  }
@@ -43,6 +47,7 @@ data class AlarmData(
 		}
 
 		return AlarmData(
+//			id = this.id,
 			startTime = startCalendar.timeInMillis,
 			endTime = candidateEnd.timeInMillis,
 			frequencyInMin = this.frequencyInMin,
@@ -89,7 +94,6 @@ data class AlarmData(
 
 	private fun timeFormatted(x: Long): String {
 		return SimpleDateFormat("h:mm:ss a yyyy-MM-dd", Locale.getDefault()).format(Date(x))
-
 	}
 
 }
@@ -121,6 +125,10 @@ sealed class AlarmDataValidationResult(
 			is Frequency -> "Frequency"
 		}
 		return "$className, $err "
+	}
+
+	fun isFailure(): Boolean{
+		return this !is Success
 	}
 
 	fun errorMessage():String{

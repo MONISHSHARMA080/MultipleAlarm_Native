@@ -57,8 +57,8 @@ fun TimePickerWithoutDialog(
 
 		AnimatedVisibility(visible = isCandidateInvalid) {
 			val locale = LocalLocale.current.platformLocale
-			val startTimeString = remember(uiState.alarmObject.startTime, locale) {
-				SimpleDateFormat("h:mm a", locale).format(uiState.alarmObject.startTime.time)
+			val startTimeString = remember(uiState.alarmData.startTime, locale) {
+				SimpleDateFormat("h:mm a", locale).format(uiState.alarmData.startTime)
 			}
 			Text(
 				text =  stringResource(R.string.alarm_error_fix_alarm_time, startTimeString ),

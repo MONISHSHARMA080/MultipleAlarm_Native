@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.media.RingtoneManager
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,9 +14,7 @@ import com.coolApps.MultipleAlarmClock.Data.dataStore.Settings
 import com.coolApps.MultipleAlarmClock.Data.dataStore.copy
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmObject
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.Permissions.PermissionUtils
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.data.AlarmSound
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
@@ -56,14 +53,14 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	}
 
 	private val _uiState = MutableStateFlow(AlarmPickerUiState(
-		alarmObject =  createDefaultAlarmObject(alarmData),
+		alarmData = createDefaultAlarm(alarmData),
 		initialAlarm = alarmData,
 		progress = if (alarmData == null) Progress.StartTime else Progress.FullEditor
 	))
 
 	val uiState: StateFlow<AlarmPickerUiState> = _uiState.asStateFlow()
 
-	private  val nonCancellableScope = CoroutineScope(NonCancellable)
+	private val nonCancellableScope = CoroutineScope(NonCancellable)
 
 	private val _alarmSoundName = MutableStateFlow<List<AlarmSound>>(emptyList())
 	val listOfAlarms = _alarmSoundName.asStateFlow()
@@ -95,13 +92,13 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		analytics.captureEvent("set alarm clicked", mapOf("Ui state" to _uiState.value.toString()))
 
 		val current = _uiState.value
-		val alarmToUse = current.alarmObject.ifTimeIntervalPassedThenReturnRollOver().alarmObject
+		val alarmToUse = current.alarmData.rollOverIfTimeIntervalPassed()
 		val validationResult = alarmToUse.validate()
 
-		_uiState.update { it.copy(alarmObject = alarmToUse, validationResult = validationResult) }
-		logD("validation result after setAlarmCLicked is  $validationResult ")
+		_uiState.update { it.copy(alarmData = alarmToUse, validationResult = validationResult) }
+		logD("validation result after setAlarmCLicked is $validationResult ")
 
-		if (validationResult is ValidationResult.Failure) return
+		if (validationResult !is AlarmDataValidationResult.Success) return
 		if (!current.areAllPermissionsGranted) {
 			val missing = PermissionUtils.getRequiredPermissionSteps(context)
 			_uiState.update { it.copy(showPermissionDialog = true, missingSteps = missing) }
@@ -109,8 +106,8 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		}
 
 		viewModelScope.launch {
-					setNewOrUpdateAlarm(alarmToUse, current.initialAlarm)
-					_uiState.update { it.copy(alarmOperationCompletedGoBack = true) }
+			setNewOrUpdateAlarm(alarmToUse, current.initialAlarm)
+			_uiState.update { it.copy(alarmOperationCompletedGoBack = true) }
 		}
 	}
 
@@ -144,7 +141,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 				"are all permission granted" to state.areAllPermissionsGranted,
 				"validation error message" to state.validationResult.toString(),
 				"ui_state" to uiState.value.toString(),
-				"did user choose random alarmSound" to (state.alarmObject.alarmSoundUri == null),
+				"did user choose random alarmSound" to (state.alarmData.sound == null),
 				"notification permission granted" to isNotificationsEnabled
 			)
 		)
@@ -154,33 +151,55 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		_uiState.update { it.copy(progress = newProgress) }
 	}
 
-	private fun updateAlarmObject(transform: (AlarmObject) -> AlarmObject) {
+	private fun updateAlarmData(transform: (AlarmData) -> AlarmData) {
 		_uiState.update { state ->
-			val corrected = transform(state.alarmObject).ifTimeIntervalPassedThenReturnRollOver().alarmObject
+			val transformed = transform(state.alarmData)
+			val corrected = transformed.rollOverIfTimeIntervalPassed()
 
-			val newStartTime =(corrected.startTime.clone() as Calendar).apply {
+			val newStartTime = Calendar.getInstance().apply {
+				timeInMillis = corrected.startTime
 				set(Calendar.SECOND, 0)
 				set(Calendar.MILLISECOND, 0)
-			}
-			val newEndTime =(corrected.endTime.clone() as Calendar).apply {
+			}.timeInMillis
+			val newEndTime = Calendar.getInstance().apply {
+				timeInMillis = corrected.endTime
 				set(Calendar.SECOND, 0)
 				set(Calendar.MILLISECOND, 0)
-			}
+			}.timeInMillis
 
+			val finalAlarm = corrected.copy(startTime = newStartTime, endTime = newEndTime)
 			state.copy(
-				alarmObject = corrected.copy(startTime = newStartTime, endTime = newEndTime),
-				validationResult = corrected.validate()
+				alarmData = finalAlarm,
+				validationResult = finalAlarm.validate()
 			)
 		}
 	}
 
-	fun updateStartTime(newStartTime: Calendar) = updateAlarmObject { it.copy(startTime = newStartTime) }
+	fun updateStartTime(newStartTime: Calendar) = updateAlarmData {
+		it.copy(startTime = newStartTime.apply {
+			set(Calendar.SECOND, 0)
+			set(Calendar.MILLISECOND, 0)
+		}.timeInMillis)
+	}
 
-	fun updateEndTime(newEndTime: Calendar) = updateAlarmObject { it.copy(endTime = newEndTime) }
+	fun updateStartTime(newStartTime: Long) = updateAlarmData {
+		it.copy(startTime = newStartTime)
+	}
+
+	fun updateEndTime(newEndTime: Calendar) = updateAlarmData {
+		it.copy(endTime = newEndTime.apply {
+			set(Calendar.SECOND, 0)
+			set(Calendar.MILLISECOND, 0)
+		}.timeInMillis)
+	}
+
+	fun updateEndTime(newEndTime: Long) = updateAlarmData {
+		it.copy(endTime = newEndTime)
+	}
 
 	fun onAlarmSoundSelected(sound: AlarmSound?){
 		_selectedAlarmSound.value = sound
-		_uiState.update { it.copy(alarmObject = it.alarmObject.copy(alarmSoundUri = sound?.soundUri)) }
+		_uiState.update { it.copy(alarmData = it.alarmData.copy(sound = sound?.soundUri?.toString())) }
 		previewSound(sound)
 	}
 
@@ -205,11 +224,10 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		return sounds
 	}
 
-	/** created a default alarm object; either selects a time if [alarm] is null or else just puts the alarm in the alarmObject and will not increment the date that's not it's responsiblity*/
-	private fun createDefaultAlarmObject(alarm: AlarmData?): AlarmObject {
-		val selectedStartTime: Calendar
-		val selectedEndTime: Calendar
-		val selectedDate:Long
+	/** creates a default alarm data; either selects a time if [alarm] is null or else returns [alarm]*/
+	private fun createDefaultAlarm(alarm: AlarmData?): AlarmData {
+		val selectedStartTime: Long
+		val selectedEndTime: Long
 		logD("alarm is $alarm")
 		when(alarm){
 			null ->{
@@ -218,6 +236,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 				val startTime = (now.clone() as Calendar).apply  {
 					add(Calendar.MINUTE, 1)
 					set(Calendar.SECOND, 0)
+					set(Calendar.MILLISECOND, 0)
 				}
 
 				val endOfDay = (now.clone() as Calendar).apply {
@@ -230,48 +249,50 @@ class AlarmPickerViewModel @AssistedInject constructor(
 				val durationMin = 45
 				when{
 					startTime.after(endOfDay) -> {
-						selectedStartTime = (now.clone() as Calendar).apply {
+						val start = (now.clone() as Calendar).apply {
 							add(Calendar.DAY_OF_YEAR, 1)
 							set(Calendar.HOUR_OF_DAY, 0)
 							set(Calendar.MINUTE, 0)
 							set(Calendar.SECOND, 0)
+							set(Calendar.MILLISECOND, 0)
 						}
-						selectedEndTime = (selectedStartTime.clone() as Calendar).apply {
+						val end = (start.clone() as Calendar).apply {
 							add(Calendar.MINUTE, durationMin)
 							set(Calendar.SECOND, 0)
-
+							set(Calendar.MILLISECOND, 0)
 						}
+						selectedStartTime = start.timeInMillis
+						selectedEndTime = end.timeInMillis
 					}
 					else ->{
-						selectedStartTime = startTime
+						selectedStartTime = startTime.timeInMillis
 						val requestedEnd = (startTime.clone() as Calendar).apply {
 							add(Calendar.MINUTE, durationMin)
 							set(Calendar.SECOND, 0)
+							set(Calendar.MILLISECOND, 0)
 						}
 						// Case 1:
 						// Full duration fits today.
 						// Case 2:
 						// It doesn't fit, so cap at 11:59 PM.
-						selectedEndTime = if (requestedEnd.after(endOfDay)) endOfDay else requestedEnd
+						selectedEndTime = if (requestedEnd.after(endOfDay)) endOfDay.timeInMillis else requestedEnd.timeInMillis
 					}
 				}
-				selectedDate = selectedStartTime.timeInMillis
-				logD(" selectedStartTime:${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(selectedStartTime.timeInMillis)}, selectedEndTime:${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(selectedEndTime.timeInMillis)}, endOfDay:${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(endOfDay.timeInMillis)} ")
+				logD(" selectedStartTime:${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(selectedStartTime)}, selectedEndTime:${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(selectedEndTime)}, endOfDay:${alarmsController.getTimeInHumanReadableFormatProtectFrom0Included(endOfDay.timeInMillis)} ")
 
-			}else -> {
-				selectedEndTime = Calendar.getInstance().apply { timeInMillis = alarm.endTime }
-				selectedStartTime = Calendar.getInstance().apply { timeInMillis = alarm.startTime }
-				selectedDate = alarm.startTime
+				return AlarmData(
+					startTime = selectedStartTime,
+					endTime = selectedEndTime,
+					message = "",
+					frequencyInMin = 5,
+					sound = null,
+					isReadyToUse = true
+				)
+			}
+			else -> {
+				return alarm
 			}
 		}
-		return AlarmObject(
-			startTime = selectedStartTime,
-			endTime = selectedEndTime,
-			date = selectedDate,
-			message = alarm?.message ?: "",
-			freqGottenAfterCallback = alarm?.frequencyInMin ?: 1,
-			alarmSoundUri = alarm?.sound?.toUri()
-		)
 	}
 
 	fun checkPermissions(context: Context) {
@@ -304,37 +325,51 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	}
 
 	fun updateDate(calVersion: Calendar) {
-		val currentAlarm = _uiState.value.alarmObject
+		val currentAlarm = _uiState.value.alarmData
 
-		val newStartDate = (currentAlarm.startTime.clone() as Calendar).apply {
+		val newStartDate = Calendar.getInstance().apply {
+			timeInMillis = currentAlarm.startTime
 			set(Calendar.YEAR, calVersion.get(Calendar.YEAR))
 			set(Calendar.MONTH, calVersion.get(Calendar.MONTH))
 			set(Calendar.DAY_OF_MONTH, calVersion.get(Calendar.DAY_OF_MONTH))
+			set(Calendar.SECOND, 0)
+			set(Calendar.MILLISECOND, 0)
 		}
 
-		val newEndDate = (currentAlarm.endTime.clone() as Calendar).apply {
+		val newEndDate = Calendar.getInstance().apply {
+			timeInMillis = currentAlarm.endTime
 			set(Calendar.YEAR, calVersion.get(Calendar.YEAR))
 			set(Calendar.MONTH, calVersion.get(Calendar.MONTH))
 			set(Calendar.DAY_OF_MONTH, calVersion.get(Calendar.DAY_OF_MONTH))
+			set(Calendar.SECOND, 0)
+			set(Calendar.MILLISECOND, 0)
 		}
+
+		val updated = currentAlarm.copy(
+			startTime = newStartDate.timeInMillis,
+			endTime = newEndDate.timeInMillis
+		).rollOverIfTimeIntervalPassed()
 
 		_uiState.update {
 			it.copy(
-				alarmObject = it.alarmObject.copy(
-					date = calVersion.timeInMillis,
-					startTime = newStartDate,
-					endTime = newEndDate
-				)
+				alarmData = updated,
+				validationResult = updated.validate()
 			)
 		}
 	}
 
 	fun updateFrequency(newFreq: Long) {
-		_uiState.update { it.copy(alarmObject = it.alarmObject.copy(freqGottenAfterCallback = newFreq)) }
+		_uiState.update { state ->
+			val updated = state.alarmData.copy(frequencyInMin = newFreq).rollOverIfTimeIntervalPassed()
+			state.copy(
+				alarmData = updated,
+				validationResult = updated.validate()
+			)
+		}
 	}
 
 	fun updateMessage(newMessage: String) {
-		_uiState.update { it.copy(alarmObject = it.alarmObject.copy(message = newMessage)) }
+		_uiState.update { it.copy(alarmData = it.alarmData.copy(message = newMessage)) }
 	}
 
 	fun captureEvent(name:String, properties: Map<String, Any>){
@@ -352,39 +387,28 @@ class AlarmPickerViewModel @AssistedInject constructor(
 
 	private fun validateForCurrentStep(
 		progress: Progress,
-		alarm: AlarmObject
-	): ValidationResult {
+		alarm: AlarmData
+	):  AlarmDataValidationResult{
 		return when (progress) {
 			Progress.StartTime -> {
-				ValidationResult.Success
+				AlarmDataValidationResult.Success
 			}
-			Progress.EndTime -> {
-				if (alarm.endTime.timeInMillis <= alarm.startTime.timeInMillis) {
-					ValidationResult.Failure(
-						field = AlarmErrorField.Time,
-						message = "End time must be after start time."
-					)
-				} else {
-					ValidationResult.Success
-				}
-			}
-
-			Progress.FullEditor -> {
+			else-> {
 				alarm.validate()
 			}
 		}
 	}
 
 
-	/**[setNewOrUpdateAlarm] - here [AlarmData] is the alarm passed in the function if it is same to the alarmObject one then do not set the alarm, as user might have miss clicked it*/
-	private fun setNewOrUpdateAlarm(newAlarmObject: AlarmObject, oldAlarm: AlarmData? ){
+	/**[setNewOrUpdateAlarm] - sets a new alarm or updates an existing one*/
+	private fun setNewOrUpdateAlarm(newAlarmData: AlarmData, oldAlarm: AlarmData? ){
 		when (oldAlarm) {
 			null -> {
 				//  oldAlarm was not there so setting a new alarm
 				viewModelScope.launch {
-					logD("the alarm data confirmed is $newAlarmObject, and is  oldAlarm == newAlarmObject ->  ")
+					logD("the alarm data confirmed is $newAlarmData, and is  oldAlarm == newAlarmData ->  ")
 					val exception = alarmsController.startAlarmSeriesHandler(
-						alarm =newAlarmObject.toAlarmData(isReadyToUse = true, id = 0) ,
+						alarm = newAlarmData.copy(isReadyToUse = true, id = 0),
 						alarmManager = alarmManager,
 						activityContext = context,
 					)
@@ -394,7 +418,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 								dataStore.updateData { data ->data.copy { firstAlarmSet = true } }
 							}
 							launch {
-								analytics.captureEvent("new alarm successfully set", mapOf("alarmObject" to newAlarmObject.toString()))
+								analytics.captureEvent("new alarm successfully set", mapOf("alarmData" to newAlarmData.toString()))
 							}
 						},
 						onError = { error ->
@@ -407,15 +431,15 @@ class AlarmPickerViewModel @AssistedInject constructor(
 			else -> {
 				//  oldAlarm was there so editing an existing alarm
 				viewModelScope.launch {
-					logD("deleting the alarm $ oldAlarm")
-					alarmsController.updateAlarmStateInDb( oldAlarm).fold(onSuccess = {}, onError = { error ->
+					logD("deleting the alarm $oldAlarm")
+					alarmsController.updateAlarmStateInDb(oldAlarm).fold(onSuccess = {}, onError = { error ->
 						// no such alarm exist in DB so can't update it
 						logD("there is a error while editing the alarm and updating it's state in DB and  that is ${error.internalErrorMessage}")
 						errorHandler.handleError(Result.Failure(error))
 					}
 					)
 					val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(
-						alarm = newAlarmObject.toAlarmData(oldAlarm.id)  ,
+						alarm = newAlarmData.copy(id = oldAlarm.id),
 						alarmManager, context
 					)
 					// now the error case is handled there
@@ -428,7 +452,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 							launch {
 								analytics.captureEvent("alarm(old) successfully edited",
 									mapOf(
-										"alarmObject" to newAlarmObject.toString(),
+										"alarmData" to newAlarmData.toString(),
 										"oldAlarm" to oldAlarm.toString(),
 									)
 								)

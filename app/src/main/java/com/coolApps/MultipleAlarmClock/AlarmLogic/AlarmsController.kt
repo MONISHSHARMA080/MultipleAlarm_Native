@@ -10,13 +10,12 @@ import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDataValidationResult
-import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.toDomain
 import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import com.coolApps.MultipleAlarmClock.alarmFeature.receiver.AlarmInfoNotification
 import com.coolApps.MultipleAlarmClock.alarmFeature.receiver.AlarmReceiver
 import com.coolApps.MultipleAlarmClock.alarmFeature.receiver.LastAlarmUpdateDBReceiver
-	import com.coolApps.MultipleAlarmClock.analytics.Analytics
-	import dagger.hilt.android.qualifiers.ApplicationContext
+import com.coolApps.MultipleAlarmClock.analytics.Analytics
+import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -255,8 +254,7 @@ class AlarmsController @Inject constructor(
 		){
 			val cal = Calendar.getInstance()
 			val currentTime = cal.timeInMillis
-			val alarmObj = alarmData.toDomain()
-			alarmObj.alarmTimeSequence()
+			alarmData.alarmTimeSequence()
 				.dropWhile { it > currentTime }
 				.take(3)
 				.forEach { alarmIterVal ->

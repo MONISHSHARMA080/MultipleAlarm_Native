@@ -66,7 +66,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.coolApps.MultipleAlarmClock.R
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.Permissions.AlarmPermissionDialog
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.LinearProgressForNewAlarm
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.SettingsCard
@@ -134,30 +134,30 @@ fun AlarmPickerScreen(
   }
 
   	val currentProgress = if (!forNewAlarm) Progress.FullEditor else uiState.progress
-	val startTimePickerState = key(currentProgress, uiState.alarmObject.startTime.timeInMillis) {
+	val startTimePickerState = key(currentProgress, uiState.alarmData.startTime) {
     rememberTimePickerState(
-            initialHour = uiState.alarmObject.startTime.get(Calendar.HOUR_OF_DAY),
-            initialMinute = uiState.alarmObject.startTime.get(Calendar.MINUTE),
+            initialHour = uiState.alarmData.startTimeCalendar.get(Calendar.HOUR_OF_DAY),
+            initialMinute = uiState.alarmData.startTimeCalendar.get(Calendar.MINUTE),
             is24Hour = false
     )
   }
 
   val endTimePickerState = key(currentProgress) {
     rememberTimePickerState(
-            initialHour = uiState.alarmObject.endTime.get(Calendar.HOUR_OF_DAY),
-            initialMinute = uiState.alarmObject.endTime.get(Calendar.MINUTE),
+            initialHour = uiState.alarmData.endTimeCalendar.get(Calendar.HOUR_OF_DAY),
+            initialMinute = uiState.alarmData.endTimeCalendar.get(Calendar.MINUTE),
             is24Hour = false
     )
   }
 
-  val candidateEnd = remember(endTimePickerState.hour, endTimePickerState.minute, uiState.alarmObject.startTime) {
-    (uiState.alarmObject.endTime.clone() as Calendar).apply {
+  val candidateEnd = remember(endTimePickerState.hour, endTimePickerState.minute, uiState.alarmData.startTime) {
+    (uiState.alarmData.endTimeCalendar.clone() as Calendar).apply {
       set(Calendar.HOUR_OF_DAY, endTimePickerState.hour)
       set(Calendar.MINUTE, endTimePickerState.minute)
     }
   }
 
-  val isCandidateInvalid = currentProgress != Progress.StartTime &&  candidateEnd.timeInMillis <= uiState.alarmObject.startTime.timeInMillis
+  val isCandidateInvalid = currentProgress != Progress.StartTime &&  candidateEnd.timeInMillis <= uiState.alarmData.startTime
 
   Scaffold(
           contentWindowInsets = WindowInsets.safeDrawing,
@@ -257,7 +257,7 @@ fun AlarmPickerScreen(
 					onAction = {
 					  when (currentProgress) {
 						Progress.StartTime -> {
-						  val selectedStartTime = (uiState.alarmObject.startTime.clone() as Calendar).apply {
+						  val selectedStartTime = (uiState.alarmData.startTimeCalendar.clone() as Calendar).apply {
 							set(Calendar.HOUR_OF_DAY, startTimePickerState.hour)
 							set(Calendar.MINUTE, startTimePickerState.minute)
 						  }
@@ -276,7 +276,7 @@ fun AlarmPickerScreen(
 
 						Progress.FullEditor -> {
 						  val isInactiveEdit =  uiState.initialAlarm?.isReadyToUse == false
-						  val canSetAlarm = uiState.validationResult == ValidationResult.Success || isInactiveEdit
+						  val canSetAlarm = uiState.validationResult == AlarmDataValidationResult.Success || isInactiveEdit
 
 						  if (canSetAlarm) {
 							viewModel.onSetAlarmClicked()
@@ -490,7 +490,7 @@ fun PrimaryActionButton(
 //        val isNotDiff = uiState.validationResult is ValidationResult.Failure &&
 //                uiState.validationResult.field == AlarmErrorField.AlarmIsNotDiff
         val isInactiveEdit =  uiState.initialAlarm?.isReadyToUse == false
-        val canSetAlarm = uiState.validationResult == ValidationResult.Success || isInactiveEdit
+        val canSetAlarm = uiState.validationResult == AlarmDataValidationResult.Success || isInactiveEdit
 
         Button(
                 onClick = onAction,
@@ -501,7 +501,7 @@ fun PrimaryActionButton(
                             contentColor = colorScheme.onPrimaryContainer
                     )
                   }
-                  uiState.validationResult is ValidationResult.Failure -> {
+                  uiState.validationResult.isFailure()-> {
                       ButtonDefaults.buttonColors(
                               containerColor = colorScheme.errorContainer,
                               contentColor = colorScheme.onErrorContainer

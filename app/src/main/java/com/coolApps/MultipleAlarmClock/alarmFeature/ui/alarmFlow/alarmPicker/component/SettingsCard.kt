@@ -53,8 +53,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDataValidationResult
+//import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
+//import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerUiState
 import java.text.SimpleDateFormat
 
@@ -67,7 +68,7 @@ import java.text.SimpleDateFormat
 	calenderButtonClicked: () -> Unit,
 	selectSoundButtonClicked: () -> Unit,
 
-): Unit {
+){
 	// 5. Settings Card (Name & Sound)
 	Surface(
 		shape = RoundedCornerShape(29.dp),
@@ -78,7 +79,7 @@ import java.text.SimpleDateFormat
 			FrequencyRow(
 				icon = Icons.Rounded.Timer,
 				title = stringResource(R.string.alarm_picker_repeat_every),
-				value = uiState.alarmObject.freqGottenAfterCallback,
+				value = uiState.alarmData.frequencyInMin,
 				onValueChange = { newValue ->
 					newValue.let {
 						if (it in 0..<720) {
@@ -100,7 +101,7 @@ import java.text.SimpleDateFormat
 				value = SimpleDateFormat(
 					"EEE, MMM d, yyyy",
 					LocalLocale.current.platformLocale
-				).format(uiState.alarmObject.startTime.time),
+				).format(uiState.alarmData.startTime),
 				onClick = calenderButtonClicked
 			)
 
@@ -124,7 +125,7 @@ import java.text.SimpleDateFormat
 			MessageRow(
 				icon = Icons.AutoMirrored.Rounded.Message,
 				title = stringResource(R.string.alarm_picker_message),
-				value = uiState.alarmObject.message,
+				value = uiState.alarmData.message,
 				onValueChange = messageValueChanged,
 			)
 
@@ -219,15 +220,9 @@ import java.text.SimpleDateFormat
 			title: String,
 			value: Long,
 			onValueChange: (Long) -> Unit,
-//			previewText: String = "",
 			uiState: AlarmPickerUiState,
 		) {
-		val doWeHaveFrequencyError =
-			(uiState.validationResult as? ValidationResult.Failure)?.field ==
-					AlarmErrorField.FREQUENCY
-//		val doWeHaveErrorOtherThanFrequency =
-//			(uiState.validationResult as? ValidationResult.Failure) != null &&
-//					uiState.validationResult.field != AlarmErrorField.FREQUENCY
+		val doWeHaveFrequencyError =  uiState.validationResult is AlarmDataValidationResult.Frequency
 
 		val view = LocalView.current
 		var textValue by remember(value) { mutableStateOf(if (value == 0L) "" else value.toString()) }
