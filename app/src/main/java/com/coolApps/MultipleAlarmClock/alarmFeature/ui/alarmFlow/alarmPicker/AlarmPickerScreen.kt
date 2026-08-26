@@ -261,12 +261,14 @@ fun AlarmPickerScreen(
 							set(Calendar.HOUR_OF_DAY, startTimePickerState.hour)
 							set(Calendar.MINUTE, startTimePickerState.minute)
 						  }
+							view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
 						  viewModel.updateStartTime(selectedStartTime)
 						  viewModel.updateProgress(Progress.EndTime)
 						}
 
 						Progress.EndTime -> {
 						  if (!isCandidateInvalid) {
+							  view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
 							viewModel.updateEndTime(candidateEnd)
 							viewModel.updateProgress(Progress.FullEditor)
 						  }
@@ -275,7 +277,6 @@ fun AlarmPickerScreen(
 						Progress.FullEditor -> {
 						  val isInactiveEdit =  uiState.initialAlarm?.isReadyToUse == false
 						  val canSetAlarm = uiState.validationResult == AlarmDataValidationResult.Success || isInactiveEdit
-
 						  if (canSetAlarm) {
 							viewModel.onSetAlarmClicked()
 							view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
