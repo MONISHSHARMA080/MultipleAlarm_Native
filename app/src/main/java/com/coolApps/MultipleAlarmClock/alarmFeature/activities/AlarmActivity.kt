@@ -84,7 +84,7 @@ class AlarmActivity : ComponentActivity() {
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
-         logD("about to create a new alarm")
+		logD("about to create a new alarm")
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 		this.intentReceived = intent
@@ -190,13 +190,13 @@ class AlarmActivity : ComponentActivity() {
     LaunchedEffect(Unit) {
         while (true) {
             currentTime = getCurrentTime()
-            delay(720)
+            delay(1.seconds)
         }
     }
 	LaunchedEffect(Unit) {
 		while (true) {
 			amPm = getAmPm()
-			delay(2.seconds)
+			delay(10.seconds)
 		}
 	}
 
@@ -235,7 +235,9 @@ class AlarmActivity : ComponentActivity() {
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-				.padding(top = 21.dp)
+                // Restore the extra offset (mimicking the previous double-padding look)
+                // without using deprecated APIs or calculateTopPadding() twice.
+                .padding(top = innerPadding.calculateTopPadding() + 21.dp)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = if (message.isEmpty()) Arrangement.Center else Arrangement.Top
@@ -284,7 +286,7 @@ class AlarmActivity : ComponentActivity() {
 								Text(
 									text = message,
 									color = colorScheme.onSurface,
-									style = typography.headlineSmall,
+									style = typography.titleLarge,
 									fontWeight = FontWeight.Normal,
 									lineHeight = 35.sp
 								)
