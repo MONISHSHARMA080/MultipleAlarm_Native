@@ -60,32 +60,13 @@ class EngagementWorker @AssistedInject constructor(
 			"engagement_notification_sent",
 			mapOf(
 				"inactive_days" to config.inactiveDays,
-				"cooldown_days" to config.cooldownDays,
+//				"cooldown_days" to config.cooldownDays,
 				"notificaton_time_slot" to config.notificationTimeSlot
 			)
 		)
 
 		return Result.success()
 	}
-
-//	private suspend fun scheduleNextCheck(nextRunAt: Long) {
-//
-//		val workManager = WorkManager.getInstance(applicationContext)
-//
-//		val workInfo = withContext(Dispatchers.IO) {
-//				workManager.getWorkInfosForUniqueWork("engagement-worker").get()
-//		}.firstOrNull() ?: return
-//
-//		val updatedRequest = PeriodicWorkRequestBuilder<EngagementWorker>(24, TimeUnit.HOURS)
-//			.setId(workInfo.id)
-//			.setNextScheduleTimeOverride(nextRunAt)
-//			.build()
-//
-//		withContext(Dispatchers.IO) {
-//			workManager.updateWork(updatedRequest).get()
-//		}
-//	}
-
 }
 
 private val Long.hoursToMillis: Long

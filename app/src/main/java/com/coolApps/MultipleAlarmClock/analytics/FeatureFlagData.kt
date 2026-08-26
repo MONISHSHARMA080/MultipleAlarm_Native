@@ -12,7 +12,7 @@ data class FeatureFlagsData(
 data class EngagementConfig(
 		val enabled: Boolean,
 		val inactiveDays: Long,
-		val cooldownDays: Long,
+//		val cooldownDays: Long,
 		val checkIntervalHours: Long,
 		val notificationTimeSlot: OfflineNotificationTimeSlot
 )

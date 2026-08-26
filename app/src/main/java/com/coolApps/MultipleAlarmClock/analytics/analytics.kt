@@ -157,7 +157,7 @@ class Analytics(
 		return EngagementConfig(
 			enabled = enabled,
 			inactiveDays = inactiveDays,
-			cooldownDays = cooldownDays,
+//			cooldownDays = cooldownDays,
 			checkIntervalHours = checkIntervalHours,
 			notificationTimeSlot = timeSlot
 		)
