@@ -263,14 +263,12 @@ fun AlarmPickerScreen(
 						  }
 						  viewModel.updateStartTime(selectedStartTime)
 						  viewModel.updateProgress(Progress.EndTime)
-						  view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
 						}
 
 						Progress.EndTime -> {
 						  if (!isCandidateInvalid) {
 							viewModel.updateEndTime(candidateEnd)
 							viewModel.updateProgress(Progress.FullEditor)
-							view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
 						  }
 						}
 
