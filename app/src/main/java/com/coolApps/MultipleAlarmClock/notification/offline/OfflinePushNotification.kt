@@ -15,7 +15,11 @@ data class OfflineNotificationContent(
 	val id: Int,
 	@StringRes val titleRes: Int,
 	@StringRes val messageRes: Int,
-)
+) {
+	override fun toString(): String {
+		return "OfflineNotificationContent(id=$id, titleRes=$titleRes, messageRes=$messageRes)"
+	}
+}
 
 /**
  * Sealed class defining the offline push notification time-of-day slots (Morning, Evening, Night).
@@ -61,11 +65,7 @@ sealed class OfflineNotificationTimeSlot(
 	)
 
 	override fun toString(): String {
-		return when(this){
-			Evening -> "Evening"
-			Morning -> "Morning"
-			Night -> "Night"
-		}
+		return "OfflineNotificationTimeSlot(slotName='$slotName', defaultHour=$defaultHour, defaultMinute=$defaultMinute, notifications=$notifications)"
 	}
 
 	/**

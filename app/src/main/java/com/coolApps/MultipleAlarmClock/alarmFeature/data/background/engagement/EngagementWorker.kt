@@ -57,10 +57,9 @@ class EngagementWorker @AssistedInject constructor(
 		)
 
 		analytics.captureEvent(
-			"engagement_notification_sent",
+			"engagement_notification_scheduled",
 			mapOf(
 				"inactive_days" to config.inactiveDays,
-//				"cooldown_days" to config.cooldownDays,
 				"notificaton_time_slot" to config.notificationTimeSlot
 			)
 		)

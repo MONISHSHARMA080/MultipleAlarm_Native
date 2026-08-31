@@ -1,5 +1,6 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker
 
+import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -238,9 +239,17 @@ fun AlarmPickerScreen(
                         onClick = {
                           when (currentProgress) {
                             Progress.StartTime -> settingAlarmCancelled()
-                            Progress.EndTime -> viewModel.updateProgress(Progress.StartTime)
+                            Progress.EndTime -> {
+                              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+	                              view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
+							  }
+								viewModel.updateProgress(Progress.StartTime)
+                            }
                             Progress.FullEditor -> {
                               if (forNewAlarm) {
+								  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+									  view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
+								  }
                                 viewModel.updateProgress(Progress.EndTime)
                               } else {
                                 viewModel.onDeleteClicked()
@@ -261,14 +270,14 @@ fun AlarmPickerScreen(
 							set(Calendar.HOUR_OF_DAY, startTimePickerState.hour)
 							set(Calendar.MINUTE, startTimePickerState.minute)
 						  }
-							view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+						  view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
 						  viewModel.updateStartTime(selectedStartTime)
 						  viewModel.updateProgress(Progress.EndTime)
 						}
 
 						Progress.EndTime -> {
 						  if (!isCandidateInvalid) {
-							  view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+							view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
 							viewModel.updateEndTime(candidateEnd)
 							viewModel.updateProgress(Progress.FullEditor)
 						  }

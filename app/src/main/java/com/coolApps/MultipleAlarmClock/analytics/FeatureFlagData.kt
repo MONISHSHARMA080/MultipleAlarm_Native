@@ -15,4 +15,8 @@ data class EngagementConfig(
 //		val cooldownDays: Long,
 		val checkIntervalHours: Long,
 		val notificationTimeSlot: OfflineNotificationTimeSlot
-)
+) {
+	override fun toString(): String {
+		return "EngagementConfig(enabled=$enabled, inactiveDays=$inactiveDays, checkIntervalHours=$checkIntervalHours, notificationTimeSlot=$notificationTimeSlot)"
+	}
+}
