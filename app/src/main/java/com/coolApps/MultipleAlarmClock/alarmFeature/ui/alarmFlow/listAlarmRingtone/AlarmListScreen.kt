@@ -1,6 +1,7 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.listAlarmRingtone
 
 import android.net.Uri
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -48,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -64,6 +66,7 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.dat
 	onBack: () -> Unit,
 	onSelected: (AlarmSound?) -> Unit,
 ) {
+	val view = LocalView.current
 	val listOfAlarms by vm.listOfAlarms.collectAsStateWithLifecycle()
 	val randomPreviewing by vm.previewingRandom.collectAsStateWithLifecycle()
 
@@ -75,7 +78,10 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.dat
 					Text(stringResource(R.string.Sound_screen_heading))
 				},
 				navigationIcon = {
-					IconButton(onClick = onBack) {
+					IconButton(onClick = {
+						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+						onBack()
+					}) {
 						Icon(
 							imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
 							contentDescription = "Back"
@@ -95,7 +101,10 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.dat
 					sound = null,
 					selected = selectedUri == null,
 					isPlaying = randomPreviewing,
-					onClick = { onSelected(null) },
+					onClick = {
+						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+						onSelected(null)
+					},
 					imageVector = Icons.Rounded.Shuffle
 				)
 				Spacer(Modifier.padding(bottom = 25.dp))
@@ -109,7 +118,10 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.dat
 					sound = sound,
 					selected = sound.soundUri == selectedUri,
 					isPlaying = previewingUri == sound.soundUri,
-					onClick = { onSelected(sound) }
+					onClick = {
+						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+						onSelected(sound)
+					}
 				)
 			}
 		}

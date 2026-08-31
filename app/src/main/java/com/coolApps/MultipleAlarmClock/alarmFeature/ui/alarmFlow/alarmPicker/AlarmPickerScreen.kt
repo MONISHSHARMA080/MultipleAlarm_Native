@@ -133,7 +133,7 @@ fun AlarmPickerScreen(
     )
   }
 
-  	val currentProgress = if (!forNewAlarm) Progress.FullEditor else uiState.progress
+	val currentProgress = if (!forNewAlarm) Progress.FullEditor else uiState.progress
 	val startTimePickerState = key(currentProgress, uiState.alarmData.startTime) {
     rememberTimePickerState(
             initialHour = uiState.alarmData.startTimeCalendar.get(Calendar.HOUR_OF_DAY),
@@ -486,8 +486,6 @@ fun PrimaryActionButton(
       }
 
       Progress.FullEditor -> {
-//        val isNotDiff = uiState.validationResult is ValidationResult.Failure &&
-//                uiState.validationResult.field == AlarmErrorField.AlarmIsNotDiff
         val isInactiveEdit =  uiState.initialAlarm?.isReadyToUse == false
         val canSetAlarm = uiState.validationResult == AlarmDataValidationResult.Success || isInactiveEdit
 

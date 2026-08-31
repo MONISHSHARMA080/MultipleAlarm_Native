@@ -1,6 +1,7 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components
 
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
@@ -47,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -65,6 +67,7 @@ private enum class ProblemPhase {
 fun ProblemScreen(
 	onComplete: () -> Unit
 ) {
+	val view = LocalView.current
 	var phase by remember { mutableStateOf(ProblemPhase.Building) }
 	var visibleAlarms by remember { mutableIntStateOf(0) }
 
@@ -84,6 +87,7 @@ fun ProblemScreen(
 		alarms.indices.forEach { index ->
 			delay(160.milliseconds)
 			visibleAlarms = index + 1
+			view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
 		}
 		delay(400.milliseconds)
 		phase = ProblemPhase.ShowingProblem
@@ -107,9 +111,13 @@ fun ProblemScreen(
 				) {
 					Button(
 						onClick = {
+							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 							when (phase) {
 								ProblemPhase.Crushing -> onComplete()
-								else -> phase = ProblemPhase.Crushing
+								else -> {
+									phase = ProblemPhase.Crushing
+									view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+								}
 							}
 						},
 						enabled = phase != ProblemPhase.Building,

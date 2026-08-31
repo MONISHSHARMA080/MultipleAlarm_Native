@@ -1,6 +1,6 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components
 
-import android.R.attr.onClick
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -44,6 +45,8 @@ import androidx.compose.ui.unit.sp
 
 
 @Composable fun GreetingScreen(onClickNext:()->Unit) {
+
+	val view = LocalView.current
 
 	val infiniteTransition = rememberInfiniteTransition(
 		label = "wave_animation"
@@ -96,7 +99,10 @@ import androidx.compose.ui.unit.sp
 					verticalAlignment = Alignment.CenterVertically
 				) {
 					Button(
-						onClick = onClickNext,
+						onClick = {
+							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+							onClickNext()
+						},
 						modifier = Modifier
 							.fillMaxWidth()
 							.height(56.dp),

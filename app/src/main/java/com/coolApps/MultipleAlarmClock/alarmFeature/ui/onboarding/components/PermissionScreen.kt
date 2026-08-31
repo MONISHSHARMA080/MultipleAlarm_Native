@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutLinearInEasing
@@ -53,6 +54,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -61,6 +63,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -86,7 +89,14 @@ fun PermissionScreen(
 ) {
 
 	val context = LocalContext.current
+	val view = LocalView.current
 	val lifecycleOwner = LocalLifecycleOwner.current
+
+	LaunchedEffect(allCriticalGranted) {
+		if (allCriticalGranted) {
+			view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+		}
+	}
 
 	val notificationPermState = rememberPermissionState(android.Manifest.permission.POST_NOTIFICATIONS)
 
@@ -126,7 +136,10 @@ fun PermissionScreen(
 					verticalAlignment = Alignment.CenterVertically
 				) {
 					Button(
-						onClick = onNext,
+						onClick = {
+							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+							onNext()
+						},
 						enabled = allCriticalGranted,
 						modifier = Modifier
 							.fillMaxWidth()
@@ -322,6 +335,7 @@ private fun PermissionItem(
 	isPermanentlyDenied: Boolean = false,
     onAction: () -> Unit
 ) {
+	val view = LocalView.current
     Surface(
         shape = shapes.large,
         color = colorScheme.surfaceVariant.copy(alpha = 0.5f),
@@ -349,7 +363,10 @@ private fun PermissionItem(
             Spacer(modifier = Modifier.width(16.dp))
             
             Button(
-                onClick = onAction,
+                onClick = {
+					view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+					onAction()
+				},
                 shape = RoundedCornerShape(12.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {

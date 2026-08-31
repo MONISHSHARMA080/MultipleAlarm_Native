@@ -385,19 +385,19 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	}
 
 
-	private fun validateForCurrentStep(
-		progress: Progress,
-		alarm: AlarmData
-	):  AlarmDataValidationResult{
-		return when (progress) {
-			Progress.StartTime -> {
-				AlarmDataValidationResult.Success
-			}
-			else-> {
-				alarm.validate()
-			}
-		}
-	}
+//	private fun validateForCurrentStep(
+//		progress: Progress,
+//		alarm: AlarmData
+//	):  AlarmDataValidationResult{
+//		return when (progress) {
+//			Progress.StartTime -> {
+//				AlarmDataValidationResult.Success
+//			}
+//			else-> {
+//				alarm.validate()
+//			}
+//		}
+//	}
 
 
 	/**[setNewOrUpdateAlarm] - sets a new alarm or updates an existing one*/

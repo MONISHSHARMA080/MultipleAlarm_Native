@@ -1,6 +1,6 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components
 
-import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -68,9 +68,8 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -78,6 +77,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -129,7 +129,7 @@ private fun AlarmResultContent(
 	var isSettled by remember { mutableStateOf(false) }
 	var visibleRows by remember { mutableIntStateOf(0) }
 
-	val haptic = LocalHapticFeedback.current
+	val view = LocalView.current
 
 	LaunchedEffect(alarmData) {
 		notificationTimes = withContext(Dispatchers.Default) {
@@ -140,8 +140,8 @@ private fun AlarmResultContent(
 	// Triggered after the custom tick icon finishes its drawing animation
 	LaunchedEffect(iconAnimationDone) {
 		if (iconAnimationDone) {
-			haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-			delay(400) // Brief pause before snapping to settled state
+			view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+			delay(400.milliseconds) // Brief pause before snapping to settled state
 			isSettled = true
 
 			// Wait for the layout to slide up before showing rows
@@ -150,10 +150,11 @@ private fun AlarmResultContent(
 			val initialRowCount = minOf(notificationTimes.size, MAX_VISIBLE_TIMELINE_ROWS)
 			repeat(initialRowCount) { index ->
 				visibleRows = index + 1
+				view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
 				delay(TIMELINE_ROW_STAGGER_MS)
 			}
 
-			haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+			view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
 		}
 	}
 
@@ -177,7 +178,10 @@ private fun AlarmResultContent(
 					contentAlignment = Alignment.Center
 				) {
 					Button(
-						onClick = onNextClick,
+						onClick = {
+							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+							onNextClick()
+						},
 						modifier = Modifier
 							.fillMaxWidth()
 							.height(56.dp),

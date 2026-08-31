@@ -96,7 +96,9 @@
             android:name="com.coolApps.MultipleAlarmClock.alarmFeature.receiver.AlarmReceiver"
             android:exported="false" >
             <intent-filter>
-                <action android:name="com.coolApps.trying_native.ALARM_TRIGGERED" />
+                <action android:name="4.65
+
+" />
             </intent-filter>
         </receiver>
 
