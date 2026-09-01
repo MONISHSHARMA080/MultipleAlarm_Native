@@ -51,10 +51,10 @@ sealed interface DeleteAlarmHandlerError : AlarmControllerError
 /** Legal failures for [AlarmsController.updateAlarmStateInDb]. */
 sealed interface UpdateAlarmInDbError : AlarmControllerError
 
-/** Legal failures for [AlarmsController.rescheduleAlarm]. */
+///** Legal failures for [AlarmsController.rescheduleAlarm]. */
 sealed interface RescheduleAlarmError : AlarmControllerError
 
-/** Legal failures for [AlarmsController.resetAlarms]. */
+/** Legal failures for [AlarmsController.resetAlarmsHandler]. */
 sealed interface ResetAlarmError : AlarmControllerError
 
 /** Legal failures for [AlarmsController.calculateNextAlarmInfo]. */

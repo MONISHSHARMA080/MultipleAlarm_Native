@@ -179,7 +179,7 @@ class AlarmContainerViewModel @Inject constructor(
 	fun resetAlarm(alarmData: AlarmData){
 		viewModelScope.launch {
 			logD("about to reset the alarm-+")
-			val exception = alarmsController.resetAlarms(
+			val exception = alarmsController.resetAlarmsHandler(
 				alarmData = alarmData,
 				alarmManager = alarmManager,
 				activityContext = context,

@@ -22,8 +22,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import java.text.SimpleDateFormat
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -69,7 +67,7 @@ class AlarmsController @Inject constructor(
 		}
 	}
 
-	suspend fun scheduleAlarm(
+	private	suspend fun scheduleAlarm(
 			alarmManager:AlarmManager, componentActivity: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, alarmData: AlarmData, alarmTriggerTime:Long
 	): ResultCustom<Unit, ScheduleAlarmError>{
 		return ResultCustom.runCatching({ exception ->AlarmControllerErrorSet.Unknown(internalErrorMessage = exception.toString()) }){
@@ -91,7 +89,7 @@ class AlarmsController @Inject constructor(
 		}
 	}
 
-	fun getPendingIntentForAlarm(
+	private	fun getPendingIntentForAlarm(
 			receiverClass:Class<out BroadcastReceiver>, context: Context, alarmTriggerTime:Long, alarmData: AlarmData,
 	): ResultCustom<PendingIntentCreated, GetPendingIntentForAlarmError> {
 		return ResultCustom.runCatching(
@@ -120,7 +118,7 @@ class AlarmsController @Inject constructor(
 	}
 
 	/**given an alarm Series(or alarm, or startTime->endTime, this function will start it. If the alarm startTime is greater than current startTime then we will iterate over it and set that alarm from that time */
-	suspend fun startAlarmSeries(
+	private	suspend fun startAlarmSeries(
 			alarmData: AlarmData, alarmManager: AlarmManager, activityContext: Context,
 			receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java,
 	): ResultCustom<Unit, StartAlarmSeriesError> {
@@ -249,7 +247,7 @@ class AlarmsController @Inject constructor(
 	}
 
 	/** cancels scheduled alarm*/
-	suspend fun cancelAlarm(
+	private suspend fun cancelAlarm(
 			alarmData: AlarmData, context: Context, alarmManager: AlarmManager
 	): ResultCustom<Unit, CancelAlarmError > {
 		return ResultCustom.runCatching(
@@ -303,7 +301,7 @@ class AlarmsController @Inject constructor(
 		pendingIntent?.let { alarmManager.cancel(it) }
 	}
 
-	suspend fun updateAlarmStateInDb(
+	private suspend fun updateAlarmStateInDb(
 			alarmData: AlarmData
 	): ResultCustom<Unit, UpdateAlarmInDbError> {
 		return ResultCustom.runCatching(
@@ -315,51 +313,51 @@ class AlarmsController @Inject constructor(
 	}
 
 
-	suspend fun rescheduleAlarm(
-			alarmManager: AlarmManager,
-			 activityContext: Context, alarmData:AlarmData,
-			receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, nextAlarmInfo: NextAlarmInfo
-	): ResultCustom<Unit, RescheduleAlarmError> {
-		return ResultCustom.runCatching(
-			{ exception ->AlarmControllerErrorSet.Unknown(internalErrorMessage = exception.toString()) }
-		) {
-			// should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
-			// we can't get it form the alarmData as this func is for the reset alarm and that could be only one
-			logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
-			// these are the new/incremented/updated time
-			var alarmDataForDeleting: AlarmData = alarmData
-			if (this.getDateForDisplay(nextAlarmInfo.newSeriesStartTime) != this.getDateForDisplay(nextAlarmInfo.newSeriesEndTime)) return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "startDate from new startSeries time is ${this.getDateForDisplay(nextAlarmInfo.newSeriesStartTime)} and the end date from the new endSeries time is ${this.getDateForDisplay(nextAlarmInfo.newSeriesEndTime)}"))
-			// cause I want to see if there is a error and if there is then I want to react
-			try {
-				val newAlarm =alarmData.copy(
-					isReadyToUse = true,
-					startTime = nextAlarmInfo.newSeriesStartTime,
-					endTime = nextAlarmInfo.newSeriesEndTime
-				)
-				alarmRepository.updateAlarm(newAlarm)
-				alarmDataForDeleting = newAlarm
-				scheduleAlarm(alarmManager = alarmManager, componentActivity = activityContext, alarmData = newAlarm, alarmTriggerTime = nextAlarmInfo.nextAlarmTriggerTime, receiverClass = receiverClass).fold(
-					onSuccess = {},
-					onError = { failureRes ->
-						this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarmData.startTime, activityContext, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", alarmData.endTime, LastAlarmUpdateDBReceiver())
-						return when (failureRes) {
-							is AlarmControllerErrorSet.Unknown -> ResultCustom.Failure(errorClass = failureRes)
-							is AlarmControllerErrorSet.ValidationFailed -> ResultCustom.Failure(errorClass = failureRes)
-							is AlarmControllerErrorSet.PendingIntentNotFound -> ResultCustom.Failure(errorClass = failureRes)
-							is AlarmControllerErrorSet.PendingIntentAlreadyExist -> ResultCustom.Failure(errorClass = failureRes)
-						}
-					}
-				)
-			} catch (e: Exception) {
-				this.cancelAlarm(alarmDataForDeleting, activityContext, alarmManager,)
-				logD("error occurred in the schedule multiple alarms, so we are going to cancel the alarm whole, in scheduleAlarm2-->${e}")
-				logD("[UNEXPECTED ERROR] in reschedule alarm failed to account for exception/error (exception here) -> $e")
-				return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.Unknown(internalErrorMessage = e.toString()))
-			}
-		}
-	}
+//	suspend fun rescheduleAlarm(
+//			alarmManager: AlarmManager,
+//			 activityContext: Context, alarmData:AlarmData,
+//			receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, nextAlarmInfo: NextAlarmInfo
+//	): ResultCustom<Unit, RescheduleAlarmError> {
+//		return ResultCustom.runCatching(
+//			{ exception ->AlarmControllerErrorSet.Unknown(internalErrorMessage = exception.toString()) }
+//		) {
+//			// should probably make some checks like if the user ST->11:30 pm today and end time 1 am tomorrow (basically should be in a day)
+//			// we can't get it form the alarmData as this func is for the reset alarm and that could be only one
+//			logD("about to set lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime ")
+//			// these are the new/incremented/updated time
+//			var alarmDataForDeleting: AlarmData = alarmData
+//			if (this.getDateForDisplay(nextAlarmInfo.newSeriesStartTime) != this.getDateForDisplay(nextAlarmInfo.newSeriesEndTime)) return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "startDate from new startSeries time is ${this.getDateForDisplay(nextAlarmInfo.newSeriesStartTime)} and the end date from the new endSeries time is ${this.getDateForDisplay(nextAlarmInfo.newSeriesEndTime)}"))
+//			// cause I want to see if there is a error and if there is then I want to react
+//			try {
+//				val newAlarm =alarmData.copy(
+//					isReadyToUse = true,
+//					startTime = nextAlarmInfo.newSeriesStartTime,
+//					endTime = nextAlarmInfo.newSeriesEndTime
+//				)
+//				alarmRepository.updateAlarm(newAlarm)
+//				alarmDataForDeleting = newAlarm
+//				scheduleAlarm(alarmManager = alarmManager, componentActivity = activityContext, alarmData = newAlarm, alarmTriggerTime = nextAlarmInfo.nextAlarmTriggerTime, receiverClass = receiverClass).fold(
+//					onSuccess = {},
+//					onError = { failureRes ->
+//						this@AlarmsController.lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarmData.startTime, activityContext, alarmManager,"alarm_start_time_to_search_db", "alarm_end_time_to_search_db", alarmData.endTime, LastAlarmUpdateDBReceiver())
+//						return when (failureRes) {
+//							is AlarmControllerErrorSet.Unknown -> ResultCustom.Failure(errorClass = failureRes)
+//							is AlarmControllerErrorSet.ValidationFailed -> ResultCustom.Failure(errorClass = failureRes)
+//							is AlarmControllerErrorSet.PendingIntentNotFound -> ResultCustom.Failure(errorClass = failureRes)
+//							is AlarmControllerErrorSet.PendingIntentAlreadyExist -> ResultCustom.Failure(errorClass = failureRes)
+//						}
+//					}
+//				)
+//			} catch (e: Exception) {
+//				this.cancelAlarm(alarmDataForDeleting, activityContext, alarmManager,)
+//				logD("error occurred in the schedule multiple alarms, so we are going to cancel the alarm whole, in scheduleAlarm2-->${e}")
+//				logD("[UNEXPECTED ERROR] in reschedule alarm failed to account for exception/error (exception here) -> $e")
+//				return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.Unknown(internalErrorMessage = e.toString()))
+//			}
+//		}
+//	}
 
-	suspend fun resetAlarms(
+	suspend fun resetAlarmsHandler(
 			alarmData:AlarmData, alarmManager: AlarmManager, activityContext: Context
 	): ResultCustom<Unit, ResetAlarmError> {
 		return ResultCustom.runCatching(
@@ -521,15 +519,15 @@ class AlarmsController @Inject constructor(
 		}
 	}
 
-	fun lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarm_start_time_to_search_db: Long, context_of_activity:Context, alarmManager:AlarmManager, message_name_for_start_time:String, message_name_for_end_time: String, alarm_end_time_to_search_db:Long, broadcastReceiverClass:BroadcastReceiver){
-		val intent = Intent(context_of_activity, broadcastReceiverClass::class.java)
-		// probably should hardcode message_name_for_start_time to be alarm_end_time_to_search_db and same for message_name_for_end_time
-		intent.putExtra(message_name_for_start_time,alarm_start_time_to_search_db)
-		intent.putExtra(message_name_for_end_time,alarm_end_time_to_search_db)
-		val pendingIntent = PendingIntent.getBroadcast(context_of_activity,(alarm_end_time_to_search_db+alarm_start_time_to_search_db).toInt(), intent, PendingIntent.FLAG_IMMUTABLE)
-		alarmManager.setExact(AlarmManager.RTC_WAKEUP, alarm_end_time_to_search_db, pendingIntent)
-		logD("intent -->${intent.extras} ||||| and pending intent -->${pendingIntent}\n ${Calendar.getInstance().timeInMillis < alarm_end_time_to_search_db}")
-	}
+//	fun lastPendingIntentWithMessageForDbOperationsWillFireAtEndTime(alarm_start_time_to_search_db: Long, context_of_activity:Context, alarmManager:AlarmManager, message_name_for_start_time:String, message_name_for_end_time: String, alarm_end_time_to_search_db:Long, broadcastReceiverClass:BroadcastReceiver){
+//		val intent = Intent(context_of_activity, broadcastReceiverClass::class.java)
+//		// probably should hardcode message_name_for_start_time to be alarm_end_time_to_search_db and same for message_name_for_end_time
+//		intent.putExtra(message_name_for_start_time,alarm_start_time_to_search_db)
+//		intent.putExtra(message_name_for_end_time,alarm_end_time_to_search_db)
+//		val pendingIntent = PendingIntent.getBroadcast(context_of_activity,(alarm_end_time_to_search_db+alarm_start_time_to_search_db).toInt(), intent, PendingIntent.FLAG_IMMUTABLE)
+//		alarmManager.setExact(AlarmManager.RTC_WAKEUP, alarm_end_time_to_search_db, pendingIntent)
+//		logD("intent -->${intent.extras} ||||| and pending intent -->${pendingIntent}\n ${Calendar.getInstance().timeInMillis < alarm_end_time_to_search_db}")
+//	}
 
 	private  fun getTimeInHumanReadableFormat(t:Long): String{
 		return SimpleDateFormat("yyyy-MM-dd h:mm:ss a", Locale.getDefault()).format(Date(t))
@@ -540,13 +538,13 @@ class AlarmsController @Inject constructor(
 		return SimpleDateFormat("h:mm:ss a yyyy-MM-dd", Locale.getDefault()).format(Date(t))
 	}
 
-	fun getDateForDisplay(a: Long):String{
-		val calendar = Calendar.getInstance().apply { timeInMillis = a }
-		return  calendar.time.toInstant()
-			.atZone(ZoneId.systemDefault())
-			.toLocalDate()
-			.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-	}
+//	fun getDateForDisplay(a: Long):String{
+//		val calendar = Calendar.getInstance().apply { timeInMillis = a }
+//		return  calendar.time.toInstant()
+//			.atZone(ZoneId.systemDefault())
+//			.toLocalDate()
+//			.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+//	}
 
 	private  fun  logD(msg: String): Unit{
 		Log.d("AAAAAA", "[AlarmController] $msg")

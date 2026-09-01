@@ -45,7 +45,7 @@ class ResetAlarmAfterBoot @AssistedInject constructor(
 		val results = coroutineScope {
 			enabledAlarms.map { alarmData ->
 				async {
-					val result =alarmsController.resetAlarms(alarmData = alarmData, alarmManager = alarmManager, activityContext = applicationContext)
+					val result =alarmsController.resetAlarmsHandler(alarmData = alarmData, alarmManager = alarmManager, activityContext = applicationContext)
 					if (result.isErr()){
 						alarmsController.updateAlarmStateInDb(alarmData.copy(isReadyToUse = false))
 					}
