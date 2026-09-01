@@ -16,4 +16,11 @@ data class AlarmActivityIntentData(
     override fun toString(): String {
         return "AlarmActivityIntentData: alarmIdInDb=$alarmIdInDb, startTimeForDb=$startTimeForDb, alarmTriggerTime=$alarmTriggerTime, endTime=$endTime, message:$message"
     }
+
+
+
+}
+
+fun  AlarmActivityIntentData.toIntent(){
+
 }
