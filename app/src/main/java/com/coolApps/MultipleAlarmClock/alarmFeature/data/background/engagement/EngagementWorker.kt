@@ -56,6 +56,7 @@ class EngagementWorker @AssistedInject constructor(
 			context = applicationContext, slot = config.notificationTimeSlot
 		)
 
+		// should also comment it out as of no use I want to measure when the notification is received
 		analytics.captureEvent(
 			"engagement_notification_scheduled",
 			mapOf(

@@ -225,9 +225,12 @@ class AlarmsController @Inject constructor(
 			// first update the Db as it is more visible to the user, and there is a race condition here as we can't do it in parallel, as are accessing the db in failure in both
 			// the alarm was not in the DB so return
 			// since the alarm is not in the DB we can't insert it, and also we can't just insert it as it wasn't there and the user did not wanted it
-			val rowsAffected = alarmRepository.deleteAlarm(alarmData)
+
+			val alarmDeletionTask  = scope.async(Dispatchers.IO) {alarmRepository.deleteAlarm(alarmData)}
+			val cancellationResult =cancelAlarm(alarmData, context,alarmManager)
+			val rowsAffected = alarmDeletionTask.await()
 			if (rowsAffected == 0) return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.DatabaseOperationFailed(internalErrorMessage = "No such alarm in the Db to delete, alarmData:$alarmData, rowsAffected:$rowsAffected"))
-			cancelAlarm(alarmData, context,alarmManager).fold(
+			cancellationResult.fold(
 				onSuccess = {},
 				onError = { failureRes ->
 					// since we can't delete it then we should just put it back and tell the user to try to cancel it again
@@ -252,11 +255,10 @@ class AlarmsController @Inject constructor(
 		return ResultCustom.runCatching(
 			{ exception ->AlarmControllerErrorSet.Unknown(internalErrorMessage = exception.toString()) }
 		){
-			val cal = Calendar.getInstance()
-			val currentTime = cal.timeInMillis
+			val currentTime = Calendar.getInstance().timeInMillis
 			alarmData.alarmTimeSequence()
-				.dropWhile { it > currentTime }
-				.take(3)
+				.dropWhile { it < currentTime }
+				.take(5)
 				.forEach { alarmIterVal ->
 					logD("the time value gotten in iterating is ${getTimeInHumanReadableFormatProtectFrom0Included(alarmIterVal)}")
 
