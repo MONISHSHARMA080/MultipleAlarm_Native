@@ -38,7 +38,11 @@ data class AlarmData(
 		val endCalendar = Calendar.getInstance().apply {timeInMillis = endTime  }
 
 
-		if (endCalendar.before(now)) {
+		// Keep advancing a full day at a time until the interval's end is no longer
+		// in the past. This lets an alarm that's several days stale jump straight to
+		// the right date in one shot (today, if today's slot hasn't passed yet -
+		// otherwise tomorrow) instead of needing one call per day of drift.
+		while (startCalendar.timeInMillis + durationMillis < now.timeInMillis) {
 			startCalendar.add(Calendar.DAY_OF_YEAR, 1)
 		}
 
