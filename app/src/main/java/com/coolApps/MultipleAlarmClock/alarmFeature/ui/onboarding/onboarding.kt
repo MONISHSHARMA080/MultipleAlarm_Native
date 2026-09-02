@@ -1,10 +1,5 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding
 
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.AlarmResultClaude
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.GreetingScreen
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.PermissionScreen
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.ProblemScreen
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data.DisplaySate
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -20,7 +15,12 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerViewModel
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.listAlarmRingtone.ListAlarmScreen
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.listAlarmRingtone.ListAlarmSoundScreen
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.AlarmResultClaude
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.GreetingScreen
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.PermissionScreen
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.ProblemScreen
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data.DisplaySate
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 
@@ -88,7 +88,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 				) { shouldWeShowAlarmScreen ->
 
 					if (shouldWeShowAlarmScreen) {
-						ListAlarmScreen(
+						ListAlarmSoundScreen(
 							alarmPickerViewModel,
 							previewingUri = previewing?.soundUri,
 							selectedUri = selected?.soundUri,

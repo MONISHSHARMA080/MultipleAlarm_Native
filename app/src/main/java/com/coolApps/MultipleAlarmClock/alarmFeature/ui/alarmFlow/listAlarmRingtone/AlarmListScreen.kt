@@ -59,7 +59,7 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.dat
 
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable fun ListAlarmScreen(
+@Composable fun ListAlarmSoundScreen(
 	vm: AlarmPickerViewModel,
 	selectedUri: Uri?,
 	previewingUri: Uri?,

@@ -20,7 +20,7 @@ import com.coolApps.MultipleAlarmClock.Ui.Navigation.AlarmFlowRoute
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerViewModel
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.listAlarmRingtone.ListAlarmScreen
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.listAlarmRingtone.ListAlarmSoundScreen
 
 @Composable
 fun AlarmFlowScreen(
@@ -95,7 +95,7 @@ fun AlarmFlowScreen(
 					}
 				}
 
-				ListAlarmScreen(
+				ListAlarmSoundScreen(
 					viewModel,
 					previewingUri = previewing?.soundUri,
 					selectedUri = selected?.soundUri,

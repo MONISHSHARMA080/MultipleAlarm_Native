@@ -432,12 +432,12 @@ class AlarmPickerViewModel @AssistedInject constructor(
 				//  oldAlarm was there so editing an existing alarm
 				viewModelScope.launch {
 					logD("deleting the alarm $oldAlarm")
-					alarmsController.updateAlarmStateInDb(oldAlarm).fold(onSuccess = {}, onError = { error ->
-						// no such alarm exist in DB so can't update it
-						logD("there is a error while editing the alarm and updating it's state in DB and  that is ${error.internalErrorMessage}")
-						errorHandler.handleError(Result.Failure(error))
-					}
-					)
+//					alarmsController.updateAlarmStateInDb(oldAlarm).fold(onSuccess = {}, onError = { error ->
+//						// no such alarm exist in DB so can't update it
+//						logD("there is a error while editing the alarm and updating it's state in DB and  that is ${error.internalErrorMessage}")
+//						errorHandler.handleError(Result.Failure(error))
+//					}
+//					)
 					val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(
 						alarm = newAlarmData.copy(id = oldAlarm.id),
 						alarmManager, context

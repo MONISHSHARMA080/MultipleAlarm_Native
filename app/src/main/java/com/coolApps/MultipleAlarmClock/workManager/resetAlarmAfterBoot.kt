@@ -1,7 +1,5 @@
 package com.coolApps.MultipleAlarmClock.workManager
 
-import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import android.app.AlarmManager
 import android.content.Context
 import androidx.hilt.work.HiltWorker
@@ -9,6 +7,8 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
+import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -46,9 +46,10 @@ class ResetAlarmAfterBoot @AssistedInject constructor(
 			enabledAlarms.map { alarmData ->
 				async {
 					val result =alarmsController.resetAlarmsHandler(alarmData = alarmData, alarmManager = alarmManager, activityContext = applicationContext)
-					if (result.isErr()){
-						alarmsController.updateAlarmStateInDb(alarmData.copy(isReadyToUse = false))
-					}
+					// already being cancelled
+//					if (result.isErr()){
+//						alarmsController.updateAlarmStateInDb(alarmData.copy(isReadyToUse = false))
+//					}
 					return@async result
 				}
 			}.awaitAll()

@@ -39,7 +39,6 @@ fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) 
 	val isFirstLaunch by navViewModel.isFirstLaunch.collectAsStateWithLifecycle()
 	if (isFirstLaunch == null) return
 //	val isFirstLaunch = false
-	// debug
 	val startKey = remember(deepLinkScreen, isFirstLaunch) {
 		deepLinkScreen ?: if (isFirstLaunch == true) Screen.OnboardingScreen else Screen.AlarmContainer
 	}
@@ -107,7 +106,9 @@ fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) 
 
 				entry<Screen.SettingsScreen> {
 					SettingsScreen(
-						onNavigateBack = { backStack.removeLastOrNull() }
+						onNavigateBack = {
+							backStack.removeLastOrNull() ?: backStack.add(Screen.AlarmContainer)
+						}
 					)
 				}
 

@@ -254,9 +254,7 @@ fun PermissionScreen(
 					color = colorScheme.onBackground
 				)
 			}
-
             Spacer(modifier = Modifier.height(12.dp))
-
 			if (!allCriticalGranted){
 				Text(
 					text = stringResource(R.string.onboarding_permission_reason),
