@@ -6,8 +6,10 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.coolApps.MultipleAlarmClock.MainActivity
 import com.coolApps.MultipleAlarmClock.R
@@ -105,8 +107,12 @@ class NotificationHandler @Inject constructor(@ApplicationContext val context: C
 		val deepLinkUri = getDeepLinkUriForScreen(targetScreen)
 		val contentIntent = createPendingIntent(deepLinkUri)
 
+		val largeIconBitmap = BitmapFactory.decodeResource(context.resources, R.mipmap.app_icon)
+
 		return NotificationCompat.Builder(context, notificationChannel.channelId)
-			.setSmallIcon(R.mipmap.app_icon)
+			.setSmallIcon(R.drawable.ic_notification)
+			.setLargeIcon(largeIconBitmap)
+			.setColor(ContextCompat.getColor(context, R.color.notification_accent))
 			.setContentTitle(notificationTitle)
 			.setContentText(notificationText)
 			.setPriority(NotificationCompat.PRIORITY_DEFAULT)

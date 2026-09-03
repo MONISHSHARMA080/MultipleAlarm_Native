@@ -81,7 +81,6 @@ class MainActivity : ComponentActivity() {
 			else -> null
 		}
 	}
-
 }
 
 fun logD(message: String): Unit {

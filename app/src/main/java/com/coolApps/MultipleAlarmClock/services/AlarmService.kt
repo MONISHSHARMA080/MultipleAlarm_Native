@@ -8,17 +8,21 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.graphics.BitmapFactory
 import android.media.RingtoneManager
 import android.net.Uri
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.IntentCompat
 import androidx.core.net.toUri
+import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.alarmFeature.activities.AlarmActivity
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDao
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
+import com.coolApps.MultipleAlarmClock.notification.NotificationChannelType
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -197,7 +201,7 @@ class AlarmService: Service() {
     private fun buildNotification(context:Context, originalIntent: Intent):Result<Pair<Notification, AlarmActivityIntentData>>{
         return runCatching {
             val notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            val channelId = "alarm_channel_id"
+            val channelId = NotificationChannelType.AlarmNotification.channelId
 
             val intentData = IntentCompat.getParcelableExtra( originalIntent,"intentData", AlarmActivityIntentData::class.java)
                 ?: return Result.failure(Exception("Expected to intent data to be in the intent but got it as null"))
@@ -239,8 +243,12 @@ class AlarmService: Service() {
 
 
             // 3. Build the Notification
+            val largeIconBitmap = BitmapFactory.decodeResource(context.resources, R.mipmap.app_icon)
+
             val builder = NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(android.R.drawable.ic_lock_idle_alarm) // Use your actual icon
+                .setSmallIcon(R.drawable.ic_notification)
+                .setLargeIcon(largeIconBitmap)
+                .setColor(ContextCompat.getColor(context, R.color.notification_accent))
                 .setContentTitle("Alarm")
                 .setContentText(if(intentData.message != "") intentData.message else "Alarm is ringing")
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
