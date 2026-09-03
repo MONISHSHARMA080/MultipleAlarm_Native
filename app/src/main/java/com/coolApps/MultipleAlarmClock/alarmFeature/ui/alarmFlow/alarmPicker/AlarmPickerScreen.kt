@@ -274,7 +274,7 @@ fun AlarmPickerScreen(
 								view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
 							}
 							viewModel.updateStartTime(selectedStartTime)
-						  viewModel.updateProgress(Progress.EndTime)
+							viewModel.updateProgress(Progress.EndTime)
 						}
 
 						Progress.EndTime -> {
