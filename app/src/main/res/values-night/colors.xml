@@ -2,5 +2,10 @@
 <resources>
     <color name="splash_background">#FF121212</color>
     <color name="notification_accent">#FFFFFFFF</color>
+    <color name="splash_clock_rim">#FF3A3A3C</color>
+    <color name="splash_clock_face">#FF1C1C1E</color>
+    <color name="splash_clock_hands">#FFFFFFFF</color>
+    <color name="splash_clock_pivot_rim">#FFAEAEB2</color>
+    <color name="splash_clock_pivot_core">#FF2C2C2E</color>
 </resources>
 

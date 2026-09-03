@@ -5,28 +5,28 @@
     android:viewportHeight="160">
     <!-- Clock Outer Rim & Bezel -->
     <path
-        android:fillColor="#FF212121"
+        android:fillColor="@color/splash_clock_rim"
         android:pathData="M80,10 A70,70 0 1,0 80,150 A70,70 0 1,0 80,10 Z" />
     <path
-        android:fillColor="#FF141414"
+        android:fillColor="@color/splash_clock_face"
         android:pathData="M80,15 A65,65 0 1,0 80,145 A65,65 0 1,0 80,15 Z" />
     <!-- Hour Hand -->
     <path
         android:strokeWidth="7"
-        android:strokeColor="#FFFFFFFF"
+        android:strokeColor="@color/splash_clock_hands"
         android:strokeLineCap="round"
         android:pathData="M80,80 L48,58" />
     <!-- Minute Hand -->
     <path
         android:strokeWidth="6"
-        android:strokeColor="#FFFFFFFF"
+        android:strokeColor="@color/splash_clock_hands"
         android:strokeLineCap="round"
         android:pathData="M80,80 L118,52" />
     <!-- Center Pivot Rim & Core -->
     <path
-        android:fillColor="#FF8E8E93"
+        android:fillColor="@color/splash_clock_pivot_rim"
         android:pathData="M80,74 A6,6 0 1,0 80,86 A6,6 0 1,0 80,74 Z" />
     <path
-        android:fillColor="#FF1C1C1E"
+        android:fillColor="@color/splash_clock_pivot_core"
         android:pathData="M80,77 A3,3 0 1,0 80,83 A3,3 0 1,0 80,77 Z" />
 </vector>
