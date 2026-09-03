@@ -1,18 +1,24 @@
 [versions]
+accompanistPermissions = "0.37.3"
 agp = "9.2.1"
+coreSplashscreen = "1.2.0"
 datastore = "1.2.1"
 firebaseBom = "34.17.0"
-googleProtobufKotlinLite = "4.35.1"
+googleProtobufKotlinLite = "4.36.1"
+hiltAndroidCompiler = "2.60.1"
+hiltNavigationCompose = "1.4.0"
 kotlin = "2.3.21"
 kotlinSerialization = "2.3.21"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.7.0"
+kotlinxSerializationJson = "1.11.0"
 lifecycleRuntimeKtx = "2.11.0"
 activityCompose = "1.13.0"
 composeBom = "2026.08.00"
 materialIconsExtended = "1.7.8"
 media3Common = "1.11.0"
+navigationCompose = "2.10.0"
 uiautomatorVersion = "2.4.0"
 uiTestAndroid = "1.12.0"
 junitKtx = "1.2.1"
@@ -38,14 +44,21 @@ datastoreCore = "1.2.1"
 playServicesAppset = "16.1.0"
 animationCore = "1.12.0"
 ui = "1.12.0"
+workRuntimeKtx = "2.11.2"
 #firebaseFunctionsKtx = "22.1.1"
 
 [libraries]
+accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
+androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
+androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3Core" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "nav3Core" }
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycleViewmodelNav3" }
 androidx-uiautomator-v240alpha05 = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomatorVersion" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidCompiler" }
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerializationCore" }
 androidx-material3-adaptive-navigation3 = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation3", version.ref = "material3AdaptiveNav3" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -65,6 +78,7 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 posthog-android = { module = "com.posthog:posthog-android" }
 androidx-media3-common = { group = "androidx.media3", name = "media3-common", version.ref = "media3Common" }
 androidx-ui-test-android = { group = "androidx.compose.ui", name = "ui-test-android", version.ref = "uiTestAndroid" }

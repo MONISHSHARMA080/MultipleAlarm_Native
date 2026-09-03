@@ -163,25 +163,26 @@ dependencies {
 	implementation(libs.androidx.hilt.work)
 	implementation(libs.play.services.appset)
 	ksp(libs.androidx.hilt.compiler)
-	ksp("com.google.dagger:hilt-android-compiler:2.60.1")
-	implementation("androidx.hilt:hilt-navigation-compose:1.4.0")
+	ksp(libs.hilt.android.compiler)
+	implementation(libs.androidx.hilt.navigation.compose)
 
 
 	implementation("com.google.android.play:review:2.0.2")
 	implementation("com.google.android.play:review-ktx:2.0.2")
 
 
-    implementation("com.google.accompanist:accompanist-permissions:0.37.3")
+    implementation(libs.accompanist.permissions)
 
-    implementation ("com.posthog:posthog-android:3.58.2")
-    implementation("androidx.core:core-splashscreen:1.2.0")
+    implementation ("com.posthog:posthog-android:3.61.1")
+    implementation (libs.posthog.android)
+    implementation(libs.androidx.core.splashscreen)
 
 	implementation(libs.androidx.media3.common)
 
     implementation(libs.androidx.datastore)
 	implementation(libs.protobuf.kotlin.lite.v4321)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+    implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.androidx.espresso.contrib)
     implementation(libs.androidx.ui.test.junit4.android)
@@ -195,8 +196,8 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.12.0")
     "baselineProfile"(project(":baselineprofile"))
     implementation(libs.androidx.junit.ktx)
-    implementation("androidx.navigation:navigation-compose:2.9.8")
-    implementation("androidx.work:work-runtime-ktx:2.11.2")
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.work.runtime.ktx)
 
     // -- roboelectric tests ---
     testImplementation("junit:junit")
