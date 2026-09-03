@@ -270,18 +270,20 @@ fun AlarmPickerScreen(
 							set(Calendar.HOUR_OF_DAY, startTimePickerState.hour)
 							set(Calendar.MINUTE, startTimePickerState.minute)
 						  }
-							if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-								view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
-							}
+//							if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+//								view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
+//							}
+							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 							viewModel.updateStartTime(selectedStartTime)
 							viewModel.updateProgress(Progress.EndTime)
 						}
 
 						Progress.EndTime -> {
 						  if (!isCandidateInvalid) {
-							  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-								  view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
-							  }
+//							  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+//								  view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
+//							  }
+							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 							viewModel.updateEndTime(candidateEnd)
 							viewModel.updateProgress(Progress.FullEditor)
 						  }

@@ -3,6 +3,7 @@ package com.coolApps.MultipleAlarmClock.alarmFeature.activities
 import android.content.Intent
 import android.os.Bundle
 import android.os.PowerManager
+import android.view.HapticFeedbackConstants
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -49,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -186,6 +188,7 @@ class AlarmActivity : ComponentActivity() {
     var currentTime by remember { mutableStateOf(getCurrentTime()) }
     var amPm by remember { mutableStateOf(getAmPm()) }
 	val colorScheme = MaterialTheme.colorScheme
+	val view = LocalView.current
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -215,7 +218,10 @@ class AlarmActivity : ComponentActivity() {
                 contentAlignment = Alignment.Center
             ) {
                 Button(
-                    onClick = { onFinish() },
+                    onClick = {
+						view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+						onFinish()
+				  	},
                     colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primaryContainer, contentColor = colorScheme.onPrimaryContainer),
                     shape = RoundedCornerShape(45.dp),
                     modifier = Modifier.height(83.dp).fillMaxWidth(0.92f)

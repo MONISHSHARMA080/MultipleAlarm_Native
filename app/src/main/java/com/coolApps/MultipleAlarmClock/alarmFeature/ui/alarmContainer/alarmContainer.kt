@@ -1,6 +1,7 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmContainer
 
 import android.app.Activity
+import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.core.animateFloatAsState
@@ -189,8 +190,18 @@ import kotlinx.coroutines.launch
 							alarmData = individualAlarm,
 							onEdit = { alarmData -> onNavigateToEdit(alarmData) },
 							onToggle = { alarmData, isChecked ->
-								if (isChecked) alarmContainerViewModel.resetAlarm(alarmData)
-								else alarmContainerViewModel.stopAlarm(alarmData)
+								if (isChecked){
+									alarmContainerViewModel.resetAlarm(alarmData)
+									if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+										view.performHapticFeedback(HapticFeedbackConstants.TOGGLE_OFF)
+									}
+								}
+								else {
+									alarmContainerViewModel.stopAlarm(alarmData)
+									if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+										view.performHapticFeedback(HapticFeedbackConstants.TOGGLE_OFF)
+									}
+								}
 							},
 							onDelete = { alarmData -> alarmContainerViewModel.deleteAlarm(alarmData) },
 							onLongPress = { alarmData ->
@@ -218,7 +229,7 @@ import kotlinx.coroutines.launch
 			) {
 				AddAlarmButton(
 					onClick = {
-						view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 						onNavigateToCreate()
 				  },
 				)
