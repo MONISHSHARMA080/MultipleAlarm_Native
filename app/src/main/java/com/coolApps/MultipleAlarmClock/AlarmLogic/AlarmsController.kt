@@ -96,15 +96,6 @@ class AlarmsController @Inject constructor(
 		{ exception ->AlarmControllerErrorSet.Unknown(internalErrorMessage = exception.toString()) }
 		){
 			val alarmId = alarmData.id
-//			val intent = Intent(ALARM_ACTION)
-//			val intentData = AlarmActivityIntentData(
-//				startTimeForDb = alarmData.startTime, alarmTriggerTime = alarmTriggerTime, endTime = alarmData.endTime,
-//				message = alarmData.message, alarmIdInDb = alarmData.id
-//			)
-//			intent.setClass(context, receiverClass)
-//			intent.putExtra("intentData", intentData)
-//			intent.putExtra("alarmIdInDb", alarmId)
-
 			val intent = intentAsAlarmActionData(alarmData = alarmData, alarmTriggerTime = alarmTriggerTime, receiverClass = receiverClass)
 			val pendingIntentForAlarm = PendingIntent.getBroadcast(context, alarmId, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 			// meaning that the pending intent does not exist, and it is safe to create one
@@ -261,15 +252,6 @@ class AlarmsController @Inject constructor(
 				.forEach { alarmIterVal ->
 					logD("the time value gotten in iterating is ${getTimeInHumanReadableFormatProtectFrom0Included(alarmIterVal)}")
 					val intent = intentAsAlarmActionData(alarmData = alarmData, receiverClass = alarmReceiverClass, alarmTriggerTime = alarmIterVal )
-//					val intentData = AlarmActivityIntentData(
-//						startTimeForDb = alarmData.startTime,
-//						alarmTriggerTime = alarmIterVal,
-//						endTime = alarmData.endTime,
-//						message = alarmData.message,
-//						alarmIdInDb = alarmData.id
-//					)
-//
-//					val baseIntent = Intent(ALARM_ACTION)
 					cancelPendingIntentReceiver(intent, context,  alarmManager, alarmData.id)
 					cancelPendingIntentReceiver(intent, context,   alarmManager, alarmIterVal.toInt())
 				}
@@ -292,14 +274,8 @@ class AlarmsController @Inject constructor(
 	}
 
 	private fun cancelPendingIntentReceiver(
-			baseIntent: Intent, context: Context,
-//			intentData: AlarmActivityIntentData, alarmReceiverClass:Class<out BroadcastReceiver>,
-			alarmManager: AlarmManager, intentRequestCode: Int
+			baseIntent: Intent, context: Context, alarmManager: AlarmManager, intentRequestCode: Int
 	){
-//		baseIntent.apply {
-//			setClass(context, alarmReceiverClass)
-//			putExtra("intentData", intentData)
-//		}
 		val pendingIntent = PendingIntent.getBroadcast(context, intentRequestCode, baseIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE)
 		pendingIntent?.let { alarmManager.cancel(it) }
 	}
