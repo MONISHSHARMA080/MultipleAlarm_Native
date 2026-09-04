@@ -270,9 +270,6 @@ fun AlarmPickerScreen(
 							set(Calendar.HOUR_OF_DAY, startTimePickerState.hour)
 							set(Calendar.MINUTE, startTimePickerState.minute)
 						  }
-//							if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-//								view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
-//							}
 							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 							viewModel.updateStartTime(selectedStartTime)
 							viewModel.updateProgress(Progress.EndTime)
@@ -280,9 +277,6 @@ fun AlarmPickerScreen(
 
 						Progress.EndTime -> {
 						  if (!isCandidateInvalid) {
-//							  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-//								  view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
-//							  }
 							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 							viewModel.updateEndTime(candidateEnd)
 							viewModel.updateProgress(Progress.FullEditor)
@@ -393,6 +387,7 @@ fun AlarmPickerScreen(
                 selectSoundButtonClicked = onNavigateToSoundList,
                 selectedSoundName = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random)
               )
+				Spacer(modifier = Modifier.height(10.dp))
             }
           }
         }

@@ -88,6 +88,11 @@ fun AlarmCard(
 	SwipeToDismissBox(
 		state = dismissState,
 		onDismiss = { _ ->
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+				view.performHapticFeedback(HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE)
+			}else{
+				view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+			}
 			onDelete(alarmData)
 		},
 		backgroundContent = {

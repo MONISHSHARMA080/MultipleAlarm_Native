@@ -1,14 +1,16 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component
 
+//import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
+//import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,8 +32,6 @@ import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,7 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalView
@@ -54,8 +54,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDataValidationResult
-//import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
-//import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerUiState
 import java.text.SimpleDateFormat
 
@@ -163,56 +161,55 @@ import java.text.SimpleDateFormat
 			value: String,
 			onValueChange: (String) -> Unit
 		) {
+	Row(
+		modifier = Modifier
+			.fillMaxWidth()
+			.imePadding()
+			.padding(horizontal = 16.dp, vertical = 16.dp)
+			.animateContentSize(),
+		verticalAlignment = Alignment.CenterVertically
+	) {
+		Icon(
+			imageVector = icon,
+			contentDescription = null,
+			tint = colorScheme.onSurfaceVariant
+		)
+		Spacer(modifier = Modifier.width(16.dp))
+		Text(
+			text = title,
+			color = colorScheme.onBackground,
+			style = typography.titleSmall
+		)
+		Spacer(modifier = Modifier.weight(0.85f))
+		BasicTextField(
+			value = value,
+			maxLines = 1,
+			minLines = 1,
+			onValueChange = onValueChange,
+			modifier = Modifier.weight(1f)
+//				.background(colorScheme.secondaryContainer.copy(alpha = 0.40f))
+			,
+			textStyle = typography.bodyMedium.copy(
+				color = colorScheme.onSurface,
+			),
+			cursorBrush = SolidColor(colorScheme.secondary),
 
-			Column(
-				modifier =
-					Modifier.fillMaxWidth()
-						.padding(horizontal = 16.dp, vertical = 12.dp)
-						.imePadding()
-						.animateContentSize()
-			) {
-				Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-					Icon(
-						imageVector = icon,
-						contentDescription = null,
-						tint = colorScheme.onSurfaceVariant,
-						modifier = Modifier.size(20.dp)
-					)
-					Spacer(modifier = Modifier.width(12.dp))
-					Text(
-						text = title,
-						color = colorScheme.onBackground,
-						style = typography.titleSmall,
-						modifier = Modifier.weight(1f)
-					)
-				}
-				Spacer(modifier = Modifier.height(8.dp))
-
-				TextField(
-					value = value,
-					onValueChange = onValueChange,
-					modifier = Modifier.fillMaxWidth().padding(start = 32.dp),
-					textStyle = typography.bodyMedium,
-					placeholder = {
+			singleLine = true,
+			decorationBox = { innerTextField ->
+				Box(contentAlignment = Alignment.CenterStart) {
+					if (value.isEmpty()) {
 						Text(
 							text = stringResource(R.string.alarm_picker_message_placeholder),
 							style = typography.bodyMedium,
 							color = colorScheme.onSurfaceVariant
 						)
-					},
-					minLines = 1,
-					maxLines = 3,
-					shape = RoundedCornerShape(20.dp),
-					colors =
-						TextFieldDefaults.colors(
-							focusedIndicatorColor = Color.Transparent,
-							unfocusedIndicatorColor = Color.Transparent,
-							disabledIndicatorColor = Color.Transparent,
-							errorIndicatorColor = Color.Transparent
-						)
-				)
+					}
+					innerTextField()
+				}
 			}
-		}
+		)
+	}
+}
 
 @Composable fun FrequencyRow(
 			icon: ImageVector,
@@ -326,26 +323,5 @@ import java.text.SimpleDateFormat
 					}
 				}
 			}
-
-			// check for failure as if we have a error  in time then we won't be able to produce correct
-			// sequence of preview text, so don't display
-//			AnimatedVisibility(
-//				visible =
-//					!doWeHaveErrorOtherThanFrequency &&
-//							(previewText.isNotEmpty() || doWeHaveFrequencyError),
-//				enter = expandVertically() + fadeIn(),
-//				exit = shrinkVertically() + fadeOut()
-//			) {
-//				Spacer(modifier = Modifier.padding(3.dp))
-//				Text(
-//					text = previewText,
-//					style = typography.labelMedium,
-//					textAlign = TextAlign.Start,
-//					modifier = Modifier.padding(top = 5.dp, start = 2.dp).animateContentSize(),
-//					color =
-//						if (doWeHaveFrequencyError) colorScheme.onErrorContainer
-//						else colorScheme.onSurfaceVariant
-//				)
-//			}
 		}
 }

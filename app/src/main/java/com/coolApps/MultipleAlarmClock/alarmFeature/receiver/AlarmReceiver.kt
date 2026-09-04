@@ -35,7 +35,6 @@ class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         logD("onReceive: intent action = ${intent.action}")
         val pendingResult = goAsync()
-
 		coroutineScope.launch {
 			try {
 				coroutineScope {
