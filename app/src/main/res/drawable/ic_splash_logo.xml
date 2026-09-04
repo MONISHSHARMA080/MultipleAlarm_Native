@@ -1,32 +1,32 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="160dp"
-    android:height="160dp"
-    android:viewportWidth="160"
-    android:viewportHeight="160">
-    <!-- Clock Outer Rim & Bezel -->
+    android:width="288dp"
+    android:height="288dp"
+    android:viewportWidth="288"
+    android:viewportHeight="288">
+    <!-- Clock Outer Rim & Bezel (Diameter 180dp within official 192dp / 2-thirds safe zone circle) -->
     <path
         android:fillColor="@color/splash_clock_rim"
-        android:pathData="M80,10 A70,70 0 1,0 80,150 A70,70 0 1,0 80,10 Z" />
+        android:pathData="M144,54 A90,90 0 1,0 144,234 A90,90 0 1,0 144,54 Z" />
     <path
         android:fillColor="@color/splash_clock_face"
-        android:pathData="M80,15 A65,65 0 1,0 80,145 A65,65 0 1,0 80,15 Z" />
+        android:pathData="M144,60.5 A83.5,83.5 0 1,0 144,227.5 A83.5,83.5 0 1,0 144,60.5 Z" />
     <!-- Hour Hand -->
     <path
-        android:strokeWidth="7"
+        android:strokeWidth="9"
         android:strokeColor="@color/splash_clock_hands"
         android:strokeLineCap="round"
-        android:pathData="M80,80 L48,58" />
+        android:pathData="M144,144 L103,116" />
     <!-- Minute Hand -->
     <path
-        android:strokeWidth="6"
+        android:strokeWidth="8"
         android:strokeColor="@color/splash_clock_hands"
         android:strokeLineCap="round"
-        android:pathData="M80,80 L118,52" />
+        android:pathData="M144,144 L193,108" />
     <!-- Center Pivot Rim & Core -->
     <path
         android:fillColor="@color/splash_clock_pivot_rim"
-        android:pathData="M80,74 A6,6 0 1,0 80,86 A6,6 0 1,0 80,74 Z" />
+        android:pathData="M144,136.3 A7.7,7.7 0 1,0 144,151.7 A7.7,7.7 0 1,0 144,136.3 Z" />
     <path
         android:fillColor="@color/splash_clock_pivot_core"
-        android:pathData="M80,77 A3,3 0 1,0 80,83 A3,3 0 1,0 80,77 Z" />
+        android:pathData="M144,140.15 A3.85,3.85 0 1,0 144,147.85 A3.85,3.85 0 1,0 144,140.15 Z" />
 </vector>

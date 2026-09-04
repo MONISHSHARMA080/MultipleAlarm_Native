@@ -203,8 +203,6 @@ class AlarmActivity : ComponentActivity() {
 		}
 	}
 
-
-
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets.safeContent,
@@ -219,7 +217,7 @@ class AlarmActivity : ComponentActivity() {
             ) {
                 Button(
                     onClick = {
-						view.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 						onFinish()
 				  	},
                     colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primaryContainer, contentColor = colorScheme.onPrimaryContainer),
@@ -241,8 +239,6 @@ class AlarmActivity : ComponentActivity() {
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                // Restore the extra offset (mimicking the previous double-padding look)
-                // without using deprecated APIs or calculateTopPadding() twice.
                 .padding(top = innerPadding.calculateTopPadding() + 21.dp)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
