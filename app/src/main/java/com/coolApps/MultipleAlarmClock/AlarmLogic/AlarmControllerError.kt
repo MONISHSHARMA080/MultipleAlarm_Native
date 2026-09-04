@@ -33,8 +33,8 @@ sealed interface ScheduleAlarmError : AlarmControllerError
 /** Legal failures for [AlarmsController.getPendingIntentForAlarm]. */
 sealed interface GetPendingIntentForAlarmError : AlarmControllerError
 
-/** Legal failures for [AlarmsController.startAlarmSeries]. */
-sealed interface StartAlarmSeriesError : AlarmControllerError
+///** Legal failures for [AlarmsController]. */
+//sealed interface StartAlarmSeriesError : AlarmControllerError
 
 /** Legal failures for [AlarmsController.startAlarmSeriesHandler]. */
 sealed interface StartAlarmSeriesHandlerError : AlarmControllerError
@@ -79,7 +79,7 @@ object AlarmControllerErrorSet {
 			override val messageToDisplayUser: UiText = defaultErrorToDisplayUser,
 			override val titleToDisplayUser: UiText = defaultErrorTitle,
 			override val internalErrorMessage: String = ""
-	) : ScheduleAlarmError, GetPendingIntentForAlarmError, StartAlarmSeriesError,
+	) : ScheduleAlarmError, GetPendingIntentForAlarmError,
 		StartAlarmSeriesHandlerError, CancelAlarmError, CancelAlarmHandlerError,
 		DeleteAlarmHandlerError, UpdateAlarmInDbError, RescheduleAlarmError,
 		ResetAlarmError, CalculateNextAlarmInfo {
@@ -99,7 +99,7 @@ object AlarmControllerErrorSet {
 			override val messageToDisplayUser: UiText = defaultErrorToDisplayUser,
 			override val titleToDisplayUser: UiText = alarmErrorTitle,
 			override val internalErrorMessage: String = ""
-	) : ScheduleAlarmError, StartAlarmSeriesError, ResetAlarmError,
+	) : ScheduleAlarmError, ResetAlarmError,
 		StartAlarmSeriesHandlerError, CancelAlarmError, CancelAlarmHandlerError,
 		DeleteAlarmHandlerError, RescheduleAlarmError, CalculateNextAlarmInfo {
 		override fun toString() = toDebugString()
@@ -109,7 +109,7 @@ object AlarmControllerErrorSet {
 			override val messageToDisplayUser: UiText = UiText.StringResource(R.string.error_alarm_schedule_failed),
 			override val titleToDisplayUser: UiText = alarmErrorTitle,
 			override val internalErrorMessage: String = ""
-	) : ScheduleAlarmError, StartAlarmSeriesError, StartAlarmSeriesHandlerError,
+	) : ScheduleAlarmError,  StartAlarmSeriesHandlerError,
 		RescheduleAlarmError, ResetAlarmError {
 		override fun toString() = toDebugString()
 	}
@@ -118,7 +118,7 @@ object AlarmControllerErrorSet {
 			override val messageToDisplayUser: UiText = UiText.StringResource(R.string.error_alarm_already_exists),
 			override val titleToDisplayUser: UiText = alarmErrorTitle,
 			override val internalErrorMessage: String = ""
-	) : GetPendingIntentForAlarmError, ScheduleAlarmError, StartAlarmSeriesError,
+	) : GetPendingIntentForAlarmError, ScheduleAlarmError,
 		StartAlarmSeriesHandlerError, RescheduleAlarmError, ResetAlarmError {
 		override fun toString() = toDebugString()
 	}

@@ -110,40 +110,12 @@ class AlarmsController @Inject constructor(
 		}
 	}
 
-	/**given an alarm Series(or alarm, or startTime->endTime, this function will start it. If the alarm startTime is greater than current startTime then we will iterate over it and set that alarm from that time */
-	private	suspend fun startAlarmSeries(
-			alarmData: AlarmData, alarmManager: AlarmManager, activityContext: Context,
-			receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java,
-	): ResultCustom<Unit, StartAlarmSeriesError> {
-		return ResultCustom.runCatching(
-			{ exception ->AlarmControllerErrorSet.Unknown(internalErrorMessage = exception.toString()) }
-		){
-			val currentTIme = Calendar.getInstance()
-			alarmData.validate().let {
-				if (it != AlarmDataValidationResult.Success) return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "AlarmData validation failed, and res:$it"))
-			}
-			// since I could have startTime < now < endTime
-			val timeReturned = alarmData.alarmTimeSequence().firstOrNull{ it > currentTIme.timeInMillis }
-				?: return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "Can't get first alarm to start the series\n alarmData:$alarmData"))
-			scheduleAlarm(alarmData = alarmData, alarmManager = alarmManager, alarmTriggerTime = timeReturned, componentActivity = activityContext, receiverClass = receiverClass).fold(
-				onSuccess = {},
-				onError = { failureRes ->
-					return when (failureRes) {
-						is AlarmControllerErrorSet.Unknown -> ResultCustom.Failure(errorClass = failureRes)
-						is AlarmControllerErrorSet.ValidationFailed -> ResultCustom.Failure(errorClass = failureRes)
-						is AlarmControllerErrorSet.PendingIntentNotFound -> ResultCustom.Failure(errorClass = failureRes)
-						is AlarmControllerErrorSet.PendingIntentAlreadyExist -> ResultCustom.Failure(errorClass = failureRes)
-					}
-				}
-			)
-		}
-	}
 	/** handle setting the alarms and if fails then cancel it and update the DB state not running else running */
 	suspend fun startAlarmSeriesHandler(
 			alarm: AlarmData, alarmManager: AlarmManager, activityContext: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java,
 	): ResultCustom<Unit, StartAlarmSeriesHandlerError> {
 		return ResultCustom.runCatching(
-			{ exception ->AlarmControllerErrorSet.Unknown(internalErrorMessage = exception.toString()) }
+			{ exception -> AlarmControllerErrorSet.Unknown(internalErrorMessage = exception.toString()) }
 		) {
 			val upsertResult = alarmRepository.upsertAlarm(alarm.copy(isReadyToUse = true))
 			val insertedAlarmData: AlarmData =	if (upsertResult == -1L){
@@ -151,17 +123,18 @@ class AlarmsController @Inject constructor(
 			}else {
 				alarm.copy(id = upsertResult.toInt(), isReadyToUse = true )
 			}
-			val alarmResult = this@AlarmsController.startAlarmSeries(
-				insertedAlarmData,
-				alarmManager,
-				activityContext,
-				receiverClass,
-			)
-			alarmResult.fold(
+			val currentTIme = Calendar.getInstance()
+			insertedAlarmData.validate().let {
+				if (it != AlarmDataValidationResult.Success) return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "AlarmData validation failed, and res:$it"))
+			}
+			val timeReturned = insertedAlarmData.alarmTimeSequence().firstOrNull{ it > currentTIme.timeInMillis }
+				?: return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "Can't get first alarm to start the series\n alarmData:$insertedAlarmData"))
+			scheduleAlarm(alarmData = insertedAlarmData, alarmManager = alarmManager, alarmTriggerTime = timeReturned, componentActivity = activityContext, receiverClass = receiverClass).fold(
 				onSuccess = {},
 				onError = { failureRes ->
-					// ToDo: fix this error in all alarmController, if the alarmValidation(some cases) doesn't have problem then we don't need to delete it, better for user experience
-					alarmRepository.deleteAlarm(insertedAlarmData)
+					if (failureRes is AlarmControllerErrorSet.ValidationFailed){
+						alarmRepository.deleteAlarm(insertedAlarmData)
+					}
 					this@AlarmsController.cancelAlarmHandler(insertedAlarmData, activityContext, alarmManager)
 					return when (failureRes) {
 						is AlarmControllerErrorSet.Unknown -> ResultCustom.Failure(errorClass = failureRes)
@@ -370,6 +343,7 @@ class AlarmsController @Inject constructor(
 				}
 			)
 		} else {
+			// check if the alarm can be set for some next day in week
 			logD("No more instances to schedule for this alarm series")
 			this.updateAlarmStateInDb(alarmData.copy(isReadyToUse = false))
 		}
