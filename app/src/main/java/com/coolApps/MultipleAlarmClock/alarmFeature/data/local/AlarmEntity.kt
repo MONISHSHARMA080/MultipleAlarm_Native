@@ -14,6 +14,7 @@ import java.util.Locale
 @Entity(indices = [Index(value = ["startTime", "endTime"])], )
 data class AlarmData(
 	@PrimaryKey(autoGenerate = true) val id: Int = 0,
+	// this start time and end time denotes the time on say day,
 	@ColumnInfo(name = "startTime") val startTime: Long,
 	@ColumnInfo(name = "endTime") val endTime: Long,
 	@ColumnInfo(name = "message") val message: String,

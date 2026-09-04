@@ -1,6 +1,6 @@
 package com.coolApps.MultipleAlarmClock.AlarmLogic
 
-	import android.app.AlarmManager
+import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -212,7 +212,7 @@ class AlarmsController @Inject constructor(
 	}
 
 	/** cancels scheduled alarm*/
-	private  fun cancelAlarm(
+	private fun cancelAlarm(
 			alarmData: AlarmData, context: Context, alarmManager: AlarmManager
 	): ResultCustom<Unit, CancelAlarmError > {
 		return ResultCustom.runCatching(
