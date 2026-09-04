@@ -4,8 +4,14 @@ import android.app.Activity
 import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.activity.compose.ReportDrawnWhen
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +26,7 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -62,6 +69,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -241,6 +249,17 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun EmptyState(modifier: Modifier = Modifier) {
+	val infiniteTransition = rememberInfiniteTransition(label = "EmptyStateIconTransition")
+	val dy by infiniteTransition.animateFloat(
+		initialValue = 0f,
+		targetValue = 7f,
+		animationSpec = infiniteRepeatable(
+			animation = tween(durationMillis = 1777, easing = LinearEasing),
+			repeatMode = RepeatMode.Reverse
+		),
+		label = "EmptyStateIconOffset"
+	)
+
 	Column(
 		modifier = modifier,
 		verticalArrangement = Arrangement.Center,
@@ -249,8 +268,10 @@ fun EmptyState(modifier: Modifier = Modifier) {
 		Icon(
 			imageVector = Icons.Outlined.Alarm,
 			contentDescription = null,
-			modifier = Modifier.size(120.dp),
-			tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+			modifier = Modifier
+				.size(120.dp)
+				.offset { IntOffset(x = 0, y = dy.dp.roundToPx()) },
+			tint = colorScheme.primary.copy(alpha = 0.6f)
 		)
 		Spacer(modifier = Modifier.height(24.dp))
 		Text(
