@@ -256,6 +256,7 @@ import java.text.SimpleDateFormat
 					IconButton(
 						onClick = {
 							if (value - 1 > 0) {
+								view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 								onValueChange(value - 1)
 							} else {
 								view.performHapticFeedback(HapticFeedbackConstants.REJECT)

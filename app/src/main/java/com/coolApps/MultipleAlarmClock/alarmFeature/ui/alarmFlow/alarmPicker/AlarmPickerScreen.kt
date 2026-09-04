@@ -387,7 +387,7 @@ fun AlarmPickerScreen(
                 selectSoundButtonClicked = onNavigateToSoundList,
                 selectedSoundName = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random)
               )
-				Spacer(modifier = Modifier.height(10.dp))
+				Spacer(modifier = Modifier.weight(0.04f))
             }
           }
         }
