@@ -117,6 +117,9 @@ fun Project.configureAndroid() {
 
             }
         }
+//        sourceSets {
+//            getByName("test").assets.srcDir("$projectDir/schemas")
+//        }
     }
 }
 

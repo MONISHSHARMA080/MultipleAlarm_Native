@@ -20,13 +20,14 @@ data class AlarmData(
 	@ColumnInfo(name = "message") val message: String,
 	@ColumnInfo(name = "freq_used_to_skip_start_alarm") val frequencyInMin: Long,
 	val sound: String?,
-	@ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean
+	@ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean,
+	@ColumnInfo(name = "repeat_days", defaultValue = "NULL") val repeatDays: RepeatDays? = null
 ){
 	private fun getDateTimeFormatted(time:Long):String{
 		return SimpleDateFormat("hh:mm a dd/MM/yyyy", Locale.getDefault()).format(time)
 	}
 	override fun toString(): String {
-		return "AlarmData: startTime:${getDateTimeFormatted(startTime)}, endTime:${getDateTimeFormatted(endTime)}, message:$message freqGottenAfterCallback:$frequencyInMin alarmSoundUri:$sound"
+		return "AlarmData: startTime:${getDateTimeFormatted(startTime)}, endTime:${getDateTimeFormatted(endTime)}, message:$message freqGottenAfterCallback:$frequencyInMin alarmSoundUri:$sound repeatDays:$repeatDays"
 	}
 
 	val startTimeCalendar: Calendar get() = Calendar.getInstance().apply { timeInMillis = startTime }
@@ -58,7 +59,8 @@ data class AlarmData(
 			frequencyInMin = this.frequencyInMin,
 			sound = this.sound,
 			message = this.message,
-			isReadyToUse = this.isReadyToUse
+			isReadyToUse = this.isReadyToUse,
+			repeatDays = this.repeatDays
 		)
 	}
 
@@ -94,6 +96,15 @@ data class AlarmData(
 		if (endCalendar.timeInMillis < now.timeInMillis){
 			return AlarmDataValidationResult.IntervalNotInFuture("StartTime:${timeFormatted(startTime)} should be in future ahead of now:${ timeFormatted(now.timeInMillis) }.")
 		}
+		// maybe for the weekday check is the bit a day of week, for future
+
+//		if (repeatDays != null) {
+//			val localDate = LocalDate.ofInstant(startCalendar.toInstant(), startCalendar.timeZone.toZoneId())
+//			if (!repeatDays.isSet(localDate.dayOfWeek)) {
+//				return AlarmDataValidationResult.WeekdayMismatch("Start date weekday (${localDate.dayOfWeek}) is not in configured repeatDays ($repeatDays)")
+//			}
+//		}
+
 		return AlarmDataValidationResult.Success
 	}
 
@@ -114,6 +125,7 @@ sealed class AlarmDataValidationResult(
 	data class IntervalNotInFuture( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
 	data class DifferentDate( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
 	data class Frequency( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
+//	data class WeekdayMismatch( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
 
 	override fun toString(): String {
 		var err = errorMessage
@@ -128,6 +140,7 @@ sealed class AlarmDataValidationResult(
 			is IntervalNotInFuture ->"IntervalNotInFuture"
 			is DifferentDate -> "DifferentDate"
 			is Frequency -> "Frequency"
+//			is WeekdayMismatch -> "WeekdayMismatch"
 		}
 		return "$className, $err "
 	}
@@ -143,6 +156,7 @@ sealed class AlarmDataValidationResult(
 			is IntervalNotInFuture -> this.errorMessage
 			is DifferentDate ->this.errorMessage
 			is Frequency ->this.errorMessage
+//			is WeekdayMismatch -> this.errorMessage
 		}
 	}
 }

@@ -12,6 +12,7 @@ import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDao
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDatabase
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.MIGRATION_1_2
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.MIGRATION_2_3
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.repository.AlarmRepositoryImpl
 import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
@@ -35,7 +36,7 @@ object AppModule {
 			context,
 			AlarmDatabase::class.java,
 			"alarm-database"
-		).addMigrations(MIGRATION_1_2).build()
+		).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
 	}
 
 	@Provides

@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -117,6 +118,11 @@ class AlarmsController @Inject constructor(
 		return ResultCustom.runCatching(
 			{ exception -> AlarmControllerErrorSet.Unknown(internalErrorMessage = exception.toString()) }
 		) {
+			// alarm validation check for the alarm in the past , and the initial one pcould be in the past
+//			val initialValidation = alarm.validate()
+//			if (initialValidation != AlarmDataValidationResult.Success) {
+//				return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "AlarmData validation failed before start: $initialValidation"))
+//			}
 			val upsertResult = alarmRepository.upsertAlarm(alarm.copy(isReadyToUse = true))
 			val insertedAlarmData: AlarmData =	if (upsertResult == -1L){
 				alarm.copy(isReadyToUse = true) // updated the alarm
@@ -364,22 +370,28 @@ class AlarmsController @Inject constructor(
 			if (originalSeriesStart >= originalSeriesEnd) return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "The startTime: ${this@AlarmsController.getTimeInHumanReadableFormatProtectFrom0Included(originalSeriesStart)} is not less than endTime: ${this.getTimeInHumanReadableFormatProtectFrom0Included(originalSeriesEnd)}"))
 			when {
 				now > originalSeriesStart && now > originalSeriesEnd -> {
-
-					logD("Calculator: Series is in the past. Projecting to the next valid day.")
 					val alarmSeriesDuration = originalSeriesEnd - originalSeriesStart
+					val searchFromDate = LocalDate.now(calendarNow.timeZone.toZoneId()).plusDays(1)
+
+					val nextDate: LocalDate = if (alarmData.repeatDays == null) {
+						searchFromDate // null repeatDays: legacy behavior, tomorrow is always valid
+					} else {
+						val repeatDate = alarmData.repeatDays.nextRepeatDate(searchFromDate) ?: return ResultCustom.Failure(
+							errorClass = AlarmControllerErrorSet.ValidationFailed(
+								internalErrorMessage = "repeatDays is non-null but has no valid repeat weekday configured for search starting from $searchFromDate (repeatDays=${alarmData.repeatDays})"
+							)
+						)
+						repeatDate
+					}
+
+					val origStart = Calendar.getInstance().apply { timeInMillis = originalSeriesStart }
 					val startCalendar = Calendar.getInstance().apply {
-						timeInMillis = originalSeriesStart
+						set(nextDate.year, nextDate.monthValue - 1, nextDate.dayOfMonth,
+							origStart.get(Calendar.HOUR_OF_DAY), origStart.get(Calendar.MINUTE),
+							origStart.get(Calendar.SECOND))
+						set(Calendar.MILLISECOND, origStart.get(Calendar.MILLISECOND))
 					}
-					startCalendar.apply {
-						set(Calendar.DAY_OF_YEAR, calendarNow.get(Calendar.DAY_OF_YEAR))
-						set(Calendar.MONTH, calendarNow.get(Calendar.MONTH))
-						set(Calendar.YEAR, calendarNow.get(Calendar.YEAR))
-					}
-					// if we set the alarm at 3:00 - 3:10 Pm and today it is 4:00Pm so I want it to be 3:00Pm of tomorrow
-					if (startCalendar.timeInMillis < now){
-						logD("moved the startTIme:${getTimeInHumanReadableFormat(startCalendar.timeInMillis)} to today but it is less than currentTime:${getTimeInHumanReadableFormat(now)}, so changed it to tomorrow")
-						startCalendar.add(Calendar.DAY_OF_YEAR, 1)
-					}
+
 					val newStartTime = startCalendar.timeInMillis
 					val newEndTime = newStartTime + alarmSeriesDuration
 					val nextAlarm = NextAlarmInfo(
@@ -388,9 +400,8 @@ class AlarmsController @Inject constructor(
 						newSeriesEndTime = newEndTime,
 						this@AlarmsController
 					)
-					logD("in now > seriesStart && now > seriesEnd and the updated value is $nextAlarm")
+					logD("calculateNextAlarmInfo (past series) -> $nextAlarm, repeatDays=${alarmData.repeatDays}")
 					return@runCatching nextAlarm
-
 				}
 
 				now < originalSeriesStart && now < originalSeriesEnd -> {
