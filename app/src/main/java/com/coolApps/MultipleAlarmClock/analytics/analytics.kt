@@ -1,6 +1,7 @@
 package com.coolApps.MultipleAlarmClock.analytics
 
 import android.content.Context
+import android.os.Build
 import androidx.core.content.edit
 import com.coolApps.MultipleAlarmClock.BuildConfig
 import com.coolApps.MultipleAlarmClock.logD
@@ -41,32 +42,55 @@ class Analytics(
 	){
 	private var isFeatureFlagsLoaded = false
 	companion object {
-		const val POSTHOG_API_KEY = "phc_wFUsQjwTmEznOhwyNUeAD0fe70cGWr5MuWRSjJMh5Cb"
 		const val POSTHOG_HOST = "https://us.i.posthog.com"
+
+		fun isRunningOnEmulator(): Boolean {
+			return (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
+					|| Build.FINGERPRINT.startsWith("generic")
+					|| Build.FINGERPRINT.startsWith("unknown")
+					|| Build.HARDWARE.contains("goldfish")
+					|| Build.HARDWARE.contains("ranchu")
+					|| Build.MODEL.contains("google_sdk")
+					|| Build.MODEL.contains("Emulator")
+					|| Build.MODEL.contains("Android SDK built for x86")
+					|| Build.MANUFACTURER.contains("Genymotion")
+					|| Build.PRODUCT.contains("sdk_google")
+					|| Build.PRODUCT.contains("google_sdk")
+					|| Build.PRODUCT.contains("sdk")
+					|| Build.PRODUCT.contains("sdk_x86")
+					|| Build.PRODUCT.contains("sdk_gphone")
+					|| Build.PRODUCT.contains("vbox86p")
+					|| Build.PRODUCT.contains("emulator")
+					|| Build.PRODUCT.contains("simulator")
+		}
 	}
+
+	val isEnabled: Boolean = !BuildConfig.DEBUG &&
+			!BuildConfig.SKIP_POSTHOG &&
+			BuildConfig.POSTHOG_API_KEY.isNotBlank() &&
+			!isRunningOnEmulator()
 
 	private val _featureFlagsData  = MutableStateFlow<FeatureFlagsData?>(null)
 	// null means not loaded
 	val featureFlagsData: StateFlow<FeatureFlagsData?> = _featureFlagsData.asStateFlow()
 
-	var config: PostHogAndroidConfig
+	var config: PostHogAndroidConfig? = null
 	val coroutineScope = CoroutineScope(Dispatchers.IO)
 
 	init {
-		val postHogConfig = PostHogAndroidConfig(
-			apiKey = POSTHOG_API_KEY,
-			host = POSTHOG_HOST,
-		).apply {
-				captureScreenViews= true
-				personProfiles  = PersonProfiles.ALWAYS
+		logD("Analytics isEnabled=$isEnabled (debug=${BuildConfig.DEBUG}, skipPostHog=${BuildConfig.SKIP_POSTHOG}, keyPresent=${BuildConfig.POSTHOG_API_KEY.isNotBlank()}, emulator=${isRunningOnEmulator()})")
+		if (isEnabled) {
+			val postHogConfig = PostHogAndroidConfig(
+				apiKey = BuildConfig.POSTHOG_API_KEY,
+				host = POSTHOG_HOST,
+			).apply {
+				captureScreenViews = true
+				personProfiles = PersonProfiles.ALWAYS
 				errorTrackingConfig.autoCapture = true
 				sessionReplayConfig.maskAllTextInputs = false
 				sessionReplayConfig.maskAllImages = false
 				sessionReplayConfig.captureLogcat = true
 				sessionReplay = true
-				debug = BuildConfig.DEBUG
-				optOut = BuildConfig.DEBUG || BuildConfig.SKIP_POSTHOG
-				sessionReplayConfig.captureLogcat = true
 				sessionReplayConfig.screenshot = true
 				onFeatureFlags = PostHogOnFeatureFlags {
 					isFeatureFlagsLoaded = true
@@ -74,18 +98,27 @@ class Analytics(
 						loadFeatureFlagsFromPostHog()
 					}
 				}
-
-		}
-		PostHogAndroid.setup(context, postHogConfig)
-		logD("the buildConfig.Debug is ${BuildConfig.DEBUG} and SkipPostHog:${BuildConfig.SKIP_POSTHOG}")
-		config = postHogConfig
-		coroutineScope.launch {
-			identifyAnonymousUser()
+			}
+			PostHogAndroid.setup(context, postHogConfig)
+			PostHog.optIn()
+			config = postHogConfig
+			coroutineScope.launch {
+				identifyAnonymousUser()
+			}
+		} else {
+			// Provide fallback default feature flags so app doesn't hang in debug / emulator
+			_featureFlagsData.value = FeatureFlagsData(
+				inAppReviewEnabled = false,
+				minAlarmsCreated = 3,
+				cooldownDays = 7,
+				minDaysSinceInstall = 3
+			)
 		}
 	}
 
 	private fun getIntFeatureFlag(key: String): Int? {
-		val value = PostHog.getFeatureFlagResult(key, sendFeatureFlagEvent = true) ?: return  null
+		if (!isEnabled) return null
+		val value = PostHog.getFeatureFlagResult(key, sendFeatureFlagEvent = isEnabled) ?: return null
 		return when (val payload = value.payload) {
 			is Number -> payload.toInt()   // remote config numbers come back as Double from JSON
 			is String -> payload.toIntOrNull()
@@ -95,6 +128,7 @@ class Analytics(
 
 
 	private fun loadFeatureFlagsFromPostHog() {
+		if (!isEnabled) return
 		val enabled = PostHog.isFeatureEnabled(FeatureFlagKeys.IN_APP_REVIEW_ENABLED, defaultValue = true)
 		val minAlarms = getIntFeatureFlag(FeatureFlagKeys.MIN_ALARMS_CREATED)
 		val cooldownDays = getIntFeatureFlag(FeatureFlagKeys.COOLDOWN_DAYS)
@@ -120,6 +154,14 @@ class Analytics(
 	}
 
 	fun getEngagementConfig(): EngagementConfig {
+		if (!isEnabled) {
+			return EngagementConfig(
+				enabled = false,
+				inactiveDays = 3L,
+				checkIntervalHours = 12L,
+				notificationTimeSlot = OfflineNotificationTimeSlot.Night
+			)
+		}
 
 		val enabled =
 			PostHog.isFeatureEnabled(
@@ -164,6 +206,10 @@ class Analytics(
 	}
 
 	fun captureEvent(event: String, properties: Map<String, Any>): Unit {
+		if (!isEnabled) {
+			logD("PostHog disabled: skipping captureEvent($event)")
+			return
+		}
 		PostHog.capture(
 			event = event,
 			properties = properties
@@ -171,6 +217,7 @@ class Analytics(
 	}
 
 	fun captureLog(message: String, severity: PostHogLogSeverity = PostHogLogSeverity.DEBUG) {
+		if (!isEnabled) return
 		when (severity) {
 			PostHogLogSeverity.TRACE -> PostHog.logger.trace(message)
 			PostHogLogSeverity.DEBUG -> PostHog.logger.debug(message)
@@ -183,6 +230,7 @@ class Analytics(
 
 
 	fun setFcmToken(fid: String) {
+		if (!isEnabled) return
 		PostHog.capture(
 			event = "fcm_token_updated",
 			properties = mapOf("fcm_token" to fid),
@@ -191,10 +239,15 @@ class Analytics(
 	}
 
 	fun screen(screenName: String, properties: Map<String, Any>? = null){
+		if (!isEnabled) {
+			logD("PostHog disabled: skipping screen($screenName)")
+			return
+		}
 		PostHog.screen(screenName, properties)
 	}
 
 	 fun identifyAnonymousUser() {
+		 if (!isEnabled) return
 		 logD("called identifyAnonymousUser")
 		 val client = AppSet.getClient(context)
 		 val task: Task<AppSetIdInfo> = client.appSetIdInfo

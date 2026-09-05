@@ -26,6 +26,10 @@ fun Project.configureAndroid() {
         ?: project.findProperty("REVENUECAT_API_KEY")?.toString()
         ?: "test_iTBvEbpLqrrFccKaYXPOWMgAYBI"
 
+    val postHogApiKey = System.getenv("POSTHOG_API_KEY")
+        ?: project.findProperty("POSTHOG_API_KEY")?.toString()
+        ?: ""
+
     extensions.configure<ApplicationExtension> {
 
         namespace = "com.coolApps.MultipleAlarmClock"
@@ -77,7 +81,9 @@ fun Project.configureAndroid() {
 //                    "debug-$myAppName"
                 }
                 val skipPostHog = project.findProperty("skipPostHog")?.toString() == "true"
+                val resolvedPostHogKey = if (skipPostHog) "" else postHogApiKey
                 buildConfigField("boolean", "SKIP_POSTHOG", skipPostHog.toString())
+                buildConfigField("String", "POSTHOG_API_KEY", "\"$resolvedPostHogKey\"")
                 resValue("string", "app_name", appName)
                 isShrinkResources = true
                 isMinifyEnabled = true
@@ -87,6 +93,7 @@ fun Project.configureAndroid() {
             debug {
 				resValue("string", "app_name", myAppName)
                 buildConfigField("boolean", "SKIP_POSTHOG", "true")
+                buildConfigField("String", "POSTHOG_API_KEY", "\"\"")
             }
         }
 
