@@ -121,7 +121,7 @@ class AlarmsController @Inject constructor(
 			insertedAlarmData.validate().let {
 				if (it != AlarmDataValidationResult.Success) return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "AlarmData validation failed, and res:$it"))
 			}
-			val timeReturned = insertedAlarmData.getNextAlarmTriggerTime() ?: return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "Can't get first alarm to start the series\n alarmData:$insertedAlarmData"))
+			val timeReturned = insertedAlarmData.getNextAlarmTriggerTime() ?: return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "[startAlarmSeriesHandler] Can't get first alarm to start the series\n alarmData:$insertedAlarmData"))
 			scheduleAlarm(alarmData = insertedAlarmData, alarmManager = alarmManager, alarmTriggerTime = timeReturned, componentActivity = activityContext, receiverClass = receiverClass).fold(
 				onSuccess = {},
 				onError = { failureRes ->
@@ -344,7 +344,7 @@ class AlarmsController @Inject constructor(
 		){
 			val newAlarm =	alarmData.rollOverIfTimeIntervalPassed().copy(isReadyToUse = true)
 			val newTriggerTime = newAlarm.getNextAlarmTriggerTime() ?:
-				return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "Can't get first alarm to start the series\n alarmData:$newAlarm"))
+				return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "[resetAlarmsHandler]Can't get first alarm to start the series\n alarmData:$newAlarm"))
 
 			val validationRes = newAlarm.validate()
 			if (validationRes != AlarmDataValidationResult.Success){ return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = validationRes.errorMessage())) }

@@ -14,7 +14,7 @@ value class RepeatDays(val bits: Int) {
     }
 
 	override fun toString(): String {
-		return "RepeatDays:bit:$bits"
+		return "RepeatDays(bit):$bits"
 	}
     fun isSet(day: DayOfWeek): Boolean = (bits and bitFor(day)) != 0
     fun with(day: DayOfWeek): RepeatDays = RepeatDays(bits or bitFor(day))

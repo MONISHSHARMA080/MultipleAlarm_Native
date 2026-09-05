@@ -459,9 +459,8 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		_uiState.update { state ->
 			val currentSet = state.alarmData.repeatDays?.toSet() ?: emptySet()
 			val newSet = if (day in currentSet) currentSet - day else currentSet + day
-			val updated = state.alarmData.copy(repeatDays = RepeatDays.of(newSet))
+			val updated = state.alarmData.copy(repeatDays = RepeatDays.of(newSet)).rollOverIfTimeIntervalPassed()
 			state.copy(alarmData = updated, validationResult = updated.validate())
 		}
-
 	}
 }
