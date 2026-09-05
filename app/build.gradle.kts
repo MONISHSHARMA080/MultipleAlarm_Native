@@ -22,6 +22,10 @@ val myAppName="Multiple alarms"
 configureAndroid()
 fun Project.configureAndroid() {
 
+    val revenueCatApiKey = System.getenv("REVENUECAT_API_KEY")
+        ?: project.findProperty("REVENUECAT_API_KEY")?.toString()
+        ?: "test_iTBvEbpLqrrFccKaYXPOWMgAYBI"
+
     extensions.configure<ApplicationExtension> {
 
         namespace = "com.coolApps.MultipleAlarmClock"
@@ -33,7 +37,7 @@ fun Project.configureAndroid() {
             targetSdk = 37
             versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
             versionName = project.findProperty("versionName") as String? ?: "1.0.0"
-
+			buildConfigField("String", "REVENUECAT_API_KEY", "\"$revenueCatApiKey\"")
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
             vectorDrawables {
@@ -117,9 +121,6 @@ fun Project.configureAndroid() {
 
             }
         }
-//        sourceSets {
-//            getByName("test").assets.srcDir("$projectDir/schemas")
-//        }
     }
 }
 
@@ -159,7 +160,9 @@ dependencies {
 	implementation(platform(libs.firebase.bom))
 //	implementation(libs.firebase.functions.ktx)
 	implementation(libs.firebase.messaging)
-    implementation("com.google.dagger:hilt-android:2.60.1")
+    implementation(libs.hilt.android)
+	implementation("com.revenuecat.purchases:purchases:10.20.0")
+	implementation("com.revenuecat.purchases:purchases-ui:10.20.0")
 	implementation(libs.androidx.compose.animation.core)
 	implementation(libs.androidx.compose.ui)
 	implementation(libs.androidx.datastore.core)

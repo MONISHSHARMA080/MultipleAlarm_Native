@@ -368,7 +368,6 @@ fun RepeatDaysRow(
 						value = textValue,
 						onValueChange = { newValue ->
 							val digitsOnly = newValue.filter { it.isDigit() }
-//							digitsOnly.toLongOrNull()?.let { onValueChange(it) } ?: onValueChange(0)
 							// Only propagate when we actually have a parseable value.
 							// Empty (e.g. user backspaced everything) stays local-only.
 							textValue = digitsOnly
@@ -389,6 +388,7 @@ fun RepeatDaysRow(
 					IconButton(
 						onClick = {
 							if (value + 1 <= 700) {
+								view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 								onValueChange(value + 1)
 							} else {
 								view.performHapticFeedback(HapticFeedbackConstants.REJECT)
