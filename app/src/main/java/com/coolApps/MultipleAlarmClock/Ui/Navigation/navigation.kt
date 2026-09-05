@@ -27,6 +27,9 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmContainer.AlarmConta
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmContainer.utils.SettingsScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.AlarmFlowScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.OnboardingScreen
+import com.revenuecat.purchases.ui.revenuecatui.Paywall
+import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
+import com.revenuecat.purchases.ui.revenuecatui.customercenter.CustomerCenter
 import kotlinx.coroutines.launch
 
 
@@ -108,6 +111,12 @@ fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) 
 					SettingsScreen(
 						onNavigateBack = {
 							backStack.removeLastOrNull() ?: backStack.add(Screen.AlarmContainer)
+						},
+						onNavigateToPaywall = {
+							backStack.add(Screen.Paywall)
+						},
+						onNavigateToCustomerCenter = {
+							backStack.add(Screen.CustomerCenter)
 						}
 					)
 				}
@@ -160,6 +169,20 @@ fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) 
 							)
 						)
 					}
+				}
+
+				entry<Screen.Paywall> {
+					Paywall(
+						options = PaywallOptions.Builder(
+							dismissRequest = { backStack.removeLastOrNull() }
+						).build()
+					)
+				}
+
+				entry<Screen.CustomerCenter> {
+					CustomerCenter(
+						onDismiss = { backStack.removeLastOrNull() }
+					)
 				}
 			}
 		)

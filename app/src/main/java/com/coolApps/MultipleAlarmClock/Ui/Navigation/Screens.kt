@@ -1,7 +1,7 @@
 package com.coolApps.MultipleAlarmClock.Ui.Navigation
 
-import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import androidx.navigation3.runtime.NavKey
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import kotlinx.serialization.Serializable
 
 
@@ -20,6 +20,12 @@ sealed interface Screen : NavKey {
 
 	@Serializable
 	data object SettingsScreen : Screen
+
+	@Serializable
+	data object Paywall : Screen
+
+	@Serializable
+	data object CustomerCenter : Screen
 }
 
 @Serializable

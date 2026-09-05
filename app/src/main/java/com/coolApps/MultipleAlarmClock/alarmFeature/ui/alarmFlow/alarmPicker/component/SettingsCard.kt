@@ -3,7 +3,13 @@ package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.co
 //import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
 //import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
 import android.view.HapticFeedbackConstants
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -40,10 +46,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalView
@@ -65,6 +73,7 @@ import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields
+import kotlinx.coroutines.launch
 
 
 @Composable fun SettingsCard(
@@ -164,7 +173,6 @@ fun RepeatDaysRow(
 		val first = WeekFields.of(locale).firstDayOfWeek
 		(0..6).map { first.plus(it.toLong()) }
 	}
-	val view = LocalView.current
 
 	Column(
 		modifier = Modifier
@@ -182,30 +190,79 @@ fun RepeatDaysRow(
 			horizontalArrangement = Arrangement.SpaceBetween
 		) {
 			orderedDays.forEach { day ->
-				val isSelected = day in selectedDays
-				val narrowLabel = day.getDisplayName(TextStyle.NARROW, locale)
-				val fullLabel = day.getDisplayName(TextStyle.FULL, locale)
-
-				Surface(
-					shape = CircleShape,
-					color = if (isSelected) colorScheme.primaryContainer else colorScheme.surfaceContainerHighest,
-					modifier = Modifier
-						.size(40.dp)
-						.clickable {
-							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-							onDayToggled(day)
-						}
-						.semantics { contentDescription = fullLabel }
-				) {
-					Box(contentAlignment = Alignment.Center) {
-						Text(
-							text = narrowLabel,
-							style = typography.labelLarge,
-							color = if (isSelected) colorScheme.onPrimaryContainer else colorScheme.onSurfaceVariant
-						)
-					}
-				}
+				RepeatDayButton(
+					day = day,
+					isSelected = day in selectedDays,
+					onToggle = onDayToggled
+				)
 			}
+		}
+	}
+}
+
+@Composable
+private fun RepeatDayButton(
+	day: DayOfWeek,
+	isSelected: Boolean,
+	onToggle: (DayOfWeek) -> Unit,
+	modifier: Modifier = Modifier
+) {
+	val locale = LocalLocale.current.platformLocale
+	val narrowLabel = remember(day, locale) { day.getDisplayName(TextStyle.NARROW, locale) }
+	val fullLabel = remember(day, locale) { day.getDisplayName(TextStyle.FULL, locale) }
+	val view = LocalView.current
+	val coroutineScope = rememberCoroutineScope()
+	val scale = remember { Animatable(1f) }
+
+	val containerColor by animateColorAsState(
+		targetValue = if (isSelected) colorScheme.primaryContainer else colorScheme.surfaceContainerHighest,
+		animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
+		label = "day_container_color"
+	)
+	val contentColor by animateColorAsState(
+		targetValue = if (isSelected) colorScheme.onPrimaryContainer else colorScheme.onSurfaceVariant,
+		animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
+		label = "day_content_color"
+	)
+
+	Surface(
+		shape = CircleShape,
+		color = containerColor,
+		modifier = modifier
+			.size(40.dp)
+			.graphicsLayer {
+				scaleX = scale.value
+				scaleY = scale.value
+			}
+			.clickable {
+				view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+				coroutineScope.launch {
+					scale.snapTo(1f)
+					scale.animateTo(
+						targetValue = 1.22f,
+						animationSpec = spring(
+							dampingRatio = Spring.DampingRatioMediumBouncy,
+							stiffness = Spring.StiffnessMedium
+						)
+					)
+					scale.animateTo(
+						targetValue = 1f,
+						animationSpec = spring(
+							dampingRatio = Spring.DampingRatioMediumBouncy,
+							stiffness = Spring.StiffnessMediumLow
+						)
+					)
+				}
+				onToggle(day)
+			}
+			.semantics { contentDescription = fullLabel }
+	) {
+		Box(contentAlignment = Alignment.Center) {
+			Text(
+				text = narrowLabel,
+				style = typography.labelLarge,
+				color = contentColor
+			)
 		}
 	}
 }

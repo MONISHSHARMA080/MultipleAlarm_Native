@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.WorkspacePremium
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,6 +33,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,9 +54,12 @@ import com.coolApps.MultipleAlarmClock.logD
 @Composable
 fun SettingsScreen(
 	onNavigateBack: () -> Unit,
+	onNavigateToPaywall: () -> Unit,
+	onNavigateToCustomerCenter: () -> Unit,
 ) {
 	var feedbackText by rememberSaveable { mutableStateOf("") }
 	val settingsViewModel: SettingsViewModel = hiltViewModel()
+	val isPro by settingsViewModel.isPro.collectAsState()
 	val context = LocalContext.current
 
 	Scaffold(
@@ -78,6 +83,13 @@ fun SettingsScreen(
 				.verticalScroll(rememberScrollState()),
 			verticalArrangement = Arrangement.spacedBy(16.dp)
 		) {
+			PremiumSection(
+				isPro = isPro,
+				onGoProClick = onNavigateToPaywall,
+				onManageSubscriptionClick = onNavigateToCustomerCenter,
+				modifier = Modifier.fillMaxWidth()
+			)
+
 			FeedbackCardContent(
 				feedbackText = feedbackText,
 				onFeedbackChange = { feedbackText = it },
@@ -99,6 +111,51 @@ fun SettingsScreen(
 				modifier = Modifier.fillMaxWidth()
 			)
 
+		}
+	}
+}
+
+@Composable
+fun PremiumSection(
+	isPro: Boolean,
+	onGoProClick: () -> Unit,
+	onManageSubscriptionClick: () -> Unit,
+	modifier: Modifier = Modifier
+) {
+	Card(
+		modifier = modifier.fillMaxWidth(),
+		shape = RoundedCornerShape(20.dp),
+		colors = CardDefaults.cardColors(
+			containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+		),
+		elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+	) {
+		Column(
+			modifier = Modifier.padding(20.dp),
+			verticalArrangement = Arrangement.spacedBy(4.dp)
+		) {
+			Text(
+				text = "Premium",
+				style = MaterialTheme.typography.titleMedium,
+				color = MaterialTheme.colorScheme.primary,
+				modifier = Modifier.padding(bottom = 8.dp)
+			)
+
+			if (!isPro) {
+				SettingsRow(
+					icon = Icons.Outlined.WorkspacePremium,
+					title = "Go Pro",
+					subtitle = "Unlock all features and remove ads",
+					onClick = onGoProClick
+				)
+			} else {
+				SettingsRow(
+					icon = Icons.Outlined.WorkspacePremium,
+					title = "Premium Active",
+					subtitle = "Manage your subscription",
+					onClick = onManageSubscriptionClick
+				)
+			}
 		}
 	}
 }
