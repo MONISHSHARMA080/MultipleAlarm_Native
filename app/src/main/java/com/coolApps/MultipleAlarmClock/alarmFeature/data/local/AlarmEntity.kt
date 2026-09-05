@@ -37,8 +37,8 @@ data class AlarmData(
 	val endTimeCalendar: Calendar get() = Calendar.getInstance().apply { timeInMillis = endTime }
 
 	fun rollOverIfTimeIntervalPassed(now: Calendar = Calendar.getInstance()): AlarmData{
-		// Keep advancing a full day at a time until the interval's end is no longer
-		// in the past. This lets an alarm that's several days stale jump straight to
+		// Keep advancing a full day at a time until the interval's end is no longer in the past.
+		// This lets an alarm that's several days stale jump straight to
 		// the right date in one shot (today, if today's slot hasn't passed yet -
 		// otherwise tomorrow) instead of needing one call per day of drift.
 		val durationMillis = endTime - startTime
@@ -67,7 +67,8 @@ data class AlarmData(
 			sound = this.sound,
 			message = this.message,
 			isReadyToUse = this.isReadyToUse,
-			repeatDays = this.repeatDays
+			repeatDays = this.repeatDays,
+			id = id
 		)
 	}
 
@@ -79,6 +80,12 @@ data class AlarmData(
 			yield(current)
 			current += getFreqInMillisecond()
 		}
+	}
+
+	// long means that the time is not found
+	fun getNextAlarmTriggerTime(now: Calendar = Calendar.getInstance()): Long? {
+		return alarmTimeSequence().firstOrNull{ it > now.timeInMillis }
+
 	}
 
 	fun getFreqInMillisecond(): Long {
