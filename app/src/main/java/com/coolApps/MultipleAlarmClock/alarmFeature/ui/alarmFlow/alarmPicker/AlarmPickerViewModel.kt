@@ -15,6 +15,7 @@ import com.coolApps.MultipleAlarmClock.Data.dataStore.copy
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDataValidationResult
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.RepeatDays
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.Permissions.PermissionUtils
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.data.AlarmSound
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
@@ -34,6 +35,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.DayOfWeek
 import java.util.Calendar
 
 @HiltViewModel(assistedFactory = AlarmPickerViewModel.Factory::class)
@@ -384,22 +386,6 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		}
 	}
 
-
-//	private fun validateForCurrentStep(
-//		progress: Progress,
-//		alarm: AlarmData
-//	):  AlarmDataValidationResult{
-//		return when (progress) {
-//			Progress.StartTime -> {
-//				AlarmDataValidationResult.Success
-//			}
-//			else-> {
-//				alarm.validate()
-//			}
-//		}
-//	}
-
-
 	/**[setNewOrUpdateAlarm] - sets a new alarm or updates an existing one*/
 	private fun setNewOrUpdateAlarm(newAlarmData: AlarmData, oldAlarm: AlarmData? ){
 		when (oldAlarm) {
@@ -432,12 +418,6 @@ class AlarmPickerViewModel @AssistedInject constructor(
 				//  oldAlarm was there so editing an existing alarm
 				viewModelScope.launch {
 					logD("deleting the alarm $oldAlarm")
-//					alarmsController.updateAlarmStateInDb(oldAlarm).fold(onSuccess = {}, onError = { error ->
-//						// no such alarm exist in DB so can't update it
-//						logD("there is a error while editing the alarm and updating it's state in DB and  that is ${error.internalErrorMessage}")
-//						errorHandler.handleError(Result.Failure(error))
-//					}
-//					)
 					val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(
 						alarm = newAlarmData.copy(id = oldAlarm.id),
 						alarmManager, context
@@ -473,5 +453,15 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		super.onCleared()
 		stopPreview()
 		playAlarm.destroy()
+	}
+
+	fun toggleRepeatDay(day: DayOfWeek) {
+		_uiState.update { state ->
+			val currentSet = state.alarmData.repeatDays?.toSet() ?: emptySet()
+			val newSet = if (day in currentSet) currentSet - day else currentSet + day
+			val updated = state.alarmData.copy(repeatDays = RepeatDays.of(newSet))
+			state.copy(alarmData = updated, validationResult = updated.validate())
+		}
+
 	}
 }

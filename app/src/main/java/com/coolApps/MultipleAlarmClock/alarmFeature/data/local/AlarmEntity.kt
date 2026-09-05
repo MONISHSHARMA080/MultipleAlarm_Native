@@ -6,6 +6,8 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -35,25 +37,30 @@ data class AlarmData(
 	val endTimeCalendar: Calendar get() = Calendar.getInstance().apply { timeInMillis = endTime }
 
 	fun rollOverIfTimeIntervalPassed(now: Calendar = Calendar.getInstance()): AlarmData{
-		val durationMillis = endTime - startTime
-		val startCalendar = Calendar.getInstance().apply {timeInMillis = startTime  }
-		val endCalendar = Calendar.getInstance().apply {timeInMillis = endTime  }
-
-
 		// Keep advancing a full day at a time until the interval's end is no longer
 		// in the past. This lets an alarm that's several days stale jump straight to
 		// the right date in one shot (today, if today's slot hasn't passed yet -
 		// otherwise tomorrow) instead of needing one call per day of drift.
+		val durationMillis = endTime - startTime
+		val startCalendar = Calendar.getInstance().apply { timeInMillis = startTime }
 		while (startCalendar.timeInMillis + durationMillis < now.timeInMillis) {
 			startCalendar.add(Calendar.DAY_OF_YEAR, 1)
+		}
+		// Step 2: if repeat days are set, keep advancing until we land on one of them.
+		// Bounded to at most 6 extra iterations since RepeatDays can never be empty.
+		repeatDays?.let { days ->
+				val landedOn = startCalendar.toLocalDate()
+				val nextValid = days.nextRepeatDate(landedOn) ?: landedOn
+				val deltaDays = ChronoUnit.DAYS.between(landedOn, nextValid).toInt()
+				if (deltaDays > 0) {
+					startCalendar.add(Calendar.DAY_OF_YEAR, deltaDays)
+				}
 		}
 
 		val candidateEnd = (startCalendar.clone() as Calendar).apply {
 			timeInMillis = startCalendar.timeInMillis + durationMillis
 		}
-
 		return AlarmData(
-//			id = this.id,
 			startTime = startCalendar.timeInMillis,
 			endTime = candidateEnd.timeInMillis,
 			frequencyInMin = this.frequencyInMin,
@@ -63,6 +70,8 @@ data class AlarmData(
 			repeatDays = this.repeatDays
 		)
 	}
+
+	private fun Calendar.toLocalDate(): LocalDate = LocalDate.of(get(Calendar.YEAR), get(Calendar.MONTH) + 1, get(Calendar.DAY_OF_MONTH))
 
 	fun alarmTimeSequence(): Sequence<Long> = sequence {
 		var current = startTime

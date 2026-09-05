@@ -385,6 +385,7 @@ fun AlarmPickerScreen(
                 messageValueChanged = { viewModel.updateMessage(it) },
                 calenderButtonClicked = { showCalendar = true },
                 selectSoundButtonClicked = onNavigateToSoundList,
+				  repeatDayToggled = {day -> viewModel.toggleRepeatDay(day)},
                 selectedSoundName = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random)
               )
 				Spacer(modifier = Modifier.weight(0.04f))

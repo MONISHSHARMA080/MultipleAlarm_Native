@@ -6,15 +6,18 @@ import android.view.HapticFeedbackConstants
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -22,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Message
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.EventRepeat
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Timer
@@ -44,6 +48,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -56,6 +62,9 @@ import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerUiState
 import java.text.SimpleDateFormat
+import java.time.DayOfWeek
+import java.time.format.TextStyle
+import java.time.temporal.WeekFields
 
 
 @Composable fun SettingsCard(
@@ -65,7 +74,7 @@ import java.text.SimpleDateFormat
 	updateFrequency: (Long) -> Unit,
 	calenderButtonClicked: () -> Unit,
 	selectSoundButtonClicked: () -> Unit,
-
+	repeatDayToggled: (DayOfWeek) -> Unit
 ){
 	// 5. Settings Card (Name & Sound)
 	Surface(
@@ -74,6 +83,18 @@ import java.text.SimpleDateFormat
 		modifier = Modifier.fillMaxWidth()
 	) {
 		Column {
+
+			RepeatDaysRow(
+				icon = Icons.Rounded.EventRepeat,
+				title = stringResource(R.string.alarm_picker_repeat_days),
+				selectedDays = uiState.alarmData.repeatDays?.toSet() ?: emptySet(),
+				onDayToggled = repeatDayToggled
+			)
+			HorizontalDivider(
+				modifier = Modifier.padding(horizontal = 16.dp),
+				color = colorScheme.outlineVariant,
+			)
+
 			FrequencyRow(
 				icon = Icons.Rounded.Timer,
 				title = stringResource(R.string.alarm_picker_repeat_every),
@@ -126,6 +147,65 @@ import java.text.SimpleDateFormat
 				onValueChange = messageValueChanged,
 			)
 
+		}
+	}
+}
+
+
+@Composable
+fun RepeatDaysRow(
+		icon: ImageVector,
+		title: String,
+		selectedDays: Set<DayOfWeek>,
+		onDayToggled: (DayOfWeek) -> Unit,
+) {
+	val locale = LocalLocale.current.platformLocale
+	val orderedDays = remember(locale) {
+		val first = WeekFields.of(locale).firstDayOfWeek
+		(0..6).map { first.plus(it.toLong()) }
+	}
+	val view = LocalView.current
+
+	Column(
+		modifier = Modifier
+			.fillMaxWidth()
+			.padding(horizontal = 16.dp, vertical = 12.dp)
+	) {
+		Row(verticalAlignment = Alignment.CenterVertically) {
+			Icon(imageVector = icon, contentDescription = null, tint = colorScheme.onSurfaceVariant)
+			Spacer(modifier = Modifier.width(16.dp))
+			Text(text = title, color = colorScheme.onBackground, style = typography.titleSmall)
+		}
+		Spacer(modifier = Modifier.height(12.dp))
+		Row(
+			modifier = Modifier.fillMaxWidth(),
+			horizontalArrangement = Arrangement.SpaceBetween
+		) {
+			orderedDays.forEach { day ->
+				val isSelected = day in selectedDays
+				val narrowLabel = day.getDisplayName(TextStyle.NARROW, locale)
+				val fullLabel = day.getDisplayName(TextStyle.FULL, locale)
+
+				Surface(
+					shape = CircleShape,
+					color = if (isSelected) colorScheme.primaryContainer else colorScheme.surfaceContainerHighest,
+					modifier = Modifier
+						.size(40.dp)
+						.clickable {
+							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+							onDayToggled(day)
+						}
+						.semantics { contentDescription = fullLabel }
+				) {
+					Box(contentAlignment = Alignment.Center) {
+						Text(
+							text = narrowLabel,
+							style = typography.labelLarge,
+							color = if (isSelected) colorScheme.onPrimaryContainer else colorScheme.onSurfaceVariant
+						)
+					}
+				}
+			}
 		}
 	}
 }

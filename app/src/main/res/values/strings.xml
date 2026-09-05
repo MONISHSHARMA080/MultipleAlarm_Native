@@ -37,6 +37,7 @@
     <string name="alarm_picker_btn_change">Change something</string>
     <string name="alarm_picker_btn_fix">Fix the error</string>
     <string name="alarm_picker_repeat_every">Ring every</string>
+    <string name="alarm_picker_repeat_days">Repeat daily</string>
     <string name="alarm_picker_sound">sound</string>
     <string name="alarm_picker_sound_random">Random</string>
     <string name="alarm_picker_message">message</string>

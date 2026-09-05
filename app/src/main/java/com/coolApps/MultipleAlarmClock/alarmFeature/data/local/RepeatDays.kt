@@ -28,11 +28,10 @@ value class RepeatDays(val bits: Int) {
             .firstOrNull { isSet(it.dayOfWeek) }
 
     companion object {
-        val EVERY_DAY = RepeatDays(0b1111111)
-        private fun bitFor(day: DayOfWeek) = 1 shl (day.value - 1)
-//        fun of(vararg days: DayOfWeek): RepeatDays {
-//            require(days.isNotEmpty()) { "Use null on AlarmData instead of RepeatDays.of() with no days" }
-//            return RepeatDays(days.fold(0) { acc, d -> acc or bitFor(d) })
-//        }
+		private fun bitFor(day: DayOfWeek) = 1 shl (day.value - 1)
+
+		fun of(days: Set<DayOfWeek>): RepeatDays? =
+			if (days.isEmpty()) null
+			else RepeatDays(days.fold(0) { acc, d -> acc or bitFor(d) })
     }
 }
