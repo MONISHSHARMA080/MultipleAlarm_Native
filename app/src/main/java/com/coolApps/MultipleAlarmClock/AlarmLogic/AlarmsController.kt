@@ -49,12 +49,12 @@ class AlarmsController @Inject constructor(
 	private val alarmReceiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java
 
 	data class PendingIntentCreated(
-			/** [pendingIntentToGiveUserUpcommingAlarmInfoWhenAsked] is for what happens when the user clicks on the upcoming alarm notification in the notification shade, we have to give info about alarm */
-			val pendingIntentToGiveUserUpcommingAlarmInfoWhenAsked: PendingIntent?,
+			/** [pendingIntentToGiveUserUpcomingAlarmInfoWhenAsked] is for what happens when the user clicks on the upcoming alarm notification in the notification shade, we have to give info about alarm */
+			val pendingIntentToGiveUserUpcomingAlarmInfoWhenAsked: PendingIntent?,
 			val pendingIntentForAlarm: PendingIntent
 	){
 		override fun toString(): String {
-			return "pendingIntentForAlarmNotificationInfo--$pendingIntentToGiveUserUpcommingAlarmInfoWhenAsked --  pendingIntentForAlarm--$pendingIntentForAlarm"
+			return "pendingIntentForAlarmNotificationInfo--$pendingIntentToGiveUserUpcomingAlarmInfoWhenAsked --  pendingIntentForAlarm--$pendingIntentForAlarm"
 		}
 	}
 
@@ -65,8 +65,8 @@ class AlarmsController @Inject constructor(
 			val res =alarmData.validate()
 			if (res != AlarmDataValidationResult.Success) return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed (internalErrorMessage ="AlarmData validation failed, and res:$res" ))
 			val resultForAlarmOpr = getPendingIntentForAlarm(receiverClass = receiverClass, context = componentActivity, alarmTriggerTime, alarmData = alarmData)
-			val PIForAlarm = resultForAlarmOpr.fold(
-				onSuccess = {PI -> PI},
+			val piForAlarm = resultForAlarmOpr.fold(
+				onSuccess = {pi -> pi},
 				onError = {failureRes->
 					return when(failureRes){
 						is AlarmControllerErrorSet.Unknown -> ResultCustom.Failure(errorClass = failureRes )
@@ -74,8 +74,8 @@ class AlarmsController @Inject constructor(
 					}
 				}
 			)
-			val alarmClockInfoObject = AlarmManager.AlarmClockInfo(alarmTriggerTime, PIForAlarm.pendingIntentToGiveUserUpcommingAlarmInfoWhenAsked)
-			alarmManager.setAlarmClock(alarmClockInfoObject, PIForAlarm.pendingIntentForAlarm)
+			val alarmClockInfoObject = AlarmManager.AlarmClockInfo(alarmTriggerTime, piForAlarm.pendingIntentToGiveUserUpcomingAlarmInfoWhenAsked)
+			alarmManager.setAlarmClock(alarmClockInfoObject, piForAlarm.pendingIntentForAlarm)
 			logD("Alarm successfully scheduled.")
 		}
 	}
@@ -259,7 +259,9 @@ class AlarmsController @Inject constructor(
 
 	// schedule the next alarm and if error notify the user
 	suspend fun  scheduleNextAlarmInSeries(alarmIntent: AlarmActivityIntentData) {
+
 		// TODO: this class shouldn't handle error as that  should be done in the alarm Receiver
+
 		val alarmData: AlarmData? = alarmRepository.getAlarmById(alarmIntent.alarmIdInDb)
 
 		if (alarmData == null) {
@@ -374,7 +376,7 @@ class AlarmsController @Inject constructor(
 	}
 
 	// gives you an intent with the data class as extras
-	fun intentAsAlarmActionData( action:String = ALARM_ACTION, alarmData: AlarmData, alarmTriggerTime: Long, receiverClass:Class<out BroadcastReceiver>): Intent{
+	private fun intentAsAlarmActionData( action:String = ALARM_ACTION, alarmData: AlarmData, alarmTriggerTime: Long, receiverClass:Class<out BroadcastReceiver>): Intent{
 		val intent = Intent(ALARM_ACTION)
 		val intentData = AlarmActivityIntentData(
 			startTimeForDb = alarmData.startTime, alarmTriggerTime = alarmTriggerTime, endTime = alarmData.endTime,

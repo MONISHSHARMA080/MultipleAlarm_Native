@@ -114,12 +114,12 @@ data class AlarmData(
 		}
 		// maybe for the weekday check is the bit a day of week, for future
 
-//		if (repeatDays != null) {
-//			val localDate = LocalDate.ofInstant(startCalendar.toInstant(), startCalendar.timeZone.toZoneId())
-//			if (!repeatDays.isSet(localDate.dayOfWeek)) {
-//				return AlarmDataValidationResult.WeekdayMismatch("Start date weekday (${localDate.dayOfWeek}) is not in configured repeatDays ($repeatDays)")
-//			}
-//		}
+		if (repeatDays != null) {
+			val localDate = startCalendar.toLocalDate()
+			if (!repeatDays.isSet(localDate.dayOfWeek)) {
+				return AlarmDataValidationResult.WeekdayMismatch("Start date weekday (${localDate.dayOfWeek}) is not in configured repeatDays ($repeatDays)")
+			}
+		}
 
 		return AlarmDataValidationResult.Success
 	}
@@ -141,7 +141,7 @@ sealed class AlarmDataValidationResult(
 	data class IntervalNotInFuture( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
 	data class DifferentDate( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
 	data class Frequency( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
-//	data class WeekdayMismatch( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
+	data class WeekdayMismatch( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
 
 	override fun toString(): String {
 		var err = errorMessage
@@ -156,7 +156,7 @@ sealed class AlarmDataValidationResult(
 			is IntervalNotInFuture ->"IntervalNotInFuture"
 			is DifferentDate -> "DifferentDate"
 			is Frequency -> "Frequency"
-//			is WeekdayMismatch -> "WeekdayMismatch"
+			is WeekdayMismatch -> "WeekdayMismatch"
 		}
 		return "$className, $err "
 	}
@@ -172,7 +172,7 @@ sealed class AlarmDataValidationResult(
 			is IntervalNotInFuture -> this.errorMessage
 			is DifferentDate ->this.errorMessage
 			is Frequency ->this.errorMessage
-//			is WeekdayMismatch -> this.errorMessage
+			is WeekdayMismatch -> this.errorMessage
 		}
 	}
 }
