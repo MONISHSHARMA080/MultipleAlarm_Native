@@ -1,11 +1,10 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component
 
-//import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
-//import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -69,11 +68,11 @@ import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerUiState
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields
-import kotlinx.coroutines.launch
 
 
 @Composable fun SettingsCard(
@@ -213,19 +212,42 @@ private fun RepeatDayButton(
 	val view = LocalView.current
 	val coroutineScope = rememberCoroutineScope()
 	val scale = remember { Animatable(1f) }
+	val tweenDuration = 10
+
 
 	val containerColor by animateColorAsState(
-		targetValue = if (isSelected) colorScheme.primaryContainer else colorScheme.surfaceContainerHighest,
-		animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
+		targetValue = if (isSelected) colorScheme.secondaryContainer else colorScheme.surfaceContainerHighest,
+		animationSpec = tween(durationMillis = tweenDuration, easing = FastOutLinearInEasing),
 		label = "day_container_color"
 	)
 	val contentColor by animateColorAsState(
-		targetValue = if (isSelected) colorScheme.onPrimaryContainer else colorScheme.onSurfaceVariant,
-		animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
+		targetValue = if (isSelected) colorScheme.onSecondaryContainer else colorScheme.onSurfaceVariant,
+		animationSpec = tween(durationMillis = tweenDuration, easing = FastOutSlowInEasing),
 		label = "day_content_color"
 	)
 
 	Surface(
+		onClick = {
+			view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+			coroutineScope.launch {
+				scale.snapTo(1f)
+				scale.animateTo(
+					targetValue = 1.18f,
+					animationSpec = spring(
+						dampingRatio = Spring.DampingRatioMediumBouncy,
+						stiffness = Spring.StiffnessMedium
+					)
+				)
+				scale.animateTo(
+					targetValue = 1f,
+					animationSpec = spring(
+						dampingRatio = Spring.DampingRatioMediumBouncy,
+						stiffness = Spring.StiffnessMediumLow
+					)
+				)
+			}
+			onToggle(day)
+		},
 		shape = CircleShape,
 		color = containerColor,
 		modifier = modifier
@@ -233,27 +255,6 @@ private fun RepeatDayButton(
 			.graphicsLayer {
 				scaleX = scale.value
 				scaleY = scale.value
-			}
-			.clickable {
-				view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-				coroutineScope.launch {
-					scale.snapTo(1f)
-					scale.animateTo(
-						targetValue = 1.22f,
-						animationSpec = spring(
-							dampingRatio = Spring.DampingRatioMediumBouncy,
-							stiffness = Spring.StiffnessMedium
-						)
-					)
-					scale.animateTo(
-						targetValue = 1f,
-						animationSpec = spring(
-							dampingRatio = Spring.DampingRatioMediumBouncy,
-							stiffness = Spring.StiffnessMediumLow
-						)
-					)
-				}
-				onToggle(day)
 			}
 			.semantics { contentDescription = fullLabel }
 	) {
@@ -266,6 +267,7 @@ private fun RepeatDayButton(
 		}
 	}
 }
+
 
 @Composable fun SettingRow(icon: ImageVector, title: String, value: String, onClick: () -> Unit) {
 	Row(
