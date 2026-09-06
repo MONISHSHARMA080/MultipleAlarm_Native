@@ -120,7 +120,7 @@ fun AlarmCard(
 				}
 			}
 		},
-		modifier = modifier
+		modifier = modifier.fillMaxWidth()
 	) {
 		val secondaryContentColor = contentColor.copy(alpha = 0.7f)
 

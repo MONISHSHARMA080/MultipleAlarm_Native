@@ -156,7 +156,7 @@ import kotlinx.coroutines.launch
 			}
 
 			LazyVerticalGrid(
-				columns = GridCells.Adaptive(minSize = 300.dp),
+				columns = GridCells.Adaptive(minSize = 500.dp),
 				modifier = Modifier.fillMaxSize(),
 				contentPadding = PaddingValues(
 					start = edgeToEdgePadding.calculateStartPadding(LocalLayoutDirection.current),

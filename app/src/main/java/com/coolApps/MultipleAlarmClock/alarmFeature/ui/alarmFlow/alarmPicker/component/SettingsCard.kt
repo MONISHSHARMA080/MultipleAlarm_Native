@@ -22,10 +22,12 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Message
 import androidx.compose.material.icons.rounded.Add
@@ -92,7 +94,7 @@ import kotlin.time.Duration.Companion.seconds
 		color = colorScheme.surfaceContainer,
 		modifier = Modifier.fillMaxWidth()
 	) {
-		Column {
+		Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
 
 			RepeatDaysRow(
 				icon = Icons.Rounded.EventRepeat,
@@ -296,23 +298,20 @@ private fun RepeatDayButton(
 	}
 }
 
-@Composable
-fun MessageRow(
+@Composable fun MessageRow(
 		icon: ImageVector,
 		title: String,
 		value: String,
 		onValueChange: (String) -> Unit
 ) {
 	var isTyping by remember { mutableStateOf(false) }
-
-	// Becomes false ~800ms after the last keystroke.
 	LaunchedEffect(value) {
 		if (value.isEmpty()) {
 			isTyping = false
 			return@LaunchedEffect
 		}
 		isTyping = true
-		delay(2.5.seconds)
+		delay(3.seconds)
 		isTyping = false
 	}
 
@@ -397,6 +396,7 @@ fun MessageRow(
 		)
 	}
 }
+
 
 @Composable fun FrequencyRow(
 			icon: ImageVector,
