@@ -121,7 +121,7 @@ fun FeedbackCardContent(
 
                                 // ── Title ──
                                 Text(
-                                        text = stringResource(R.string.feedback_title),
+                                        text = stringResource(R.string.feedback_card),
                                         style = MaterialTheme.typography.headlineSmall,
                                         color = MaterialTheme.colorScheme.onSurface,
                                 )
