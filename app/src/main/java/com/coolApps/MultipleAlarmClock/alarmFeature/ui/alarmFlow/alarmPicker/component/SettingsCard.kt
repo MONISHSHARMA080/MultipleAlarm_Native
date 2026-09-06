@@ -42,6 +42,7 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,12 +69,13 @@ import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerUiState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields
-
+import kotlin.time.Duration.Companion.seconds
 
 @Composable fun SettingsCard(
 	uiState: AlarmPickerUiState,
@@ -249,7 +251,7 @@ private fun RepeatDayButton(
 			onToggle(day)
 		},
 		shape = CircleShape,
-		color = containerColor,
+		color = containerColor.copy(alpha = 0.7f),
 		modifier = modifier
 			.size(40.dp)
 			.graphicsLayer {
@@ -294,59 +296,101 @@ private fun RepeatDayButton(
 	}
 }
 
-@Composable fun MessageRow(
-			icon: ImageVector,
-			title: String,
-			value: String,
-			onValueChange: (String) -> Unit
-		) {
+@Composable
+fun MessageRow(
+		icon: ImageVector,
+		title: String,
+		value: String,
+		onValueChange: (String) -> Unit
+) {
+	var isTyping by remember { mutableStateOf(false) }
+
+	// Becomes false ~800ms after the last keystroke.
+	LaunchedEffect(value) {
+		if (value.isEmpty()) {
+			isTyping = false
+			return@LaunchedEffect
+		}
+		isTyping = true
+		delay(2.5.seconds)
+		isTyping = false
+	}
+
 	Row(
 		modifier = Modifier
 			.fillMaxWidth()
 			.imePadding()
 			.padding(horizontal = 16.dp, vertical = 20.dp)
-			.animateContentSize(),
-		verticalAlignment = Alignment.CenterVertically
+			.animateContentSize(
+				animationSpec = spring(
+					dampingRatio = Spring.DampingRatioNoBouncy,
+					stiffness = Spring.StiffnessMediumLow
+				)
+			),
+		verticalAlignment = if (isTyping) {
+			Alignment.Top
+		} else {
+			Alignment.CenterVertically
+		}
 	) {
 		Icon(
 			imageVector = icon,
 			contentDescription = null,
 			tint = colorScheme.onSurfaceVariant
 		)
+
 		Spacer(modifier = Modifier.width(16.dp))
+
 		Text(
 			text = title,
 			color = colorScheme.onBackground,
 			style = typography.titleSmall
 		)
-		Spacer(modifier = Modifier.weight(0.1f))
+
+		Spacer(modifier = Modifier.width(16.dp))
+
 		BasicTextField(
 			value = value,
-			maxLines = 1,
-			minLines = 1,
 			onValueChange = onValueChange,
+
+			// Collapsed when idle, expandable while actively typing.
+			minLines = 1,
+			maxLines = if (isTyping) 4 else 1,
+
+			singleLine = !isTyping,
+
 			modifier = Modifier
 				.weight(1f)
-				.padding(start = 16.dp),
+				.padding(start = 8.dp),
+
 			textStyle = typography.bodyMedium.copy(
 				color = colorScheme.onSurface,
 				textAlign = TextAlign.End
 			),
+
 			cursorBrush = SolidColor(colorScheme.secondary),
-			singleLine = true,
+
 			decorationBox = { innerTextField ->
 				Box(
 					modifier = Modifier.fillMaxWidth(),
-					contentAlignment = Alignment.CenterEnd
+					contentAlignment = if (isTyping) {
+						Alignment.TopEnd
+					} else {
+						Alignment.CenterEnd
+					}
 				) {
 					if (value.isEmpty()) {
 						Text(
-							text = stringResource(R.string.alarm_picker_message_placeholder),
+							text = stringResource(
+								R.string.alarm_picker_message_placeholder
+							),
 							style = typography.bodyMedium,
 							color = colorScheme.onSurfaceVariant,
-							textAlign = TextAlign.End
+							textAlign = TextAlign.End,
+							modifier = Modifier.fillMaxWidth()
 						)
 					}
+
 					innerTextField()
 				}
 			}

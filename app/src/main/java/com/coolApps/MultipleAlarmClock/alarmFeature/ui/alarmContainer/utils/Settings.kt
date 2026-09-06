@@ -88,7 +88,7 @@ fun SettingsScreen(
 			TopAppBar(
 				title = {
 					Text(
-						text = "Settings",
+						text = stringResource(R.string.settings_title),
 						style = MaterialTheme.typography.headlineSmall,
 						fontWeight = FontWeight.SemiBold,
 					)
@@ -99,7 +99,7 @@ fun SettingsScreen(
 					) {
 						Icon(
 							imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-							contentDescription = "Back"
+							contentDescription = stringResource(R.string.settings_back_desc)
 						)
 					}
 				},
@@ -130,20 +130,20 @@ fun SettingsScreen(
 
 			item {
 				SettingsSection(
-					title = "Premium"
+					title = stringResource(R.string.settings_section_premium)
 				) {
 
 					SettingsListItem(
 						icon = Icons.Outlined.WorkspacePremium,
 						title = if (isPro) {
-							"Premium Active"
+							stringResource(R.string.settings_premium_active)
 						} else {
-							"Go Pro"
+							stringResource(R.string.settings_premium_go_pro)
 						},
 						subtitle = if (isPro) {
-							"Manage your subscription"
+							stringResource(R.string.settings_premium_manage_subscription)
 						} else {
-							"Unlock all features and remove ads"
+							stringResource(R.string.settings_premium_unlock_features)
 						},
 						onClick = {
 							if (isPro) {
@@ -170,7 +170,7 @@ fun SettingsScreen(
 
 			item {
 				SettingsSection(
-					title = "Feedback"
+					title = stringResource(R.string.settings_section_feedback)
 				) {
 
 					Column(
@@ -179,8 +179,8 @@ fun SettingsScreen(
 					) {
 
 						Text(
-							text = "Help improve the app",
-							style = MaterialTheme.typography.titleMedium,
+							text = stringResource(R.string.settings_feedback_improve_app),
+							style = MaterialTheme.typography.labelLarge,
 							fontWeight = FontWeight.Medium
 						)
 
@@ -211,7 +211,11 @@ fun SettingsScreen(
 							maxLines = 6,
 							supportingText = {
 								Text(
-									text = "${feedbackText.length}/500",
+									text = stringResource(
+										R.string.feedback_char_count,
+										feedbackText.length,
+										500
+									),
 									modifier = Modifier.fillMaxWidth(),
 									textAlign = TextAlign.End
 								)
@@ -252,7 +256,7 @@ fun SettingsScreen(
 									modifier = Modifier.width(8.dp)
 								)
 
-								Text("Send")
+								Text(stringResource(R.string.settings_feedback_send))
 							}
 						}
 					}
@@ -265,7 +269,7 @@ fun SettingsScreen(
 
 			item {
 				SettingsSection(
-					title = "About"
+					title = stringResource(R.string.about_section_title)
 				) {
 
 					val appName =
@@ -355,7 +359,7 @@ private fun getAppVersion(context: Context): String {
 		logD("app version is ${packageInfo.versionName}")
 		val versionName = packageInfo.versionName
 		val versionCode = packageInfo.longVersionCode
-		"v$versionName ($versionCode)"
+		context.getString(R.string.settings_version_format, versionName, versionCode)
 	} catch (e: Exception) {
 		"v1.0.0"
 	}
@@ -482,7 +486,7 @@ private fun SettingsSection(
 	) {
 		Text(
 			text = title.uppercase(),
-			style = MaterialTheme.typography.labelLarge,
+			style = MaterialTheme.typography.bodyLarge,
 			color = MaterialTheme.colorScheme.primary,
 			fontWeight = FontWeight.SemiBold,
 			modifier = Modifier.padding(
