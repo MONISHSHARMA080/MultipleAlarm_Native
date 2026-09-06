@@ -184,7 +184,7 @@ class AlarmActivity : ComponentActivity() {
 }
 
 
-@Composable fun TimeDisplay(onFinish: () -> Unit, message: String, modifier: Modifier = Modifier) {
+@Composable fun TimeDisplay(onFinish: () -> Unit , message: String , modifier: Modifier = Modifier) {
     var currentTime by remember { mutableStateOf(getCurrentTime()) }
     var amPm by remember { mutableStateOf(getAmPm()) }
 	val colorScheme = MaterialTheme.colorScheme
@@ -212,7 +212,7 @@ class AlarmActivity : ComponentActivity() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .padding(bottom = 24.dp),
+                    .padding(bottom = 12.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Button(
