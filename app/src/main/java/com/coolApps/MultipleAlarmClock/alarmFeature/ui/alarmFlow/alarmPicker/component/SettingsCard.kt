@@ -304,7 +304,7 @@ private fun RepeatDayButton(
 		modifier = Modifier
 			.fillMaxWidth()
 			.imePadding()
-			.padding(horizontal = 16.dp, vertical = 16.dp)
+			.padding(horizontal = 16.dp, vertical = 20.dp)
 			.animateContentSize(),
 		verticalAlignment = Alignment.CenterVertically
 	) {
@@ -319,28 +319,32 @@ private fun RepeatDayButton(
 			color = colorScheme.onBackground,
 			style = typography.titleSmall
 		)
-		Spacer(modifier = Modifier.weight(0.85f))
+		Spacer(modifier = Modifier.weight(0.1f))
 		BasicTextField(
 			value = value,
 			maxLines = 1,
 			minLines = 1,
 			onValueChange = onValueChange,
-			modifier = Modifier.weight(1f)
-//				.background(colorScheme.secondaryContainer.copy(alpha = 0.40f))
-			,
+			modifier = Modifier
+				.weight(1f)
+				.padding(start = 16.dp),
 			textStyle = typography.bodyMedium.copy(
 				color = colorScheme.onSurface,
+				textAlign = TextAlign.End
 			),
 			cursorBrush = SolidColor(colorScheme.secondary),
-
 			singleLine = true,
 			decorationBox = { innerTextField ->
-				Box(contentAlignment = Alignment.CenterStart) {
+				Box(
+					modifier = Modifier.fillMaxWidth(),
+					contentAlignment = Alignment.CenterEnd
+				) {
 					if (value.isEmpty()) {
 						Text(
 							text = stringResource(R.string.alarm_picker_message_placeholder),
 							style = typography.bodyMedium,
-							color = colorScheme.onSurfaceVariant
+							color = colorScheme.onSurfaceVariant,
+							textAlign = TextAlign.End
 						)
 					}
 					innerTextField()
