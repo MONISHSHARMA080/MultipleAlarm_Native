@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Main App Theme - NO ACTION BAR -->
-    <style name="Theme.Trying_native" parent="android:Theme.Material.Light.NoActionBar">
-        <!-- Ensures no title bar shows -->
+    <style name="Theme.Trying_native" parent="android:Theme.DeviceDefault.NoActionBar">
+        <item name="android:windowBackground">@color/splash_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
     <!-- Splash Screen Theme -->

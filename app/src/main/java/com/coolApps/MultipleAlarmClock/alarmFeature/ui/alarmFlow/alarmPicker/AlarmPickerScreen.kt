@@ -176,18 +176,18 @@ fun AlarmPickerScreen(
 						  AnimatedContent(
 							  targetState = currentProgress,
 							  transitionSpec = {
-								  fadeIn(
-									  animationSpec = tween(210)
-								  ) + slideInVertically(
-									  initialOffsetY = { it / 2 },
-									  animationSpec = tween(220)
-								  ) togetherWith
-										  fadeOut(
-											  animationSpec = tween(150)
-										  ) + slideOutVertically(
-									  targetOffsetY = { -it / 2 },
-									  animationSpec = tween(190)
-								  )
+						  fadeIn(
+							  animationSpec = tween(310)
+						  ) + slideInVertically(
+							  initialOffsetY = { it / 2 },
+							  animationSpec = tween(320)
+						  ) togetherWith
+								  fadeOut(
+									  animationSpec = tween(290)
+								  ) + slideOutVertically(
+							  targetOffsetY = { -it / 2 },
+							  animationSpec = tween(390)
+						  )
 							  },
 							  label = "alarm_picker_title"
 						  ) { progress ->
@@ -308,7 +308,7 @@ fun AlarmPickerScreen(
         .padding(screenPadding)
         .consumeWindowInsets(screenPadding)
         .animateContentSize(),
-      horizontalAlignment = Alignment.CenterHorizontally
+//      horizontalAlignment = Alignment.CenterHorizontally
     ) {
       AnimatedVisibility(
         visible = currentProgress != Progress.FullEditor,
@@ -349,6 +349,7 @@ fun AlarmPickerScreen(
 				animationSpec = tween(190)
 			  )
 			},
+		  contentAlignment = Alignment.Center,
         label = "alarm_picker_navigation"
       ) { progress ->
         when (progress) {

@@ -454,7 +454,7 @@ private fun RepeatDayButton(
 						Icon(
 							imageVector = Icons.Rounded.Remove,
 							contentDescription = stringResource(R.string.alarm_picker_decrease_desc),
-							tint = colorScheme.onPrimaryContainer
+							tint = colorScheme.onSecondaryContainer
 						)
 					}
 
@@ -485,7 +485,7 @@ private fun RepeatDayButton(
 						textStyle =
 							typography.titleMedium.copy(
 								textAlign = TextAlign.Center,
-								color = colorScheme.onPrimaryContainer,
+								color = colorScheme.onSecondaryContainer,
 								fontWeight = FontWeight.Bold
 							),
 						keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -506,7 +506,7 @@ private fun RepeatDayButton(
 						Icon(
 							imageVector = Icons.Rounded.Add,
 							contentDescription = stringResource(R.string.alarm_picker_increase_desc),
-							tint = colorScheme.onPrimaryContainer
+							tint = colorScheme.onSecondaryContainer
 						)
 					}
 				}
