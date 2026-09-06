@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
+import java.time.LocalDate
 import java.util.Calendar
 
 @HiltViewModel(assistedFactory = AlarmPickerViewModel.Factory::class)
@@ -182,10 +183,6 @@ class AlarmPickerViewModel @AssistedInject constructor(
 			set(Calendar.SECOND, 0)
 			set(Calendar.MILLISECOND, 0)
 		}.timeInMillis)
-	}
-
-	fun updateStartTime(newStartTime: Long) = updateAlarmData {
-		it.copy(startTime = newStartTime)
 	}
 
 	fun updateEndTime(newEndTime: Calendar) = updateAlarmData {
@@ -349,12 +346,15 @@ class AlarmPickerViewModel @AssistedInject constructor(
 
 		val updated = currentAlarm.copy(
 			startTime = newStartDate.timeInMillis,
-			endTime = newEndDate.timeInMillis
+			endTime = newEndDate.timeInMillis,
+			// if the user tries to set the alarm date then they're telling to turn of the repeating alarm
+			repeatDays = null
 		).rollOverIfTimeIntervalPassed()
 
 		_uiState.update {
 			it.copy(
 				alarmData = updated,
+
 				validationResult = updated.validate()
 			)
 		}
@@ -457,10 +457,51 @@ class AlarmPickerViewModel @AssistedInject constructor(
 
 	fun toggleRepeatDay(day: DayOfWeek) {
 		_uiState.update { state ->
-			val currentSet = state.alarmData.repeatDays?.toSet() ?: emptySet()
+			val current = state.alarmData
+			val currentSet = current.repeatDays?.toSet() ?: emptySet()
 			val newSet = if (day in currentSet) currentSet - day else currentSet + day
-			val updated = state.alarmData.copy(repeatDays = RepeatDays.of(newSet)).rollOverIfTimeIntervalPassed()
-			state.copy(alarmData = updated, validationResult = updated.validate())
+			val newRepeatDays = RepeatDays.of(newSet)
+
+			val durationMillis = current.endTime - current.startTime
+
+			val rebasedAlarm = if (newRepeatDays == null) {
+				// Repeat turned off -> keep the exact time-of-day/duration the user
+				// dialed in, just move the DATE back to today.
+				val today = LocalDate.now()
+				val newStart = Calendar.getInstance().apply {
+					timeInMillis = current.startTime
+					set(Calendar.YEAR, today.year)
+					set(Calendar.MONTH, today.monthValue - 1)
+					set(Calendar.DAY_OF_MONTH, today.dayOfMonth)
+					set(Calendar.SECOND, 0)
+					set(Calendar.MILLISECOND, 0)
+				}
+				current.copy(
+					startTime = newStart.timeInMillis,
+					endTime = newStart.timeInMillis + durationMillis,
+					repeatDays = null
+				)
+			} else {
+				// Repeat is on (or day set changed) -> keep time-of-day/duration,
+				// re-anchor the DATE from today forward so it's order-independent.
+				val nextDate = newRepeatDays.nextRepeatDate(LocalDate.now()) ?: LocalDate.now()
+				val newStart = Calendar.getInstance().apply {
+					timeInMillis = current.startTime
+					set(Calendar.YEAR, nextDate.year)
+					set(Calendar.MONTH, nextDate.monthValue - 1)
+					set(Calendar.DAY_OF_MONTH, nextDate.dayOfMonth)
+					set(Calendar.SECOND, 0)
+					set(Calendar.MILLISECOND, 0)
+				}
+				current.copy(
+					startTime = newStart.timeInMillis,
+					endTime = newStart.timeInMillis + durationMillis,
+					repeatDays = newRepeatDays
+				)
+			}
+
+			val corrected = rebasedAlarm.rollOverIfTimeIntervalPassed()
+			state.copy(alarmData = corrected, validationResult = corrected.validate())
 		}
 	}
 }
