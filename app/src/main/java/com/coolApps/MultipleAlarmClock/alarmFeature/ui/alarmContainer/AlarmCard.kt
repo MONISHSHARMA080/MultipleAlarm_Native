@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -38,6 +39,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLocale
@@ -56,8 +59,8 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
 
-//@RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
 @Composable
 fun AlarmCard(
 	alarmData: AlarmData,
@@ -103,27 +106,37 @@ fun AlarmCard(
 			onDelete(alarmData)
 		},
 		backgroundContent = {
-			val color = when (dismissState.dismissDirection) {
-				SwipeToDismissBoxValue.StartToEnd, SwipeToDismissBoxValue.EndToStart -> colorScheme.errorContainer
-				else -> Color.Transparent
-			}
-			val alignment = if (dismissState.dismissDirection == SwipeToDismissBoxValue.StartToEnd) Alignment.CenterStart else Alignment.CenterEnd
+			val direction = dismissState.dismissDirection
+			val alignment = if (direction == SwipeToDismissBoxValue.StartToEnd) Alignment.CenterStart else Alignment.CenterEnd
+			val density = LocalDensity.current
+			val rawOffset = runCatching { dismissState.requireOffset() }.getOrDefault(0f)
+			val chipWidth = with(density) { abs(rawOffset).toDp() }.coerceAtMost(600.dp)
 
 			Box(
-				Modifier
+				modifier = Modifier
 					.fillMaxSize()
-					.padding(horizontal = horizontalPadding, vertical = animatedVerticalPadding)
-					.background(color, cardShape)
-					.padding(horizontal = 24.dp)
-				,
+					.padding(horizontal = horizontalPadding, vertical = animatedVerticalPadding),
 				contentAlignment = alignment
 			) {
-				if (dismissState.dismissDirection != SwipeToDismissBoxValue.Settled) {
-					Icon(
-						Icons.Default.Delete,
-						contentDescription = "Delete",
-						tint = colorScheme.onErrorContainer
-					)
+				if (direction != SwipeToDismissBoxValue.Settled && chipWidth > 0.dp) {
+					Box(
+						modifier = Modifier
+							.fillMaxHeight()
+							.width(chipWidth)
+							.padding(end = if (direction == SwipeToDismissBoxValue.EndToStart) 6.dp else 0.dp)
+							.clip(cardShape)
+							.background(colorScheme.errorContainer),
+						contentAlignment = Alignment.Center
+					) {
+						val iconVisible = chipWidth > 48.dp
+						val iconAlpha by animateFloatAsState(if (iconVisible) 1f else 0f, label = "iconAlpha")
+						Icon(
+							Icons.Default.Delete,
+							contentDescription = "Delete",
+							tint = colorScheme.onErrorContainer,
+							modifier = Modifier.alpha(iconAlpha)
+						)
+					}
 				}
 			}
 		},

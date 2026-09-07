@@ -81,7 +81,7 @@
 
 <!-- Permission Steps -->
     <string name="perm_notifications_title">Notifications</string>
-    <string name="perm_notifications_rationale">Required to show the alarm notification</string>
+    <string name="perm_notifications_rationale">Required to show the alarm notification. No spam</string>
 
     <string name="perm_exact_alarm_title">Exact Alarms</string>
     <string name="perm_exact_alarm_rationale">Required to ensure your alarm rings exactly on time, even in power-saving mode.</string>
