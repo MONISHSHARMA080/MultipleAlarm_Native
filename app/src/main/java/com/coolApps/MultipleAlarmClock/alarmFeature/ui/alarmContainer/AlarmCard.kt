@@ -40,14 +40,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.util.AlarmFormatter.formatDate
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.Locale
 
@@ -55,6 +61,7 @@ import java.util.Locale
 @Composable
 fun AlarmCard(
 	alarmData: AlarmData,
+	todayStartMs: Long,
 	onEdit: (AlarmData) -> Unit,
 	onToggle: (AlarmData, Boolean) -> Unit,
 	onDelete: (AlarmData) -> Unit,
@@ -151,9 +158,11 @@ fun AlarmCard(
 						.padding(24.dp)
 						.fillMaxWidth()
 				) {
-					// Date
 					Text(
-						text = formatDate(alarmData.startTime),
+						text = formatRelativeDate(
+							alarmStartMs = alarmData.startTime,
+							todayStartMs = todayStartMs,
+						),
 						style = typography.labelMedium,
 						color = secondaryContentColor,
 						fontWeight = FontWeight.Medium
@@ -266,5 +275,33 @@ fun formatTime12h(millis: Long, pattern: String ="h:mm" ): String {
 	return formatter.format(Date(millis))
 }
 
-fun formatDate(millis: Long): String =
-	SimpleDateFormat("EEEE, MMM d", Locale.getDefault()).format(Date(millis))
+/**
+ * Returns a human-friendly date label:
+ *  - "Today" / "Yesterday" / "Tomorrow" when the alarm date matches those days
+ *  - Full "EEEE, MMM d" string otherwise
+ *
+ * [todayStartMs] is the start-of-today in millis (computed once in AlarmContainer,
+ * not per-card, to keep all cards in sync).
+ */
+@Composable
+fun formatRelativeDate(
+	alarmStartMs: Long,
+	todayStartMs: Long,
+): String {
+	val zone = ZoneId.systemDefault()
+	val alarmDate = Instant.ofEpochMilli(alarmStartMs).atZone(zone).toLocalDate()
+	val todayDate = Instant.ofEpochMilli(todayStartMs).atZone(zone).toLocalDate()
+
+	val labelToday = stringResource(R.string.date_label_today)
+	val labelYesterday = stringResource(R.string.date_label_yesterday)
+	val labelTomorrow = stringResource(R.string.date_label_tomorrow)
+
+	return when (ChronoUnit.DAYS.between(todayDate, alarmDate)) {
+		0L -> labelToday
+		1L -> labelTomorrow
+		-1L -> labelYesterday
+		else -> alarmDate.format(
+			DateTimeFormatter.ofPattern("EEEE, MMM d", LocalLocale.current.platformLocale)
+		)
+	}
+}

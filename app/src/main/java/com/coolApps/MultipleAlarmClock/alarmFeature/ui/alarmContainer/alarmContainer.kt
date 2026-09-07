@@ -81,6 +81,7 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmContainer.utils.Feed
 import com.coolApps.MultipleAlarmClock.logD
 import com.google.android.play.core.review.ReviewManagerFactory
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 
 @Composable fun AlarmContainer(
@@ -97,6 +98,17 @@ import kotlinx.coroutines.launch
 	val showFeedbackCard by alarmContainerViewModel.showFeedbackUIState.collectAsStateWithLifecycle()
 	val inAppReviewState = uiState.showReviewUi
 	val context = LocalContext.current
+
+	// Computed once per composition — the start of today at midnight (local timezone).
+	// Passed to every AlarmCard so all cards share the same day boundary.
+	val todayStartMs = remember {
+		Calendar.getInstance().apply {
+			set(Calendar.HOUR_OF_DAY, 0)
+			set(Calendar.MINUTE, 0)
+			set(Calendar.SECOND, 0)
+			set(Calendar.MILLISECOND, 0)
+		}.timeInMillis
+	}
 
 	LaunchedEffect(inAppReviewState) {
 		val activity = context as? Activity
@@ -196,6 +208,7 @@ import kotlinx.coroutines.launch
 					) { individualAlarm ->
 						AlarmCard(
 							alarmData = individualAlarm,
+							todayStartMs = todayStartMs,
 							onEdit = { alarmData -> onNavigateToEdit(alarmData) },
 							onToggle = { alarmData, isChecked ->
 								if (isChecked){
