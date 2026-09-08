@@ -4,6 +4,8 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.utils.UiText
 import kotlinx.serialization.Serializable
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -95,7 +97,13 @@ data class AlarmData(
 
 	fun validate():AlarmDataValidationResult {
 		if ( startTime >= endTime ) {
-			return AlarmDataValidationResult.TimeIntervalError("StartTime:${timeFormatted(startTime)} must be less than endTime:${timeFormatted(endTime)}.")
+			return AlarmDataValidationResult.TimeIntervalError(
+				errorMessage = "StartTime:${formatTimeForUserDisplay(startTime)} must be less than endTime:${formatTimeForUserDisplay(endTime)}.",
+				errorMessageToDisplayToUser = UiText.StringResource(
+					resId = R.string.alarm_error_fix_alarm_time,
+					args = arrayOf(formatTimeForUserDisplay(startTime))
+				)
+			)
 		}
 		if (frequencyInMin !in 1..700) {
 			return AlarmDataValidationResult.Frequency("Expected a value between 1 to 700 minutes, but Got $frequencyInMin")
@@ -123,6 +131,9 @@ data class AlarmData(
 
 		return AlarmDataValidationResult.Success
 	}
+	private fun formatTimeForUserDisplay(x: Long): String {
+		return SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date(x))
+	}
 
 	private fun timeFormatted(x: Long): String {
 		return SimpleDateFormat("h:mm:ss a yyyy-MM-dd", Locale.getDefault()).format(Date(x))
@@ -137,7 +148,10 @@ sealed class AlarmDataValidationResult(
 ){
 	data object Success: AlarmDataValidationResult()
 	/** startTime must be less than end time*/
-	data class TimeIntervalError( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
+	data class TimeIntervalError(
+			val errorMessage: String,
+			val  errorMessageToDisplayToUser: UiText.StringResource
+	) : AlarmDataValidationResult(errorMessage)
 	data class IntervalNotInFuture( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
 	data class DifferentDate( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
 	data class Frequency( val errorMessage: String) : AlarmDataValidationResult(errorMessage)

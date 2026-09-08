@@ -308,7 +308,6 @@ fun AlarmPickerScreen(
         .padding(screenPadding)
         .consumeWindowInsets(screenPadding)
         .animateContentSize(),
-//      horizontalAlignment = Alignment.CenterHorizontally
     ) {
       AnimatedVisibility(
         visible = currentProgress != Progress.FullEditor,

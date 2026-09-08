@@ -62,7 +62,7 @@ fun TimeRow(
 
 	val density = LocalDensity.current
 	val containerSize = LocalWindowInfo.current.containerSize
-	val screenWidthDp = with(density) { containerSize.width.toDp() }
+//	val screenWidthDp = with(density) { containerSize.width.toDp() }
 	val screenHeightDp = with(density) { containerSize.height.toDp() }
 	val timeStyle = typography.displayMedium.copy(fontWeight = FontWeight.Bold)
 	val amPmStyle = typography.bodyMedium
@@ -86,10 +86,8 @@ fun TimeRow(
 	var showStartTimePicker by remember { mutableStateOf(false) }
 	var showEndTimePicker by remember { mutableStateOf(false) }
 
-//	val doWeHaveError = uiState.validationResult != AlarmDataValidationResult.Success && (uiState.validationResult as? AlarmDataValidationResult.Failure)?.field == AlarmErrorField.Time
-//	val errorMessage = (uiState.validationResult as? AlarmDataValidationResult.Failure)?.message
 	val doWeHaveError = uiState.validationResult is AlarmDataValidationResult.TimeIntervalError
-	val errorMessage = if (uiState.validationResult is AlarmDataValidationResult.TimeIntervalError) uiState.validationResult.errorMessage else ""
+	val errorMessage = if (uiState.validationResult is AlarmDataValidationResult.TimeIntervalError) uiState.validationResult.errorMessageToDisplayToUser.asString() else ""
 	val timeColor = if (doWeHaveError) colorScheme.error else colorScheme.onBackground
 	val amPmColor = if (doWeHaveError) colorScheme.error else colorScheme.onBackground
 

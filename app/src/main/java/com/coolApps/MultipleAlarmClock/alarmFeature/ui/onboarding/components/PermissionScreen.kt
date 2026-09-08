@@ -263,7 +263,6 @@ fun PermissionScreen(
 					color = colorScheme.onBackground.copy(alpha = 0.7f),
 					modifier = Modifier.fillMaxWidth(0.9f)
 				)
-
 			}
 
             Spacer(modifier = Modifier.height(32.dp))
