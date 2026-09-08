@@ -1,5 +1,6 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component
 
+//import androidx.compose.material3.TimePickerState
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -19,7 +20,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
-import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,18 +37,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.TimePicker
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerUiState
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.Progress
+import com.coolApps.MultipleAlarmClock.logD
 import java.text.SimpleDateFormat
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimePickerWithoutDialog(
-	state: TimePickerState,
-	modifier: Modifier = Modifier,
-	isCandidateInvalid: Boolean = false,
-	uiState: AlarmPickerUiState,
+		state: TimePickerState,
+		modifier: Modifier = Modifier,
+		isCandidateInvalid: Boolean = false,
+		uiState: AlarmPickerUiState,
 ) {
 
 	Column(
@@ -68,7 +70,8 @@ fun TimePickerWithoutDialog(
 			}
 		}
 
-		TimePicker(state = state)
+		TimePicker(state,  onDisabledTimeSelected = { logD("Disabled time called") })
+//		TimePicker(state = state)
 
 		AnimatedVisibility(visible = isCandidateInvalid) {
 			val locale = LocalLocale.current.platformLocale
@@ -85,8 +88,6 @@ fun TimePickerWithoutDialog(
 		}
 	}
 }
-
-
 
 @Composable
 fun LinearProgressForNewAlarm(modifier: Modifier = Modifier, progress: Progress) {

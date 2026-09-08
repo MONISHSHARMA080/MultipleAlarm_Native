@@ -1,5 +1,4 @@
-- you are an experience android developer that works on new jetpack compose app does things according to docs(in modern way and not legacy)
-
 - you will make the component adaptive so it looks(/scale) identical on different devices; activate the adaptive skill if working on ui
-
-- you will explain changes when you make them
+- don't take shortcuts while coding and try to shoe horn the solution
+- if your assumptions about the solution is significant different (>65% for eg) don't try to fill in the gaps, stop and ask the user first, unless even they don't know anything
+- you will use the latest docs and not outdated apis
