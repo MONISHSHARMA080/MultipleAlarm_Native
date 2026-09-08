@@ -73,7 +73,6 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.com
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.SettingsCard
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.TimePickerWithoutDialog
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.TimeRow
-import com.coolApps.MultipleAlarmClock.logD
 import java.util.Calendar
 
 
@@ -93,10 +92,9 @@ fun AlarmPickerScreen(
 	val view = LocalView.current
 	val timeStyle = typography.headlineSmall
 	val context = LocalContext.current
-	LaunchedEffect(uiState) {
-		logD("ui state:$uiState ")
-	}
-
+//	LaunchedEffect(uiState) {
+//		logD("ui state:$uiState ")
+//	}
 
 	LaunchedEffect(Unit) { viewModel.screen("AlarmPickerScreen") }
 
