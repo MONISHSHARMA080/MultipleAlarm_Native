@@ -83,10 +83,6 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		viewModelScope.launch(Dispatchers.IO) {
 			_alarmSoundName.value = getAlarmSounds()
 		}
-
-		viewModelScope.launch {
-			_uiState.collect { state -> captureUiStateAndSendAnalytics(state) }
-		}
 	}
 
 
@@ -101,16 +97,21 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		_uiState.update { it.copy(alarmData = alarmToUse, validationResult = validationResult) }
 		logD("validation result after setAlarmCLicked is $validationResult ")
 
-		if (validationResult !is AlarmDataValidationResult.Success) return
+		if (validationResult !is AlarmDataValidationResult.Success) {
+			captureUiStateAndSendAnalytics(_uiState.value)
+			return
+		}
 		if (!current.areAllPermissionsGranted) {
 			val missing = PermissionUtils.getRequiredPermissionSteps(context)
 			_uiState.update { it.copy(showPermissionDialog = true, missingSteps = missing) }
+			captureUiStateAndSendAnalytics(_uiState.value)
 			return
 		}
 
 		viewModelScope.launch {
 			setNewOrUpdateAlarm(alarmToUse, current.initialAlarm)
 			_uiState.update { it.copy(alarmOperationCompletedGoBack = true) }
+			captureUiStateAndSendAnalytics(_uiState.value)
 		}
 	}
 
@@ -136,7 +137,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		_previewingRandom.value = false
 	}
 
-	fun captureUiStateAndSendAnalytics(state: AlarmPickerUiState): Unit {
+	fun captureUiStateAndSendAnalytics(state: AlarmPickerUiState) {
 		val isNotificationsEnabled = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
 		captureEvent(
 			"alarmPickerUi_state_change",
@@ -152,6 +153,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 
 	fun updateProgress(newProgress: Progress) {
 		_uiState.update { it.copy(progress = newProgress) }
+		captureUiStateAndSendAnalytics(_uiState.value)
 	}
 
 	private fun updateAlarmData(transform: (AlarmData) -> AlarmData) {
@@ -178,27 +180,30 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		}
 	}
 
-	fun updateStartTime(newStartTime: Calendar) = updateAlarmData {
-		it.copy(startTime = newStartTime.apply {
-			set(Calendar.SECOND, 0)
-			set(Calendar.MILLISECOND, 0)
-		}.timeInMillis)
+	fun updateStartTime(newStartTime: Calendar) {
+		updateAlarmData {
+			it.copy(startTime = newStartTime.apply {
+				set(Calendar.SECOND, 0)
+				set(Calendar.MILLISECOND, 0)
+			}.timeInMillis)
+		}
+		captureUiStateAndSendAnalytics(_uiState.value)
 	}
 
-	fun updateEndTime(newEndTime: Calendar) = updateAlarmData {
-		it.copy(endTime = newEndTime.apply {
-			set(Calendar.SECOND, 0)
-			set(Calendar.MILLISECOND, 0)
-		}.timeInMillis)
+	fun updateEndTime(newEndTime: Calendar) {
+		updateAlarmData {
+			it.copy(endTime = newEndTime.apply {
+				set(Calendar.SECOND, 0)
+				set(Calendar.MILLISECOND, 0)
+			}.timeInMillis)
+		}
+		captureUiStateAndSendAnalytics(_uiState.value)
 	}
 
-	fun updateEndTime(newEndTime: Long) = updateAlarmData {
-		it.copy(endTime = newEndTime)
-	}
-
-	fun onAlarmSoundSelected(sound: AlarmSound?){
+	fun onAlarmSoundSelected(sound: AlarmSound?) {
 		_selectedAlarmSound.value = sound
 		_uiState.update { it.copy(alarmData = it.alarmData.copy(sound = sound?.soundUri?.toString())) }
+		captureUiStateAndSendAnalytics(_uiState.value)
 		previewSound(sound)
 	}
 
@@ -298,12 +303,14 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		viewModelScope.launch {
 			val liveCheck = PermissionUtils.allCriticalPermissionsGranted(context)
 			_uiState.update { it.copy(areAllPermissionsGranted = liveCheck) }
+			captureUiStateAndSendAnalytics(_uiState.value)
 			dataStore.updateData { currentVal ->  currentVal.copy {  allPermissionsGranted = liveCheck }}
 		}
 	}
 
 	fun dismissPermissionDialog() {
 		_uiState.update { it.copy(showPermissionDialog = false) }
+		captureUiStateAndSendAnalytics(_uiState.value)
 		checkPermissions(context)
 	}
 
@@ -314,6 +321,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 				onSuccess = {
 					analytics.captureEvent("alarm successfully deleted", mapOf("alarmId" to alarmData.id))
 					_uiState.update { it.copy(alarmOperationCompletedGoBack = true) }
+					captureUiStateAndSendAnalytics(_uiState.value)
 				},
 				onError = { error ->
 					logD("error while deleting alarm: ${error.internalErrorMessage}")
@@ -354,10 +362,10 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		_uiState.update {
 			it.copy(
 				alarmData = updated,
-
 				validationResult = updated.validate()
 			)
 		}
+		captureUiStateAndSendAnalytics(_uiState.value)
 	}
 
 	fun updateFrequency(newFreq: Long) {
@@ -503,5 +511,6 @@ class AlarmPickerViewModel @AssistedInject constructor(
 			val corrected = rebasedAlarm.rollOverIfTimeIntervalPassed()
 			state.copy(alarmData = corrected, validationResult = corrected.validate())
 		}
+		captureUiStateAndSendAnalytics(_uiState.value)
 	}
 }

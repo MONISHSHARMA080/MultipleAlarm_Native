@@ -20,6 +20,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
+import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,9 +36,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.coolApps.MultipleAlarmClock.CustomTimePicker
-import com.coolApps.MultipleAlarmClock.CustomTimePickerState
 import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.TimePicker
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerUiState
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.Progress
 import com.coolApps.MultipleAlarmClock.logD
@@ -47,8 +47,7 @@ import java.text.SimpleDateFormat
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimePickerWithoutDialog(
-		state: CustomTimePickerState,
-//		state: TimePickerState,
+		state: TimePickerState,
 		modifier: Modifier = Modifier,
 		isCandidateInvalid: Boolean = false,
 		uiState: AlarmPickerUiState,
@@ -71,8 +70,7 @@ fun TimePickerWithoutDialog(
 			}
 		}
 
-		CustomTimePicker(state, minHour = 9, minMin = 15,  onDisabledTimeClick = {h,m-> logD("Disabled time called") })
-//		TimePicker(state = state)
+		TimePicker(state, minHour = 9, minMinute = 15,  onDisabledTimeSelected = { logD("Disabled time called") })
 
 		AnimatedVisibility(visible = isCandidateInvalid) {
 			val locale = LocalLocale.current.platformLocale
