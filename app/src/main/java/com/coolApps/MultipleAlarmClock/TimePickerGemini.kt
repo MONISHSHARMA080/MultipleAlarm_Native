@@ -193,13 +193,15 @@ internal class UserOverrideRef(var value: Boolean = false)
 internal fun Float.toHour(): Int {
     val hourOffset: Float = RadiansPerHour / 2
     val totalOffset = hourOffset + QuarterCircle
-    return ((this + totalOffset) / RadiansPerHour).toInt() % 12
+    val hour = ((this + totalOffset) / RadiansPerHour).toInt()
+    return if (hour < 0) (hour % 12 + 12) % 12 else hour % 12
 }
 
 internal fun Float.toMinute(): Int {
     val minuteOffset: Float = RadiansPerMinute / 2
     val totalOffset = minuteOffset + QuarterCircle
-    return ((this + totalOffset) / RadiansPerMinute).toInt() % 60
+    val minute = ((this + totalOffset) / RadiansPerMinute).toInt()
+    return if (minute < 0) (minute % 60 + 60) % 60 else minute % 60
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -432,17 +434,19 @@ internal class AnalogTimePickerState(
         userOverride.value = false
         mutex.mutate(MutatePriority.UserInput) {
             if (selection == TimePickerSelectionMode.Hour) {
-                hourAngle = angle.toHour() % 12 * RadiansPerHour
-                state.hour = hourAngle.toHour() % 12 + if (isPm) 12 else 0
+                val h = angle.toHour()
+                hourAngle = h * RadiansPerHour - FullCircle / 4
+                state.hour = h + if (isPm) 12 else 0
             } else {
-                minuteAngle = angle.toMinute() * RadiansPerMinute
-                state.minute = minuteAngle.toMinute()
+                val m = angle.toMinute()
+                minuteAngle = m * RadiansPerMinute - FullCircle / 4
+                state.minute = m
             }
 
             if (!animate) {
-                anim.snapTo(offsetAngle(angle))
+                anim.snapTo(angle)
             } else {
-                val endAngle = endValueForAnimation(offsetAngle(angle))
+                val endAngle = endValueForAnimation(angle)
                 anim.animateTo(endAngle, animationSpec)
             }
         }
@@ -482,11 +486,6 @@ internal class AnalogTimePickerState(
     }
 
     private val mutex = MutatorMutex()
-
-    private fun offsetAngle(angle: Float): Float {
-        val ret = angle + QuarterCircle.toFloat()
-        return if (ret < 0) ret + FullCircle else ret
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1845,7 +1844,7 @@ private fun dist(x1: Float, y1: Float, x2: Int, y2: Int): Float {
 }
 
 private fun atan(y: Float, x: Float): Float {
-    val ret = atan2(y, x) - QuarterCircle.toFloat()
+    val ret = atan2(y, x)
     return if (ret < 0) ret + FullCircle else ret
 }
 

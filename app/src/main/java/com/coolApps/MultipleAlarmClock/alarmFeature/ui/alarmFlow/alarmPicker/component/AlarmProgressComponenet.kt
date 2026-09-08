@@ -70,7 +70,7 @@ fun TimePickerWithoutDialog(
 			}
 		}
 
-		TimePicker(state,  onDisabledTimeSelected = { logD("Disabled time called") })
+		TimePicker(state, minHour = 9, minMinute = 15,  onDisabledTimeSelected = { logD("Disabled time called") })
 //		TimePicker(state = state)
 
 		AnimatedVisibility(visible = isCandidateInvalid) {
