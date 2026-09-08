@@ -45,6 +45,7 @@ playServicesAppset = "16.1.0"
 animationCore = "1.12.0"
 ui = "1.12.0"
 workRuntimeKtx = "2.11.2"
+runtimeSaveable = "1.12.0"
 #firebaseFunctionsKtx = "22.1.1"
 
 [libraries]
@@ -103,6 +104,7 @@ play-services-appset = { group = "com.google.android.gms", name = "play-services
 androidx-compose-animation-core = { group = "androidx.compose.animation", name = "animation-core", version.ref = "animationCore" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
+androidx-compose-runtime-saveable = { group = "androidx.compose.runtime", name = "runtime-saveable", version.ref = "runtimeSaveable" }
 #firebase-functions-ktx = { group = "com.google.firebase", name = "firebase-functions-ktx", version.ref = "firebaseFunctionsKtx" }
 
 [plugins]

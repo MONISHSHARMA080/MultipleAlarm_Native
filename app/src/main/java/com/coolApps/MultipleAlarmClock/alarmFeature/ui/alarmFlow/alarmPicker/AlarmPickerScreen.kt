@@ -80,325 +80,325 @@ import java.util.Calendar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmPickerScreen(
-	alarmSetProceed: () -> Unit,
-	settingAlarmCancelled: ()->Unit,
-	onNavigateToSoundList: () -> Unit,
-	forNewAlarm: Boolean,
-	viewModel: AlarmPickerViewModel
+		alarmSetProceed: () -> Unit,
+		settingAlarmCancelled: ()->Unit,
+		onNavigateToSoundList: () -> Unit,
+		forNewAlarm: Boolean,
+		viewModel: AlarmPickerViewModel
 ) {
 
-  val uiState by viewModel.uiState.collectAsState()
-  val selectedSound by viewModel.selectedAlarmSound.collectAsState()
+	val uiState by viewModel.uiState.collectAsState()
+	val selectedSound by viewModel.selectedAlarmSound.collectAsState()
 
-  val view = LocalView.current
-  val timeStyle = typography.headlineSmall
-  val context = LocalContext.current
+	val view = LocalView.current
+	val timeStyle = typography.headlineSmall
+	val context = LocalContext.current
 	LaunchedEffect(uiState) {
 		logD("ui state:$uiState ")
 	}
 
 
-  LaunchedEffect(Unit) { viewModel.screen("AlarmPickerScreen") }
+	LaunchedEffect(Unit) { viewModel.screen("AlarmPickerScreen") }
 
-  LaunchedEffect(uiState.alarmOperationCompletedGoBack) {
-    if (uiState.alarmOperationCompletedGoBack) {
-      alarmSetProceed()
-    }
-  }
+	LaunchedEffect(uiState.alarmOperationCompletedGoBack) {
+		if (uiState.alarmOperationCompletedGoBack) {
+			alarmSetProceed()
+		}
+	}
 
-  LifecycleResumeEffect(Unit) {
-    viewModel.checkPermissions(context)
-    onPauseOrDispose {
-      // Optional cleanup when the screen pauses/disposes
-    }
-  }
+	LifecycleResumeEffect(Unit) {
+		viewModel.checkPermissions(context)
+		onPauseOrDispose {
+			// Optional cleanup when the screen pauses/disposes
+		}
+	}
 
-  if (uiState.showPermissionDialog) {
-    AlarmPermissionDialog(
-            uiState.missingSteps,
-            onAllCriticalGranted = { viewModel.dismissPermissionDialog() },
-            onDismiss = { viewModel.dismissPermissionDialog() },
-            onTrackEvent = { event, prop -> viewModel.captureEvent(event, prop) }
-    )
-  }
+	if (uiState.showPermissionDialog) {
+		AlarmPermissionDialog(
+			uiState.missingSteps,
+			onAllCriticalGranted = { viewModel.dismissPermissionDialog() },
+			onDismiss = { viewModel.dismissPermissionDialog() },
+			onTrackEvent = { event, prop -> viewModel.captureEvent(event, prop) }
+		)
+	}
 
-  val horizontalPadding = rememberAdaptiveHorizontalPadding()
-  var showCalendar by remember { mutableStateOf(false) }
+	val horizontalPadding = rememberAdaptiveHorizontalPadding()
+	var showCalendar by remember { mutableStateOf(false) }
 
-  if (showCalendar) {
-    DatePickerModal(
-            onDateSelected = { date ->
-              if (date != null) {
-                val cal = Calendar.getInstance().apply { timeInMillis = date }
-                viewModel.updateDate(cal)
-              }
-              showCalendar = false
-            },
-            onDismiss = { showCalendar = false }
-    )
-  }
+	if (showCalendar) {
+		DatePickerModal(
+			onDateSelected = { date ->
+				if (date != null) {
+					val cal = Calendar.getInstance().apply { timeInMillis = date }
+					viewModel.updateDate(cal)
+				}
+				showCalendar = false
+			},
+			onDismiss = { showCalendar = false }
+		)
+	}
 
 	val currentProgress = if (!forNewAlarm) Progress.FullEditor else uiState.progress
 	val startTimePickerState = key(currentProgress, uiState.alarmData.startTime) {
-    rememberTimePickerState(
-            initialHour = uiState.alarmData.startTimeCalendar.get(Calendar.HOUR_OF_DAY),
-            initialMinute = uiState.alarmData.startTimeCalendar.get(Calendar.MINUTE),
-            is24Hour = false
-    )
-  }
+		rememberTimePickerState(
+			initialHour = uiState.alarmData.startTimeCalendar.get(Calendar.HOUR_OF_DAY),
+			initialMinute = uiState.alarmData.startTimeCalendar.get(Calendar.MINUTE),
+			is24Hour = false
+		)
+	}
 
-  val endTimePickerState = key(currentProgress) {
-    rememberTimePickerState(
-            initialHour = uiState.alarmData.endTimeCalendar.get(Calendar.HOUR_OF_DAY),
-            initialMinute = uiState.alarmData.endTimeCalendar.get(Calendar.MINUTE),
-            is24Hour = false
-    )
-  }
+	val endTimePickerState = key(currentProgress) {
+		rememberTimePickerState(
+			initialHour = uiState.alarmData.endTimeCalendar.get(Calendar.HOUR_OF_DAY),
+			initialMinute = uiState.alarmData.endTimeCalendar.get(Calendar.MINUTE),
+			is24Hour = false
+		)
+	}
 
-  val candidateEnd = remember(endTimePickerState.hour, endTimePickerState.minute, uiState.alarmData.startTime) {
-    (uiState.alarmData.endTimeCalendar.clone() as Calendar).apply {
-      set(Calendar.HOUR_OF_DAY, endTimePickerState.hour)
-      set(Calendar.MINUTE, endTimePickerState.minute)
-    }
-  }
+	val candidateEnd = remember(endTimePickerState.hour, endTimePickerState.minute, uiState.alarmData.startTime) {
+		(uiState.alarmData.endTimeCalendar.clone() as Calendar).apply {
+			set(Calendar.HOUR_OF_DAY, endTimePickerState.hour)
+			set(Calendar.MINUTE, endTimePickerState.minute)
+		}
+	}
 
-  val isCandidateInvalid = currentProgress != Progress.StartTime &&  candidateEnd.timeInMillis <= uiState.alarmData.startTime
+	val isCandidateInvalid = currentProgress != Progress.StartTime &&  candidateEnd.timeInMillis <= uiState.alarmData.startTime
 
-  Scaffold(
-          contentWindowInsets = WindowInsets.safeDrawing,
-          topBar = {
-            Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-              TopAppBar(
-                      title = {
-						  AnimatedContent(
-							  targetState = currentProgress,
-							  transitionSpec = {
-						  fadeIn(
-							  animationSpec = tween(310)
-						  ) + slideInVertically(
-							  initialOffsetY = { it / 2 },
-							  animationSpec = tween(320)
-						  ) togetherWith
-								  fadeOut(
-									  animationSpec = tween(290)
-								  ) + slideOutVertically(
-							  targetOffsetY = { -it / 2 },
-							  animationSpec = tween(390)
-						  )
-							  },
-							  label = "alarm_picker_title"
-						  ) { progress ->
-							  Text(
-								  when (progress) {
-									  Progress.StartTime -> stringResource(R.string.alarm_picker_select_start_time)
-									  Progress.EndTime -> stringResource(R.string.alarm_picker_select_end_time)
-									  Progress.FullEditor -> if (uiState.initialAlarm == null) stringResource(R.string.alarm_picker_title_set) else stringResource(R.string.alarm_picker_title_edit)
-								  },
-								  style = timeStyle,
-								  color = colorScheme.onBackground,
-								  modifier = Modifier.padding(horizontal = 7.dp),
-								  maxLines = 1,
-								  softWrap = false,
-							  )
+	Scaffold(
+		contentWindowInsets = WindowInsets.safeDrawing,
+		topBar = {
+			Column(
+				modifier = Modifier.fillMaxWidth(),
+				horizontalAlignment = Alignment.CenterHorizontally
+			) {
+				TopAppBar(
+					title = {
+						AnimatedContent(
+							targetState = currentProgress,
+							transitionSpec = {
+								fadeIn(
+									animationSpec = tween(310)
+								) + slideInVertically(
+									initialOffsetY = { it / 2 },
+									animationSpec = tween(320)
+								) togetherWith
+										fadeOut(
+											animationSpec = tween(290)
+										) + slideOutVertically(
+									targetOffsetY = { -it / 2 },
+									animationSpec = tween(390)
+								)
+							},
+							label = "alarm_picker_title"
+						) { progress ->
+							Text(
+								when (progress) {
+									Progress.StartTime -> stringResource(R.string.alarm_picker_select_start_time)
+									Progress.EndTime -> stringResource(R.string.alarm_picker_select_end_time)
+									Progress.FullEditor -> if (uiState.initialAlarm == null) stringResource(R.string.alarm_picker_title_set) else stringResource(R.string.alarm_picker_title_edit)
+								},
+								style = timeStyle,
+								color = colorScheme.onBackground,
+								modifier = Modifier.padding(horizontal = 7.dp),
+								maxLines = 1,
+								softWrap = false,
+							)
 
-						  }
-                      },
-                      navigationIcon = {
-                        IconButton(
-                                onClick = {
-                                  settingAlarmCancelled()
-                                }
-                        ) {
-                          Icon(
-                                  imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                  contentDescription = stringResource(R.string.alarm_picker_back_desc)
-                          )
-                        }
-                      },
-              )
-            }
-          },
-          bottomBar = {
-            Box(
-                    modifier =
-                            Modifier.fillMaxWidth()
-                                    .background(colorScheme.background)
-                                    .navigationBarsPadding()
-                                    .padding(16.dp)
-                                    .padding(bottom = 20.dp)
-                                    .animateContentSize(),
-                    contentAlignment = Alignment.Center
-            ) {
-              Row(
-                      modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth(),
-                      horizontalArrangement = Arrangement.SpaceBetween,
-                      verticalAlignment = Alignment.CenterVertically
-              ) {
-                CancelAndDeleteButton(
-                        currentProgress = currentProgress,
-                        isNewAlarm = forNewAlarm,
-                        onClick = {
-                          when (currentProgress) {
-                            Progress.StartTime -> settingAlarmCancelled()
-                            Progress.EndTime -> {
-                              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-	                              view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
-							  }
-								viewModel.updateProgress(Progress.StartTime)
-                            }
-                            Progress.FullEditor -> {
-                              if (forNewAlarm) {
-								  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-									  view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
-								  }
-                                viewModel.updateProgress(Progress.EndTime)
-                              } else {
-                                viewModel.onDeleteClicked()
-                              }
-                            }
-                          }
-                        }
-                )
-
-                PrimaryActionButton(
-					currentProgress = currentProgress,
-					uiState = uiState,
-					isCandidateInvalid = isCandidateInvalid,
-					onAction = {
-					  when (currentProgress) {
-						Progress.StartTime -> {
-						  val selectedStartTime = (uiState.alarmData.startTimeCalendar.clone() as Calendar).apply {
-							set(Calendar.HOUR_OF_DAY, startTimePickerState.hour)
-							set(Calendar.MINUTE, startTimePickerState.minute)
-						  }
-							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-							viewModel.updateStartTime(selectedStartTime)
-							viewModel.updateProgress(Progress.EndTime)
 						}
-
-						Progress.EndTime -> {
-						  if (!isCandidateInvalid) {
-							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-							viewModel.updateEndTime(candidateEnd)
-							viewModel.updateProgress(Progress.FullEditor)
-						  }
+					},
+					navigationIcon = {
+						IconButton(
+							onClick = {
+								settingAlarmCancelled()
+							}
+						) {
+							Icon(
+								imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+								contentDescription = stringResource(R.string.alarm_picker_back_desc)
+							)
 						}
-
-						Progress.FullEditor -> {
-						  val isInactiveEdit =  uiState.initialAlarm?.isReadyToUse == false
-						  val canSetAlarm = uiState.validationResult == AlarmDataValidationResult.Success || isInactiveEdit
-						  if (canSetAlarm) {
-							viewModel.onSetAlarmClicked()
-							view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-						  }
-						}
-					  }
-					}
+					},
 				)
-              }
-            }
-          }
-  ) { screenPadding ->
-    Column(
-      modifier = Modifier
-        .fillMaxSize()
-        .padding(screenPadding)
-        .consumeWindowInsets(screenPadding)
-        .animateContentSize(),
-    ) {
-      AnimatedVisibility(
-        visible = currentProgress != Progress.FullEditor,
-        enter = expandVertically() + fadeIn(),
-        exit = shrinkVertically() + fadeOut()
-      ) {
-        LinearProgressForNewAlarm(
-          progress = currentProgress,
-          modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 5.dp)
-        )
-      }
-
-      AnimatedContent(
-        targetState = currentProgress,
-        modifier = Modifier.weight(1f).fillMaxWidth(),
-        transitionSpec = {
-			  val direction = if (targetState.ordinal > initialState.ordinal) {
-				AnimatedContentTransitionScope.SlideDirection.Left
-			  } else {
-				AnimatedContentTransitionScope.SlideDirection.Right
-			  }
-			  slideIntoContainer(
-				towards = direction,
-				animationSpec = tween(
-				  270,
-				  easing = FastOutSlowInEasing
-				)
-			  ) + fadeIn(
-				animationSpec = tween(250)
-			  ) togetherWith
-				  slideOutOfContainer(
-					towards = direction,
-					animationSpec = tween(
-					  110,
-					  easing = FastOutSlowInEasing
+			}
+		},
+		bottomBar = {
+			Box(
+				modifier =
+					Modifier.fillMaxWidth()
+						.background(colorScheme.background)
+						.navigationBarsPadding()
+						.padding(16.dp)
+						.padding(bottom = 20.dp)
+						.animateContentSize(),
+				contentAlignment = Alignment.Center
+			) {
+				Row(
+					modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth(),
+					horizontalArrangement = Arrangement.SpaceBetween,
+					verticalAlignment = Alignment.CenterVertically
+				) {
+					CancelAndDeleteButton(
+						currentProgress = currentProgress,
+						isNewAlarm = forNewAlarm,
+						onClick = {
+							when (currentProgress) {
+								Progress.StartTime -> settingAlarmCancelled()
+								Progress.EndTime -> {
+									if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+										view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
+									}
+									viewModel.updateProgress(Progress.StartTime)
+								}
+								Progress.FullEditor -> {
+									if (forNewAlarm) {
+										if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+											view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
+										}
+										viewModel.updateProgress(Progress.EndTime)
+									} else {
+										viewModel.onDeleteClicked()
+									}
+								}
+							}
+						}
 					)
-				  ) + fadeOut(
-				animationSpec = tween(190)
-			  )
-			},
-		  contentAlignment = Alignment.Center,
-        label = "alarm_picker_navigation"
-      ) { progress ->
-        when (progress) {
-          Progress.StartTime -> {
-            TimePickerWithoutDialog(
-              state = startTimePickerState,
-              modifier = Modifier.padding(horizontal = horizontalPadding),
-              uiState = uiState
-            )
-          }
 
-          Progress.EndTime -> {
-            TimePickerWithoutDialog(
-              state = endTimePickerState,
-              isCandidateInvalid = isCandidateInvalid,
-              modifier = Modifier.padding(horizontal = horizontalPadding),
-              uiState = uiState
-            )
-          }
+					PrimaryActionButton(
+						currentProgress = currentProgress,
+						uiState = uiState,
+						isCandidateInvalid = isCandidateInvalid,
+						onAction = {
+							when (currentProgress) {
+								Progress.StartTime -> {
+									val selectedStartTime = (uiState.alarmData.startTimeCalendar.clone() as Calendar).apply {
+										set(Calendar.HOUR_OF_DAY, startTimePickerState.hour)
+										set(Calendar.MINUTE, startTimePickerState.minute)
+									}
+									view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+									viewModel.updateStartTime(selectedStartTime)
+									viewModel.updateProgress(Progress.EndTime)
+								}
 
-          Progress.FullEditor -> {
-            Column(
-              modifier = Modifier.fillMaxSize()
-                .padding(horizontal = horizontalPadding)
-                .animateContentSize(),
-              horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-              Spacer(modifier = Modifier.weight(0.44f))
-              TimeRow(
-                uiState,
-                { viewModel.updateStartTime(it) },
-                { viewModel.updateEndTime(it) },
-              )
-              Spacer(modifier = Modifier.weight(0.44f))
-              SettingsCard(
-                uiState = uiState,
-                updateFrequency = { viewModel.updateFrequency(it) },
-                messageValueChanged = { viewModel.updateMessage(it) },
-                calenderButtonClicked = { showCalendar = true },
-                selectSoundButtonClicked = onNavigateToSoundList,
-				  repeatDayToggled = {day -> viewModel.toggleRepeatDay(day)},
-                selectedSoundName = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random)
-              )
-				Spacer(modifier = Modifier.weight(0.04f))
-            }
-          }
-        }
-      }
-    }
-  }
+								Progress.EndTime -> {
+									if (!isCandidateInvalid) {
+										view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+										viewModel.updateEndTime(candidateEnd)
+										viewModel.updateProgress(Progress.FullEditor)
+									}
+								}
+
+								Progress.FullEditor -> {
+									val isInactiveEdit =  uiState.initialAlarm?.isReadyToUse == false
+									val canSetAlarm = uiState.validationResult == AlarmDataValidationResult.Success || isInactiveEdit
+									if (canSetAlarm) {
+										viewModel.onSetAlarmClicked()
+										view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+									}
+								}
+							}
+						}
+					)
+				}
+			}
+		}
+	) { screenPadding ->
+		Column(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(screenPadding)
+				.consumeWindowInsets(screenPadding)
+				.animateContentSize(),
+		) {
+			AnimatedVisibility(
+				visible = currentProgress != Progress.FullEditor,
+				enter = expandVertically() + fadeIn(),
+				exit = shrinkVertically() + fadeOut()
+			) {
+				LinearProgressForNewAlarm(
+					progress = currentProgress,
+					modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 5.dp)
+				)
+			}
+
+			AnimatedContent(
+				targetState = currentProgress,
+				modifier = Modifier.weight(1f).fillMaxWidth(),
+				transitionSpec = {
+					val direction = if (targetState.ordinal > initialState.ordinal) {
+						AnimatedContentTransitionScope.SlideDirection.Left
+					} else {
+						AnimatedContentTransitionScope.SlideDirection.Right
+					}
+					slideIntoContainer(
+						towards = direction,
+						animationSpec = tween(
+							270,
+							easing = FastOutSlowInEasing
+						)
+					) + fadeIn(
+						animationSpec = tween(250)
+					) togetherWith
+							slideOutOfContainer(
+								towards = direction,
+								animationSpec = tween(
+									110,
+									easing = FastOutSlowInEasing
+								)
+							) + fadeOut(
+						animationSpec = tween(190)
+					)
+				},
+				contentAlignment = Alignment.Center,
+				label = "alarm_picker_navigation"
+			) { progress ->
+				when (progress) {
+					Progress.StartTime -> {
+						TimePickerWithoutDialog(
+							state = startTimePickerState,
+							modifier = Modifier.padding(horizontal = horizontalPadding),
+							uiState = uiState
+						)
+					}
+
+					Progress.EndTime -> {
+						TimePickerWithoutDialog(
+							state = endTimePickerState,
+							isCandidateInvalid = isCandidateInvalid,
+							modifier = Modifier.padding(horizontal = horizontalPadding),
+							uiState = uiState
+						)
+					}
+
+					Progress.FullEditor -> {
+						Column(
+							modifier = Modifier.fillMaxSize()
+								.padding(horizontal = horizontalPadding)
+								.animateContentSize(),
+							horizontalAlignment = Alignment.CenterHorizontally
+						) {
+							Spacer(modifier = Modifier.weight(0.44f))
+							TimeRow(
+								uiState,
+								{ viewModel.updateStartTime(it) },
+								{ viewModel.updateEndTime(it) },
+							)
+							Spacer(modifier = Modifier.weight(0.44f))
+							SettingsCard(
+								uiState = uiState,
+								updateFrequency = { viewModel.updateFrequency(it) },
+								messageValueChanged = { viewModel.updateMessage(it) },
+								calenderButtonClicked = { showCalendar = true },
+								selectSoundButtonClicked = onNavigateToSoundList,
+								repeatDayToggled = {day -> viewModel.toggleRepeatDay(day)},
+								selectedSoundName = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random)
+							)
+							Spacer(modifier = Modifier.weight(0.04f))
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 
