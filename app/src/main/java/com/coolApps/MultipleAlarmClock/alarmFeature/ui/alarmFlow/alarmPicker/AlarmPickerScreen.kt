@@ -480,8 +480,8 @@ fun PrimaryActionButton(
                 enabled = !isCandidateInvalid,
                 colors = if (!isCandidateInvalid) {
                   ButtonDefaults.buttonColors(
-                          containerColor = colorScheme.primaryContainer,
-                          contentColor = colorScheme.onPrimaryContainer
+                          containerColor = colorScheme.primary,
+                          contentColor = colorScheme.onPrimary
                   )
                 } else {
                   ButtonDefaults.buttonColors(
@@ -509,8 +509,8 @@ fun PrimaryActionButton(
                 colors = when {
                   canSetAlarm -> {
                     ButtonDefaults.buttonColors(
-                            containerColor = colorScheme.primaryContainer,
-                            contentColor = colorScheme.onPrimaryContainer
+						containerColor = colorScheme.primary,
+						contentColor = colorScheme.onPrimary
                     )
                   }
                   uiState.validationResult.isFailure()-> {

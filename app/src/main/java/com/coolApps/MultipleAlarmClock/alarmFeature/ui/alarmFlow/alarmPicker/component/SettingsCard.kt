@@ -216,16 +216,16 @@ private fun RepeatDayButton(
 	val view = LocalView.current
 	val coroutineScope = rememberCoroutineScope()
 	val scale = remember { Animatable(1f) }
-	val tweenDuration = 10
+	val tweenDuration = 12
 
 
 	val containerColor by animateColorAsState(
-		targetValue = if (isSelected) colorScheme.secondaryContainer else colorScheme.surfaceContainerHighest,
+		targetValue = if (isSelected) colorScheme.primaryContainer else colorScheme.surfaceContainerHighest,
 		animationSpec = tween(durationMillis = tweenDuration, easing = FastOutLinearInEasing),
 		label = "day_container_color"
 	)
 	val contentColor by animateColorAsState(
-		targetValue = if (isSelected) colorScheme.onSecondaryContainer else colorScheme.onSurfaceVariant,
+		targetValue = if (isSelected) colorScheme.onPrimaryContainer else colorScheme.onSurfaceVariant,
 		animationSpec = tween(durationMillis = tweenDuration, easing = FastOutSlowInEasing),
 		label = "day_content_color"
 	)
@@ -351,24 +351,17 @@ private fun RepeatDayButton(
 		BasicTextField(
 			value = value,
 			onValueChange = onValueChange,
-
-			// Collapsed when idle, expandable while actively typing.
 			minLines = 1,
 			maxLines = if (isTyping) 4 else 1,
-
 			singleLine = !isTyping,
-
 			modifier = Modifier
 				.weight(1f)
 				.padding(start = 8.dp),
-
 			textStyle = typography.bodyMedium.copy(
 				color = colorScheme.onSurface,
 				textAlign = TextAlign.End
 			),
-
 			cursorBrush = SolidColor(colorScheme.secondary),
-
 			decorationBox = { innerTextField ->
 				Box(
 					modifier = Modifier.fillMaxWidth(),
@@ -389,7 +382,6 @@ private fun RepeatDayButton(
 							modifier = Modifier.fillMaxWidth()
 						)
 					}
-
 					innerTextField()
 				}
 			}
