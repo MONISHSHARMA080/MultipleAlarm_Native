@@ -2,6 +2,7 @@ package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker
 
 import android.os.Build
 import android.view.HapticFeedbackConstants
+import android.view.View
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
@@ -352,7 +353,7 @@ fun AlarmPickerScreen(
 						TimePickerWithoutDialog(
 							state = startTimePickerState,
 							modifier = Modifier.padding(horizontal = horizontalPadding),
-							uiState = uiState
+							uiState = uiState, onDisabledTimeSelected = {onDisabledTimeSelected(view)}
 						)
 					}
 
@@ -364,6 +365,7 @@ fun AlarmPickerScreen(
 							uiState = uiState,
 							minHour = startTimePickerState.hour,
 							minMin = if (startTimePickerState.minute == 59) 59 else startTimePickerState.minute + 1 ,
+							onDisabledTimeSelected = {onDisabledTimeSelected(view)}
 						)
 					}
 
@@ -379,8 +381,9 @@ fun AlarmPickerScreen(
 								uiState,
 								{ viewModel.updateStartTime(it) },
 								{ viewModel.updateEndTime(it) },
+								onDisabledTimeSelected = {onDisabledTimeSelected(view)}
 							)
-							Spacer(modifier = Modifier.weight(0.44f))
+							Spacer(modifier = Modifier.weight(0.45f))
 							SettingsCard(
 								uiState = uiState,
 								updateFrequency = { viewModel.updateFrequency(it) },
@@ -443,12 +446,12 @@ fun CancelAndDeleteButton(
                 label = "cancel_button_text"
         ) { progress ->
           Text(
-                  text = when (progress) {
-                    Progress.StartTime -> stringResource(R.string.alarm_picker_cancel)
-                    Progress.EndTime -> stringResource(R.string.alarm_picker_previous)
-                    Progress.FullEditor -> stringResource(R.string.alarm_picker_previous)
-                  },
-                  style = typography.bodyLarge,
+			  text = when (progress) {
+				Progress.StartTime -> stringResource(R.string.alarm_picker_cancel)
+				Progress.EndTime -> stringResource(R.string.alarm_picker_previous)
+				Progress.FullEditor -> stringResource(R.string.alarm_picker_previous)
+			  },
+			  style = typography.bodyLarge,
           )
         }
       }
@@ -542,6 +545,10 @@ fun PrimaryActionButton(
       }
     }
   }
+}
+
+fun onDisabledTimeSelected(view: View){
+	view.performHapticFeedback(HapticFeedbackConstants.REJECT)
 }
 
 @Composable fun rememberAdaptiveHorizontalPadding(percent: Float = 0.0066f, min: Dp = 14.dp, max: Dp = 30.dp): Dp {

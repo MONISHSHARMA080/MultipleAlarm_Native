@@ -40,7 +40,6 @@ import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.TimePicker
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerUiState
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.Progress
-import com.coolApps.MultipleAlarmClock.logD
 import java.text.SimpleDateFormat
 
 
@@ -53,6 +52,7 @@ fun TimePickerWithoutDialog(
 		uiState: AlarmPickerUiState,
 		@IntRange(from = 0, to = 23) minHour:Int? = null,
 		@IntRange(from = 0, to = 59) minMin:Int? = null,
+		onDisabledTimeSelected:()->Unit
 ) {
 
 
@@ -73,7 +73,7 @@ fun TimePickerWithoutDialog(
 			}
 		}
 
-		TimePicker(state, minHour = minHour, minMinute = minMin,  onDisabledTimeSelected = { logD("Disabled time called") })
+		TimePicker(state, minHour = minHour, minMinute = minMin,  onDisabledTimeSelected = onDisabledTimeSelected)
 
 		AnimatedVisibility(visible = isCandidateInvalid) {
 			val locale = LocalLocale.current.platformLocale

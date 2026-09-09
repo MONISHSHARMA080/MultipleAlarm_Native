@@ -1,7 +1,5 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component
 
-//import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.AlarmErrorField
-//import com.coolApps.MultipleAlarmClock.alarmFeature.domain.model.ValidationResult
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -25,7 +23,6 @@ import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -45,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.TimePicker
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerUiState
 import java.text.SimpleDateFormat
@@ -55,7 +53,8 @@ import java.util.Calendar
 fun TimeRow(
 	uiState: AlarmPickerUiState,
 	onStartTimeChange: (Calendar) -> Unit,
-	onEndTimeChange: (Calendar) -> Unit
+	onEndTimeChange: (Calendar) -> Unit,
+	onDisabledTimeSelected:()->Unit
 ) {
 	val startTime = uiState.alarmData.startTimeCalendar
 	val endTime = uiState.alarmData.endTimeCalendar
@@ -132,7 +131,7 @@ fun TimeRow(
 					view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
 				}
 			}
-			TimePicker(state = timePickerState)
+			TimePicker(timePickerState)
 		}
 	}
 
@@ -189,7 +188,12 @@ fun TimeRow(
 					view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
 				}
 			}
-			TimePicker(state = endTimePickerState)
+			TimePicker(
+				state = endTimePickerState,
+				minHour = timePickerState.hour,
+				minMinute = if (timePickerState.minute == 59) 59 else timePickerState.minute + 1 ,
+				onDisabledTimeSelected = onDisabledTimeSelected
+			)
 		}
 	}
 
@@ -203,9 +207,7 @@ fun TimeRow(
 			horizontalArrangement = Arrangement.Start
 		) {
 			Text(
-				text =
-					SimpleDateFormat("h:mm ", LocalLocale.current.platformLocale)
-						.format(startTime.time),
+				text = SimpleDateFormat("h:mm ", LocalLocale.current.platformLocale).format(startTime.time),
 				style = timeStyle,
 				color = timeColor,
 				maxLines = 1,
