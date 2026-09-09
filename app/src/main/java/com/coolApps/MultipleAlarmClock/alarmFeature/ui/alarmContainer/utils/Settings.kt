@@ -78,7 +78,7 @@ fun SettingsScreen(
 	var feedbackText by rememberSaveable { mutableStateOf("") }
 
 	val settingsViewModel: SettingsViewModel = hiltViewModel()
-	val isPro by settingsViewModel.isPro.collectAsState()
+	val isPro by settingsViewModel.isPremium.collectAsState()
 	val context = LocalContext.current
 
 	Scaffold(

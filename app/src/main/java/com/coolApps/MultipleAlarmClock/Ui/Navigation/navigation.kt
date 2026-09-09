@@ -153,7 +153,8 @@ fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) 
 
 					AlarmFlowScreen(
 						alarmData = key.alarmData,
-						onCloseFlow = { backStack.removeLastOrNull() }
+						onCloseFlow = { backStack.removeLastOrNull() },
+						onNavigateToPaywall = {backStack.add(Screen.Paywall)}
 					)
 
 					LaunchedEffect(key.alarmData) {

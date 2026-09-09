@@ -3,13 +3,14 @@ package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.Permissions.PermissionStep
+import java.time.DayOfWeek
 import java.util.Calendar
 
 enum class Progress{StartTime, EndTime, FullEditor}
 
 /** [areAllPermissionsGranted] - make sure to set the right value when loading this, as the true is a false value */
 data class AlarmPickerUiState(
-	val alarmData: AlarmData = AlarmData(
+		val alarmData: AlarmData = AlarmData(
 		startTime = Calendar.getInstance().apply {
 			add(Calendar.MINUTE, 1)
 			set(Calendar.SECOND, 0)
@@ -25,13 +26,15 @@ data class AlarmPickerUiState(
 		sound = null,
 		isReadyToUse = true
 	),
-	val validationResult: AlarmDataValidationResult = AlarmDataValidationResult.Success,
-	val isLoading: Boolean = false,
-	val areAllPermissionsGranted: Boolean = true,
+		val validationResult: AlarmDataValidationResult = AlarmDataValidationResult.Success,
+		val isLoading: Boolean = false,
+		val areAllPermissionsGranted: Boolean = true,
 	// if this is null then we are creating a new alarm else if not null then we are editing an existing alarm
-	var initialAlarm: AlarmData? = null,
-	val showPermissionDialog: Boolean = false,
-	val missingSteps: List<PermissionStep> = emptyList(),
-	val alarmOperationCompletedGoBack: Boolean = false,
-	val progress: Progress = if(initialAlarm == null) Progress.StartTime else Progress.FullEditor
+		var initialAlarm: AlarmData? = null,
+		val showPermissionDialog: Boolean = false,
+		val missingSteps: List<PermissionStep> = emptyList(),
+		val showPaywall: Boolean = false,
+		val pendingRepeatDay: DayOfWeek? = null, // remember what the user was trying to do
+		val alarmOperationCompletedGoBack: Boolean = false,
+		val progress: Progress = if(initialAlarm == null) Progress.StartTime else Progress.FullEditor
 )

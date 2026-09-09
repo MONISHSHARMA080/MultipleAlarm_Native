@@ -2,7 +2,7 @@ package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmContainer.utils
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.coolApps.MultipleAlarmClock.Data.billing.BillingManager
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.billing.EntitlementManager
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
@@ -12,10 +12,11 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
 	private val analytics: Analytics,
-	private val billingManager: BillingManager
+	private val entitlementManager: EntitlementManager, // <-- add
+
 )  : ViewModel() {
 
-	val isPro: StateFlow<Boolean> = billingManager.isPro
+	val isPremium: StateFlow<Boolean> = entitlementManager.isPremium
 
 	fun submitFeedback(feedback: String): Unit {
 		viewModelScope.launch {

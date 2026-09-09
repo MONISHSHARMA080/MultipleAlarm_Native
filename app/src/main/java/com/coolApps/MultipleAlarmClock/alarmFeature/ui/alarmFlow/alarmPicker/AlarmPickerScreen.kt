@@ -74,6 +74,7 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.com
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.SettingsCard
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.TimePickerWithoutDialog
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.TimeRow
+import com.coolApps.MultipleAlarmClock.logD
 import java.util.Calendar
 
 
@@ -83,23 +84,37 @@ fun AlarmPickerScreen(
 		alarmSetProceed: () -> Unit,
 		settingAlarmCancelled: ()->Unit,
 		onNavigateToSoundList: () -> Unit,
+		onNavigateToPaywall:()->Unit,
 		forNewAlarm: Boolean,
 		fromOnboarding:Boolean = false,
 		viewModel: AlarmPickerViewModel
 ) {
 
 	val uiState by viewModel.uiState.collectAsState()
+	val isPremium by viewModel.isPremium.collectAsState()
 	val selectedSound by viewModel.selectedAlarmSound.collectAsState()
 
 	val view = LocalView.current
 	val timeStyle = typography.headlineSmall
 	val context = LocalContext.current
 
+
 	LaunchedEffect(Unit) { viewModel.screen("AlarmPickerScreen") }
 
+	LaunchedEffect(uiState) {
+		logD("ui state:$uiState")
+		logD("isPremium:$isPremium")
+
+	}
 	LaunchedEffect(uiState.alarmOperationCompletedGoBack) {
 		if (uiState.alarmOperationCompletedGoBack) {
 			alarmSetProceed()
+		}
+	}
+	LaunchedEffect(uiState.showPaywall) {
+		if (uiState.showPaywall){
+			onNavigateToPaywall()
+			viewModel.navigationToPaywallComplete()
 		}
 	}
 
@@ -390,7 +405,7 @@ fun AlarmPickerScreen(
 								messageValueChanged = { viewModel.updateMessage(it) },
 								calenderButtonClicked = { showCalendar = true },
 								selectSoundButtonClicked = onNavigateToSoundList,
-								repeatDayToggled = {day -> viewModel.toggleRepeatDay(day)},
+								repeatDayToggled = {day -> viewModel.onRepeatDayClicked(day)},
 								selectedSoundName = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random)
 							)
 							Spacer(modifier = Modifier.weight(0.04f))

@@ -25,7 +25,8 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.listAlarmRingto
 @Composable
 fun AlarmFlowScreen(
 	alarmData: AlarmData?,
-	onCloseFlow: () -> Unit
+	onCloseFlow: () -> Unit,
+	onNavigateToPaywall: () -> Unit
 ) {
 	val viewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory ->
 		factory.create(alarmData)
@@ -80,7 +81,7 @@ fun AlarmFlowScreen(
 					forNewAlarm = alarmData == null,
 					onNavigateToSoundList = {
 						flowBackStack.add(AlarmFlowRoute.AlarmSoundListScreen)
-					}
+					}, onNavigateToPaywall = onNavigateToPaywall,
 				)
 			}
 

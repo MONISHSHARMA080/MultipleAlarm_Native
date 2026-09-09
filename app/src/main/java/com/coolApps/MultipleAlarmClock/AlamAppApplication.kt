@@ -8,19 +8,25 @@ import com.revenuecat.purchases.Purchases
 import com.revenuecat.purchases.PurchasesConfiguration
 import dagger.hilt.android.HiltAndroidApp
 import jakarta.inject.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @HiltAndroidApp
 class AlarmApp : Application(), Configuration.Provider {
 
 	@Inject
 	lateinit var workerFactory: HiltWorkerFactory
+	private val coroutineScope = CoroutineScope(Dispatchers.Main)
 
 	override fun onCreate() {
 		super.onCreate()
-		Purchases.logLevel = LogLevel.DEBUG
-		Purchases.configure(
-			PurchasesConfiguration.Builder(this, BuildConfig.REVENUECAT_API_KEY).build()
-		)
+		coroutineScope.launch {
+			Purchases.logLevel = LogLevel.DEBUG
+			Purchases.configure(
+				PurchasesConfiguration.Builder(this@AlarmApp, BuildConfig.REVENUECAT_API_KEY).build()
+			)
+		}
 	}
 
 	override val workManagerConfiguration: Configuration get() = Configuration.Builder()

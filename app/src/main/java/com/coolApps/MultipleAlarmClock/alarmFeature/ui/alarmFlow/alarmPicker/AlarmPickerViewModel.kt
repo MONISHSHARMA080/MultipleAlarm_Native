@@ -13,6 +13,7 @@ import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.Data.dataStore.Settings
 import com.coolApps.MultipleAlarmClock.Data.dataStore.copy
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.billing.EntitlementManager
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.RepeatDays
@@ -41,13 +42,14 @@ import java.util.Calendar
 
 @HiltViewModel(assistedFactory = AlarmPickerViewModel.Factory::class)
 class AlarmPickerViewModel @AssistedInject constructor(
-	val analytics: Analytics,
-	private val alarmManager: AlarmManager,
-	private val dataStore: DataStore<Settings>,
-	private val alarmsController: AlarmsController,
-	private val errorHandler: ErrorHandler,
-	@ApplicationContext val context: Context,
-	@Assisted private val alarmData: AlarmData?
+		val analytics: Analytics,
+		private val alarmManager: AlarmManager,
+		private val dataStore: DataStore<Settings>,
+		private val alarmsController: AlarmsController,
+		private val entitlementManager: EntitlementManager, // <-- add
+		private val errorHandler: ErrorHandler,
+		@ApplicationContext val context: Context,
+		@Assisted private val alarmData: AlarmData?
 ) : ViewModel() {
 
 	@AssistedFactory
@@ -60,10 +62,11 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		initialAlarm = alarmData,
 		progress = if (alarmData == null) Progress.StartTime else Progress.FullEditor
 	))
-
 	val uiState: StateFlow<AlarmPickerUiState> = _uiState.asStateFlow()
 
 	private val nonCancellableScope = CoroutineScope(NonCancellable)
+
+	val isPremium: StateFlow<Boolean> = entitlementManager.isPremium
 
 	private val _alarmSoundName = MutableStateFlow<List<AlarmSound>>(emptyList())
 	val listOfAlarms = _alarmSoundName.asStateFlow()
@@ -78,13 +81,16 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	val previewingRandom = _previewingRandom.asStateFlow()
 	private val playAlarm = PlayAlarm(context, analytics)
 
-
 	init {
 		viewModelScope.launch(Dispatchers.IO) {
 			_alarmSoundName.value = getAlarmSounds()
 		}
+		observePremiumAccess()
 	}
 
+	fun navigationToPaywallComplete(){
+		_uiState.update { it.copy(showPaywall = false) }
+	}
 
 	// Update your onSetAlarmClicked to be even simpler
 	fun onSetAlarmClicked() {
@@ -101,6 +107,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 			captureUiStateAndSendAnalytics(_uiState.value)
 			return
 		}
+
 		if (!current.areAllPermissionsGranted) {
 			val missing = PermissionUtils.getRequiredPermissionSteps(context)
 			_uiState.update { it.copy(showPermissionDialog = true, missingSteps = missing) }
@@ -457,11 +464,35 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		}
 	}
 
-	override fun onCleared() {
-		super.onCleared()
-		stopPreview()
-		playAlarm.destroy()
+	fun onRepeatDayClicked(day: DayOfWeek) {
+		viewModelScope.launch {
+			entitlementManager.refresh()
+
+			if (isPremium.value) {
+				toggleRepeatDay(day)
+			} else {
+				_uiState.update {
+					it.copy(
+						showPaywall = true,
+						pendingRepeatDay = day
+					)
+				}
+			}
+		}
 	}
+//
+//	fun onPaywallDismissed() {
+//		_uiState.update { it.copy(showPaywall = false, pendingRepeatDay = null) }
+//	}
+//	fun onPurchaseCompleted() {
+//		val day = _uiState.value.pendingRepeatDay
+//		_uiState.update { it.copy(showPaywall = false, pendingRepeatDay = null) }
+//		if (day != null) {
+//			toggleRepeatDay(day) // resume exactly what the user was trying to do
+//		}
+//		analytics.captureEvent("repeat_day_paywall_converted", emptyMap())
+//	}
+//
 
 	fun toggleRepeatDay(day: DayOfWeek) {
 		_uiState.update { state ->
@@ -513,4 +544,36 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		}
 		captureUiStateAndSendAnalytics(_uiState.value)
 	}
+
+	private fun observePremiumAccess() {
+
+		//TODO: remove the pending repeat date form here as user can just click it again and ok for the ux, and wouldn't require state sync if they did convert
+
+
+		viewModelScope.launch {
+			entitlementManager.isPremium.collect { isPremium ->
+				if (isPremium) {
+					val pendingDay = _uiState.value.pendingRepeatDay
+
+					if (pendingDay != null) {
+						toggleRepeatDay(pendingDay)
+
+						_uiState.update {
+							it.copy(
+								showPaywall = false,
+								pendingRepeatDay = null
+							)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	override fun onCleared() {
+		super.onCleared()
+		stopPreview()
+		playAlarm.destroy()
+	}
+
 }

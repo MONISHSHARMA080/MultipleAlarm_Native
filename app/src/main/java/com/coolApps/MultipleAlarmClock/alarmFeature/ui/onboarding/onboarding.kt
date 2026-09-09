@@ -86,7 +86,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 					},
 					label = "alarm screen navigation"
 				) { shouldWeShowAlarmScreen ->
-
 					if (shouldWeShowAlarmScreen) {
 						ListAlarmSoundScreen(
 							alarmPickerViewModel,
@@ -111,7 +110,8 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 							},
 							settingAlarmCancelled = {
 								viewModel.onPreviousClicked()
-							}
+							}, onNavigateToPaywall = {},
+							fromOnboarding = true
 						)
 					}
 				}
