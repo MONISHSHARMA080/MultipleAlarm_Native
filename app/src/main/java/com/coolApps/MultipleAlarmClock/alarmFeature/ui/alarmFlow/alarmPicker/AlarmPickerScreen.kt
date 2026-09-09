@@ -83,6 +83,7 @@ fun AlarmPickerScreen(
 		settingAlarmCancelled: ()->Unit,
 		onNavigateToSoundList: () -> Unit,
 		forNewAlarm: Boolean,
+		fromOnboarding:Boolean = false,
 		viewModel: AlarmPickerViewModel
 ) {
 
@@ -92,9 +93,6 @@ fun AlarmPickerScreen(
 	val view = LocalView.current
 	val timeStyle = typography.headlineSmall
 	val context = LocalContext.current
-//	LaunchedEffect(uiState) {
-//		logD("ui state:$uiState ")
-//	}
 
 	LaunchedEffect(Unit) { viewModel.screen("AlarmPickerScreen") }
 
@@ -363,7 +361,9 @@ fun AlarmPickerScreen(
 							state = endTimePickerState,
 							isCandidateInvalid = isCandidateInvalid,
 							modifier = Modifier.padding(horizontal = horizontalPadding),
-							uiState = uiState
+							uiState = uiState,
+							minHour = startTimePickerState.hour,
+							minMin = if (startTimePickerState.minute == 59) 59 else startTimePickerState.minute + 1 ,
 						)
 					}
 

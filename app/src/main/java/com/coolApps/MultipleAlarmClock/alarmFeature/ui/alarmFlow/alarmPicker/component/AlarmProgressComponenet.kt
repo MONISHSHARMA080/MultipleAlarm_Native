@@ -1,7 +1,7 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component
 
-//import androidx.compose.material3.TimePickerState
 import android.view.HapticFeedbackConstants
+import androidx.annotation.IntRange
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -51,7 +51,10 @@ fun TimePickerWithoutDialog(
 		modifier: Modifier = Modifier,
 		isCandidateInvalid: Boolean = false,
 		uiState: AlarmPickerUiState,
+		@IntRange(from = 0, to = 23) minHour:Int? = null,
+		@IntRange(from = 0, to = 59) minMin:Int? = null,
 ) {
+
 
 	Column(
 		modifier = modifier
@@ -70,7 +73,7 @@ fun TimePickerWithoutDialog(
 			}
 		}
 
-		TimePicker(state, minHour = 9, minMinute = 15,  onDisabledTimeSelected = { logD("Disabled time called") })
+		TimePicker(state, minHour = minHour, minMinute = minMin,  onDisabledTimeSelected = { logD("Disabled time called") })
 
 		AnimatedVisibility(visible = isCandidateInvalid) {
 			val locale = LocalLocale.current.platformLocale

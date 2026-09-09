@@ -267,7 +267,7 @@ fun EmptyState(modifier: Modifier = Modifier) {
 		initialValue = 0f,
 		targetValue = 7f,
 		animationSpec = infiniteRepeatable(
-			animation = tween(durationMillis = 1777, easing = LinearEasing),
+			animation = tween(durationMillis = 1222, easing = LinearEasing),
 			repeatMode = RepeatMode.Reverse
 		),
 		label = "EmptyStateIconOffset"

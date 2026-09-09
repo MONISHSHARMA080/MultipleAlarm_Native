@@ -144,6 +144,7 @@ import kotlin.math.hypot
 import kotlin.math.round
 import kotlin.math.roundToInt
 import kotlin.math.sin
+import kotlin.time.Duration.Companion.milliseconds
 
 private const val FullCircle: Float = (PI * 2).toFloat()
 private const val HalfCircle: Float = FullCircle / 2f
@@ -544,7 +545,7 @@ private suspend fun AnalogTimePickerState.onTap(
     rotateTo(angle, animationSpec = animationSpec, animate = true)
 
     if (selection == TimePickerSelectionMode.Hour && autoSwitchToMinute) {
-        delay(100)
+        delay(100.milliseconds)
         selection = TimePickerSelectionMode.Minute
     }
 }
@@ -1003,10 +1004,14 @@ private fun PeriodToggleImpl(
     val borderStroke =
         BorderStroke(PeriodSelectorOutlineWidth, colors.periodSelectorBorderColor)
     val shape = RoundedCornerShape(8.dp)
-    val amDisabled = isPeriodAmDisabled(minHour)
-    val pmDisabled = isPeriodPmDisabled(minHour)
+//    val amDisabled = isPeriodAmDisabled(minHour)
+//    val pmDisabled = isPeriodPmDisabled(minHour)
+	val amDisabled = false
+	val pmDisabled = false
 
-    Layout(
+
+
+	Layout(
         modifier =
             modifier
                 .semantics {
@@ -1017,52 +1022,46 @@ private fun PeriodToggleImpl(
                 .border(border = borderStroke, shape = shape),
         measurePolicy = measurePolicy,
         content = {
-            ToggleItem(
-                checked = !state.isPm,
-                isDisabled = amDisabled,
-                shape = startShape,
-                onClick = {
-                    if (amDisabled) {
-                        onDisabledTimeSelected?.invoke()
-                    } else if (state.isPm) {
-                        val targetHour = state.hour - 12
-                        if (isMinuteDisabled(targetHour, state.minute, minHour, minMinute)) {
-                            onDisabledTimeSelected?.invoke()
-                        } else {
-                            state.hour -= 12
-                        }
-                    }
-                },
-                colors = colors,
-            ) {
-                Text(text = "AM")
+ ToggleItem(
+        checked = !state.isPm,
+        isDisabled = amDisabled,
+        shape = startShape,
+        onClick = {
+            if (state.isPm) {
+                val targetHour = state.hour - 12
+                state.hour = targetHour
+                if (isMinuteDisabled(targetHour, state.minute, minHour, minMinute)) {
+                    onDisabledTimeSelected?.invoke()
+                }
             }
-            Spacer(
-                Modifier.layoutId("Spacer")
-                    .zIndex(SeparatorZIndex)
-                    .fillMaxSize()
-                    .background(color = colors.periodSelectorBorderColor)
-            )
-            ToggleItem(
-                checked = state.isPm,
-                isDisabled = pmDisabled,
-                shape = endShape,
-                onClick = {
-                    if (pmDisabled) {
-                        onDisabledTimeSelected?.invoke()
-                    } else if (!state.isPm) {
-                        val targetHour = state.hour + 12
-                        if (isMinuteDisabled(targetHour, state.minute, minHour, minMinute)) {
-                            onDisabledTimeSelected?.invoke()
-                        } else {
-                            state.hour += 12
-                        }
-                    }
-                },
-                colors = colors,
-            ) {
-                Text("PM")
+        },
+        colors = colors,
+    ) {
+        Text(text = "AM")
+    }
+    Spacer(
+        Modifier.layoutId("Spacer")
+            .zIndex(SeparatorZIndex)
+            .fillMaxSize()
+            .background(color = colors.periodSelectorBorderColor)
+    )
+    ToggleItem(
+        checked = state.isPm,
+        isDisabled = pmDisabled,
+        shape = endShape,
+        onClick = {
+            if (!state.isPm) {
+                val targetHour = state.hour + 12
+                state.hour = targetHour
+                if (isMinuteDisabled(targetHour, state.minute, minHour, minMinute)) {
+                    onDisabledTimeSelected?.invoke()
+                }
             }
+        },
+        colors = colors,
+    ) {
+        Text("PM")
+    }
         },
     )
 }
