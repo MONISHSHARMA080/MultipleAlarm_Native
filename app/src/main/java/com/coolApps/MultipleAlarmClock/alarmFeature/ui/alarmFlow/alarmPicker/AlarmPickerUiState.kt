@@ -28,7 +28,7 @@ data class AlarmPickerUiState(
 	),
 	val validationResult: AlarmDataValidationResult = AlarmDataValidationResult.Success,
 	val isLoading: Boolean = false,
-	val areAllPermissionsGranted: Boolean = true,
+	val areAllPermissionsGranted: Boolean = false,
 	// if this is null then we are creating a new alarm else if not null then we are editing an existing alarm
 	val initialAlarm: AlarmData? = null,
 	val showPermissionDialog: Boolean = false,

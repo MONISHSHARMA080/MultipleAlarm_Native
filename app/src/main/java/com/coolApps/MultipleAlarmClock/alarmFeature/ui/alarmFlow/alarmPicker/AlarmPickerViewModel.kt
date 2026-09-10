@@ -238,9 +238,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 				val endOfDay = (now.clone() as Calendar).apply {
 					set(Calendar.HOUR_OF_DAY, 23)
 					set(Calendar.MINUTE, 59)
-					set(Calendar.SECOND, 0)
-					set(Calendar.MILLISECOND, 0)
-				}
+				}.truncatedToMinute()
 
 				val durationMin = 45
 				when{
