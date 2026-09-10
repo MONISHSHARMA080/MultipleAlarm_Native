@@ -1,6 +1,6 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.data.local.repository
 
-import com.coolApps.MultipleAlarmClock.alarmFeature.data.AlarmLocalDataSource
+import com.coolApps.MultipleAlarmClock.alarmFeature.repository.AlarmLocalDataSource
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import jakarta.inject.Inject

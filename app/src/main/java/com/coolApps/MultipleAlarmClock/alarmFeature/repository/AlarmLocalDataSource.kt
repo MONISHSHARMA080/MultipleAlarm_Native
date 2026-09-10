@@ -1,4 +1,4 @@
-package com.coolApps.MultipleAlarmClock.alarmFeature.data
+package com.coolApps.MultipleAlarmClock.alarmFeature.repository
 
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDao
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData

@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.AlarmManager
 import android.content.Context
 import android.content.pm.PackageManager
-import android.media.RingtoneManager
 import androidx.core.content.ContextCompat
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
@@ -17,6 +16,7 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.data.billing.EntitlementMana
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.RepeatDays
+import com.coolApps.MultipleAlarmClock.alarmFeature.repository.AlarmSoundRepository
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.Permissions.PermissionUtils
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.data.AlarmSound
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
@@ -29,11 +29,15 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
@@ -42,14 +46,15 @@ import java.util.Calendar
 
 @HiltViewModel(assistedFactory = AlarmPickerViewModel.Factory::class)
 class AlarmPickerViewModel @AssistedInject constructor(
-		val analytics: Analytics,
-		private val alarmManager: AlarmManager,
-		private val dataStore: DataStore<Settings>,
-		private val alarmsController: AlarmsController,
-		private val entitlementManager: EntitlementManager, // <-- add
-		private val errorHandler: ErrorHandler,
-		@ApplicationContext val context: Context,
-		@Assisted private val alarmData: AlarmData?
+	val analytics: Analytics,
+	private val alarmManager: AlarmManager,
+	private val dataStore: DataStore<Settings>,
+	private val alarmsController: AlarmsController,
+	private val entitlementManager: EntitlementManager,
+	private val errorHandler: ErrorHandler,
+	private val alarmSoundRepository: AlarmSoundRepository,
+	@ApplicationContext val context: Context,
+	@Assisted private val alarmData: AlarmData?
 ) : ViewModel() {
 
 	@AssistedFactory
@@ -57,34 +62,49 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		fun create(alarmData: AlarmData?): AlarmPickerViewModel
 	}
 
-	private val _uiState = MutableStateFlow(AlarmPickerUiState(
-		alarmData = createDefaultAlarm(alarmData),
-		initialAlarm = alarmData,
-		progress = if (alarmData == null) Progress.StartTime else Progress.FullEditor
-	))
+	private val _uiState = MutableStateFlow(
+		AlarmPickerUiState(
+			alarmData = createDefaultAlarm(alarmData),
+			initialAlarm = alarmData,
+			progress = if (alarmData == null) Progress.StartTime else Progress.FullEditor
+		)
+	)
 	val uiState: StateFlow<AlarmPickerUiState> = _uiState.asStateFlow()
+
+	val listOfAlarms: StateFlow<List<AlarmSound>> = alarmSoundRepository
+		.getAlarmSoundsStream()
+		.stateIn(
+			scope = viewModelScope,
+			started = SharingStarted.WhileSubscribed(5_000),
+			initialValue = emptyList()
+		)
+
+	private val _previewingSound = MutableStateFlow<AlarmSound?>(null)
+	val previewingSound = _previewingSound.asStateFlow()
+
+	private val _previewingRandom = MutableStateFlow(false)
+	val previewingRandom = _previewingRandom.asStateFlow()
+
+	// Derived purely from listOfAlarms + the currently selected sound uri in uiState.
+	// No manual write path needed anymore -- onAlarmSoundSelected just updates uiState.
+	val selectedAlarmSound: StateFlow<AlarmSound?> = combine(
+		listOfAlarms,
+		_uiState.map { it.alarmData.sound }.distinctUntilChanged()
+	) { sounds, soundUri ->
+		sounds.find { it.soundUri.toString() == soundUri }
+	}.stateIn(
+		scope = viewModelScope,
+		started = SharingStarted.WhileSubscribed(5_000),
+		initialValue = null
+	)
 
 	private val nonCancellableScope = CoroutineScope(NonCancellable)
 
 	val isPremium: StateFlow<Boolean> = entitlementManager.isPremium
 
-	private val _alarmSoundName = MutableStateFlow<List<AlarmSound>>(emptyList())
-	val listOfAlarms = _alarmSoundName.asStateFlow()
-
-	private val _selectedAlarmSound = MutableStateFlow<AlarmSound?>(null)
-	val selectedAlarmSound = _selectedAlarmSound.asStateFlow()
-
-	/** here null means it's empty*/
-	private val _previewingSound = MutableStateFlow<AlarmSound?>(null)
-	val previewingSound = _previewingSound.asStateFlow()
-	private val _previewingRandom = MutableStateFlow(false)
-	val previewingRandom = _previewingRandom.asStateFlow()
 	private val playAlarm = PlayAlarm(context, analytics)
 
 	init {
-		viewModelScope.launch(Dispatchers.IO) {
-			_alarmSoundName.value = getAlarmSounds()
-		}
 		observePremiumAccess()
 	}
 
@@ -124,8 +144,8 @@ class AlarmPickerViewModel @AssistedInject constructor(
 
 	fun previewSound(sound: AlarmSound?) {
 		val soundToPlay = sound ?: listOfAlarms.value.randomOrNull() ?: return
-
-		val sameItemTapped = (sound == null && _previewingRandom.value) || (sound != null && _previewingSound.value?.soundUri == sound.soundUri)
+		val sameItemTapped = (sound == null && _previewingRandom.value) ||
+				(sound != null && _previewingSound.value?.soundUri == sound.soundUri)
 
 		if (sameItemTapped) {
 			stopPreview()
@@ -135,7 +155,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		stopPreview()
 		playAlarm.play(soundToPlay.soundUri)
 		_previewingSound.value = soundToPlay
-		_previewingRandom.value = sound == null
+		_previewingRandom.value = (sound == null)
 	}
 
 	fun stopPreview() {
@@ -208,31 +228,13 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	}
 
 	fun onAlarmSoundSelected(sound: AlarmSound?) {
-		_selectedAlarmSound.value = sound
-		_uiState.update { it.copy(alarmData = it.alarmData.copy(sound = sound?.soundUri?.toString())) }
-		captureUiStateAndSendAnalytics(_uiState.value)
-		previewSound(sound)
-	}
-
-	fun getAlarmSounds(): List<AlarmSound> {
-		val ringtoneManager = RingtoneManager(context).apply {
-			setType(RingtoneManager.TYPE_ALARM)
-		}
-		val cursor = ringtoneManager.cursor
-		val sounds = mutableListOf<AlarmSound>()
-		while (cursor.moveToNext()) {
-			val position = cursor.position
-			val title = ringtoneManager.getRingtone(position)
-				?.getTitle(context)
-				?: "Unknown"
-			val uri = ringtoneManager.getRingtoneUri(position)
-			sounds += AlarmSound(
-				title = title,
-				soundUri = uri,
+		_uiState.update {
+			it.copy(
+				alarmData = it.alarmData.copy(sound = sound?.soundUri?.toString())
 			)
 		}
-		cursor.close()
-		return sounds
+		captureUiStateAndSendAnalytics(_uiState.value)
+		previewSound(sound)
 	}
 
 	/** creates a default alarm data; either selects a time if [alarm] is null or else returns [alarm]*/
@@ -480,19 +482,6 @@ class AlarmPickerViewModel @AssistedInject constructor(
 			}
 		}
 	}
-//
-//	fun onPaywallDismissed() {
-//		_uiState.update { it.copy(showPaywall = false, pendingRepeatDay = null) }
-//	}
-//	fun onPurchaseCompleted() {
-//		val day = _uiState.value.pendingRepeatDay
-//		_uiState.update { it.copy(showPaywall = false, pendingRepeatDay = null) }
-//		if (day != null) {
-//			toggleRepeatDay(day) // resume exactly what the user was trying to do
-//		}
-//		analytics.captureEvent("repeat_day_paywall_converted", emptyMap())
-//	}
-//
 
 	fun toggleRepeatDay(day: DayOfWeek) {
 		_uiState.update { state ->
