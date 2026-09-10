@@ -373,60 +373,32 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	}
 
 	private fun setNewOrUpdateAlarm(newAlarmData: AlarmData, oldAlarm: AlarmData? ){
-		when (oldAlarm) {
-			null -> {
-				viewModelScope.launch {
-					logD("the alarm data confirmed is $newAlarmData, and is  oldAlarm == newAlarmData ->  ")
-					val exception = alarmsController.startAlarmSeriesHandler(
-						alarm = newAlarmData.copy(isReadyToUse = true, id = 0),
-						alarmManager = alarmManager,
-						activityContext = context,
-					)
-					exception.fold(
-						onSuccess = {
-							launch {
-								dataStore.updateData { data ->data.copy { firstAlarmSet = true } }
-							}
-							launch {
-								analytics.captureEvent("new alarm successfully set", mapOf("alarmData" to newAlarmData.toString()))
-							}
-						},
-						onError = { error ->
-							logD("there is a error in making new alarm  that is $error")
-							errorHandler.handleError(Result.Failure(error))
-						}
-					)
+		viewModelScope.launch {
+			logD("deleting the alarm $oldAlarm")
+			val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(
+				alarm = newAlarmData.copy(id = oldAlarm?.id ?: 0),
+				alarmManager, context
+			)
+			alarmScheduledResult.fold(
+				onSuccess = {
+					launch {
+						dataStore.updateData { data ->data.copy { firstAlarmSet = true } }
+					}
+					launch {
+						val eventText = if (oldAlarm != null) "alarm_edited"  else "new_alarm_set"
+						analytics.captureEvent(eventText,
+							mapOf(
+								"alarmData" to newAlarmData.toString(),
+								"oldAlarm" to oldAlarm.toString(),
+							)
+						)
+					}
+				},
+				onError = { error ->
+					errorHandler.handleError(Result.Failure(error))
+					logD("there is a error in editing new alarm-->${error.internalErrorMessage}")
 				}
-			}
-			else -> {
-				viewModelScope.launch {
-					logD("deleting the alarm $oldAlarm")
-					val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(
-						alarm = newAlarmData.copy(id = oldAlarm.id),
-						alarmManager, context
-					)
-					alarmScheduledResult.fold(
-						onSuccess = {
-							launch {
-								dataStore.updateData { data ->data.copy { firstAlarmSet = true } }
-							}
-							launch {
-								analytics.captureEvent("alarm(old) successfully edited",
-									mapOf(
-										"alarmData" to newAlarmData.toString(),
-										"oldAlarm" to oldAlarm.toString(),
-									)
-								)
-							}
-						},
-						onError = { error ->
-							errorHandler.handleError(Result.Failure(error))
-							logD("there is a error in editing new alarm-->${error.internalErrorMessage}")
-						}
-					)
-
-				}
-			}
+			)
 		}
 	}
 

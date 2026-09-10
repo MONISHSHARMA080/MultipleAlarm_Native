@@ -30,7 +30,7 @@ data class AlarmPickerUiState(
 	val isLoading: Boolean = false,
 	val areAllPermissionsGranted: Boolean = true,
 	// if this is null then we are creating a new alarm else if not null then we are editing an existing alarm
-	var initialAlarm: AlarmData? = null,
+	val initialAlarm: AlarmData? = null,
 	val showPermissionDialog: Boolean = false,
 	val missingSteps: List<PermissionStep> = emptyList(),
 	val showPaywall: Boolean = false,
