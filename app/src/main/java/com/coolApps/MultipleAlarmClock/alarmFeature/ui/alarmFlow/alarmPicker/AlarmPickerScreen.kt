@@ -89,7 +89,6 @@ fun AlarmPickerScreen(
 		fromOnboarding:Boolean = false,
 		viewModel: AlarmPickerViewModel
 ) {
-
 	val uiState by viewModel.uiState.collectAsState()
 	val isPremium by viewModel.isPremium.collectAsState()
 	val selectedSound by viewModel.selectedAlarmSound.collectAsState()
@@ -99,7 +98,13 @@ fun AlarmPickerScreen(
 	val context = LocalContext.current
 
 
-	LaunchedEffect(Unit) { viewModel.screen("AlarmPickerScreen") }
+	LaunchedEffect(Unit) {
+		viewModel.screen("AlarmPickerScreen")
+	}
+
+	LaunchedEffect(fromOnboarding) {
+		viewModel.fromOnboarding = fromOnboarding
+	}
 
 	LaunchedEffect(uiState) {
 		logD("ui state:$uiState")

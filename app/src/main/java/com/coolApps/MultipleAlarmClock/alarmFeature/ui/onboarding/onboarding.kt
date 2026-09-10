@@ -18,10 +18,15 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.Ala
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.listAlarmRingtone.ListAlarmSoundScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.AlarmResultClaude
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.GreetingScreen
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.OnboardingPaywallScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.PermissionScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.ProblemScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data.DisplaySate
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.revenuecat.purchases.Offering
+import com.revenuecat.purchases.Purchases
+import com.revenuecat.purchases.PurchasesException
+import com.revenuecat.purchases.awaitOfferings
 
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -33,6 +38,21 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 	LaunchedEffect(uiState.displaySate) {
 		viewModel.analytics.screen("Onboarding_${uiState.displaySate.name.lowercase()}")
 	}
+	// pre-fetching for caching
+	var offering by remember { mutableStateOf<Offering?>(null) }
+	var loadFailed by remember { mutableStateOf(false) }
+
+	LaunchedEffect(Unit) {
+		try {
+			val offerings = Purchases.sharedInstance.awaitOfferings()
+			offering = offerings.getCurrentOfferingForPlacement("onboarding_end")
+				?: offerings.current // fallback if the placement/rule isn't set up yet
+		} catch (e: PurchasesException) {
+			loadFailed = true
+		}
+	}
+
+
 
 	AnimatedContent( targetState = uiState.displaySate,
 		transitionSpec = {
@@ -116,7 +136,10 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 					}
 				}
 			}
-			DisplaySate.AlarmResult -> AlarmResultClaude(uiState.alarmData, onNextClick = {viewModel.finishedOnboarding() })
+			DisplaySate.AlarmResult -> AlarmResultClaude(uiState.alarmData, onNextClick = {viewModel.onNextClicked() })
+			DisplaySate.OnboardingPaywall -> {
+				OnboardingPaywallScreen(onFinished = {viewModel.finishedOnboarding()}, loadFailed = loadFailed, offering = offering)
+			}
 		}
 
 	}

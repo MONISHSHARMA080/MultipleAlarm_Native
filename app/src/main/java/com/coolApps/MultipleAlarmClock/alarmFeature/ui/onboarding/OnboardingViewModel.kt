@@ -61,7 +61,8 @@ import kotlinx.coroutines.launch
 				DisplaySate.Problem -> value.copy(displaySate = DisplaySate.Permission)
 				DisplaySate.Permission -> value.copy(displaySate = DisplaySate.CreateFirstAlarm)
 				DisplaySate.CreateFirstAlarm ->value.copy(displaySate = DisplaySate.AlarmResult)
-				DisplaySate.AlarmResult -> value.copy(displaySate = DisplaySate.AlarmResult);
+				DisplaySate.AlarmResult -> value.copy(displaySate = DisplaySate.OnboardingPaywall);
+				DisplaySate.OnboardingPaywall -> value.copy(displaySate = DisplaySate.OnboardingPaywall);
 			}
 		}
 	}
@@ -76,6 +77,7 @@ import kotlinx.coroutines.launch
 				DisplaySate.Permission -> value.copy(displaySate = DisplaySate.Problem)
 				DisplaySate.CreateFirstAlarm ->value.copy(displaySate = DisplaySate.Permission)
 				DisplaySate.AlarmResult -> value.copy(displaySate = DisplaySate.CreateFirstAlarm)
+				DisplaySate.OnboardingPaywall -> value.copy(displaySate = DisplaySate.AlarmResult);
 			}
 		}
 	}

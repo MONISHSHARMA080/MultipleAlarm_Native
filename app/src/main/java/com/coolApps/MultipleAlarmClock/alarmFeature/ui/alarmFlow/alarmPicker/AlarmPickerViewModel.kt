@@ -69,6 +69,8 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	)
 	val uiState: StateFlow<AlarmPickerUiState> = _uiState.asStateFlow()
 
+	var fromOnboarding = false
+
 	val listOfAlarms: StateFlow<List<AlarmSound>> = alarmSoundRepository
 		.getAlarmSoundsStream()
 		.stateIn(
@@ -373,8 +375,9 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	private fun setNewOrUpdateAlarm(newAlarmData: AlarmData, oldAlarm: AlarmData? ){
 		viewModelScope.launch {
 			logD("deleting the alarm $oldAlarm")
+			val repeatDays = if (fromOnboarding) null else newAlarmData.repeatDays
 			val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(
-				alarm = newAlarmData.copy(id = oldAlarm?.id ?: 0),
+				alarm = newAlarmData.copy(id = oldAlarm?.id ?: 0, repeatDays=repeatDays),
 				alarmManager, context
 			)
 			alarmScheduledResult.fold(
@@ -402,16 +405,17 @@ class AlarmPickerViewModel @AssistedInject constructor(
 
 	fun onRepeatDayClicked(day: DayOfWeek) {
 		viewModelScope.launch {
-			// I don't think I need it, we have a listener set up it can listen and tell me when user got the premium access
-//			entitlementManager.refresh()
-			if (isPremium.value) {
-				toggleRepeatDay(day)
-			} else {
-				_uiState.update {
-					it.copy(
-						showPaywall = true,
-						pendingRepeatDay = day
-					)
+			when{
+				fromOnboarding || isPremium.value ->{
+					toggleRepeatDay(day)
+				}
+				else ->{
+					_uiState.update {
+						it.copy(
+							showPaywall = true,
+							pendingRepeatDay = day
+						)
+					}
 				}
 			}
 		}

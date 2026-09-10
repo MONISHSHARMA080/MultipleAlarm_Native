@@ -114,9 +114,6 @@ fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) 
 						onNavigateBack = {
 							backStack.removeLastOrNull() ?: backStack.add(Screen.AlarmContainer)
 						},
-//						onNavigateToPaywall = {
-//							backStack.add(Screen.Paywall)
-//						},
 						onNavigateToPaywall = {
 							showPaywall = it
 						},

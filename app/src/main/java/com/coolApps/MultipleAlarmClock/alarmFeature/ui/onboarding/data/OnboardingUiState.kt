@@ -8,7 +8,8 @@ enum class DisplaySate() {
 	Problem,
 	CreateFirstAlarm,
 	Permission,
-	AlarmResult;
+	AlarmResult,
+	OnboardingPaywall;
 
 	override fun toString(): String {
 		return  when(this){
@@ -17,6 +18,7 @@ enum class DisplaySate() {
 			CreateFirstAlarm -> "CreateFirstAlarm"
 			Permission -> "Permission"
 			AlarmResult -> "AlarmResult"
+			OnboardingPaywall ->"OnboardingPaywall"
 		}
 	}
 }
