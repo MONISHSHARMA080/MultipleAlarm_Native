@@ -1,12 +1,15 @@
 package com.coolApps.MultipleAlarmClock.Ui.Navigation
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -14,8 +17,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -27,6 +32,7 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmContainer.AlarmConta
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmContainer.utils.SettingsScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.AlarmFlowScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.OnboardingScreen
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.util.PremiumPaywallDialog
 import com.revenuecat.purchases.ui.revenuecatui.Paywall
 import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 import com.revenuecat.purchases.ui.revenuecatui.customercenter.CustomerCenter
@@ -42,6 +48,7 @@ fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) 
 	}
 	val backStack = rememberNavBackStack(startKey)
 	val coroutineScope = rememberCoroutineScope()
+	var showPaywall by remember { mutableStateOf(false) }
 
 	LaunchedEffect(isFirstLaunch) {
 		if (isFirstLaunch == false && deepLinkScreen == null) {
@@ -107,9 +114,13 @@ fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) 
 						onNavigateBack = {
 							backStack.removeLastOrNull() ?: backStack.add(Screen.AlarmContainer)
 						},
+//						onNavigateToPaywall = {
+//							backStack.add(Screen.Paywall)
+//						},
 						onNavigateToPaywall = {
-							backStack.add(Screen.Paywall)
+							showPaywall = it
 						},
+
 						onNavigateToCustomerCenter = {
 							backStack.add(Screen.CustomerCenter)
 						}
@@ -154,7 +165,9 @@ fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) 
 					AlarmFlowScreen(
 						alarmData = key.alarmData,
 						onCloseFlow = { backStack.removeLastOrNull() },
-						onNavigateToPaywall = {backStack.add(Screen.Paywall)}
+						onNavigateToPaywall = {
+							showPaywall = it
+						}
 					)
 
 					LaunchedEffect(key.alarmData) {
@@ -182,5 +195,12 @@ fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) 
 				}
 			}
 		)
+	}
+	AnimatedVisibility(
+		showPaywall,
+		enter = slideInVertically { it },
+		exit = slideOutVertically { it }
+	) {
+		PremiumPaywallDialog(false) { showPaywall = false }
 	}
 }

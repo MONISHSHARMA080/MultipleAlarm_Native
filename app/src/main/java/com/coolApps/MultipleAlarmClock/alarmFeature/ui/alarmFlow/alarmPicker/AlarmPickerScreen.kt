@@ -84,7 +84,7 @@ fun AlarmPickerScreen(
 		alarmSetProceed: () -> Unit,
 		settingAlarmCancelled: ()->Unit,
 		onNavigateToSoundList: () -> Unit,
-		onNavigateToPaywall:()->Unit,
+		onNavigateToPaywall:(Boolean)->Unit,
 		forNewAlarm: Boolean,
 		fromOnboarding:Boolean = false,
 		viewModel: AlarmPickerViewModel
@@ -113,7 +113,7 @@ fun AlarmPickerScreen(
 	}
 	LaunchedEffect(uiState.showPaywall) {
 		if (uiState.showPaywall){
-			onNavigateToPaywall()
+			onNavigateToPaywall(true)
 			viewModel.navigationToPaywallComplete()
 		}
 	}

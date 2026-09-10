@@ -402,8 +402,8 @@ class AlarmPickerViewModel @AssistedInject constructor(
 
 	fun onRepeatDayClicked(day: DayOfWeek) {
 		viewModelScope.launch {
-			entitlementManager.refresh()
-
+			// I don't think I need it, we have a listener set up it can listen and tell me when user got the premium access
+//			entitlementManager.refresh()
 			if (isPremium.value) {
 				toggleRepeatDay(day)
 			} else {

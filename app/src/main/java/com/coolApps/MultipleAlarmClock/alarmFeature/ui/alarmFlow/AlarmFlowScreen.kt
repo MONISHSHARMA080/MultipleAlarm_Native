@@ -26,7 +26,7 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.listAlarmRingto
 fun AlarmFlowScreen(
 	alarmData: AlarmData?,
 	onCloseFlow: () -> Unit,
-	onNavigateToPaywall: () -> Unit
+	onNavigateToPaywall: (Boolean) -> Unit
 ) {
 	val viewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory ->
 		factory.create(alarmData)
@@ -88,14 +88,11 @@ fun AlarmFlowScreen(
 			entry<AlarmFlowRoute.AlarmSoundListScreen> {
 				val selected by viewModel.selectedAlarmSound.collectAsStateWithLifecycle()
 				val previewing by viewModel.previewingSound.collectAsStateWithLifecycle()
-
-
 				DisposableEffect(Unit) {
 					onDispose {
 						viewModel.stopPreview()
 					}
 				}
-
 				ListAlarmSoundScreen(
 					viewModel,
 					previewingUri = previewing?.soundUri,

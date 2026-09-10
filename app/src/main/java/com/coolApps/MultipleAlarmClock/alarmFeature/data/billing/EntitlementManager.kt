@@ -1,8 +1,10 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.data.billing
 
+import com.coolApps.MultipleAlarmClock.logD
 import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.Purchases
 import com.revenuecat.purchases.awaitCustomerInfo
+import com.revenuecat.purchases.getCustomerInfoWith
 import com.revenuecat.purchases.interfaces.UpdatedCustomerInfoListener
 import jakarta.inject.Inject
 import jakarta.inject.Singleton
@@ -15,19 +17,28 @@ import kotlinx.coroutines.flow.asStateFlow
 class EntitlementManager @Inject constructor() {
 	private val _isPremium = MutableStateFlow(false)
 	val isPremium: StateFlow<Boolean> = _isPremium.asStateFlow()
+	private val purchases by lazy { Purchases.sharedInstance }
 
 	init {
-		Purchases.sharedInstance.updatedCustomerInfoListener =
+		purchases.updatedCustomerInfoListener =
 			UpdatedCustomerInfoListener { customerInfo ->
 				updateFrom(customerInfo)
 			}
+		purchases.getCustomerInfoWith(
+			onSuccess = { customerInfo ->
+				_isPremium.value = customerInfo.entitlements[RevenueCatEntitlements.PREMIUM]?.isActive == true
+			},
+			onError = { error ->
+				logD("GooglePlayPaywallManager Error fetching customer info: $error")
+			}
+		)
+
 	}
 
 	suspend fun refresh() {
 		try {
 			val customerInfo =
 				Purchases.sharedInstance.awaitCustomerInfo()
-
 			updateFrom(customerInfo)
 		} catch (e: Exception) {
 			// Keep the last known state.

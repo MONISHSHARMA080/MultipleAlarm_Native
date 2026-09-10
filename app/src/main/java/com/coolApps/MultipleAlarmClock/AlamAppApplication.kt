@@ -11,6 +11,7 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 @HiltAndroidApp
 class AlarmApp : Application(), Configuration.Provider {
@@ -24,7 +25,9 @@ class AlarmApp : Application(), Configuration.Provider {
 		coroutineScope.launch {
 			Purchases.logLevel = LogLevel.DEBUG
 			Purchases.configure(
-				PurchasesConfiguration.Builder(this@AlarmApp, BuildConfig.REVENUECAT_API_KEY).build()
+				PurchasesConfiguration.Builder(this@AlarmApp,BuildConfig.REVENUECAT_API_KEY)
+					.preferredUILocaleOverride(Locale.getDefault().language)
+					.build()
 			)
 		}
 	}

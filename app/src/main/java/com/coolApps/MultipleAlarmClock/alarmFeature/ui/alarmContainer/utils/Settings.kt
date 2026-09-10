@@ -72,7 +72,7 @@ import com.coolApps.MultipleAlarmClock.logD
 @Composable
 fun SettingsScreen(
 		onNavigateBack: () -> Unit,
-		onNavigateToPaywall: () -> Unit,
+		onNavigateToPaywall: (Boolean) -> Unit,
 		onNavigateToCustomerCenter: () -> Unit,
 ) {
 	var feedbackText by rememberSaveable { mutableStateOf("") }
@@ -149,7 +149,7 @@ fun SettingsScreen(
 							if (isPro) {
 								onNavigateToCustomerCenter()
 							} else {
-								onNavigateToPaywall()
+								onNavigateToPaywall(true)
 							}
 						},
 						trailing = {
@@ -315,11 +315,15 @@ fun SettingsScreen(
 							}
 						)
 
+						Spacer(Modifier.height(4.dp))
+
 						HorizontalDivider(
 							modifier = Modifier.padding(
 								start = 56.dp
 							)
 						)
+
+						Spacer(Modifier.height(4.dp))
 
 						SettingsListItem(
 							icon = Icons.Outlined.Info,
