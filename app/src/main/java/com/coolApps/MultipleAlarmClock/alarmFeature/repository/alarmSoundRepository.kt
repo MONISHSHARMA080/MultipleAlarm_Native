@@ -2,6 +2,7 @@ package com.coolApps.MultipleAlarmClock.alarmFeature.repository
 
 import android.content.Context
 import android.media.RingtoneManager
+import androidx.core.net.toUri
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.data.AlarmSound
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
@@ -29,5 +30,12 @@ class AlarmSoundRepository @Inject constructor(
 		}
 		cursor.close()
 		return sounds
+	}
+
+	fun resolveSound(uriString: String?): AlarmSound? {
+		if (uriString == null) return null
+		val uri = uriString.toUri()
+		val title = RingtoneManager.getRingtone(context, uri)?.getTitle(context) ?: return null
+		return AlarmSound(title = title, soundUri = uri)
 	}
 }
