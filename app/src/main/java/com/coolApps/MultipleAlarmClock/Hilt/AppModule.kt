@@ -55,9 +55,6 @@ object AppModule {
 	@Singleton
 	fun provideAlarmRepository(repository: AlarmRepositoryImpl): AlarmRepository = repository
 
-	@Provides
-	fun provideTimeProvider(): com.coolApps.MultipleAlarmClock.AlarmLogic.TimeProvider = com.coolApps.MultipleAlarmClock.AlarmLogic.TimeProviderImpl()
-
 
 	@Provides
 	fun provideAlarmManager(@ApplicationContext context: Context): AlarmManager {

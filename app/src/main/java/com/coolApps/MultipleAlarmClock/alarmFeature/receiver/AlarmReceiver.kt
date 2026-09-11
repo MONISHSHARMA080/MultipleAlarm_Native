@@ -8,7 +8,6 @@ import androidx.core.content.IntentCompat
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
-import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.services.AlarmService
 import dagger.hilt.android.AndroidEntryPoint
@@ -21,8 +20,6 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class AlarmReceiver : BroadcastReceiver() {
-
-    @Inject lateinit var alarmRepository: AlarmRepository
 
     @Inject lateinit var alarmsController: AlarmsController
 

@@ -43,7 +43,6 @@ fun Project.configureAndroid() {
             versionName = project.findProperty("versionName") as String? ?: "1.0.0"
 			buildConfigField("String", "REVENUECAT_API_KEY", "\"$revenueCatApiKey\"")
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-            testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
             vectorDrawables {
                 useSupportLibrary = true
             }
@@ -123,7 +122,7 @@ fun Project.configureAndroid() {
                 all {
                     it.systemProperty("robolectric.logging", "stdout")
                     it.systemProperty("robolectric.graphicsMode", "NATIVE")
-                    it.jvmArgs("-noverify")
+                    it.jvmArgs("-noverify", "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
                 }
 
             }
@@ -166,28 +165,26 @@ dependencies {
 	}
 	implementation(platform(libs.firebase.bom))
 	implementation(libs.androidx.compose.runtime.saveable)
-//	implementation(libs.firebase.functions.ktx)
 	implementation(libs.firebase.messaging)
     implementation(libs.hilt.android)
-	implementation("com.revenuecat.purchases:purchases:10.20.0")
-	implementation("com.revenuecat.purchases:purchases-ui:10.20.0")
+	implementation(libs.purchases)
+	implementation(libs.purchases.ui)
 	implementation(libs.androidx.compose.animation.core)
 	implementation(libs.androidx.compose.ui)
 	implementation(libs.androidx.datastore.core)
 	implementation(libs.androidx.hilt.work)
 	implementation(libs.play.services.appset)
 	ksp(libs.androidx.hilt.compiler)
-	ksp(libs.hilt.android.compiler)
 	implementation(libs.androidx.hilt.navigation.compose)
 
 
-	implementation("com.google.android.play:review:2.0.2")
-	implementation("com.google.android.play:review-ktx:2.0.2")
+	implementation(libs.review)
+	implementation(libs.review.ktx)
 
 
     implementation(libs.accompanist.permissions)
 
-    implementation ("com.posthog:posthog-android:3.61.1")
+    implementation ("com.posthog:posthog-android:3.63.1")
     implementation (libs.posthog.android)
     implementation(libs.androidx.core.splashscreen)
 
@@ -207,17 +204,19 @@ dependencies {
 	implementation(libs.androidx.ui.text)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.profileinstaller)
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.12.0")
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     "baselineProfile"(project(":baselineprofile"))
     implementation(libs.androidx.junit.ktx)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.work.runtime.ktx)
 
-    // -- roboelectric tests ---
-    testImplementation("junit:junit")
-    testImplementation("org.robolectric:robolectric:4.16")
-    testImplementation("io.mockk:mockk:1.13.8")
-    testImplementation("com.google.truth:truth:1.4.5")
+    // -- robolectric tests ---
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.mockk)
+    testImplementation(libs.truth)
+    testImplementation(libs.hilt.android.testing)
+    kspTest(libs.hilt.android.compiler)
 
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.androidx.material3.adaptive.navigation3)
@@ -225,7 +224,7 @@ dependencies {
 
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.ui.test.android)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
+    implementation(libs.kotlinx.coroutines.android)
 
 //	val roomVersion = "3.0.1"
     val roomVersion = "2.8.4"
@@ -247,10 +246,8 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
-    testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)

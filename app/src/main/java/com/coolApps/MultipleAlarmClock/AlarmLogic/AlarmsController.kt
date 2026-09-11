@@ -29,16 +29,9 @@ import com.coolApps.MultipleAlarmClock.utils.Result.Result as ResultCustom
 
 const val ALARM_ACTION = "com.coolApps.trying_native.ALARM_TRIGGERED"
 
-interface  TimeProvider{
-	fun getCurrentTime(): Long
-}
-class TimeProviderImpl : TimeProvider {
-	override fun getCurrentTime() = System.currentTimeMillis()
-}
 
 class AlarmsController @Inject constructor(
 		private val alarmRepository: AlarmRepository,
-		private val timeProvider: TimeProvider,
 		private val alarmManager: AlarmManager,
 		val analytics: Analytics,
 		private val errorHandler: ErrorHandler,
@@ -234,7 +227,6 @@ class AlarmsController @Inject constructor(
 				it.cancel()
 				logD("Cancelled LastAlarmUpdateDBReceiver")
 			}
-			// now try to mark it as not ready to use in db and we done if problem then reschedule it and return error
 			logD("the alarmData is $alarmData")
 		}
 	}
@@ -259,9 +251,8 @@ class AlarmsController @Inject constructor(
 
 	// schedule the next alarm and if error notify the user
 	suspend fun  scheduleNextAlarmInSeries(alarmIntent: AlarmActivityIntentData) {
-
 		// TODO: this class shouldn't handle error as that  should be done in the alarm Receiver
-
+		logD("alarmIntent:$alarmIntent")
 		val alarmData: AlarmData? = alarmRepository.getAlarmById(alarmIntent.alarmIdInDb)
 
 		if (alarmData == null) {
