@@ -4,18 +4,36 @@ import android.app.AlarmManager
 import android.content.Context
 import android.os.Looper
 import android.os.SystemClock
+import androidx.datastore.core.DataStore
+import androidx.datastore.core.DataStoreFactory
+import androidx.datastore.dataStoreFile
+import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
+import com.coolApps.MultipleAlarmClock.Data.dataStore.Settings
+import com.coolApps.MultipleAlarmClock.Data.dataStore.SettingsSerializer
+import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
+import com.coolApps.MultipleAlarmClock.Hilt.AppModule
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDao
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
+import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDatabase
 import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
+import com.coolApps.MultipleAlarmClock.analytics.Analytics
+import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.utils.Result.Result
 import com.google.common.truth.Truth.assertThat
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
+import dagger.hilt.android.testing.UninstallModules
+import dagger.hilt.components.SingletonComponent
 import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,19 +42,70 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowAlarmManager
 import java.time.Duration
 import java.util.Calendar
 
+
 @HiltAndroidTest
-@RunWith(AndroidJUnit4::class)
+@UninstallModules(AppModule::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(application = HiltTestApplication::class)
 class AlarmSeriesLogicTest2 {
+
+	/**
+	 * Re-provides everything AppModule provided except AlarmRepository,
+	 * which is replaced by the @BindValue fake below.
+	 */
+	@Module
+	@InstallIn(SingletonComponent::class)
+	object TestAppModule {
+
+		@Provides
+		@Singleton
+		fun provideDatabase(@ApplicationContext context: Context): AlarmDatabase =
+			Room.inMemoryDatabaseBuilder(context, AlarmDatabase::class.java)
+				.allowMainThreadQueries()
+				.build()
+
+		@Provides
+		fun provideAlarmDao(db: AlarmDatabase): AlarmDao = db.alarmDao()
+
+		@Provides
+		@Singleton
+		fun provideProtoDataStore(@ApplicationContext context: Context): DataStore<Settings> =
+			DataStoreFactory.create(
+				serializer = SettingsSerializer,
+				produceFile = { context.dataStoreFile("test_user_settings.pb") },
+			)
+
+		@Provides
+		fun provideAlarmManager(@ApplicationContext context: Context): AlarmManager =
+			context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+		@Provides
+		@Singleton
+		fun provideAnalytics(@ApplicationContext context: Context): Analytics =
+			Analytics(context)
+
+		@Provides
+		fun provideNotificationHandler(@ApplicationContext context: Context): NotificationHandler =
+			NotificationHandler(context)
+
+		@Provides
+		fun provideErrorHandler(
+			notificationHandler: NotificationHandler,
+			analytics: Analytics,
+		): ErrorHandler = ErrorHandler(notificationHandler, analytics)
+	}
+
 	@get:Rule
 	val hiltRule = HiltAndroidRule(this)
 
+	/** Replaces AppModule.provideAlarmRepository in the test component. */
 	@BindValue
 	@JvmField
 	val fakeAlarmRepository: AlarmRepository = FakeAlarmRepository()
@@ -50,28 +119,13 @@ class AlarmSeriesLogicTest2 {
 
 	@Before
 	fun setUp() {
-
-
 		hiltRule.inject()
 
 		context = ApplicationProvider.getApplicationContext()
-
-		ShadowAlarmManager.setAutoSchedule(true)
-
 		alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
 		shadowAlarmManager = shadowOf(alarmManager)
 
-
-
-//		controller = AlarmsController(
-//			alarmRepository = repo,
-//			alarmManager = alarmManager,
-//			analytics = mockk(relaxed = true),
-//			errorHandler = mockk(relaxed = true),
-//			context = context
-//		)
-//
+		ShadowAlarmManager.setAutoSchedule(true)
 	}
 
 	@Test

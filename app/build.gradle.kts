@@ -4,7 +4,6 @@ import com.android.build.api.dsl.ApplicationExtension
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    id("kotlin-kapt")
     id("com.google.devtools.ksp") version "2.3.9"
     id ("kotlin-parcelize")
     id("com.posthog.android") version "1.6.0"
@@ -176,7 +175,7 @@ dependencies {
 	implementation(libs.play.services.appset)
 	ksp(libs.androidx.hilt.compiler)
 	implementation(libs.androidx.hilt.navigation.compose)
-
+	ksp(libs.hilt.android.compiler)     // main source set (KSP only, no kapt)
 
 	implementation(libs.review)
 	implementation(libs.review.ktx)
@@ -237,7 +236,7 @@ dependencies {
     implementation("androidx.room:room-guava:$roomVersion")
     testImplementation("androidx.room:room-testing:$roomVersion")
     implementation("androidx.room:room-paging:$roomVersion")
-
+	testImplementation("androidx.multidex:multidex:2.0.1")
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
