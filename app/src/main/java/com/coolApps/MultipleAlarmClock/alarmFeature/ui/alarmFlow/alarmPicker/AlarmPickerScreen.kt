@@ -86,13 +86,14 @@ fun AlarmPickerScreen(
 		onNavigateToSoundList: () -> Unit,
 		onNavigateToPaywall:(Boolean)->Unit,
 		forNewAlarm: Boolean,
-		fromOnboarding:Boolean = false,
+		linearProgressBar: (@Composable () -> Unit)? = null,
 		viewModel: AlarmPickerViewModel
 ) {
 	val uiState by viewModel.uiState.collectAsState()
 	val isPremium by viewModel.isPremium.collectAsState()
 	val selectedSound by viewModel.selectedAlarmSound.collectAsState()
 
+	val fromOnboarding = linearProgressBar != null
 	val view = LocalView.current
 	val timeStyle = typography.headlineSmall
 	val context = LocalContext.current
@@ -184,58 +185,61 @@ fun AlarmPickerScreen(
 	Scaffold(
 		contentWindowInsets = WindowInsets.safeDrawing,
 		topBar = {
-			Column(
-				modifier = Modifier.fillMaxWidth(),
-				horizontalAlignment = Alignment.CenterHorizontally
-			) {
-				TopAppBar(
-					title = {
-						AnimatedContent(
-							targetState = currentProgress,
-							transitionSpec = {
-								fadeIn(
-									animationSpec = tween(310)
-								) + slideInVertically(
-									initialOffsetY = { it / 2 },
-									animationSpec = tween(320)
-								) togetherWith
-										fadeOut(
-											animationSpec = tween(290)
-										) + slideOutVertically(
-									targetOffsetY = { -it / 2 },
-									animationSpec = tween(390)
-								)
-							},
-							label = "alarm_picker_title"
-						) { progress ->
-							Text(
-								when (progress) {
-									Progress.StartTime -> stringResource(R.string.alarm_picker_select_start_time)
-									Progress.EndTime -> stringResource(R.string.alarm_picker_select_end_time)
-									Progress.FullEditor -> if (uiState.initialAlarm == null) stringResource(R.string.alarm_picker_title_set) else stringResource(R.string.alarm_picker_title_edit)
+			if (!fromOnboarding) {
+				Column(
+					modifier = Modifier.fillMaxWidth(),
+					horizontalAlignment = Alignment.CenterHorizontally
+				) {
+					TopAppBar(
+						title = {
+							AnimatedContent(
+								targetState = currentProgress,
+								transitionSpec = {
+									fadeIn(
+										animationSpec = tween(310)
+									) + slideInVertically(
+										initialOffsetY = { it / 2 },
+										animationSpec = tween(320)
+									) togetherWith
+											fadeOut(
+												animationSpec = tween(290)
+											) + slideOutVertically(
+										targetOffsetY = { -it / 2 },
+										animationSpec = tween(390)
+									)
 								},
-								style = timeStyle,
-								color = colorScheme.onBackground,
-								modifier = Modifier.padding(horizontal = 7.dp),
-								maxLines = 1,
-								softWrap = false,
-							)
+								label = "alarm_picker_title"
+							) { progress ->
+								Text(
+									when (progress) {
+										Progress.StartTime -> stringResource(R.string.alarm_picker_select_start_time)
+										Progress.EndTime -> stringResource(R.string.alarm_picker_select_end_time)
+										Progress.FullEditor -> if (uiState.initialAlarm == null) stringResource(R.string.alarm_picker_title_set) else stringResource(R.string.alarm_picker_title_edit)
+									},
+									style = timeStyle,
+									color = colorScheme.onBackground,
+									modifier = Modifier.padding(horizontal = 7.dp),
+									maxLines = 1,
+									softWrap = false,
+								)
 
-						}
-					},
-					navigationIcon = {
-						IconButton(
-							onClick = {
-								settingAlarmCancelled()
 							}
-						) {
-							Icon(
-								imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-								contentDescription = stringResource(R.string.alarm_picker_back_desc)
-							)
-						}
-					},
-				)
+						},
+						navigationIcon = {
+							IconButton(
+								onClick = {
+									settingAlarmCancelled()
+								}
+							) {
+								Icon(
+									imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+									contentDescription = stringResource(R.string.alarm_picker_back_desc)
+								)
+							}
+						},
+					)
+				}
+
 			}
 		},
 		bottomBar = {
@@ -326,15 +330,17 @@ fun AlarmPickerScreen(
 				.consumeWindowInsets(screenPadding)
 				.animateContentSize(),
 		) {
-			AnimatedVisibility(
-				visible = currentProgress != Progress.FullEditor,
-				enter = expandVertically() + fadeIn(),
-				exit = shrinkVertically() + fadeOut()
-			) {
-				LinearProgressForNewAlarm(
-					progress = currentProgress,
-					modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 5.dp)
-				)
+			if (!fromOnboarding){
+				AnimatedVisibility(
+					visible = currentProgress != Progress.FullEditor,
+					enter = expandVertically() + fadeIn(),
+					exit = shrinkVertically() + fadeOut()
+				) {
+					LinearProgressForNewAlarm(
+						progress = currentProgress,
+						modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 5.dp)
+					)
+				}
 			}
 
 			AnimatedContent(
