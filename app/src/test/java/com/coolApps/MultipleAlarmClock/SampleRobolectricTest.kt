@@ -4,39 +4,26 @@ import android.app.AlarmManager
 import android.content.Context
 import android.os.Looper
 import android.os.SystemClock
-import androidx.datastore.core.DataStore
-import androidx.datastore.core.DataStoreFactory
-import androidx.datastore.dataStoreFile
-import androidx.room.Room
+import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
-import com.coolApps.MultipleAlarmClock.Data.dataStore.Settings
-import com.coolApps.MultipleAlarmClock.Data.dataStore.SettingsSerializer
-import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
-import com.coolApps.MultipleAlarmClock.Hilt.AppModule
-import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDao
+import com.coolApps.MultipleAlarmClock.Hilt.DispatcherModule
+import com.coolApps.MultipleAlarmClock.Hilt.IoDispatcher
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
-import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDatabase
 import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
-import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import com.coolApps.MultipleAlarmClock.utils.Result.Result
 import com.google.common.truth.Truth.assertThat
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.HiltTestApplication
 import dagger.hilt.android.testing.UninstallModules
-import dagger.hilt.components.SingletonComponent
 import jakarta.inject.Inject
-import jakarta.inject.Singleton
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -51,64 +38,31 @@ import java.util.Calendar
 
 
 @HiltAndroidTest
-@UninstallModules(AppModule::class)
+@UninstallModules(DispatcherModule::class)
 @RunWith(RobolectricTestRunner::class)
 @Config(application = HiltTestApplication::class)
 class AlarmSeriesLogicTest2 {
 
-	/**
-	 * Re-provides everything AppModule provided except AlarmRepository,
-	 * which is replaced by the @BindValue fake below.
-	 */
-	@Module
-	@InstallIn(SingletonComponent::class)
-	object TestAppModule {
-
-		@Provides
-		@Singleton
-		fun provideDatabase(@ApplicationContext context: Context): AlarmDatabase =
-			Room.inMemoryDatabaseBuilder(context, AlarmDatabase::class.java)
-				.allowMainThreadQueries()
-				.build()
-
-		@Provides
-		fun provideAlarmDao(db: AlarmDatabase): AlarmDao = db.alarmDao()
-
-		@Provides
-		@Singleton
-		fun provideProtoDataStore(@ApplicationContext context: Context): DataStore<Settings> =
-			DataStoreFactory.create(
-				serializer = SettingsSerializer,
-				produceFile = { context.dataStoreFile("test_user_settings.pb") },
-			)
-
-		@Provides
-		fun provideAlarmManager(@ApplicationContext context: Context): AlarmManager =
-			context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-		@Provides
-		@Singleton
-		fun provideAnalytics(@ApplicationContext context: Context): Analytics =
-			Analytics(context)
-
-		@Provides
-		fun provideNotificationHandler(@ApplicationContext context: Context): NotificationHandler =
-			NotificationHandler(context)
-
-		@Provides
-		fun provideErrorHandler(
-			notificationHandler: NotificationHandler,
-			analytics: Analytics,
-		): ErrorHandler = ErrorHandler(notificationHandler, analytics)
-	}
-
 	@get:Rule
 	val hiltRule = HiltAndroidRule(this)
 
-	/** Replaces AppModule.provideAlarmRepository in the test component. */
 	@BindValue
 	@JvmField
-	val fakeAlarmRepository: AlarmRepository = FakeAlarmRepository()
+	val fakeAlarmRepository: AlarmRepository =
+		FakeAlarmRepository()
+
+	/*
+	 * Keep the concrete StandardTestDispatcher reference so the
+	 * test can explicitly control its scheduler.
+	 */
+	private val testDispatcher =
+		StandardTestDispatcher()
+
+	@BindValue
+	@JvmField
+	@IoDispatcher
+	val ioDispatcher: CoroutineDispatcher =
+		testDispatcher
 
 	@Inject
 	lateinit var controller: AlarmsController
@@ -121,9 +75,16 @@ class AlarmSeriesLogicTest2 {
 	fun setUp() {
 		hiltRule.inject()
 
-		context = ApplicationProvider.getApplicationContext()
-		alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-		shadowAlarmManager = shadowOf(alarmManager)
+		context =
+			ApplicationProvider.getApplicationContext()
+
+		alarmManager =
+			context.getSystemService(
+				Context.ALARM_SERVICE
+			) as AlarmManager
+
+		shadowAlarmManager =
+			shadowOf(alarmManager)
 
 		ShadowAlarmManager.setAutoSchedule(true)
 	}
@@ -179,13 +140,25 @@ class AlarmSeriesLogicTest2 {
 			logD("Scheduled:$scheduled, scheduled:${scheduled?.triggerAtMs}, fired:$firedCount")
 
 			assertThat(scheduled).isNotNull()
-			assertThat(scheduled!!.triggerAtMs)
-				.isEqualTo(expectedTrigger)
+			assertThat(scheduled!!.triggerAtMs).isEqualTo(expectedTrigger)
 
+			val delta = expectedTrigger - SystemClock.uptimeMillis()
+
+
+//			shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(expectedTrigger - System.currentTimeMillis()))
+//			testDispatcher.scheduler.advanceUntilIdle()
+//			shadowOf(Looper.getMainLooper()).idle()
+//
 			shadowOf(Looper.getMainLooper())
-				.idleFor(Duration.ofMillis(
-					expectedTrigger - System.currentTimeMillis()
-				))
+				.idleFor(Duration.ofMillis(delta))
+
+			testDispatcher.scheduler.advanceUntilIdle()
+
+			shadowOf(Looper.getMainLooper()).idle()
+
+			// The receiver coroutine may itself have posted more coroutine work.
+			testDispatcher.scheduler.advanceUntilIdle()
+
 
 			firedCount++
 
@@ -208,6 +181,10 @@ class AlarmSeriesLogicTest2 {
 		}
 
 		assertThat(firedCount).isEqualTo(180)
+	}
+
+	private fun logD(str: String){
+		Log.d("AAAA", "[Test] $str")
 	}
 
 }

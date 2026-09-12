@@ -8,12 +8,13 @@ import androidx.core.content.IntentCompat
 import com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmsController
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
+import com.coolApps.MultipleAlarmClock.Hilt.IoDispatcher
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
 import com.coolApps.MultipleAlarmClock.services.AlarmService
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -22,17 +23,19 @@ import kotlinx.coroutines.launch
 class AlarmReceiver : BroadcastReceiver() {
 
     @Inject lateinit var alarmsController: AlarmsController
-
     @Inject lateinit var errorHandler: ErrorHandler
-
     @Inject lateinit var analytics: Analytics
+//    private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+	@Inject @IoDispatcher
+	lateinit var ioDispatcher: CoroutineDispatcher
+
 
     override fun onReceive(context: Context, intent: Intent) {
+		val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
         logD("onReceive: intent action = ${intent.action}")
         val pendingResult = goAsync()
-		coroutineScope.launch {
+		scope.launch {
 			try {
 				coroutineScope {
 					launch {

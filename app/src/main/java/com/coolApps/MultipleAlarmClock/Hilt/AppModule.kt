@@ -22,7 +22,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import jakarta.inject.Qualifier
 import jakarta.inject.Singleton
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 
 
 @Module
@@ -48,6 +51,16 @@ object AppModule {
 		)
 	}
 
+//	@Qualifier
+//	annotation class IoDispatcher
+
+//	@Module
+//	@InstallIn(SingletonComponent::class)
+//	object DispatcherModule {
+//		@IoDispatcher
+//		@Provides
+//		fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
+//	}
 	@Provides
 	fun provideAlarmDao(db: AlarmDatabase): AlarmDao = db.alarmDao()
 
@@ -76,4 +89,17 @@ object AppModule {
 	fun provideErrorHandler(notificationHandler: NotificationHandler, analytics: Analytics): ErrorHandler {
 		return ErrorHandler(notificationHandler, analytics)
 	}
+}
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class IoDispatcher
+
+@Module
+@InstallIn(SingletonComponent::class)
+object DispatcherModule {
+
+	@Provides
+	@IoDispatcher
+	fun provideIoDispatcher(): CoroutineDispatcher =
+		Dispatchers.IO
 }
