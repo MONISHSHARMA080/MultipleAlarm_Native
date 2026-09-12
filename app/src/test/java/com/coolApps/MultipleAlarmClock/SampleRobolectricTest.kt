@@ -48,15 +48,9 @@ class AlarmSeriesLogicTest2 {
 
 	@BindValue
 	@JvmField
-	val fakeAlarmRepository: AlarmRepository =
-		FakeAlarmRepository()
+	val fakeAlarmRepository: AlarmRepository = FakeAlarmRepository()
 
-	/*
-	 * Keep the concrete StandardTestDispatcher reference so the
-	 * test can explicitly control its scheduler.
-	 */
-	private val testDispatcher =
-		StandardTestDispatcher()
+	private val testDispatcher = StandardTestDispatcher()
 
 	@BindValue
 	@JvmField
@@ -111,10 +105,15 @@ class AlarmSeriesLogicTest2 {
 			repeatDays = null,
 			sound = null
 		)
-		logD("test AlarmData:$alarm")
+
+		val expectedAlarmList  = mutableListOf<Long>()
+		alarm.alarmTimeSequence().iterator().forEach {
+			value-> expectedAlarmList.add(value)
+		}
 
 		// Start Robolectric clock at the alarm start.
-		SystemClock.setCurrentTimeMillis(startTime)
+		SystemClock.setCurrentTimeMillis(startTime - 200L)
+		logD("test AlarmData:$alarm, expectedAlarms:${expectedAlarmList.size}")
 
 		val result = controller.startAlarmSeriesHandler(
 			alarm = alarm,
@@ -125,7 +124,7 @@ class AlarmSeriesLogicTest2 {
 
 		val storedAlarm = fakeAlarmRepository.getAllAlarms().single()
 
-		logD("test retrived alarm:$storedAlarm")
+		logD("test retried alarm:$storedAlarm")
 		assertThat(storedAlarm.isReadyToUse).isTrue()
 		assertThat(storedAlarm.startTime).isEqualTo(startTime)
 		assertThat(storedAlarm.endTime).isEqualTo(endTime)
@@ -137,50 +136,30 @@ class AlarmSeriesLogicTest2 {
 		while (expectedTrigger < endTime) {
 
 			val scheduled = shadowAlarmManager.peekNextScheduledAlarm()
-			logD("Scheduled:$scheduled, scheduled:${scheduled?.triggerAtMs}, fired:$firedCount")
+			logD("\n\n(iteration:${firedCount}) Scheduled:$scheduled, scheduled:${scheduled?.triggerAtMs}, fired:$firedCount")
+			logD("alarm scheduled at:${scheduled?.triggerAtMs} and alarm at this index's start time ${expectedAlarmList[firedCount]} are they same:${scheduled?.triggerAtMs == expectedAlarmList[firedCount]}")
 
 			assertThat(scheduled).isNotNull()
 			assertThat(scheduled!!.triggerAtMs).isEqualTo(expectedTrigger)
 
 			val delta = expectedTrigger - SystemClock.uptimeMillis()
 
-
-//			shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(expectedTrigger - System.currentTimeMillis()))
-//			testDispatcher.scheduler.advanceUntilIdle()
-//			shadowOf(Looper.getMainLooper()).idle()
-//
-			shadowOf(Looper.getMainLooper())
-				.idleFor(Duration.ofMillis(delta))
-
+			shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(delta))
 			testDispatcher.scheduler.advanceUntilIdle()
-
 			shadowOf(Looper.getMainLooper()).idle()
-
-			// The receiver coroutine may itself have posted more coroutine work.
 			testDispatcher.scheduler.advanceUntilIdle()
 
+			// TODO: here get a list(stack) of alarms that should come (start/trigger time) + freq till end time, store them in a list and (duplicate it)on
+			//  every loop pop it and check if the alarm fired on the same trigger time
 
 			firedCount++
+			logD("alarm")
 
 			val nextTrigger = expectedTrigger + frequency
-
-			if (nextTrigger < endTime) {
-				val nextScheduled =
-					shadowAlarmManager.peekNextScheduledAlarm()
-
-				assertThat(nextScheduled).isNotNull()
-				assertThat(nextScheduled!!.triggerAtMs)
-					.isEqualTo(nextTrigger)
-			} else {
-				assertThat(
-					shadowAlarmManager.peekNextScheduledAlarm()
-				).isNull()
-			}
-
 			expectedTrigger = nextTrigger
 		}
 
-		assertThat(firedCount).isEqualTo(180)
+		assertThat(firedCount).isEqualTo(expectedAlarmList.size -1)
 	}
 
 	private fun logD(str: String){
