@@ -51,16 +51,6 @@ object AppModule {
 		)
 	}
 
-//	@Qualifier
-//	annotation class IoDispatcher
-
-//	@Module
-//	@InstallIn(SingletonComponent::class)
-//	object DispatcherModule {
-//		@IoDispatcher
-//		@Provides
-//		fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
-//	}
 	@Provides
 	fun provideAlarmDao(db: AlarmDatabase): AlarmDao = db.alarmDao()
 

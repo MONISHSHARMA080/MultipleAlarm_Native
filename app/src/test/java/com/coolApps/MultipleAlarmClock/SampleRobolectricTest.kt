@@ -68,18 +68,9 @@ class AlarmSeriesLogicTest2 {
 	@Before
 	fun setUp() {
 		hiltRule.inject()
-
-		context =
-			ApplicationProvider.getApplicationContext()
-
-		alarmManager =
-			context.getSystemService(
-				Context.ALARM_SERVICE
-			) as AlarmManager
-
-		shadowAlarmManager =
-			shadowOf(alarmManager)
-
+		context = ApplicationProvider.getApplicationContext()
+		alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+		shadowAlarmManager = shadowOf(alarmManager)
 		ShadowAlarmManager.setAutoSchedule(true)
 	}
 
@@ -87,13 +78,13 @@ class AlarmSeriesLogicTest2 {
 	fun `alarm series fires every minute and schedules the next alarm until end time`() = runTest {
 		val startTime = Calendar.getInstance().apply {
 			add(Calendar.DAY_OF_YEAR, 1)
-			set(Calendar.HOUR_OF_DAY, 20)
+			set(Calendar.HOUR_OF_DAY, 10)
 			set(Calendar.MINUTE, 0)
 			set(Calendar.SECOND, 0)
 			set(Calendar.MILLISECOND, 0)
 		}.timeInMillis
 
-		val endTime = startTime + Duration.ofHours(3).toMillis()
+		val endTime = startTime + Duration.ofHours(8).toMillis()
 		val frequency = Duration.ofMinutes(1).toMillis()
 
 		val alarm = AlarmData(
@@ -149,9 +140,6 @@ class AlarmSeriesLogicTest2 {
 			shadowOf(Looper.getMainLooper()).idle()
 			testDispatcher.scheduler.advanceUntilIdle()
 
-			// TODO: here get a list(stack) of alarms that should come (start/trigger time) + freq till end time, store them in a list and (duplicate it)on
-			//  every loop pop it and check if the alarm fired on the same trigger time
-
 			firedCount++
 			logD("alarm")
 
@@ -162,104 +150,16 @@ class AlarmSeriesLogicTest2 {
 		assertThat(firedCount).isEqualTo(expectedAlarmList.size -1)
 	}
 
+
+	// TODO: make the validation while loop abstract such that I can test if current time a) before(this one) start time, b) in b/w the time interval, c) after the time interval (here I want to
+	//  schedule it for next day)
+	//  also do the same testing for the reset alarm one
+
 	private fun logD(str: String){
 		Log.d("AAAA", "[Test] $str")
 	}
 
 }
-
-
-//@RunWith(AndroidJUnit4::class)
-//class AlarmSeriesLogicTest {
-//
-//	private lateinit var context: Context
-//	private lateinit var alarmManager: AlarmManager
-//	private lateinit var shadowAlarmManager: ShadowAlarmManager
-//	private lateinit var repo: AlarmRepository
-//	private lateinit var controller: AlarmsController
-//
-//	@Before
-//	fun setUp() {
-//		context = ApplicationProvider.getApplicationContext()
-//		alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-//		shadowAlarmManager = shadowOf(alarmManager)
-//		repo = FakeAlarmRepository()
-//		controller = AlarmsController(
-//			alarmRepository = repo,
-//			alarmManager = alarmManager,
-//			analytics = mockk(relaxed = true),   // swap for mockk<Analytics>(relaxed = true) w/ real type
-//			errorHandler = mockk(relaxed = true), // same for ErrorHandler
-//			context = context,
-//		)
-//	}
-//
-//	@Test
-//	fun `alarm fires every 2 minutes from 5-00 to 6-00`() = runTest {
-//		// Anchor "now" so any Calendar.getInstance()/currentTimeMillis()
-//		// calls inside your validate()/cancelAlarm() logic see a controlled
-//		// clock instead of the real wall clock.
-//		val today5am = Calendar.getInstance().apply {
-//			set(Calendar.HOUR_OF_DAY, 5); set(Calendar.MINUTE, 0)
-//			set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-//		}
-//		SystemClock.setCurrentTimeMillis(today5am.timeInMillis - 60_000L)
-//
-//		val startTime = today5am.timeInMillis
-//		val endTime = startTime + TimeUnit.HOURS.toMillis(1)
-//
-//		val alarm = AlarmData(
-//			id = 0,
-//			startTime = startTime,
-//			endTime = endTime,
-//			message = "test alarm",
-//			isReadyToUse = false,
-//			frequencyInMin = 2,
-//			repeatDays = null,
-//			sound = null,
-//		)
-//
-//		val startResult = controller.startAlarmSeriesHandler(alarm, alarmManager, context)
-//		check(startResult is Result.Success) { "setup failed: $startResult" }
-//
-//		val insertedId = repo.all().single().id
-//		val firedTimes = mutableListOf<Long>()
-//
-//		var guard = 0
-//		while (true) {
-//			val due = shadowAlarmManager.peekNextScheduledAlarm() ?: break
-//			if (due.triggerAtTime >= endTime) break // window's done; this is the rollover/next occurrence
-//
-//			shadowAlarmManager.getNextScheduledAlarm() // pops the same alarm we just peeked
-//			firedTimes += due.triggerAtTime
-//
-//			controller.scheduleNextAlarmInSeries(
-//				AlarmActivityIntentData(
-//					startTimeForDb = startTime,
-//					alarmTriggerTime = due.triggerAtTime,
-//					endTime = endTime,
-//					message = alarm.message,
-//					alarmIdInDb = insertedId,
-//				)
-//			)
-//
-//			if (++guard > 200) error("more alarms than expected - check the rollover/off-by-one logic")
-//		}
-//
-//		assertThat(firedTimes.first()).isEqualTo(startTime)
-//		// 1 hour / 2 min = 30, if your boundary check is strictly "< endTime"
-//		// and the first trigger is exactly startTime. Adjust if your
-//		// fencepost differs.
-//		assertThat(firedTimes).hasSize(30)
-//		firedTimes.zipWithNext().forEach { (a, b) ->
-//			assertThat(b - a).isEqualTo(TimeUnit.MINUTES.toMillis(2))
-//		}
-//
-//		// Whatever's left scheduled now should be the next day's rollover -
-//		// useful as a second assertion once you know rollOverIfTimeIntervalPassed()'s exact contract:
-//		// val rollover = shadowAlarmManager.peekNextScheduledAlarm()
-//		// assertThat(rollover?.triggerAtTime).isGreaterThan(endTime)
-//	}
-//}
 
 /**
  * In-memory fake for AlarmRepository.
