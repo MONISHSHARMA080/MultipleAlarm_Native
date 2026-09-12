@@ -33,8 +33,12 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowAlarmManager
+import java.text.SimpleDateFormat
 import java.time.Duration
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import kotlin.random.Random
 
 
 @HiltAndroidTest
@@ -75,7 +79,7 @@ class AlarmSeriesLogicTest2 {
 	}
 
 	@Test
-	fun `alarm series fires every minute and schedules the next alarm until end time`() = runTest {
+	fun `start alarm series form beginning`() = runTest {
 		val startTime = Calendar.getInstance().apply {
 			add(Calendar.DAY_OF_YEAR, 1)
 			set(Calendar.HOUR_OF_DAY, 10)
@@ -141,7 +145,6 @@ class AlarmSeriesLogicTest2 {
 			testDispatcher.scheduler.advanceUntilIdle()
 
 			firedCount++
-			logD("alarm")
 
 			val nextTrigger = expectedTrigger + frequency
 			expectedTrigger = nextTrigger
@@ -151,12 +154,88 @@ class AlarmSeriesLogicTest2 {
 	}
 
 
-	// TODO: make the validation while loop abstract such that I can test if current time a) before(this one) start time, b) in b/w the time interval, c) after the time interval (here I want to
-	//  schedule it for next day)
-	//  also do the same testing for the reset alarm one
+	@Test
+	fun `start alarm series form the middle`() = runTest {
+		val startTime = Calendar.getInstance().apply {
+			add(Calendar.DAY_OF_YEAR, 100)
+			set(Calendar.HOUR_OF_DAY, 5)
+			set(Calendar.MINUTE, 0)
+			set(Calendar.SECOND, 0)
+			set(Calendar.MILLISECOND, 0)
+		}.timeInMillis
+		val endTime = startTime + Duration.ofHours(10).toMillis()
+		val freqInMin = 2L
+		val frequency = Duration.ofMinutes(freqInMin).toMillis()
+
+		val alarm = AlarmData(
+			startTime = startTime, endTime = endTime, message = "test alarm",
+			isReadyToUse = false, frequencyInMin = freqInMin, repeatDays = null, sound = null
+		)
+
+		val fullSequence = alarm.alarmTimeSequence().toList()
+
+		// Wake up somewhere between two arbitrary consecutive ticks. Exclude the last
+		// index so at least one future tick always remains; landing halfway (not
+		// exactly on a tick) mirrors the "5:59 between 5:58 and 6:00" case.
+		logD("${fullSequence.size * 0.8}, fullSequence:${fullSequence.size}")
+		val wakeUpAfterIndex = Random.nextInt(0, ((fullSequence.size * 0.8).toInt()))
+		val now = fullSequence[wakeUpAfterIndex] + frequency / 2
+
+		val expectedAlarmList = fullSequence.filter { it > now }
+		check(expectedAlarmList.isNotEmpty())
+		val nowCalendar = Calendar.getInstance().apply { timeInMillis = now }
+
+		logD("randomIndex:$wakeUpAfterIndex wakeUpAfterIndex:$wakeUpAfterIndex now:${getTimeInHumanReadableFormatProtectFrom0Included(now)} firstExpected:${getTimeInHumanReadableFormatProtectFrom0Included(expectedAlarmList.first())}")
+
+		SystemClock.setCurrentTimeMillis(now)
+
+		val result = controller.startAlarmSeriesHandler(
+			alarm = alarm, alarmManager = alarmManager, activityContext = context, now =  nowCalendar
+		)
+		assertThat(result).isInstanceOf(Result.Success::class.java)
+
+		val storedAlarm = fakeAlarmRepository.getAllAlarms().single()
+		assertThat(storedAlarm.isReadyToUse).isTrue()
+		assertThat(storedAlarm.startTime).isEqualTo(startTime)   // unchanged - no rollover expected
+		assertThat(storedAlarm.endTime).isEqualTo(endTime)
+
+		// Unconditional check: covers the case (reachable when the random pick lands on
+		// the second-to-last tick) where only the final tick is left and the loop below
+		// never executes a single iteration.
+		val firstScheduled = shadowAlarmManager.peekNextScheduledAlarm()
+		assertThat(firstScheduled).isNotNull()
+		logD("alarm is $alarm")
+		logD("next alarm at:${getTimeInHumanReadableFormatProtectFrom0Included(firstScheduled!!.triggerAtMs)}, first expected alarm:${getTimeInHumanReadableFormatProtectFrom0Included(expectedAlarmList.first())}, current time:${getTimeInHumanReadableFormatProtectFrom0Included(now)}")
+		assertThat(firstScheduled.triggerAtMs).isEqualTo(expectedAlarmList.first())
+
+		var expectedTrigger = expectedAlarmList.first()
+		var firedCount = 0
+
+		while (expectedTrigger < endTime) {
+			val scheduled = shadowAlarmManager.peekNextScheduledAlarm()
+			assertThat(scheduled).isNotNull()
+			assertThat(scheduled!!.triggerAtMs).isEqualTo(expectedTrigger)
+			logD("\n\n(iteration:${firedCount}) Scheduled:$scheduled, scheduled:${scheduled.triggerAtMs}, fired:$firedCount, noOfAlarms:${expectedAlarmList.size}")
+
+			val delta = expectedTrigger - SystemClock.uptimeMillis()
+			shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(delta))
+			testDispatcher.scheduler.advanceUntilIdle()
+			shadowOf(Looper.getMainLooper()).idle()
+			testDispatcher.scheduler.advanceUntilIdle()
+
+			firedCount++
+			expectedTrigger += frequency
+		}
+
+		assertThat(firedCount).isEqualTo(expectedAlarmList.size - 1)
+	}
 
 	private fun logD(str: String){
 		Log.d("AAAA", "[Test] $str")
+	}
+	fun getTimeInHumanReadableFormatProtectFrom0Included(t:Long): String{
+		if (t == 0L) return "--the time here(probablyFromTheIntent) is 0--"
+		return SimpleDateFormat("h:mm:ss a yyyy-MM-dd", Locale.getDefault()).format(Date(t))
 	}
 
 }

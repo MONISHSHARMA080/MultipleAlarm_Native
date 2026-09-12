@@ -25,7 +25,6 @@ class AlarmReceiver : BroadcastReceiver() {
     @Inject lateinit var alarmsController: AlarmsController
     @Inject lateinit var errorHandler: ErrorHandler
     @Inject lateinit var analytics: Analytics
-//    private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
 	@Inject @IoDispatcher
 	lateinit var ioDispatcher: CoroutineDispatcher

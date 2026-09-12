@@ -96,7 +96,7 @@ class AlarmsController @Inject constructor(
 
 	/** handle setting the alarms and if fails then cancel it and update the DB state not running else running */
 	suspend fun startAlarmSeriesHandler(
-			alarm: AlarmData, alarmManager: AlarmManager, activityContext: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java,
+			alarm: AlarmData, alarmManager: AlarmManager, activityContext: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, now: Calendar = Calendar.getInstance(),
 	): ResultCustom<Unit, StartAlarmSeriesHandlerError> {
 		return ResultCustom.runCatching(
 			{ exception -> AlarmControllerErrorSet.Unknown(internalErrorMessage = exception.toString()) }
@@ -114,7 +114,7 @@ class AlarmsController @Inject constructor(
 			insertedAlarmData.validate().let {
 				if (it != AlarmDataValidationResult.Success) return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "AlarmData validation failed, and res:$it"))
 			}
-			val timeReturned = insertedAlarmData.getNextAlarmTriggerTime() ?: return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "[startAlarmSeriesHandler] Can't get first alarm to start the series\n alarmData:$insertedAlarmData"))
+			val timeReturned = insertedAlarmData.getNextAlarmTriggerTime(now) ?: return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "[startAlarmSeriesHandler] Can't get first alarm to start the series\n alarmData:$insertedAlarmData"))
 			scheduleAlarm(alarmData = insertedAlarmData, alarmManager = alarmManager, alarmTriggerTime = timeReturned, componentActivity = activityContext, receiverClass = receiverClass).fold(
 				onSuccess = {},
 				onError = { failureRes ->
