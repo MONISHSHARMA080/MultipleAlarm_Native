@@ -3,11 +3,11 @@ package com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -28,38 +28,38 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
  fun OnboardingPaywallScreen(onFinished: () -> Unit, offering: Offering?, loadFailed:Boolean) {
 	when {
 		offering != null -> {
-			Scaffold { innerPadding ->
-					Paywall(
-						options = PaywallOptions.Builder(
-							dismissRequest = { onFinished() } // user closes it -> continue onboarding
-						)
-							.setOffering(offering)
-							.setListener(object : PaywallListener {
-								override fun onPurchaseCompleted(
-										customerInfo: CustomerInfo,
-										storeTransaction: StoreTransaction
-								) {
-									onFinished()
-								}
-								override fun onRestoreCompleted(customerInfo: CustomerInfo) {
-									onFinished()
-								}
-							})
-							.build()
+			Box(modifier = Modifier.fillMaxSize()) {
+				Paywall(
+					options = PaywallOptions.Builder(
+						dismissRequest = { onFinished() } // user closes it -> continue onboarding
 					)
+						.setOffering(offering)
+						.setListener(object : PaywallListener {
+							override fun onPurchaseCompleted(
+									customerInfo: CustomerInfo,
+									storeTransaction: StoreTransaction
+							) {
+								onFinished()
+							}
+							override fun onRestoreCompleted(customerInfo: CustomerInfo) {
+								onFinished()
+							}
+						})
+						.build()
+				)
 
-					FilledTonalIconButton(
-						onClick = onFinished,
-						colors = IconButtonDefaults.filledTonalIconButtonColors(),
-						modifier = Modifier
-							.padding(innerPadding)
-							.padding(16.dp)
-					) {
-						Icon(
-							painterResource(R.drawable.clear),
-							null
-						)
-					}
+				FilledTonalIconButton(
+					onClick = onFinished,
+					colors = IconButtonDefaults.filledTonalIconButtonColors(),
+					modifier = Modifier
+						.statusBarsPadding()
+						.padding(16.dp)
+				) {
+					Icon(
+						painterResource(R.drawable.clear),
+						null
+					)
+				}
 			}
 
 		}

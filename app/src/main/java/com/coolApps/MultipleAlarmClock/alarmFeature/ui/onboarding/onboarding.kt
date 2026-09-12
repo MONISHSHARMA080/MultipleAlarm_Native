@@ -6,7 +6,6 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +18,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -96,33 +96,36 @@ import com.revenuecat.purchases.awaitOfferings
 		label = "progress"
 	)
 
-	Column(modifier = Modifier.fillMaxSize()) {
-		if (uiState.displaySate != DisplaySate.OnboardingPaywall){
-
-		Row(
-			modifier = Modifier
-				.fillMaxWidth()
-				.statusBarsPadding()
-				.padding(horizontal = 8.dp, vertical = 8.dp),
-			verticalAlignment = Alignment.CenterVertically
-		) {
-			IconButton(onClick = { viewModel.onPreviousClicked() }) {
-				Icon(
-					imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-					contentDescription = "Back"
-				)
-			}
-			Spacer(modifier = Modifier.width(8.dp))
-				LinearProgressIndicator(
-					progress = { animatedProgress },
-					modifier = Modifier.fillMaxWidth().padding(end = 16.dp)
-				)
-
+	Scaffold(
+		topBar = {
+			if (uiState.displaySate != DisplaySate.OnboardingPaywall) {
+				Row(
+					modifier = Modifier
+						.fillMaxWidth()
+						.statusBarsPadding()
+						.padding(horizontal = 8.dp, vertical = 8.dp),
+					verticalAlignment = Alignment.CenterVertically
+				) {
+					IconButton(onClick = { viewModel.onPreviousClicked() }) {
+						Icon(
+							imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+							contentDescription = "Back"
+						)
+					}
+					Spacer(modifier = Modifier.width(8.dp))
+					LinearProgressIndicator(
+						progress = { animatedProgress },
+						modifier = Modifier.fillMaxWidth().padding(end = 12.dp)
+					)
+				}
 			}
 		}
-
-		AnimatedContent( targetState = uiState.displaySate,
-			modifier = Modifier.fillMaxSize(),
+	) { innerPadding ->
+		AnimatedContent(
+			targetState = uiState.displaySate,
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(innerPadding),
 			transitionSpec = {
 				slideIntoContainer(
 					towards = AnimatedContentTransitionScope.SlideDirection.Left,
@@ -131,89 +134,89 @@ import com.revenuecat.purchases.awaitOfferings
 					towards = AnimatedContentTransitionScope.SlideDirection.Left,
 					animationSpec = tween(220, easing = FastOutSlowInEasing)
 				)
-		},
-		) { state->
-		when(state){
-			DisplaySate.Greeting -> GreetingScreen(onClickNext = {viewModel.onNextClicked()} )
-			DisplaySate.Problem -> ProblemScreen { viewModel.onNextClicked() }
-			DisplaySate.Permission -> {
-				PermissionScreen(
-					missingSteps = uiState.missingSteps,
-					allCriticalGranted = uiState.allCriticalGranted,
-					onNext = { viewModel.onNextClicked() },
-					refreshPermissionUiState = {viewModel.refreshPermissions()},
-				)
-			}
-			DisplaySate.CreateFirstAlarm -> {
-				val selected by alarmPickerViewModel.selectedAlarmSound.collectAsStateWithLifecycle()
-				val previewing by alarmPickerViewModel.previewingSound.collectAsStateWithLifecycle()
+			},
+		) { state ->
+			when (state) {
+				DisplaySate.Greeting -> GreetingScreen(onClickNext = { viewModel.onNextClicked() })
+				DisplaySate.Problem -> ProblemScreen { viewModel.onNextClicked() }
+				DisplaySate.Permission -> {
+					PermissionScreen(
+						missingSteps = uiState.missingSteps,
+						allCriticalGranted = uiState.allCriticalGranted,
+						onNext = { viewModel.onNextClicked() },
+						refreshPermissionUiState = { viewModel.refreshPermissions() },
+					)
+				}
+				DisplaySate.CreateFirstAlarm -> {
+					val selected by alarmPickerViewModel.selectedAlarmSound.collectAsStateWithLifecycle()
+					val previewing by alarmPickerViewModel.previewingSound.collectAsStateWithLifecycle()
 
-				AnimatedContent(
-					targetState = showAlarmSoundList,
-					transitionSpec = {
-						if (targetState) {
-							// Going forward
-							slideIntoContainer(
-								towards = AnimatedContentTransitionScope.SlideDirection.Left,
-								animationSpec = tween(150, easing = FastOutSlowInEasing)
-							) togetherWith slideOutOfContainer(
-								towards = AnimatedContentTransitionScope.SlideDirection.Left,
-								animationSpec = tween(150, easing = FastOutSlowInEasing)
+					AnimatedContent(
+						targetState = showAlarmSoundList,
+						transitionSpec = {
+							if (targetState) {
+								// Going forward
+								slideIntoContainer(
+									towards = AnimatedContentTransitionScope.SlideDirection.Left,
+									animationSpec = tween(150, easing = FastOutSlowInEasing)
+								) togetherWith slideOutOfContainer(
+									towards = AnimatedContentTransitionScope.SlideDirection.Left,
+									animationSpec = tween(150, easing = FastOutSlowInEasing)
+								)
+							} else {
+								// Going back
+								slideIntoContainer(
+									towards = AnimatedContentTransitionScope.SlideDirection.Right,
+									animationSpec = tween(150, easing = FastOutSlowInEasing)
+								) togetherWith slideOutOfContainer(
+									towards = AnimatedContentTransitionScope.SlideDirection.Right,
+									animationSpec = tween(150, easing = FastOutSlowInEasing)
+								)
+							}
+						},
+						label = "alarm screen navigation"
+					) { shouldWeShowAlarmScreen ->
+						if (shouldWeShowAlarmScreen) {
+							ListAlarmSoundScreen(
+								alarmPickerViewModel,
+								previewingUri = previewing?.soundUri,
+								selectedUri = selected?.soundUri,
+								onBack = {
+									showAlarmSoundList = false
+								},
+								onSelected = { sound ->
+									alarmPickerViewModel.onAlarmSoundSelected(sound)
+								}
 							)
 						} else {
-							// Going back
-							slideIntoContainer(
-								towards = AnimatedContentTransitionScope.SlideDirection.Right,
-								animationSpec = tween(150, easing = FastOutSlowInEasing)
-							) togetherWith slideOutOfContainer(
-								towards = AnimatedContentTransitionScope.SlideDirection.Right,
-								animationSpec = tween(150, easing = FastOutSlowInEasing)
+							AlarmPickerScreen(
+								alarmSetProceed = {
+									viewModel.onNextClicked()
+								},
+								forNewAlarm = true,
+								viewModel = alarmPickerViewModel,
+								onNavigateToSoundList = {
+									showAlarmSoundList = true
+								},
+								settingAlarmCancelled = {
+									viewModel.onPreviousClicked()
+								}, onNavigateToPaywall = {},
+								linearProgressBar = {
+									LinearProgressIndicator(
+										progress = { animatedProgress },
+										modifier = Modifier.fillMaxWidth().padding(end = 16.dp)
+									)
+
+								}
 							)
 						}
-					},
-					label = "alarm screen navigation"
-				) { shouldWeShowAlarmScreen ->
-					if (shouldWeShowAlarmScreen) {
-						ListAlarmSoundScreen(
-							alarmPickerViewModel,
-							previewingUri = previewing?.soundUri,
-							selectedUri = selected?.soundUri,
-							onBack = {
-								showAlarmSoundList = false
-							},
-							onSelected = { sound ->
-								alarmPickerViewModel.onAlarmSoundSelected(sound)
-							}
-						)
-					} else {
-						AlarmPickerScreen(
-							alarmSetProceed = {
-								viewModel.onNextClicked()
-							},
-							forNewAlarm = true,
-							viewModel = alarmPickerViewModel,
-							onNavigateToSoundList = {
-								showAlarmSoundList = true
-							},
-							settingAlarmCancelled = {
-								viewModel.onPreviousClicked()
-							}, onNavigateToPaywall = {},
-							linearProgressBar = {
-								LinearProgressIndicator(
-									progress = { animatedProgress },
-									modifier = Modifier.fillMaxWidth().padding(end = 16.dp)
-								)
-
-							}
-						)
 					}
 				}
-			}
-			DisplaySate.AlarmResult -> AlarmResultClaude(uiState.alarmData, onNextClick = {viewModel.onNextClicked() })
-			DisplaySate.OnboardingPaywall -> {
-				OnboardingPaywallScreen(onFinished = {viewModel.finishedOnboarding()}, loadFailed = loadFailed, offering = offering)
+				DisplaySate.AlarmResult -> AlarmResultClaude(uiState.alarmData, onNextClick = { viewModel.onNextClicked() })
+				DisplaySate.OnboardingPaywall -> {
+					OnboardingPaywallScreen(onFinished = { viewModel.finishedOnboarding() }, loadFailed = loadFailed, offering = offering)
+				}
 			}
 		}
-	}
 	}
 }

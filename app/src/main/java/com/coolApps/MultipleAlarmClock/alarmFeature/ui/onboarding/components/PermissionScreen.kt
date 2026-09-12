@@ -49,7 +49,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -118,56 +117,16 @@ fun PermissionScreen(
 	}
 
 
-    Scaffold(
-        bottomBar = {
-			Box(
-				modifier =
-					Modifier.fillMaxWidth()
-						.background(colorScheme.background)
-						.navigationBarsPadding()
-						.padding(26.dp)
-						.padding(bottom = 20.dp)
-						.animateContentSize(),
-				contentAlignment = Alignment.Center,
-			) {
-				Row(
-					modifier = Modifier.fillMaxWidth(),
-					horizontalArrangement = Arrangement.End,
-					verticalAlignment = Alignment.CenterVertically
-				) {
-					Button(
-						onClick = {
-							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-							onNext()
-						},
-						enabled = allCriticalGranted,
-						modifier = Modifier
-							.fillMaxWidth()
-							.height(56.dp),
-						shape = shapes.extraLarge,
-						colors = ButtonDefaults.buttonColors(
-							containerColor = colorScheme.primaryContainer,
-							contentColor = colorScheme.onPrimaryContainer
-						)
-					) {
-						Text(
-							text = stringResource(if (allCriticalGranted)R.string.permission_continue else R.string.permission_grant_permissions),
-							style = typography.titleMedium
-						)
-					}
-
-
-				}
-			}
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+	Column(
+		modifier = Modifier.fillMaxSize()
+	) {
+		Column(
+			modifier = Modifier
+				.fillMaxWidth()
+				.weight(1f)
+				.padding(horizontal = 24.dp),
+			horizontalAlignment = Alignment.CenterHorizontally
+		) {
 			Spacer(modifier = Modifier.weight(0.2f))
 
 			// Micro-interaction: Continuous floating animation for the shield icon
@@ -254,7 +213,7 @@ fun PermissionScreen(
 					color = colorScheme.onBackground
 				)
 			}
-            Spacer(modifier = Modifier.height(12.dp))
+			Spacer(modifier = Modifier.height(12.dp))
 			if (!allCriticalGranted){
 				Text(
 					text = stringResource(R.string.onboarding_permission_reason),
@@ -265,24 +224,24 @@ fun PermissionScreen(
 				)
 			}
 
-            Spacer(modifier = Modifier.height(32.dp))
+			Spacer(modifier = Modifier.height(32.dp))
 
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 300.dp),
-                modifier = Modifier
+			LazyVerticalGrid(
+				columns = GridCells.Adaptive(minSize = 300.dp),
+				modifier = Modifier
 					.fillMaxWidth()
 					.weight(1f, fill = false),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(bottom = 24.dp)
-            ) {
-                items(missingSteps) { step ->
+				horizontalArrangement = Arrangement.spacedBy(16.dp),
+				verticalArrangement = Arrangement.spacedBy(16.dp),
+				contentPadding = PaddingValues(bottom = 24.dp)
+			) {
+				items(missingSteps) { step ->
 					val isPermanentlyDenied = step == PermissionStep.PostNotification && notificationPermanentlyDenied
 
-                    PermissionItem(
-                        step = step,
+					PermissionItem(
+						step = step,
 						isPermanentlyDenied = isPermanentlyDenied,
-                        onAction = {
+						onAction = {
 							when (step) {
 								PermissionStep.PostNotification -> {
 									if (notificationPermanentlyDenied) {
@@ -318,12 +277,50 @@ fun PermissionScreen(
 							}
 
 						}
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.weight(0.2f))
-        }
-    }
+					)
+				}
+			}
+			Spacer(modifier = Modifier.weight(0.2f))
+		}
+
+		Box(
+			modifier =
+				Modifier.fillMaxWidth()
+					.background(colorScheme.background)
+					.navigationBarsPadding()
+					.padding(26.dp)
+					.padding(bottom = 20.dp)
+					.animateContentSize(),
+			contentAlignment = Alignment.Center,
+		) {
+			Row(
+				modifier = Modifier.fillMaxWidth(),
+				horizontalArrangement = Arrangement.End,
+				verticalAlignment = Alignment.CenterVertically
+			) {
+				Button(
+					onClick = {
+						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+						onNext()
+					},
+					enabled = allCriticalGranted,
+					modifier = Modifier
+						.fillMaxWidth()
+						.height(56.dp),
+					shape = shapes.extraLarge,
+					colors = ButtonDefaults.buttonColors(
+						containerColor = colorScheme.primaryContainer,
+						contentColor = colorScheme.onPrimaryContainer
+					)
+				) {
+					Text(
+						text = stringResource(if (allCriticalGranted)R.string.permission_continue else R.string.permission_grant_permissions),
+						style = typography.titleMedium
+					)
+				}
+			}
+		}
+	}
 }
 
 @Composable

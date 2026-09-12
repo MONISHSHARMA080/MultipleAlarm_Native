@@ -12,6 +12,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,7 +29,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -81,52 +81,15 @@ import androidx.compose.ui.unit.sp
 		label = "hand_rotation"
 	)
 
-	Scaffold(
-		bottomBar = {
-			Box(
-				modifier =
-					Modifier.fillMaxWidth()
-						.background(colorScheme.background)
-						.navigationBarsPadding()
-						.padding(26.dp)
-						.padding(bottom = 20.dp)
-						.animateContentSize(),
-				contentAlignment = Alignment.Center,
-			) {
-				Row(
-					modifier = Modifier.fillMaxWidth(),
-					horizontalArrangement = Arrangement.End,
-					verticalAlignment = Alignment.CenterVertically
-				) {
-					Button(
-						onClick = {
-							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-							onClickNext()
-						},
-						modifier = Modifier
-							.fillMaxWidth()
-							.height(56.dp),
-						shape = shapes.extraLarge,
-						colors = ButtonDefaults.buttonColors(
-							containerColor = colorScheme.primaryContainer,
-							contentColor = colorScheme.onPrimaryContainer
-						)
-					) {
-						Text(
-							text = stringResource(R.string.onboarding_greeting_next),
-							style = typography.titleMedium
-						)
-					}
-
-
-				}
-			}
-		}
-	) { padding->
+	Column(
+		modifier = Modifier
+			.fillMaxSize()
+			.background(colorScheme.background)
+	) {
 		Box(
 			modifier = Modifier
-				.fillMaxSize()
-				.background(colorScheme.background),
+				.fillMaxWidth()
+				.weight(1f),
 			contentAlignment = Alignment.Center
 		) {
 			Row(
@@ -152,6 +115,41 @@ import androidx.compose.ui.unit.sp
 			}
 		}
 
+		Box(
+			modifier =
+				Modifier.fillMaxWidth()
+					.background(colorScheme.background)
+					.navigationBarsPadding()
+					.padding(26.dp)
+					.padding(bottom = 20.dp)
+					.animateContentSize(),
+			contentAlignment = Alignment.Center,
+		) {
+			Row(
+				modifier = Modifier.fillMaxWidth(),
+				horizontalArrangement = Arrangement.End,
+				verticalAlignment = Alignment.CenterVertically
+			) {
+				Button(
+					onClick = {
+						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+						onClickNext()
+					},
+					modifier = Modifier
+						.fillMaxWidth()
+						.height(56.dp),
+					shape = shapes.extraLarge,
+					colors = ButtonDefaults.buttonColors(
+						containerColor = colorScheme.primaryContainer,
+						contentColor = colorScheme.onPrimaryContainer
+					)
+				) {
+					Text(
+						text = stringResource(R.string.onboarding_greeting_next),
+						style = typography.titleMedium
+					)
+				}
+			}
+		}
 	}
-
 }

@@ -46,7 +46,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -162,49 +161,14 @@ private fun AlarmResultContent(
 		if (expanded) notificationTimes else notificationTimes.take(MAX_VISIBLE_TIMELINE_ROWS)
 	}
 
-	Scaffold(
-		bottomBar = {
-			// Fade in bottom bar only when settled
-			AnimatedVisibility(
-				visible = isSettled,
-				enter = slideInVertically(initialOffsetY = { it }) + fadeIn()
-			) {
-				Box(
-					modifier = Modifier
-						.fillMaxWidth()
-						.background(colorScheme.background)
-						.navigationBarsPadding()
-						.padding(horizontal = 26.dp, vertical = 20.dp),
-					contentAlignment = Alignment.Center
-				) {
-					Button(
-						onClick = {
-							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-							onNextClick()
-						},
-						modifier = Modifier
-							.fillMaxWidth()
-							.height(56.dp),
-						shape = shapes.extraLarge,
-						colors = ButtonDefaults.buttonColors(
-							containerColor = colorScheme.primaryContainer,
-							contentColor = colorScheme.onPrimaryContainer
-						)
-					) {
-						Text(
-							text = stringResource(R.string.onboarding_result_finish),
-							style = typography.titleMedium
-						)
-					}
-				}
-			}
-		}
-	) { padding ->
+	Box(
+		modifier = Modifier.fillMaxSize()
+	) {
 		LazyColumn(
 			modifier = Modifier
 				.fillMaxSize()
-				.padding(padding)
 				.padding(horizontal = 24.dp),
+			contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 100.dp),
 			horizontalAlignment = Alignment.Start
 		) {
 			item(key = "header_title") {
@@ -318,6 +282,42 @@ private fun AlarmResultContent(
 
 			item(key = "bottom_spacer") {
 				Spacer(modifier = Modifier.height(24.dp))
+			}
+		}
+
+		// Fade in bottom bar only when settled
+		AnimatedVisibility(
+			visible = isSettled,
+			modifier = Modifier.align(Alignment.BottomCenter),
+			enter = slideInVertically(initialOffsetY = { it }) + fadeIn()
+		) {
+			Box(
+				modifier = Modifier
+					.fillMaxWidth()
+					.background(colorScheme.background)
+					.navigationBarsPadding()
+					.padding(horizontal = 26.dp, vertical = 20.dp),
+				contentAlignment = Alignment.Center
+			) {
+				Button(
+					onClick = {
+						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+						onNextClick()
+					},
+					modifier = Modifier
+						.fillMaxWidth()
+						.height(56.dp),
+					shape = shapes.extraLarge,
+					colors = ButtonDefaults.buttonColors(
+						containerColor = colorScheme.primaryContainer,
+						contentColor = colorScheme.onPrimaryContainer
+					)
+				) {
+					Text(
+						text = stringResource(R.string.onboarding_result_finish),
+						style = typography.titleMedium
+					)
+				}
 			}
 		}
 	}

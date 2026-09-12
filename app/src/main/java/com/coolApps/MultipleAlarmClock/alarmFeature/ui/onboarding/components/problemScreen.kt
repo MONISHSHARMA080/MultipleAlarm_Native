@@ -33,7 +33,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -92,63 +91,14 @@ fun ProblemScreen(
 		delay(400.milliseconds)
 		phase = ProblemPhase.ShowingProblem
 	}
-	Scaffold(
-		bottomBar = {
-			Box(
-				modifier =
-					Modifier.fillMaxWidth()
-						.background(colorScheme.background)
-						.navigationBarsPadding()
-						.padding(26.dp)
-						.padding(bottom = 20.dp)
-						.animateContentSize(),
-				contentAlignment = Alignment.Center,
-			) {
-				Row(
-					modifier = Modifier.fillMaxWidth(),
-					horizontalArrangement = Arrangement.End,
-					verticalAlignment = Alignment.CenterVertically
-				) {
-					Button(
-						onClick = {
-							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-							when (phase) {
-								ProblemPhase.Crushing -> onComplete()
-								else -> {
-									phase = ProblemPhase.Crushing
-									view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-								}
-							}
-						},
-						enabled = phase != ProblemPhase.Building,
-						modifier = Modifier
-							.fillMaxWidth()
-							.height(56.dp),
-						shape = shapes.extraLarge,
-						colors = ButtonDefaults.buttonColors(
-							containerColor = colorScheme.primaryContainer,
-							contentColor = colorScheme.onPrimaryContainer
-						)
-					)
-					{
-						Text(
-							text = if (phase == ProblemPhase.Crushing) {
-								stringResource(R.string.onboarding_problem_btn_set)
-							} else {
-								stringResource(R.string.onboarding_problem_btn_fix)
-							},
-							style = typography.titleMedium
-						)
-					}
-				}
-			}
-		}
-	) { padding ->
-
+	Column(
+		modifier = Modifier.fillMaxSize(),
+		horizontalAlignment = Alignment.CenterHorizontally
+	) {
 		Column(
 			modifier = Modifier
-				.fillMaxSize()
-				.padding(padding),
+				.fillMaxWidth()
+				.weight(1f),
 			horizontalAlignment = Alignment.CenterHorizontally
 		) {
 			Spacer(modifier = Modifier.weight(0.8f))
@@ -192,7 +142,55 @@ fun ProblemScreen(
 			)
 
 			Spacer(modifier = Modifier.weight(1f))
+		}
 
+		Box(
+			modifier =
+				Modifier.fillMaxWidth()
+					.background(colorScheme.background)
+					.navigationBarsPadding()
+					.padding(26.dp)
+					.padding(bottom = 20.dp)
+					.animateContentSize(),
+			contentAlignment = Alignment.Center,
+		) {
+			Row(
+				modifier = Modifier.fillMaxWidth(),
+				horizontalArrangement = Arrangement.End,
+				verticalAlignment = Alignment.CenterVertically
+			) {
+				Button(
+					onClick = {
+						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+						when (phase) {
+							ProblemPhase.Crushing -> onComplete()
+							else -> {
+								phase = ProblemPhase.Crushing
+								view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+							}
+						}
+					},
+					enabled = phase != ProblemPhase.Building,
+					modifier = Modifier
+						.fillMaxWidth()
+						.height(56.dp),
+					shape = shapes.extraLarge,
+					colors = ButtonDefaults.buttonColors(
+						containerColor = colorScheme.primaryContainer,
+						contentColor = colorScheme.onPrimaryContainer
+					)
+				)
+				{
+					Text(
+						text = if (phase == ProblemPhase.Crushing) {
+							stringResource(R.string.onboarding_problem_btn_set)
+						} else {
+							stringResource(R.string.onboarding_problem_btn_fix)
+						},
+						style = typography.titleMedium
+					)
+				}
+			}
 		}
 	}
 }
