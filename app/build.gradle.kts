@@ -122,6 +122,12 @@ fun Project.configureAndroid() {
                     it.systemProperty("robolectric.logging", "stdout")
                     it.systemProperty("robolectric.graphicsMode", "NATIVE")
                     it.jvmArgs("-noverify", "--add-opens=java.base/jdk.internal.access=ALL-UNNAMED")
+                    it.testLogging {
+                        events("passed", "skipped", "failed")
+                        showStandardStreams = true
+                        showExceptions = true
+                        showStackTraces = true
+                    }
                 }
 
             }
