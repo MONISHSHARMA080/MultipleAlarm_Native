@@ -163,8 +163,8 @@ class AlarmSeriesLogicTest2 {
 			set(Calendar.SECOND, 0)
 			set(Calendar.MILLISECOND, 0)
 		}.timeInMillis
-		val endTime = startTime + Duration.ofHours(10).toMillis()
-		val freqInMin = 2L
+		val endTime = startTime + Duration.ofHours(18).toMillis()
+		val freqInMin = Random.nextInt(1, 25).toLong()
 		val frequency = Duration.ofMinutes(freqInMin).toMillis()
 
 		val alarm = AlarmData(
@@ -215,7 +215,7 @@ class AlarmSeriesLogicTest2 {
 			val scheduled = shadowAlarmManager.peekNextScheduledAlarm()
 			assertThat(scheduled).isNotNull()
 			assertThat(scheduled!!.triggerAtMs).isEqualTo(expectedTrigger)
-			logD("\n\n(iteration:${firedCount}) Scheduled:$scheduled, scheduled:${scheduled.triggerAtMs}, fired:$firedCount, noOfAlarms:${expectedAlarmList.size}")
+			logD("\n\n(iteration:${firedCount}) Scheduled:$scheduled, scheduled:${geTimeWithoutDate(scheduled.triggerAtMs)}, fired:$firedCount, noOfAlarms:${expectedAlarmList.size}")
 
 			val delta = expectedTrigger - SystemClock.uptimeMillis()
 			shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(delta))
@@ -237,6 +237,11 @@ class AlarmSeriesLogicTest2 {
 		if (t == 0L) return "--the time here(probablyFromTheIntent) is 0--"
 		return SimpleDateFormat("h:mm:ss a yyyy-MM-dd", Locale.getDefault()).format(Date(t))
 	}
+	fun geTimeWithoutDate(t:Long): String{
+		if (t == 0L) return "--the time here(probablyFromTheIntent) is 0--"
+		return SimpleDateFormat("h:mm:ss a", Locale.getDefault()).format(Date(t))
+	}
+
 
 }
 
