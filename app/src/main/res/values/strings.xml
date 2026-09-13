@@ -143,6 +143,17 @@
     <string name="onboarding_problem_preview_interval">7:00 → 7:40</string>
     <string name="onboarding_problem_preview_frequency">every 10 minutes</string>
 
+    <!-- Onboarding Create First Alarm Intro -->
+    <string name="onboarding_create_alarm_title">Let\'s create your first alarm</string>
+    <string name="onboarding_create_alarm_subtitle">Set an alarm interval in just two simple steps.</string>
+    <string name="onboarding_create_alarm_step_start_title">Start time</string>
+    <string name="onboarding_create_alarm_step_start_desc">Select when you want the alarms to start, eg wake up time </string>
+    <string name="onboarding_create_alarm_step_end_title">End time</string>
+    <string name="onboarding_create_alarm_step_end_desc">Select when you want your alarms to stop.</string>
+    <string name="onboarding_create_alarm_step_flexible_title">Full flexibility</string>
+    <string name="onboarding_create_alarm_step_flexible_desc">you could edit this later.</string>
+    <string name="onboarding_create_alarm_btn_continue">Get started</string>
+
     <!-- Onboarding Result Screen -->
     <string name="onboarding_result_finish">Finish</string>
     <string name="onboarding_result_done">Done</string>

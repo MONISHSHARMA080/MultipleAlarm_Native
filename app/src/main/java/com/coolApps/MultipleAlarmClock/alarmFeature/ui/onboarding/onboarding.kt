@@ -147,7 +147,7 @@ import com.revenuecat.purchases.awaitOfferings
 					CreateFirstAlarmScreen(
 						alarmPickerViewModel = alarmPickerViewModel,
 						onAlarmSetProceed = { viewModel.onNextClicked() },
-						onSettingAlarmCancelled = { viewModel.onPreviousClicked() },
+//						onSettingAlarmCancelled = { viewModel.onPreviousClicked() },
 						linearProgressBar = {
 							LinearProgressIndicator(
 								progress = { animatedProgress },
