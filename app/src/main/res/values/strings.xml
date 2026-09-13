@@ -14,7 +14,7 @@
 
     <!-- Alarm Validation Errors -->
     <string name="alarm_error_fix_alarm_time">Choose an end time after <xliff:g id="start_time">%1$s</xliff:g></string>
-    <string name="alarm_error_frequency_range">Enter a value between 1 to 700 minutes</string>
+    <string name="alarm_error_frequency_range">Enter a value between 1 and 700 minutes</string>
     <string name="alarm_error_date_mismatch">Start and end times must be on the same day</string>
     <string name="alarm_error_past_date">Date value must be today or in the future.</string>
     <string name="alarm_error_no_changes">No changes made. Change something to update the alarm.</string>
@@ -151,8 +151,11 @@
     <string name="onboarding_create_alarm_step_end_title">End time</string>
     <string name="onboarding_create_alarm_step_end_desc">Select when you want your alarms to stop.</string>
     <string name="onboarding_create_alarm_step_flexible_title">Full flexibility</string>
-    <string name="onboarding_create_alarm_step_flexible_desc">you could edit this later.</string>
+    <string name="onboarding_create_alarm_step_flexible_desc">you could change this later.</string>
     <string name="onboarding_create_alarm_btn_continue">Get started</string>
+
+    <string name="onboarding_create_alarm_opal_step_1">let\'s create your first alarm</string>
+    <string name="onboarding_create_alarm_opal_step_2">select when do you wake up, and when do you want the alarm to stop , we\'ll send you an aalrm every some min of your choosing</string>
 
     <!-- Onboarding Result Screen -->
     <string name="onboarding_result_finish">Finish</string>
@@ -185,10 +188,6 @@
     <string name="offline_notification_evening_msg_1">Getting ready for tomorrow? Set up your wake-up intervals before you relax.</string>
     <string name="offline_notification_evening_title_2">Plan ahead tonight</string>
     <string name="offline_notification_evening_msg_2">Avoid the morning rush by setting your alarms ahead of time.</string>
-<!--    <string name="offline_notification_evening_title_3">Evening reminder</string>-->
-<!--    <string name="offline_notification_evening_msg_3">Stay ahead of your schedule. Prepare your alarms for tomorrow.</string>-->
-<!--    <string name="offline_notification_evening_title_4">Wrap up your day</string>-->
-<!--    <string name="offline_notification_evening_msg_4">Time to organize tomorrow\'s routine. Make sure your alarms are ready.</string>-->
     <string name="offline_notification_evening_title_5">Reminder</string>
     <string name="offline_notification_evening_msg_5">Set your alarms tonight so you can wake up stress-free.</string>
 
@@ -197,11 +196,5 @@
     <string name="offline_notification_night_msg_1">schedule alarm for tomorrow morning.</string>
     <string name="offline_notification_night_title_2">Reminder</string>
     <string name="offline_notification_night_msg_2">Make sure your alarms are active</string>
-<!--    <string name="offline_notification_night_title_3">Sweet dreams</string>-->
-<!--    <string name="offline_notification_night_msg_3">Need an extra push tomorrow morning? Make sure your interval alarms are active.</string>-->
-<!--    <string name="offline_notification_night_title_4">Bedtime checklist</string>-->
-<!--    <string name="offline_notification_night_msg_4">Phone on charge? Alarms set? Have a restful night of sleep.</string>-->
-<!--    <string name="offline_notification_night_title_5">Recharge for tomorrow</string>-->
-<!--    <string name="offline_notification_night_msg_5">Get quality rest tonight. Your alarms will take care of waking you up.</string>-->
 
 </resources>

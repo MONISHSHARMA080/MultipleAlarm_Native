@@ -3,48 +3,37 @@ package com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
-import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -55,6 +44,8 @@ import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerViewModel
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.listAlarmRingtone.ListAlarmSoundScreen
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 private enum class CreateFirstAlarmStep {
 	Intro,
@@ -146,86 +137,64 @@ private fun FirstAlarmIntroView(
 	modifier: Modifier = Modifier
 ) {
 	val view = LocalView.current
-	val scrollState = rememberScrollState()
+	var showHeadline by remember { mutableStateOf(false) }
+	var showDescription by remember { mutableStateOf(false) }
+	var showButton by remember { mutableStateOf(false) }
+
+	LaunchedEffect(Unit) {
+//		showHeadline = true
+		showButton = true
+		delay(400.milliseconds)
+		showDescription = true
+		delay(700.milliseconds)
+	}
 
 	Column(
 		modifier = modifier
 			.fillMaxSize()
 			.background(colorScheme.background)
 	) {
-		Column(
+		Box(
 			modifier = Modifier
 				.fillMaxWidth()
 				.weight(1f)
-				.verticalScroll(scrollState)
-				.padding(horizontal = 24.dp),
-			horizontalAlignment = Alignment.CenterHorizontally
+				.padding(horizontal = 32.dp),
+			contentAlignment = Alignment.Center
 		) {
-			Spacer(modifier = Modifier.weight(0.5f))
-
-			Surface(
-				modifier = Modifier.size(68.dp),
-				shape = CircleShape,
-				color = colorScheme.primaryContainer
-			) {
-				Box(contentAlignment = Alignment.Center) {
-					Icon(
-						imageVector = Icons.Outlined.Alarm,
-						contentDescription = null,
-						tint = colorScheme.onPrimaryContainer,
-						modifier = Modifier.size(36.dp)
-					)
-				}
-			}
-
-			Spacer(modifier = Modifier.height(20.dp))
-
-			Text(
-				text = stringResource(R.string.onboarding_create_alarm_title),
-				style = typography.headlineMedium,
-				fontWeight = FontWeight.SemiBold,
-				textAlign = TextAlign.Center,
-				color = colorScheme.onBackground
-			)
-
-			Spacer(modifier = Modifier.height(8.dp))
-
-			Text(
-				text = stringResource(R.string.onboarding_create_alarm_subtitle),
-				style = typography.bodyMedium,
-				textAlign = TextAlign.Center,
-				color = colorScheme.onBackground.copy(alpha = 0.72f),
-				modifier = Modifier.fillMaxWidth(0.9f)
-			)
-
-			Spacer(modifier = Modifier.height(28.dp))
-
 			Column(
 				modifier = Modifier
-					.widthIn(max = 520.dp)
-					.fillMaxWidth(),
-				verticalArrangement = Arrangement.spacedBy(14.dp)
+					.fillMaxWidth()
+					.animateContentSize(animationSpec = tween(1000)),
+				horizontalAlignment = Alignment.CenterHorizontally
 			) {
-				FirstAlarmInstructionCard(
-					badgeText = "1",
-					title = stringResource(R.string.onboarding_create_alarm_step_start_title),
-					description = stringResource(R.string.onboarding_create_alarm_step_start_desc)
-				)
-
-				FirstAlarmInstructionCard(
-					badgeText = "2",
-					title = stringResource(R.string.onboarding_create_alarm_step_end_title),
-					description = stringResource(R.string.onboarding_create_alarm_step_end_desc)
-				)
-
-				FirstAlarmInstructionCard(
-					icon = Icons.Filled.Check,
-					title = stringResource(R.string.onboarding_create_alarm_step_flexible_title),
-					description = stringResource(R.string.onboarding_create_alarm_step_flexible_desc)
-				)
+				AnimatedVisibility(
+					visible = true,
+					enter = fadeIn(animationSpec = tween(300)) + slideInVertically(animationSpec = tween(300), initialOffsetY = { 30 })
+				) {
+					Text(
+						text = stringResource(R.string.onboarding_create_alarm_opal_step_1),
+						style = typography.headlineLarge,
+						fontWeight = FontWeight.Bold,
+						textAlign = TextAlign.Center,
+						color = colorScheme.onBackground
+					)
+				}
+				AnimatedVisibility(
+					visible = showDescription,
+					enter = fadeIn(animationSpec = tween(400)) + expandVertically(animationSpec = tween(400))
+				) {
+					Column(horizontalAlignment = Alignment.CenterHorizontally) {
+						Spacer(modifier = Modifier.height(24.dp))
+						Text(
+							text = stringResource(R.string.onboarding_create_alarm_opal_step_2),
+							style = typography.titleMedium,
+							fontWeight = FontWeight.Medium,
+							textAlign = TextAlign.Center,
+							color = colorScheme.onBackground.copy(alpha = 0.6f)
+						)
+					}
+				}
 			}
-
-			Spacer(modifier = Modifier.weight(0.8f))
 		}
 
 		Box(
@@ -238,11 +207,7 @@ private fun FirstAlarmIntroView(
 				.animateContentSize(),
 			contentAlignment = Alignment.Center
 		) {
-			Box(
-				modifier = Modifier
-					.widthIn(max = 520.dp)
-					.fillMaxWidth()
-			) {
+			Column(horizontalAlignment = Alignment.CenterHorizontally) {
 				Button(
 					onClick = {
 						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
@@ -251,7 +216,7 @@ private fun FirstAlarmIntroView(
 					modifier = Modifier
 						.fillMaxWidth()
 						.height(56.dp),
-					shape = shapes.extraLarge,
+					shape = androidx.compose.material3.MaterialTheme.shapes.extraLarge,
 					colors = ButtonDefaults.buttonColors(
 						containerColor = colorScheme.primaryContainer,
 						contentColor = colorScheme.onPrimaryContainer
@@ -262,72 +227,12 @@ private fun FirstAlarmIntroView(
 						style = typography.titleMedium
 					)
 				}
-			}
-		}
-	}
-}
 
-@Composable
-private fun FirstAlarmInstructionCard(
-	title: String,
-	description: String,
-	modifier: Modifier = Modifier,
-	badgeText: String? = null,
-	icon: ImageVector? = null
-) {
-	Surface(
-		modifier = modifier.fillMaxWidth(),
-		shape = shapes.large,
-		color = colorScheme.surfaceContainerHigh,
-		tonalElevation = 1.dp
-	) {
-		Row(
-			modifier = Modifier
-				.fillMaxWidth()
-				.padding(horizontal = 16.dp, vertical = 14.dp),
-			verticalAlignment = Alignment.CenterVertically
-		) {
-			Surface(
-				modifier = Modifier.size(38.dp),
-				shape = CircleShape,
-				color = colorScheme.primary.copy(alpha = 0.12f)
-			) {
-				Box(contentAlignment = Alignment.Center) {
-					if (icon != null) {
-						Icon(
-							imageVector = icon,
-							contentDescription = null,
-							tint = colorScheme.primary,
-							modifier = Modifier.size(20.dp)
-						)
-					} else if (badgeText != null) {
-						Text(
-							text = badgeText,
-							style = typography.titleMedium,
-							fontWeight = FontWeight.Bold,
-							color = colorScheme.primary
-						)
-					}
-				}
-			}
-
-			Spacer(modifier = Modifier.width(14.dp))
-
-			Column(
-				modifier = Modifier.weight(1f),
-				verticalArrangement = Arrangement.spacedBy(2.dp)
-			) {
-				Text(
-					text = title,
-					style = typography.titleMedium,
-					fontWeight = FontWeight.SemiBold,
-					color = colorScheme.onSurface
-				)
-				Text(
-					text = description,
-					style = typography.bodyMedium,
-					color = colorScheme.onSurfaceVariant
-				)
+//				AnimatedVisibility(
+//					visible = showButton,
+//					enter = fadeIn(animationSpec = tween(1000)) + expandVertically(animationSpec = tween(1000))
+//				) {
+//				}
 			}
 		}
 	}
