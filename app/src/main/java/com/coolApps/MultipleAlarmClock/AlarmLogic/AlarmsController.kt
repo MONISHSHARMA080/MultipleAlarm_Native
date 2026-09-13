@@ -266,7 +266,7 @@ class AlarmsController @Inject constructor(
 			getTimeInHumanReadableFormatProtectFrom0Included(nextAlarmTime)
 		}")
 
-		if (nextAlarmTime < alarmData.endTime) {
+		if (nextAlarmTime <= alarmData.endTime) {
 			// put this logic in alarmController (end time calc too)
 			val res = scheduleAlarm(
 				alarmManager = alarmManager,

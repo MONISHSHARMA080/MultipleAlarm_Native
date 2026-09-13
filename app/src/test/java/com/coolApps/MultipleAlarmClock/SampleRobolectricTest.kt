@@ -211,7 +211,7 @@ class AlarmSeriesLogicTest2 {
 		var expectedTrigger = expectedAlarmList.first()
 		var firedCount = 0
 
-		while (expectedTrigger < endTime) {
+		while (expectedTrigger <= endTime) {
 			val scheduled = shadowAlarmManager.peekNextScheduledAlarm()
 			assertThat(scheduled).isNotNull()
 			assertThat(scheduled!!.triggerAtMs).isEqualTo(expectedTrigger)
@@ -222,12 +222,11 @@ class AlarmSeriesLogicTest2 {
 			testDispatcher.scheduler.advanceUntilIdle()
 			shadowOf(Looper.getMainLooper()).idle()
 			testDispatcher.scheduler.advanceUntilIdle()
-
 			firedCount++
 			expectedTrigger += frequency
 		}
 
-		assertThat(firedCount).isEqualTo(expectedAlarmList.size - 1)
+		assertThat(firedCount).isEqualTo(expectedAlarmList.size )
 	}
 
 	private fun logD(str: String){
