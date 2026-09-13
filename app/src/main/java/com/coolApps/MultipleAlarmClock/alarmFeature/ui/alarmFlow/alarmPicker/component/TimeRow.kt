@@ -61,7 +61,6 @@ fun TimeRow(
 
 	val density = LocalDensity.current
 	val containerSize = LocalWindowInfo.current.containerSize
-//	val screenWidthDp = with(density) { containerSize.width.toDp() }
 	val screenHeightDp = with(density) { containerSize.height.toDp() }
 	val timeStyle = typography.displayMedium.copy(fontWeight = FontWeight.Bold)
 	val amPmStyle = typography.bodyMedium

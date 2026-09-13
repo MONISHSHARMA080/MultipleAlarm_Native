@@ -30,10 +30,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerViewModel
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.listAlarmRingtone.ListAlarmSoundScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.AlarmResultClaude
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.CreateFirstAlarmScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.GreetingScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.OnboardingPaywallScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.PermissionScreen
@@ -51,9 +50,8 @@ import com.revenuecat.purchases.awaitOfferings
 	val viewModel : OnboardingViewModel = hiltViewModel()
 	val alarmPickerViewModel : AlarmPickerViewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory -> factory.create(null) }
 	val alarmPickerUiState by alarmPickerViewModel.uiState.collectAsStateWithLifecycle()
-	
+
 	val uiState by viewModel.displayState.collectAsStateWithLifecycle()
-	var showAlarmSoundList by remember { mutableStateOf(false) }
 
 	LaunchedEffect(uiState.displaySate) {
 		viewModel.analytics.screen("Onboarding_${uiState.displaySate.name.lowercase()}")
@@ -66,13 +64,11 @@ import com.revenuecat.purchases.awaitOfferings
 		try {
 			val offerings = Purchases.sharedInstance.awaitOfferings()
 			offering = offerings.getCurrentOfferingForPlacement("onboarding_end")
-				?: offerings.current // fallback if the placement/rule isn't set up yet
+				?: offerings.current
 		} catch (e: PurchasesException) {
 			loadFailed = true
 		}
 	}
-
-
 
 	val progress = when (uiState.displaySate) {
 		DisplaySate.Greeting -> 1f / 6f
@@ -148,69 +144,17 @@ import com.revenuecat.purchases.awaitOfferings
 					)
 				}
 				DisplaySate.CreateFirstAlarm -> {
-					val selected by alarmPickerViewModel.selectedAlarmSound.collectAsStateWithLifecycle()
-					val previewing by alarmPickerViewModel.previewingSound.collectAsStateWithLifecycle()
-
-					AnimatedContent(
-						targetState = showAlarmSoundList,
-						transitionSpec = {
-							if (targetState) {
-								// Going forward
-								slideIntoContainer(
-									towards = AnimatedContentTransitionScope.SlideDirection.Left,
-									animationSpec = tween(150, easing = FastOutSlowInEasing)
-								) togetherWith slideOutOfContainer(
-									towards = AnimatedContentTransitionScope.SlideDirection.Left,
-									animationSpec = tween(150, easing = FastOutSlowInEasing)
-								)
-							} else {
-								// Going back
-								slideIntoContainer(
-									towards = AnimatedContentTransitionScope.SlideDirection.Right,
-									animationSpec = tween(150, easing = FastOutSlowInEasing)
-								) togetherWith slideOutOfContainer(
-									towards = AnimatedContentTransitionScope.SlideDirection.Right,
-									animationSpec = tween(150, easing = FastOutSlowInEasing)
-								)
-							}
-						},
-						label = "alarm screen navigation"
-					) { shouldWeShowAlarmScreen ->
-						if (shouldWeShowAlarmScreen) {
-							ListAlarmSoundScreen(
-								alarmPickerViewModel,
-								previewingUri = previewing?.soundUri,
-								selectedUri = selected?.soundUri,
-								onBack = {
-									showAlarmSoundList = false
-								},
-								onSelected = { sound ->
-									alarmPickerViewModel.onAlarmSoundSelected(sound)
-								}
-							)
-						} else {
-							AlarmPickerScreen(
-								alarmSetProceed = {
-									viewModel.onNextClicked()
-								},
-								forNewAlarm = true,
-								viewModel = alarmPickerViewModel,
-								onNavigateToSoundList = {
-									showAlarmSoundList = true
-								},
-								settingAlarmCancelled = {
-									viewModel.onPreviousClicked()
-								}, onNavigateToPaywall = {},
-								linearProgressBar = {
-									LinearProgressIndicator(
-										progress = { animatedProgress },
-										modifier = Modifier.fillMaxWidth().padding(end = 16.dp)
-									)
-
-								}
+					CreateFirstAlarmScreen(
+						alarmPickerViewModel = alarmPickerViewModel,
+						onAlarmSetProceed = { viewModel.onNextClicked() },
+						onSettingAlarmCancelled = { viewModel.onPreviousClicked() },
+						linearProgressBar = {
+							LinearProgressIndicator(
+								progress = { animatedProgress },
+								modifier = Modifier.fillMaxWidth().padding(end = 16.dp)
 							)
 						}
-					}
+					)
 				}
 				DisplaySate.AlarmResult -> AlarmResultClaude(uiState.alarmData, onNextClick = { viewModel.onNextClicked() })
 				DisplaySate.OnboardingPaywall -> {

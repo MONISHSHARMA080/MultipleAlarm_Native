@@ -197,19 +197,6 @@ fun AlarmPickerScreen(
 							contentDescription = stringResource(R.string.alarm_picker_back_desc)
 						)
 					}
-
-//					AnimatedVisibility(
-//						visible = currentProgress != Progress.FullEditor,
-//						enter = expandVertically() + fadeIn(),
-//						exit = shrinkVertically() + fadeOut()
-//					) {
-//
-//						LinearProgressForNewAlarm(
-//							progress = currentProgress,
-//							modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 5.dp)
-//						)
-//					}
-
 				}
 			}
 		},
