@@ -8,7 +8,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,7 +32,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
@@ -110,18 +108,6 @@ fun LinearProgressForNewAlarm(modifier: Modifier = Modifier, progress: Progress)
 		modifier = modifier.fillMaxWidth().widthIn(max = 600.dp).padding(horizontal = 24.dp),
 		horizontalAlignment = Alignment.CenterHorizontally
 	) {
-		Row(
-			modifier = Modifier.fillMaxWidth(),
-			horizontalArrangement = Arrangement.SpaceBetween,
-			verticalAlignment = Alignment.CenterVertically
-		) {
-			Text(
-				text = "Step $step of $total",
-				style = typography.labelSmall,
-				fontWeight = FontWeight.Normal,
-				color = colorScheme.onSurface
-			)
-		}
 		Spacer(modifier = Modifier.height(8.dp))
 		LinearProgressIndicator(
 			progress = { progressFraction },

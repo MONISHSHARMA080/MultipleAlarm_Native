@@ -5,17 +5,12 @@ import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +27,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -47,7 +43,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -70,7 +65,6 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.Permissions.AlarmPermissionDialog
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.LinearProgressForNewAlarm
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.SettingsCard
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.TimePickerWithoutDialog
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.component.TimeRow
@@ -186,60 +180,37 @@ fun AlarmPickerScreen(
 		contentWindowInsets = WindowInsets.safeDrawing,
 		topBar = {
 			if (!fromOnboarding) {
-				Column(
-					modifier = Modifier.fillMaxWidth(),
-					horizontalAlignment = Alignment.CenterHorizontally
+				Row(
+					modifier = Modifier
+						.fillMaxWidth()
+						.statusBarsPadding()
+						.padding(horizontal = 8.dp, vertical = 8.dp),
+					verticalAlignment = Alignment.CenterVertically
 				) {
-					TopAppBar(
-						title = {
-							AnimatedContent(
-								targetState = currentProgress,
-								transitionSpec = {
-									fadeIn(
-										animationSpec = tween(310)
-									) + slideInVertically(
-										initialOffsetY = { it / 2 },
-										animationSpec = tween(320)
-									) togetherWith
-											fadeOut(
-												animationSpec = tween(290)
-											) + slideOutVertically(
-										targetOffsetY = { -it / 2 },
-										animationSpec = tween(390)
-									)
-								},
-								label = "alarm_picker_title"
-							) { progress ->
-								Text(
-									when (progress) {
-										Progress.StartTime -> stringResource(R.string.alarm_picker_select_start_time)
-										Progress.EndTime -> stringResource(R.string.alarm_picker_select_end_time)
-										Progress.FullEditor -> if (uiState.initialAlarm == null) stringResource(R.string.alarm_picker_title_set) else stringResource(R.string.alarm_picker_title_edit)
-									},
-									style = timeStyle,
-									color = colorScheme.onBackground,
-									modifier = Modifier.padding(horizontal = 7.dp),
-									maxLines = 1,
-									softWrap = false,
-								)
+					IconButton(
+						onClick = {
+							settingAlarmCancelled()
+						}
+					) {
+						Icon(
+							imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+							contentDescription = stringResource(R.string.alarm_picker_back_desc)
+						)
+					}
 
-							}
-						},
-						navigationIcon = {
-							IconButton(
-								onClick = {
-									settingAlarmCancelled()
-								}
-							) {
-								Icon(
-									imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-									contentDescription = stringResource(R.string.alarm_picker_back_desc)
-								)
-							}
-						},
-					)
+//					AnimatedVisibility(
+//						visible = currentProgress != Progress.FullEditor,
+//						enter = expandVertically() + fadeIn(),
+//						exit = shrinkVertically() + fadeOut()
+//					) {
+//
+//						LinearProgressForNewAlarm(
+//							progress = currentProgress,
+//							modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 5.dp)
+//						)
+//					}
+
 				}
-
 			}
 		},
 		bottomBar = {
@@ -289,32 +260,41 @@ fun AlarmPickerScreen(
 						uiState = uiState,
 						isCandidateInvalid = isCandidateInvalid,
 						onAction = {
-							when (currentProgress) {
-								Progress.StartTime -> {
-									val selectedStartTime = (uiState.alarmData.startTimeCalendar.clone() as Calendar).apply {
-										set(Calendar.HOUR_OF_DAY, startTimePickerState.hour)
-										set(Calendar.MINUTE, startTimePickerState.minute)
-									}
-									view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-									viewModel.updateStartTime(selectedStartTime)
-									viewModel.updateProgress(Progress.EndTime)
-								}
-
-								Progress.EndTime -> {
-									if (!isCandidateInvalid) {
+							if (fromOnboarding){
+								when (currentProgress) {
+									Progress.StartTime -> {
+										val selectedStartTime = (uiState.alarmData.startTimeCalendar.clone() as Calendar).apply {
+											set(Calendar.HOUR_OF_DAY, startTimePickerState.hour)
+											set(Calendar.MINUTE, startTimePickerState.minute)
+										}
 										view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-										viewModel.updateEndTime(candidateEnd)
-										viewModel.updateProgress(Progress.FullEditor)
+										viewModel.updateStartTime(selectedStartTime)
+										viewModel.updateProgress(Progress.EndTime)
+									}
+
+									Progress.EndTime -> {
+										if (!isCandidateInvalid) {
+											view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+											viewModel.updateEndTime(candidateEnd)
+											viewModel.updateProgress(Progress.FullEditor)
+										}
+									}
+
+									Progress.FullEditor -> {
+										val isInactiveEdit =  uiState.initialAlarm?.isReadyToUse == false
+										val canSetAlarm = uiState.validationResult == AlarmDataValidationResult.Success || isInactiveEdit
+										if (canSetAlarm) {
+											viewModel.onSetAlarmClicked()
+											view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+										}
 									}
 								}
-
-								Progress.FullEditor -> {
-									val isInactiveEdit =  uiState.initialAlarm?.isReadyToUse == false
-									val canSetAlarm = uiState.validationResult == AlarmDataValidationResult.Success || isInactiveEdit
-									if (canSetAlarm) {
-										viewModel.onSetAlarmClicked()
-										view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-									}
+							}else{
+								val isInactiveEdit =  uiState.initialAlarm?.isReadyToUse == false
+								val canSetAlarm = uiState.validationResult == AlarmDataValidationResult.Success || isInactiveEdit
+								if (canSetAlarm) {
+									viewModel.onSetAlarmClicked()
+									view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
 								}
 							}
 						}
@@ -330,19 +310,6 @@ fun AlarmPickerScreen(
 				.consumeWindowInsets(screenPadding)
 				.animateContentSize(),
 		) {
-			if (!fromOnboarding){
-				AnimatedVisibility(
-					visible = currentProgress != Progress.FullEditor,
-					enter = expandVertically() + fadeIn(),
-					exit = shrinkVertically() + fadeOut()
-				) {
-					LinearProgressForNewAlarm(
-						progress = currentProgress,
-						modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 5.dp)
-					)
-				}
-			}
-
 			AnimatedContent(
 				targetState = currentProgress,
 				modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -374,53 +341,80 @@ fun AlarmPickerScreen(
 				contentAlignment = Alignment.Center,
 				label = "alarm_picker_navigation"
 			) { progress ->
-				when (progress) {
-					Progress.StartTime -> {
-						TimePickerWithoutDialog(
-							state = startTimePickerState,
-							modifier = Modifier.padding(horizontal = horizontalPadding),
-							uiState = uiState, onDisabledTimeSelected = {onDisabledTimeSelected(view)}
-						)
-					}
+				if (fromOnboarding){
+					when (progress) {
+						Progress.StartTime -> {
+							TimePickerWithoutDialog(
+								state = startTimePickerState,
+								modifier = Modifier.padding(horizontal = horizontalPadding),
+								uiState = uiState, onDisabledTimeSelected = {onDisabledTimeSelected(view)}
+							)
+						}
 
-					Progress.EndTime -> {
-						TimePickerWithoutDialog(
-							state = endTimePickerState,
-							isCandidateInvalid = isCandidateInvalid,
-							modifier = Modifier.padding(horizontal = horizontalPadding),
-							uiState = uiState,
-							minHour = startTimePickerState.hour,
-							minMin = if (startTimePickerState.minute == 59) 59 else startTimePickerState.minute + 1 ,
-							onDisabledTimeSelected = {onDisabledTimeSelected(view)}
-						)
-					}
-
-					Progress.FullEditor -> {
-						Column(
-							modifier = Modifier.fillMaxSize()
-								.padding(horizontal = horizontalPadding)
-								.animateContentSize(),
-							horizontalAlignment = Alignment.CenterHorizontally
-						) {
-							Spacer(modifier = Modifier.weight(0.44f))
-							TimeRow(
-								uiState,
-								{ viewModel.updateStartTime(it) },
-								{ viewModel.updateEndTime(it) },
+						Progress.EndTime -> {
+							TimePickerWithoutDialog(
+								state = endTimePickerState,
+								isCandidateInvalid = isCandidateInvalid,
+								modifier = Modifier.padding(horizontal = horizontalPadding),
+								uiState = uiState,
+								minHour = startTimePickerState.hour,
+								minMin = if (startTimePickerState.minute == 59) 59 else startTimePickerState.minute + 1 ,
 								onDisabledTimeSelected = {onDisabledTimeSelected(view)}
 							)
-							Spacer(modifier = Modifier.weight(0.45f))
-							SettingsCard(
-								uiState = uiState,
-								updateFrequency = { viewModel.updateFrequency(it) },
-								messageValueChanged = { viewModel.updateMessage(it) },
-								calenderButtonClicked = { showCalendar = true },
-								selectSoundButtonClicked = onNavigateToSoundList,
-								repeatDayToggled = {day -> viewModel.onRepeatDayClicked(day)},
-								selectedSoundName = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random)
-							)
-							Spacer(modifier = Modifier.weight(0.04f))
 						}
+						Progress.FullEditor -> {
+							Column(
+								modifier = Modifier.fillMaxSize()
+									.padding(horizontal = horizontalPadding)
+									.animateContentSize(),
+								horizontalAlignment = Alignment.CenterHorizontally
+							) {
+								Spacer(modifier = Modifier.weight(0.44f))
+								TimeRow(
+									uiState,
+									{ viewModel.updateStartTime(it) },
+									{ viewModel.updateEndTime(it) },
+									onDisabledTimeSelected = {onDisabledTimeSelected(view)}
+								)
+								Spacer(modifier = Modifier.weight(0.45f))
+								SettingsCard(
+									uiState = uiState,
+									updateFrequency = { viewModel.updateFrequency(it) },
+									messageValueChanged = { viewModel.updateMessage(it) },
+									calenderButtonClicked = { showCalendar = true },
+									selectSoundButtonClicked = onNavigateToSoundList,
+									repeatDayToggled = {day -> viewModel.onRepeatDayClicked(day)},
+									selectedSoundName = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random)
+								)
+								Spacer(modifier = Modifier.weight(0.04f))
+							}
+						}
+					}
+				}else{
+					Column(
+						modifier = Modifier.fillMaxSize()
+							.padding(horizontal = horizontalPadding)
+							.animateContentSize(),
+						horizontalAlignment = Alignment.CenterHorizontally
+					) {
+						Spacer(modifier = Modifier.weight(0.44f))
+						TimeRow(
+							uiState,
+							{ viewModel.updateStartTime(it) },
+							{ viewModel.updateEndTime(it) },
+							onDisabledTimeSelected = {onDisabledTimeSelected(view)}
+						)
+						Spacer(modifier = Modifier.weight(0.45f))
+						SettingsCard(
+							uiState = uiState,
+							updateFrequency = { viewModel.updateFrequency(it) },
+							messageValueChanged = { viewModel.updateMessage(it) },
+							calenderButtonClicked = { showCalendar = true },
+							selectSoundButtonClicked = onNavigateToSoundList,
+							repeatDayToggled = {day -> viewModel.onRepeatDayClicked(day)},
+							selectedSoundName = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random)
+						)
+						Spacer(modifier = Modifier.weight(0.04f))
 					}
 				}
 			}
