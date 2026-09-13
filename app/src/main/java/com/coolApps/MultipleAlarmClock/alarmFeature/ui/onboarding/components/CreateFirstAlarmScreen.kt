@@ -1,5 +1,7 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components
 
+//import androidx.compose.animation.slideIntoContainer
+//import androidx.compose.animation.slideOutOfContainer
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -15,14 +17,19 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
@@ -34,11 +41,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerScreen
@@ -55,10 +64,10 @@ private enum class CreateFirstAlarmStep {
 
 @Composable
 fun CreateFirstAlarmScreen(
-	alarmPickerViewModel: AlarmPickerViewModel,
-	onAlarmSetProceed: () -> Unit,
-	modifier: Modifier = Modifier,
-	linearProgressBar: @Composable () -> Unit = {},
+		alarmPickerViewModel: AlarmPickerViewModel,
+		onAlarmSetProceed: () -> Unit,
+		modifier: Modifier = Modifier,
+		linearProgressBar: @Composable () -> Unit = {},
 ) {
 	var currentStep by remember { mutableStateOf(CreateFirstAlarmStep.Intro) }
 	val selected by alarmPickerViewModel.selectedAlarmSound.collectAsStateWithLifecycle()
@@ -133,20 +142,33 @@ fun CreateFirstAlarmScreen(
 
 @Composable
 private fun FirstAlarmIntroView(
-	onContinue: () -> Unit,
-	modifier: Modifier = Modifier
+		onContinue: () -> Unit,
+		modifier: Modifier = Modifier
 ) {
 	val view = LocalView.current
+
 	var showHeadline by remember { mutableStateOf(false) }
-	var showDescription by remember { mutableStateOf(false) }
+	var showConversation by remember { mutableStateOf(false) }
+	var showSteps by remember { mutableStateOf(false) }
+	var showEditNote by remember { mutableStateOf(false) }
 	var showButton by remember { mutableStateOf(false) }
 
 	LaunchedEffect(Unit) {
-//		showHeadline = true
-		showButton = true
-		delay(400.milliseconds)
-		showDescription = true
+		// 1. "Let's create your first alarm"
+		showHeadline = true
+
+		// Give the headline its own moment.
+		delay(600.milliseconds)
+
+		// 2. Conversation appears.
+		showConversation = true
+
+		// Let the user read it before introducing structure.
 		delay(700.milliseconds)
+		showSteps = true
+		delay(500.milliseconds)
+		showButton = true
+		showEditNote = true
 	}
 
 	Column(
@@ -154,86 +176,263 @@ private fun FirstAlarmIntroView(
 			.fillMaxSize()
 			.background(colorScheme.background)
 	) {
+
 		Box(
 			modifier = Modifier
-				.fillMaxWidth()
 				.weight(1f)
-				.padding(horizontal = 32.dp),
-			contentAlignment = Alignment.Center
+				.fillMaxWidth()
 		) {
 			Column(
 				modifier = Modifier
 					.fillMaxWidth()
-					.animateContentSize(animationSpec = tween(1000)),
+					.padding(horizontal = 28.dp)
+					.align(Alignment.Center)
+					.animateContentSize(
+						animationSpec = tween(
+							durationMillis = 450,
+							easing = FastOutSlowInEasing
+						)
+					),
 				horizontalAlignment = Alignment.CenterHorizontally
 			) {
+
 				AnimatedVisibility(
-					visible = true,
-					enter = fadeIn(animationSpec = tween(300)) + slideInVertically(animationSpec = tween(300), initialOffsetY = { 30 })
+					visible = showHeadline,
+					enter =
+						fadeIn(
+							animationSpec = tween(500)
+						) +
+						slideInVertically(
+							animationSpec = tween(500),
+							initialOffsetY = { 32 }
+						)
 				) {
 					Text(
-						text = stringResource(R.string.onboarding_create_alarm_opal_step_1),
+						text = stringResource(R.string.onboarding_create_alarm_title),
 						style = typography.headlineLarge,
 						fontWeight = FontWeight.Bold,
 						textAlign = TextAlign.Center,
 						color = colorScheme.onBackground
 					)
 				}
+
 				AnimatedVisibility(
-					visible = showDescription,
-					enter = fadeIn(animationSpec = tween(400)) + expandVertically(animationSpec = tween(400))
+					visible = showConversation,
+					enter =
+						fadeIn(
+							animationSpec = tween(
+								durationMillis = 500
+							)
+						) +
+								slideInVertically(
+									animationSpec = tween(
+										durationMillis = 550,
+										easing = FastOutSlowInEasing
+									),
+									initialOffsetY = { 18 }
+								)
 				) {
-					Column(horizontalAlignment = Alignment.CenterHorizontally) {
-						Spacer(modifier = Modifier.height(24.dp))
-						Text(
-							text = stringResource(R.string.onboarding_create_alarm_opal_step_2),
-							style = typography.titleMedium,
-							fontWeight = FontWeight.Medium,
-							textAlign = TextAlign.Center,
-							color = colorScheme.onBackground.copy(alpha = 0.6f)
+					Text(
+						text = stringResource(
+							R.string.onboarding_create_alarm_subtitle
+						),
+						modifier = Modifier
+							.padding(top = 8.dp)
+							.fillMaxWidth(),
+						style = typography.titleMedium,
+						fontWeight = FontWeight.Normal,
+						lineHeight = 25.sp,
+						textAlign = TextAlign.Center,
+						color = colorScheme.onSurfaceVariant
+					)
+				}
+
+				AnimatedVisibility(
+					visible = showSteps,
+					enter =
+						fadeIn(animationSpec = tween(500)) +
+								expandVertically(
+									animationSpec = tween(
+										durationMillis = 550,
+										easing = FastOutSlowInEasing
+									),
+									expandFrom = Alignment.Top
+								)
+				) {
+					Column(
+						modifier = Modifier
+							.padding(top = 32.dp)
+							.fillMaxWidth()
+					) {
+						AlarmIntroStep(
+							number = "1",
+							title = stringResource(
+								R.string.onboarding_create_alarm_step_start_title
+							),
+							description = stringResource(
+								R.string.onboarding_create_alarm_step_start_desc
+							)
+						)
+
+						Spacer(modifier = Modifier.height(14.dp))
+
+						AlarmIntroStep(
+							number = "2",
+							title = stringResource(
+								R.string.onboarding_create_alarm_step_end_title
+							),
+							description = stringResource(
+								R.string.onboarding_create_alarm_step_end_desc
+							)
 						)
 					}
+				}
+
+				AnimatedVisibility(
+					visible = showEditNote,
+					enter = fadeIn(
+						animationSpec = tween(500)
+					)
+				) {
+					Text(
+						text = stringResource(R.string.onboarding_create_alarm_edit_note),
+						modifier = Modifier.padding(top = 22.dp),
+						style = typography.bodyMedium,
+						textAlign = TextAlign.Center,
+						color = colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+					)
 				}
 			}
 		}
 
-		Box(
-			modifier = Modifier
-				.fillMaxWidth()
-				.background(colorScheme.background)
-				.navigationBarsPadding()
-				.padding(26.dp)
-				.padding(bottom = 20.dp)
-				.animateContentSize(),
-			contentAlignment = Alignment.Center
+		// ─────────────────────────────
+		// BUTTON
+		// ─────────────────────────────
+
+		AnimatedVisibility(
+			visible = showButton,
+			enter =
+				fadeIn(
+					animationSpec = tween(350)
+				) +
+						slideInVertically(
+							animationSpec = tween(400),
+							initialOffsetY = { 20 }
+						)
 		) {
-			Column(horizontalAlignment = Alignment.CenterHorizontally) {
+			Column(
+				modifier = Modifier
+					.fillMaxWidth()
+					.navigationBarsPadding()
+					.padding(
+						horizontal = 24.dp,
+						vertical = 24.dp
+					)
+			) {
 				Button(
 					onClick = {
-						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+						view.performHapticFeedback(
+							HapticFeedbackConstants.VIRTUAL_KEY
+						)
 						onContinue()
 					},
 					modifier = Modifier
 						.fillMaxWidth()
 						.height(56.dp),
-					shape = androidx.compose.material3.MaterialTheme.shapes.extraLarge,
+					shape = MaterialTheme.shapes.extraLarge,
 					colors = ButtonDefaults.buttonColors(
-						containerColor = colorScheme.primaryContainer,
-						contentColor = colorScheme.onPrimaryContainer
+						containerColor =
+							MaterialTheme.colorScheme.primaryContainer,
+						contentColor =
+							MaterialTheme.colorScheme.onPrimaryContainer
 					)
 				) {
 					Text(
-						text = stringResource(R.string.onboarding_create_alarm_btn_continue),
-						style = typography.titleMedium
+						text = stringResource(
+							R.string.onboarding_create_alarm_btn_continue
+						),
+						style = MaterialTheme.typography.titleMedium
 					)
 				}
-
-//				AnimatedVisibility(
-//					visible = showButton,
-//					enter = fadeIn(animationSpec = tween(1000)) + expandVertically(animationSpec = tween(1000))
-//				) {
-//				}
 			}
 		}
 	}
+}
+
+
+@Composable
+private fun AlarmIntroStep(
+		number: String,
+		title: String,
+		description: String,
+		modifier: Modifier = Modifier
+) {
+	Row(
+		modifier = modifier
+			.fillMaxWidth(),
+		verticalAlignment = Alignment.Top
+	) {
+		Box(
+			modifier = Modifier
+				.padding(top = 2.dp)
+				.size(32.dp)
+				.clip(CircleShape)
+				.background(
+					MaterialTheme.colorScheme.primaryContainer
+				),
+			contentAlignment = Alignment.Center
+		) {
+			Text(
+				text = number,
+				style = MaterialTheme.typography.labelLarge,
+				fontWeight = FontWeight.Bold,
+				color = MaterialTheme.colorScheme.onPrimaryContainer
+			)
+		}
+
+		Spacer(modifier = Modifier.width(16.dp))
+
+		Column(
+			modifier = Modifier.weight(1f)
+		) {
+			Text(
+				text = title,
+				style = MaterialTheme.typography.titleMedium,
+				fontWeight = FontWeight.SemiBold,
+				color = MaterialTheme.colorScheme.onBackground
+			)
+
+			Spacer(modifier = Modifier.height(3.dp))
+
+			Text(
+				text = description,
+				style = MaterialTheme.typography.bodyMedium,
+				color = MaterialTheme.colorScheme.onSurfaceVariant
+			)
+		}
+	}
+}
+
+/**
+ * A single "fine print" line for the secondary detail block —
+ * deliberately quiet: no icons, no card chrome, no numbered badges.
+ * It should read like a caption you can skip, not a step you must follow.
+ */
+@Composable
+private fun IntroDetailRow(
+	title: String,
+	description: String,
+	modifier: Modifier = Modifier
+) {
+	Text(
+		text = buildString {
+			append(title)
+			append(" — ")
+			append(description)
+		},
+		style = typography.bodySmall,
+		textAlign = TextAlign.Center,
+		color = colorScheme.onSurfaceVariant,
+		modifier = modifier.fillMaxWidth(0.85f)
+	)
 }

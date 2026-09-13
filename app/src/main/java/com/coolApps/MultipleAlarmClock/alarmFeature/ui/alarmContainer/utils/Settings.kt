@@ -33,7 +33,6 @@ import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.WorkspacePremium
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -315,15 +314,7 @@ fun SettingsScreen(
 							}
 						)
 
-						Spacer(Modifier.height(4.dp))
-
-						HorizontalDivider(
-							modifier = Modifier.padding(
-								start = 56.dp
-							)
-						)
-
-						Spacer(Modifier.height(4.dp))
+						Spacer(Modifier.height(8.dp))
 
 						SettingsListItem(
 							icon = Icons.Outlined.Info,

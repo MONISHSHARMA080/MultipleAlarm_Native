@@ -149,10 +149,11 @@
     <string name="onboarding_create_alarm_step_start_title">Start time</string>
     <string name="onboarding_create_alarm_step_start_desc">Select when you want the alarms to start, eg wake up time </string>
     <string name="onboarding_create_alarm_step_end_title">End time</string>
-    <string name="onboarding_create_alarm_step_end_desc">Select when you want your alarms to stop.</string>
+    <string name="onboarding_create_alarm_step_end_desc">When do you want your alarms to stop.</string>
     <string name="onboarding_create_alarm_step_flexible_title">Full flexibility</string>
     <string name="onboarding_create_alarm_step_flexible_desc">you could change this later.</string>
     <string name="onboarding_create_alarm_btn_continue">Get started</string>
+    <string name="onboarding_create_alarm_edit_note">You can change this anytime</string>
 
     <string name="onboarding_create_alarm_opal_step_1">let\'s create your first alarm</string>
     <string name="onboarding_create_alarm_opal_step_2">select when do you wake up, and when do you want the alarm to stop , we\'ll send you an aalrm every some min of your choosing</string>
@@ -171,6 +172,7 @@
     <string name="onboarding_result_more_notifications">%1$d more notifications</string>
     <string name="onboarding_result_time_range">%1$s - %2$s</string>
     <string name="onboarding_result_time_range_arrow">%1$s → %2$s</string>
+<!--    <string name="onboarding_create_alarm_edit_note">You can change this anytime</string>-->
 
     <!-- Offline Engagement / Push Notifications -->
     <!-- Morning -->
