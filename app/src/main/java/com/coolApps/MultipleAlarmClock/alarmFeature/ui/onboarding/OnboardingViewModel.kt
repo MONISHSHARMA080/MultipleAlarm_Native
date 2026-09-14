@@ -11,6 +11,7 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.Permissions.Per
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data.DisplaySate
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data.OnboardingUiState
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
+import com.coolApps.MultipleAlarmClock.notification.trial.TrialReminderScheduler
 import com.coolApps.MultipleAlarmClock.utils.toAnalyticsString
 import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.models.StoreTransaction
@@ -91,6 +92,7 @@ import kotlinx.coroutines.launch
 				"customerInfo" to customerInfo.toString(),
 				"storeTransaction" to storeTransaction.toAnalyticsString(),
 			))
+			TrialReminderScheduler.scheduleIfOnTrial(context, customerInfo)
 		}
 	}
 	fun onRestoreCompletedEvent(customerInfo:CustomerInfo){

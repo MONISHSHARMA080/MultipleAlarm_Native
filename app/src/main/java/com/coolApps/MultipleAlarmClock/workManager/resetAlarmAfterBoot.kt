@@ -10,6 +10,9 @@ import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.alarmFeature.domain.AlarmRepository
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
+import com.coolApps.MultipleAlarmClock.notification.trial.TrialReminderScheduler
+import com.revenuecat.purchases.Purchases
+import com.revenuecat.purchases.awaitCustomerInfo
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.async
@@ -30,6 +33,9 @@ class ResetAlarmAfterBoot @AssistedInject constructor(
 	val alarmManager = applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
 	override suspend fun doWork(): Result {
+		// Re-schedule trial reminder if user is on an active trial
+		rescheduleTrialReminderIfNeeded()
+
 		// Do the work here--in this case, upload the images.
 		val allAlarmsInDb =getAllAlarms(alarmRepository)
 		val enabledAlarms: List<AlarmData> = allAlarmsInDb.filter { it.isReadyToUse }
@@ -46,10 +52,6 @@ class ResetAlarmAfterBoot @AssistedInject constructor(
 			enabledAlarms.map { alarmData ->
 				async {
 					val result =alarmsController.resetAlarmsHandler(alarmData = alarmData, alarmManager = alarmManager, activityContext = applicationContext)
-					// already being cancelled
-//					if (result.isErr()){
-//						alarmsController.updateAlarmStateInDb(alarmData.copy(isReadyToUse = false))
-//					}
 					return@async result
 				}
 			}.awaitAll()
@@ -63,7 +65,23 @@ class ResetAlarmAfterBoot @AssistedInject constructor(
 		}
 		return if (hasError) Result.failure() else Result.success()
 	}
+
+	/**
+	 * Re-schedules the trial reminder alarm after boot/app update.
+	 * Uses RevenueCat's cached CustomerInfo so this works offline.
+	 */
+	private suspend fun rescheduleTrialReminderIfNeeded() {
+		try {
+			val customerInfo = Purchases.sharedInstance.awaitCustomerInfo()
+			TrialReminderScheduler.scheduleIfOnTrial(applicationContext, customerInfo)
+		} catch (_: Exception) {
+			// Non-critical — if cache is empty and offline, we skip.
+			// The reminder is a best-effort enhancement.
+		}
+	}
+
 	private suspend fun getAllAlarms(alarmRepository: AlarmRepository): List<AlarmData> {
 		return alarmRepository.getAllAlarms()
 	}
 }
+

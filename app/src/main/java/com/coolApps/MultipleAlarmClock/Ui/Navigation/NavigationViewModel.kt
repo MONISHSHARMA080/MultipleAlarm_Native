@@ -1,14 +1,17 @@
 package com.coolApps.MultipleAlarmClock.Ui.Navigation
 
+import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.Data.dataStore.Settings
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
+import com.coolApps.MultipleAlarmClock.notification.trial.TrialReminderScheduler
 import com.coolApps.MultipleAlarmClock.utils.toAnalyticsString
 import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.models.StoreTransaction
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -20,6 +23,7 @@ import javax.inject.Inject
 class NavigationViewModel @Inject constructor(
 	private val dataStore: DataStore<Settings>,
 	val analytics: Analytics,
+	@ApplicationContext private val context: Context,
 ) : ViewModel() {
 
 	val isFirstLaunch: StateFlow<Boolean?> = dataStore.data
@@ -43,6 +47,7 @@ class NavigationViewModel @Inject constructor(
 				"customerInfo" to customerInfo.toString(),
 				"storeTransaction" to storeTransaction.toAnalyticsString(),
 			))
+			TrialReminderScheduler.scheduleIfOnTrial(context, customerInfo)
 		}
 	}
 	fun onRestoreCompletedEvent(customerInfo:CustomerInfo){
