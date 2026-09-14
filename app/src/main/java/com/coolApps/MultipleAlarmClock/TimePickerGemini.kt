@@ -522,32 +522,35 @@ private suspend fun AnalogTimePickerState.onTap(
             return
         }
     } else {
-        angle = round(angle / RadiansPerHour) * RadiansPerHour
-        val hourOffset = angle.toHour() % 12
-        val currentDist = dist(x, y, center.x, center.y)
-        val isPmSelection = if (is24hour) {
-            currentDist < maxDist
-        } else {
-            isPm
-        }
-        val targetHour = if (is24hour) {
-            if (currentDist < maxDist) (hourOffset % 12 + 12) else (hourOffset % 12)
-        } else {
-            hourOffset % 12 + if (isPmSelection) 12 else 0
-        }
-        if (isMinuteDisabled(targetHour, state.minute, minHour, minMinute)) {
-            onDisabledTimeSelected?.invoke()
-            return
-        }
-    }
+		angle = round(angle / RadiansPerHour) * RadiansPerHour
+		val hourOffset = angle.toHour() % 12
+		val currentDist = dist(x, y, center.x, center.y)
+		val isPmSelection = if (is24hour) currentDist < maxDist else isPm
+		val targetHour = if (is24hour) {
+			if (currentDist < maxDist) (hourOffset % 12 + 12) else (hourOffset % 12)
+		} else {
+			hourOffset % 12 + if (isPmSelection) 12 else 0
+		}
+		// Only the hour itself should block this tap.
+		if (isHourDisabled(targetHour, minHour)) {
+			onDisabledTimeSelected?.invoke()
+			return
+		}
+	}
 
-    moveSelector(x, y, maxDist, center)
-    rotateTo(angle, animationSpec = animationSpec, animate = true)
+	moveSelector(x, y, maxDist, center)
+	rotateTo(angle, animationSpec = animationSpec, animate = true)
 
-    if (selection == TimePickerSelectionMode.Hour && autoSwitchToMinute) {
-        delay(100.milliseconds)
-        selection = TimePickerSelectionMode.Minute
-    }
+	if (selection == TimePickerSelectionMode.Hour &&
+		isMinuteDisabled(hour, minute, minHour, minMinute)
+	) {
+		minute = minMinute ?: 0
+	}
+
+	if (selection == TimePickerSelectionMode.Hour && autoSwitchToMinute) {
+		delay(100.milliseconds)
+		selection = TimePickerSelectionMode.Minute
+	}
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1269,33 +1272,34 @@ internal class ClockDialNode(
                         offsetY += dragAmount.y
                         val angle = atan(offsetY - center.y, offsetX - center.x)
 
-                        if (selection == TimePickerSelectionMode.Hour) {
-                            val hourOffset = angle.toHour() % 12
-                            val isPmSelection = if (state.is24hour) (dist(offsetX, offsetY, center.x, center.y) < maxDist) else state.isPm
-                            val targetHour = if (state.is24hour) {
-                                if (dist(offsetX, offsetY, center.x, center.y) < maxDist) (hourOffset % 12 + 12) else (hourOffset % 12)
-                            } else {
-                                hourOffset % 12 + if (isPmSelection) 12 else 0
-                            }
-                            if (isMinuteDisabled(targetHour, state.minute, minHour, minMinute)) {
-                                onDisabledTimeSelected?.invoke()
-                                return@launch
-                            }
-                        } else {
-                            val targetMinute = angle.toMinute()
-                            if (isMinuteDisabled(state.hour, targetMinute, minHour, minMinute)) {
-                                onDisabledTimeSelected?.invoke()
-                                return@launch
-                            }
-                        }
+						if (selection == TimePickerSelectionMode.Hour) {
+							val hourOffset = angle.toHour() % 12
+							val isPmSelection = if (state.is24hour) dist(offsetX, offsetY, center.x, center.y) < maxDist else state.isPm
+							val targetHour = if (state.is24hour) {
+								if (dist(offsetX, offsetY, center.x, center.y) < maxDist) (hourOffset % 12 + 12) else (hourOffset % 12)
+							} else {
+								hourOffset % 12 + if (isPmSelection) 12 else 0
+							}
+							if (isHourDisabled(targetHour, minHour)) {
+								onDisabledTimeSelected?.invoke()
+								return@launch
+							}
+						} else {
+							val targetMinute = angle.toMinute()
+							if (isMinuteDisabled(state.hour, targetMinute, minHour, minMinute)) {
+								onDisabledTimeSelected?.invoke()
+								return@launch
+							}
+						}
 
-                        state.rotateTo(angle, animationSpec)
-                        state.moveSelector(
-                            x = offsetX,
-                            y = offsetY,
-                            maxDist = maxDist,
-                            center = center,
-                        )
+						state.rotateTo(angle, animationSpec)
+						state.moveSelector(x = offsetX, y = offsetY, maxDist = maxDist, center = center)
+
+						if (selection == TimePickerSelectionMode.Hour &&
+							isMinuteDisabled(state.hour, state.minute, minHour, minMinute)
+						) {
+							state.minute = minMinute ?: 0
+						}
                     }
                 }
             }
