@@ -25,7 +25,12 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 
 @OptIn(ExperimentalPreviewRevenueCatUIPurchasesAPI::class)
 @Composable
- fun OnboardingPaywallScreen(onFinished: () -> Unit, offering: Offering?, loadFailed:Boolean) {
+ fun OnboardingPaywallScreen(
+		onFinished: () -> Unit, offering: Offering?, loadFailed:Boolean,
+		onPurchaseCompletedEvent:(customerInfo:CustomerInfo,storeTransaction: StoreTransaction)->Unit,
+		onRestoreCompletedEvent:(customerInfo:CustomerInfo)->Unit,
+
+ ) {
 	when {
 		offering != null -> {
 			Box(modifier = Modifier.fillMaxSize()) {
@@ -39,9 +44,11 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 									customerInfo: CustomerInfo,
 									storeTransaction: StoreTransaction
 							) {
+								onPurchaseCompletedEvent(customerInfo,storeTransaction)
 								onFinished()
 							}
 							override fun onRestoreCompleted(customerInfo: CustomerInfo) {
+								onRestoreCompletedEvent(customerInfo)
 								onFinished()
 							}
 						})

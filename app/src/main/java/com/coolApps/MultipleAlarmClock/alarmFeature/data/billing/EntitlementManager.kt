@@ -32,7 +32,6 @@ class EntitlementManager @Inject constructor() {
 				logD("GooglePlayPaywallManager Error fetching customer info: $error")
 			}
 		)
-
 	}
 
 	suspend fun refresh() {

@@ -5,6 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.Data.dataStore.Settings
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
+import com.coolApps.MultipleAlarmClock.utils.toAnalyticsString
+import com.revenuecat.purchases.CustomerInfo
+import com.revenuecat.purchases.models.StoreTransaction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -33,6 +36,23 @@ class NavigationViewModel @Inject constructor(
 			analytics.captureEvent(eventName, properties)
 		}
 	}
+	
+	fun onPurchaseCompletedEvent(customerInfo: CustomerInfo, storeTransaction: StoreTransaction){
+		viewModelScope.launch {
+			analytics.captureEvent("purchase_completed",mapOf(
+				"customerInfo" to customerInfo.toString(),
+				"storeTransaction" to storeTransaction.toAnalyticsString(),
+			))
+		}
+	}
+	fun onRestoreCompletedEvent(customerInfo:CustomerInfo){
+		viewModelScope.launch {
+			analytics.captureEvent("restore_completed",mapOf(
+				"customerInfo" to customerInfo.toString()
+			))
+		}
+	}
+
 	fun screen(screenName:String, properties: Map<String, Any>? = null): Unit {
 		viewModelScope.launch {
 			analytics.screen(screenName, properties)

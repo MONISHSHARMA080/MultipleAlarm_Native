@@ -198,6 +198,9 @@ fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) 
 		enter = slideInVertically { it },
 		exit = slideOutVertically { it }
 	) {
-		PremiumPaywallDialog(false) { showPaywall = false }
+		PremiumPaywallDialog(false,
+			onPurchaseCompletedEvent = {customerInfo, storeTransaction -> navViewModel.onPurchaseCompletedEvent(customerInfo,storeTransaction) },
+			onRestoreCompletedEvent = { navViewModel.onRestoreCompletedEvent(it) }
+			) { showPaywall = false }
 	}
 }

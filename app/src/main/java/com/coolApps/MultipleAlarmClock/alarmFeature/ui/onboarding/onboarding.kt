@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerViewModel
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.Progress
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.AlarmResultClaude
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.CreateFirstAlarmScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.GreetingScreen
@@ -76,9 +77,9 @@ import com.revenuecat.purchases.awaitOfferings
 		DisplaySate.Permission -> 3f / 6f
 		DisplaySate.CreateFirstAlarm -> {
 			val subProgress = when (alarmPickerUiState.progress) {
-				com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.Progress.StartTime -> 1f / 3f
-				com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.Progress.EndTime -> 2f / 3f
-				com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.Progress.FullEditor -> 3f / 3f
+				Progress.StartTime -> 1f / 3f
+				Progress.EndTime -> 2f / 3f
+				Progress.FullEditor -> 3f / 3f
 			}
 			(3f / 6f) + (subProgress / 6f)
 		}
@@ -88,7 +89,7 @@ import com.revenuecat.purchases.awaitOfferings
 
 	val animatedProgress by animateFloatAsState(
 		targetValue = progress,
-		animationSpec = tween(durationMillis = 300),
+		animationSpec = tween(durationMillis = 400),
 		label = "progress"
 	)
 
@@ -125,10 +126,10 @@ import com.revenuecat.purchases.awaitOfferings
 			transitionSpec = {
 				slideIntoContainer(
 					towards = AnimatedContentTransitionScope.SlideDirection.Left,
-					animationSpec = tween(270, easing = FastOutSlowInEasing)
+					animationSpec = tween(370, easing = FastOutSlowInEasing)
 				) togetherWith slideOutOfContainer(
 					towards = AnimatedContentTransitionScope.SlideDirection.Left,
-					animationSpec = tween(220, easing = FastOutSlowInEasing)
+					animationSpec = tween(370, easing = FastOutSlowInEasing)
 				)
 			},
 		) { state ->
@@ -157,7 +158,11 @@ import com.revenuecat.purchases.awaitOfferings
 				}
 				DisplaySate.AlarmResult -> AlarmResultClaude(uiState.alarmData, onNextClick = { viewModel.onNextClicked() })
 				DisplaySate.OnboardingPaywall -> {
-					OnboardingPaywallScreen(onFinished = { viewModel.finishedOnboarding() }, loadFailed = loadFailed, offering = offering)
+					OnboardingPaywallScreen(
+						onFinished = { viewModel.finishedOnboarding() }, loadFailed = loadFailed, offering = offering,
+						onPurchaseCompletedEvent = {customerInfo, storeTransaction -> viewModel.onPurchaseCompletedEvent(customerInfo,storeTransaction) },
+						onRestoreCompletedEvent = { viewModel.onRestoreCompletedEvent(it) }
+					)
 				}
 			}
 		}

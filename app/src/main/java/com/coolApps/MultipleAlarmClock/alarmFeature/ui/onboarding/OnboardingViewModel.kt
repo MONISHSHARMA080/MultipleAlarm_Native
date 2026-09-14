@@ -11,6 +11,9 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.Permissions.Per
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data.DisplaySate
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data.OnboardingUiState
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
+import com.coolApps.MultipleAlarmClock.utils.toAnalyticsString
+import com.revenuecat.purchases.CustomerInfo
+import com.revenuecat.purchases.models.StoreTransaction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
@@ -81,6 +84,24 @@ import kotlinx.coroutines.launch
 			}
 		}
 	}
+
+	fun onPurchaseCompletedEvent(customerInfo: CustomerInfo, storeTransaction: StoreTransaction){
+		viewModelScope.launch {
+			analytics.captureEvent("purchase_completed",mapOf(
+				"customerInfo" to customerInfo.toString(),
+				"storeTransaction" to storeTransaction.toAnalyticsString(),
+			))
+		}
+	}
+	fun onRestoreCompletedEvent(customerInfo:CustomerInfo){
+		viewModelScope.launch {
+			analytics.captureEvent("restore_completed",mapOf(
+				"customerInfo" to customerInfo.toString()
+			))
+		}
+	}
+
+
 
 	  fun finishedOnboarding(){
 		 analytics.captureEvent("onboarding_finished", emptyMap())
