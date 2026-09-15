@@ -46,7 +46,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerScreen
@@ -157,13 +156,13 @@ private fun FirstAlarmIntroView(
 		showHeadline = true
 
 		// Give the headline its own moment.
-		delay(800.milliseconds)
+		delay(900.milliseconds)
 
 		// 2. Conversation appears.
 		showConversation = true
 
 		// Let the user read it before introducing structure.
-		delay(600.milliseconds)
+//		delay(600.milliseconds)
 		showSteps = true
 		delay(600.milliseconds)
 		showButton = true
@@ -216,36 +215,36 @@ private fun FirstAlarmIntroView(
 					)
 				}
 
-				AnimatedVisibility(
-					visible = showConversation,
-					enter =
-						fadeIn(
-							animationSpec = tween(
-								durationMillis = 500
-							)
-						) +
-								slideInVertically(
-									animationSpec = tween(
-										durationMillis = 550,
-										easing = FastOutSlowInEasing
-									),
-									initialOffsetY = { 18 }
-								)
-				) {
-					Text(
-						text = stringResource(
-							R.string.onboarding_create_alarm_subtitle
-						),
-						modifier = Modifier
-							.padding(top = 8.dp)
-							.fillMaxWidth(),
-						style = typography.titleMedium,
-						fontWeight = FontWeight.Normal,
-						lineHeight = 25.sp,
-						textAlign = TextAlign.Center,
-						color = colorScheme.onSurfaceVariant
-					)
-				}
+//				AnimatedVisibility(
+//					visible = showConversation,
+//					enter =
+//						fadeIn(
+//							animationSpec = tween(
+//								durationMillis = 500
+//							)
+//						) +
+//								slideInVertically(
+//									animationSpec = tween(
+//										durationMillis = 550,
+//										easing = FastOutSlowInEasing
+//									),
+//									initialOffsetY = { 18 }
+//								)
+//				) {
+//					Text(
+//						text = stringResource(
+//							R.string.onboarding_create_alarm_subtitle
+//						),
+//						modifier = Modifier
+//							.padding(top = 8.dp)
+//							.fillMaxWidth(),
+//						style = typography.titleMedium,
+//						fontWeight = FontWeight.Normal,
+//						lineHeight = 25.sp,
+//						textAlign = TextAlign.Center,
+//						color = colorScheme.onSurfaceVariant
+//					)
+//				}
 
 				AnimatedVisibility(
 					visible = showSteps,
@@ -377,16 +376,14 @@ private fun AlarmIntroStep(
 				.padding(top = 2.dp)
 				.size(32.dp)
 				.clip(CircleShape)
-				.background(
-					MaterialTheme.colorScheme.primaryContainer
-				),
+				.background(colorScheme.primaryContainer),
 			contentAlignment = Alignment.Center
 		) {
 			Text(
 				text = number,
-				style = MaterialTheme.typography.labelLarge,
+				style = typography.labelLarge,
 				fontWeight = FontWeight.Bold,
-				color = MaterialTheme.colorScheme.onPrimaryContainer
+				color = colorScheme.onPrimaryContainer
 			)
 		}
 
@@ -397,17 +394,17 @@ private fun AlarmIntroStep(
 		) {
 			Text(
 				text = title,
-				style = MaterialTheme.typography.titleMedium,
+				style = typography.titleMedium,
 				fontWeight = FontWeight.SemiBold,
-				color = MaterialTheme.colorScheme.onBackground
+				color = colorScheme.onBackground
 			)
 
 			Spacer(modifier = Modifier.height(3.dp))
 
 			Text(
 				text = description,
-				style = MaterialTheme.typography.bodyMedium,
-				color = MaterialTheme.colorScheme.onSurfaceVariant
+				style = typography.bodySmall,
+				color = colorScheme.onSurfaceVariant
 			)
 		}
 	}

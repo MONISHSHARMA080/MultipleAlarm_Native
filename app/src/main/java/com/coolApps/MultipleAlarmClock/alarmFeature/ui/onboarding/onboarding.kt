@@ -1,5 +1,6 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -27,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -60,6 +62,7 @@ import com.revenuecat.purchases.awaitOfferings
 	// pre-fetching for caching
 	var offering by remember { mutableStateOf<Offering?>(null) }
 	var loadFailed by remember { mutableStateOf(false) }
+	val view = LocalView.current
 
 	LaunchedEffect(Unit) {
 		try {
@@ -103,7 +106,10 @@ import com.revenuecat.purchases.awaitOfferings
 						.padding(horizontal = 8.dp, vertical = 8.dp),
 					verticalAlignment = Alignment.CenterVertically
 				) {
-					IconButton(onClick = { viewModel.onPreviousClicked() }) {
+					IconButton(onClick = {
+						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+						viewModel.onPreviousClicked()
+					}) {
 						Icon(
 							imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
 							contentDescription = "Back"
