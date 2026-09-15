@@ -124,11 +124,14 @@ import com.revenuecat.purchases.awaitOfferings
 				.fillMaxSize()
 				.padding(innerPadding),
 			transitionSpec = {
+				// Use natural enum ordering to determine navigation direction
+				val isForward = targetState > initialState
+
 				slideIntoContainer(
-					towards = AnimatedContentTransitionScope.SlideDirection.Left,
+					towards = if (isForward) AnimatedContentTransitionScope.SlideDirection.Left else AnimatedContentTransitionScope.SlideDirection.Right,
 					animationSpec = tween(370, easing = FastOutSlowInEasing)
 				) togetherWith slideOutOfContainer(
-					towards = AnimatedContentTransitionScope.SlideDirection.Left,
+					towards = if (isForward) AnimatedContentTransitionScope.SlideDirection.Left else AnimatedContentTransitionScope.SlideDirection.Right,
 					animationSpec = tween(370, easing = FastOutSlowInEasing)
 				)
 			},

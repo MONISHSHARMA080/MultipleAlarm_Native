@@ -101,7 +101,7 @@ fun AlarmPickerScreen(
 		viewModel.fromOnboarding = fromOnboarding
 	}
 
-	LaunchedEffect(uiState) {
+	LaunchedEffect(uiState, isPremium) {
 		logD("ui state:$uiState")
 		logD("isPremium:$isPremium")
 

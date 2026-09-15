@@ -6,8 +6,8 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.Permissions.Per
 enum class DisplaySate() {
 	Greeting,
 	Problem,
-	CreateFirstAlarm,
 	Permission,
+	CreateFirstAlarm,
 	AlarmResult,
 	OnboardingPaywall;
 
@@ -15,8 +15,8 @@ enum class DisplaySate() {
 		return  when(this){
 			Greeting -> "Greeting"
 			Problem -> "Problem"
-			CreateFirstAlarm -> "CreateFirstAlarm"
 			Permission -> "Permission"
+			CreateFirstAlarm -> "CreateFirstAlarm"
 			AlarmResult -> "AlarmResult"
 			OnboardingPaywall ->"OnboardingPaywall"
 		}
