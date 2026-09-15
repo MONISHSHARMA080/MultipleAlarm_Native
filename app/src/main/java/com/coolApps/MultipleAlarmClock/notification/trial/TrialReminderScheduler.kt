@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.billing.EntitlementManager
+import com.coolApps.MultipleAlarmClock.logD
 import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.PeriodType
 
@@ -28,6 +29,7 @@ object TrialReminderScheduler {
 	 * this is a no-op.
 	 */
 	fun scheduleIfOnTrial(context: Context, customerInfo: CustomerInfo) {
+		logD("in scheduleIfOnTrial:$context, ${customerInfo.toString()}")
 		val entitlement = customerInfo.entitlements[PREMIUM_ENTITLEMENT] ?: return
 		if (entitlement.periodType != PeriodType.TRIAL) return
 		val trialExpirationDate = entitlement.expirationDate ?: return
@@ -38,6 +40,7 @@ object TrialReminderScheduler {
 		// Already past the reminder window — don't schedule
 		if (reminderTimeMs <= now) return
 
+		logD("a")
 		scheduleAlarm(context, reminderTimeMs)
 	}
 
@@ -45,6 +48,7 @@ object TrialReminderScheduler {
 	 * Cancels any previously scheduled trial reminder alarm.
 	 */
 	fun cancelReminder(context: Context) {
+		logD("in cancel reminder")
 		val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
 		val pendingIntent = buildPendingIntent(context, PendingIntent.FLAG_NO_CREATE) ?: return
 		alarmManager.cancel(pendingIntent)
@@ -54,6 +58,7 @@ object TrialReminderScheduler {
 	private fun scheduleAlarm(context: Context, triggerAtMillis: Long) {
 		val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
 		cancelReminder(context) // cancel any existing one first
+		logD("in TrialReminderScheduler.scheduleAlarm")
 		val pendingIntent = buildPendingIntent(context, PendingIntent.FLAG_UPDATE_CURRENT) ?: return
 		alarmManager.setAndAllowWhileIdle(
 			AlarmManager.RTC_WAKEUP,

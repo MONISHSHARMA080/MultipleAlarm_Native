@@ -29,7 +29,6 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 		onFinished: () -> Unit, offering: Offering?, loadFailed:Boolean,
 		onPurchaseCompletedEvent:(customerInfo:CustomerInfo,storeTransaction: StoreTransaction)->Unit,
 		onRestoreCompletedEvent:(customerInfo:CustomerInfo)->Unit,
-
  ) {
 	when {
 		offering != null -> {

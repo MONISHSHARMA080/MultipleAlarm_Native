@@ -6,6 +6,7 @@ import android.content.Intent
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.Ui.Navigation.Screen
 import com.coolApps.MultipleAlarmClock.analytics.Analytics
+import com.coolApps.MultipleAlarmClock.logD
 import com.coolApps.MultipleAlarmClock.notification.NotificationChannelType
 import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
 import dagger.hilt.android.AndroidEntryPoint
@@ -35,6 +36,7 @@ class TrialReminderReceiver : BroadcastReceiver() {
 			targetScreen = Screen.AlarmContainer,
 		)
 		notificationHandler.show(notification)
+		logD("in TrialReminderReceiver ")
 
 		analytics.captureEvent(
 			"trial_reminder_notification_shown",
