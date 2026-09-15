@@ -44,9 +44,6 @@ object TrialReminderScheduler {
 		scheduleAlarm(context, reminderTimeMs)
 	}
 
-	/**
-	 * Cancels any previously scheduled trial reminder alarm.
-	 */
 	fun cancelReminder(context: Context) {
 		logD("in cancel reminder")
 		val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
