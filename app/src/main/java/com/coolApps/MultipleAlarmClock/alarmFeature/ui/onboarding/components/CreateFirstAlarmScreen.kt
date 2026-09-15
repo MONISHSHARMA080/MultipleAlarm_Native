@@ -313,10 +313,8 @@ private fun FirstAlarmIntroView(
 			modifier = Modifier
 				.fillMaxWidth()
 				.navigationBarsPadding()
-				.padding(
-					horizontal = 24.dp,
-					vertical = 24.dp
-				)
+				.padding(26.dp)
+				.padding(bottom = 20.dp)
 		) {
 			Column(modifier = Modifier.fillMaxWidth().height(56.dp)) {
 				AnimatedVisibility(
