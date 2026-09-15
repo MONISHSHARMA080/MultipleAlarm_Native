@@ -9,7 +9,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -81,7 +80,7 @@ fun CreateFirstAlarmScreen(
 			if (isForward) {
 				(slideIntoContainer(
 					towards = AnimatedContentTransitionScope.SlideDirection.Left,
-					animationSpec = tween(270, easing = FastOutSlowInEasing)
+					animationSpec = tween(320, easing = FastOutSlowInEasing)
 				) + fadeIn(tween(250))) togetherWith (slideOutOfContainer(
 					towards = AnimatedContentTransitionScope.SlideDirection.Left,
 					animationSpec = tween(220, easing = FastOutSlowInEasing)
@@ -89,7 +88,7 @@ fun CreateFirstAlarmScreen(
 			} else {
 				(slideIntoContainer(
 					towards = AnimatedContentTransitionScope.SlideDirection.Right,
-					animationSpec = tween(270, easing = FastOutSlowInEasing)
+					animationSpec = tween(320, easing = FastOutSlowInEasing)
 				) + fadeIn(tween(250))) togetherWith (slideOutOfContainer(
 					towards = AnimatedContentTransitionScope.SlideDirection.Right,
 					animationSpec = tween(220, easing = FastOutSlowInEasing)
@@ -158,15 +157,15 @@ private fun FirstAlarmIntroView(
 		showHeadline = true
 
 		// Give the headline its own moment.
-		delay(600.milliseconds)
+		delay(800.milliseconds)
 
 		// 2. Conversation appears.
 		showConversation = true
 
 		// Let the user read it before introducing structure.
-		delay(700.milliseconds)
+		delay(600.milliseconds)
 		showSteps = true
-		delay(500.milliseconds)
+		delay(600.milliseconds)
 		showButton = true
 		showEditNote = true
 	}
@@ -191,7 +190,8 @@ private fun FirstAlarmIntroView(
 						animationSpec = tween(
 							durationMillis = 450,
 							easing = FastOutSlowInEasing
-						)
+						),
+						alignment = Alignment.TopCenter
 					),
 				horizontalAlignment = Alignment.CenterHorizontally
 			) {
@@ -251,12 +251,12 @@ private fun FirstAlarmIntroView(
 					visible = showSteps,
 					enter =
 						fadeIn(animationSpec = tween(500)) +
-								expandVertically(
+								slideInVertically(
 									animationSpec = tween(
 										durationMillis = 550,
 										easing = FastOutSlowInEasing
 									),
-									expandFrom = Alignment.Top
+									initialOffsetY = { 32 }
 								)
 				) {
 					Column(
@@ -309,50 +309,52 @@ private fun FirstAlarmIntroView(
 		// BUTTON
 		// ─────────────────────────────
 
-		AnimatedVisibility(
-			visible = showButton,
-			enter =
-				fadeIn(
-					animationSpec = tween(350)
-				) +
-						slideInVertically(
-							animationSpec = tween(400),
-							initialOffsetY = { 20 }
-						)
+		Column(
+			modifier = Modifier
+				.fillMaxWidth()
+				.navigationBarsPadding()
+				.padding(
+					horizontal = 24.dp,
+					vertical = 24.dp
+				)
 		) {
-			Column(
-				modifier = Modifier
-					.fillMaxWidth()
-					.navigationBarsPadding()
-					.padding(
-						horizontal = 24.dp,
-						vertical = 24.dp
-					)
-			) {
-				Button(
-					onClick = {
-						view.performHapticFeedback(
-							HapticFeedbackConstants.VIRTUAL_KEY
-						)
-						onContinue()
-					},
-					modifier = Modifier
-						.fillMaxWidth()
-						.height(56.dp),
-					shape = MaterialTheme.shapes.extraLarge,
-					colors = ButtonDefaults.buttonColors(
-						containerColor =
-							MaterialTheme.colorScheme.primaryContainer,
-						contentColor =
-							MaterialTheme.colorScheme.onPrimaryContainer
-					)
+			Column(modifier = Modifier.fillMaxWidth().height(56.dp)) {
+				AnimatedVisibility(
+					visible = showButton,
+					enter =
+						fadeIn(
+							animationSpec = tween(350)
+						) +
+								slideInVertically(
+									animationSpec = tween(400),
+									initialOffsetY = { 20 }
+								)
 				) {
-					Text(
-						text = stringResource(
-							R.string.onboarding_create_alarm_btn_continue
-						),
-						style = MaterialTheme.typography.titleMedium
-					)
+					Button(
+						onClick = {
+							view.performHapticFeedback(
+								HapticFeedbackConstants.VIRTUAL_KEY
+							)
+							onContinue()
+						},
+						modifier = Modifier
+							.fillMaxWidth()
+							.height(56.dp),
+						shape = MaterialTheme.shapes.extraLarge,
+						colors = ButtonDefaults.buttonColors(
+							containerColor =
+								MaterialTheme.colorScheme.primaryContainer,
+							contentColor =
+								MaterialTheme.colorScheme.onPrimaryContainer
+						)
+					) {
+						Text(
+							text = stringResource(
+								R.string.onboarding_create_alarm_btn_continue
+							),
+							style = MaterialTheme.typography.titleMedium
+						)
+					}
 				}
 			}
 		}
