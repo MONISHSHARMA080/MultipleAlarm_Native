@@ -100,8 +100,18 @@ fun AlarmFlowScreen(
 					onBack = {
 						flowBackStack.removeLastOrNull()
 					},
-					onSelected = { sound ->
-						viewModel.onAlarmSoundSelected(sound)
+					onProceed = { sound ->
+						if (sound == null) {
+							viewModel.onAlarmSoundSelected(null)
+							flowBackStack.removeLastOrNull()
+						} else {
+							if (viewModel.isPremium.value) {
+								viewModel.onAlarmSoundSelected(sound)
+								flowBackStack.removeLastOrNull()
+							} else {
+								onNavigateToPaywall(true)
+							}
+						}
 					}
 				)
 			}

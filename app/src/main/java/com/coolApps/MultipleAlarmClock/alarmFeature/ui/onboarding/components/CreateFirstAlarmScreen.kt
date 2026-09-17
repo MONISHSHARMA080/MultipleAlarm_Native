@@ -129,8 +129,9 @@ fun CreateFirstAlarmScreen(
 					onBack = {
 						currentStep = CreateFirstAlarmStep.Picker
 					},
-					onSelected = { sound ->
+					onProceed = { sound ->
 						alarmPickerViewModel.onAlarmSoundSelected(sound)
+						currentStep = CreateFirstAlarmStep.Picker
 					}
 				)
 			}

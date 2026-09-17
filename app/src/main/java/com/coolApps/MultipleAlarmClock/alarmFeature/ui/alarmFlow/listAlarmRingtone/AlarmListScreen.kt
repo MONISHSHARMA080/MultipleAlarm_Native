@@ -32,6 +32,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Audiotrack
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Shuffle
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -44,6 +45,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,11 +68,18 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.dat
 	selectedUri: Uri?,
 	previewingUri: Uri?,
 	onBack: () -> Unit,
-	onSelected: (AlarmSound?) -> Unit,
+	onProceed: (AlarmSound?) -> Unit,
 ) {
 	val view = LocalView.current
 	val listOfAlarms by vm.listOfAlarms.collectAsStateWithLifecycle()
 	val randomPreviewing by vm.previewingRandom.collectAsStateWithLifecycle()
+	val selectedAlarmSound by vm.selectedAlarmSound.collectAsStateWithLifecycle()
+
+	// Track the temporarily selected sound (the one the user clicked on, but hasn't proceeded with yet)
+	var pendingSelectedSound by remember { mutableStateOf(selectedAlarmSound) }
+	// We also need to track if random was selected as pending, which means pendingSelectedSound is null, 
+	// but initially if selectedUri is null, then random is the pending one.
+	var isPendingRandom by remember { mutableStateOf(selectedUri == null) }
 
 	Scaffold(
 		modifier = Modifier.padding(2.dp),
@@ -90,20 +101,40 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.dat
 				}
 			)
 		},
+		bottomBar = {
+			Box(
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(16.dp),
+				contentAlignment = Alignment.Center
+			) {
+				Button(
+					onClick = {
+						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+						onProceed(if (isPendingRandom) null else pendingSelectedSound)
+					},
+					modifier = Modifier.fillMaxWidth()
+				) {
+					Text("Select")
+				}
+			}
+		}
 	) { padding ->
 		LazyColumn(
 			modifier = Modifier.fillMaxSize().padding(padding),
-			contentPadding = PaddingValues(horizontal = 15.dp, ),
+			contentPadding = PaddingValues(start = 15.dp, end = 15.dp, top = 0.dp, bottom = 80.dp),
 			verticalArrangement = Arrangement.spacedBy(12.dp)
 		) {
 			item {
 				SoundCard(
 					sound = null,
-					selected = selectedUri == null,
+					selected = isPendingRandom,
 					isPlaying = randomPreviewing,
 					onClick = {
 						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-						onSelected(null)
+						isPendingRandom = true
+						pendingSelectedSound = null
+						vm.previewSound(null)
 					},
 					imageVector = Icons.Rounded.Shuffle
 				)
@@ -116,11 +147,13 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.dat
 			) { sound ->
 				SoundCard(
 					sound = sound,
-					selected = sound.soundUri == selectedUri,
+					selected = !isPendingRandom && pendingSelectedSound?.soundUri == sound.soundUri,
 					isPlaying = previewingUri == sound.soundUri,
 					onClick = {
 						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-						onSelected(sound)
+						isPendingRandom = false
+						pendingSelectedSound = sound
+						vm.previewSound(sound)
 					}
 				)
 			}
