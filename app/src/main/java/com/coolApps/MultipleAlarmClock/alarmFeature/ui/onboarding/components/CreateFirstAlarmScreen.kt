@@ -215,37 +215,6 @@ private fun FirstAlarmIntroView(
 					)
 				}
 
-//				AnimatedVisibility(
-//					visible = showConversation,
-//					enter =
-//						fadeIn(
-//							animationSpec = tween(
-//								durationMillis = 500
-//							)
-//						) +
-//								slideInVertically(
-//									animationSpec = tween(
-//										durationMillis = 550,
-//										easing = FastOutSlowInEasing
-//									),
-//									initialOffsetY = { 18 }
-//								)
-//				) {
-//					Text(
-//						text = stringResource(
-//							R.string.onboarding_create_alarm_subtitle
-//						),
-//						modifier = Modifier
-//							.padding(top = 8.dp)
-//							.fillMaxWidth(),
-//						style = typography.titleMedium,
-//						fontWeight = FontWeight.Normal,
-//						lineHeight = 25.sp,
-//						textAlign = TextAlign.Center,
-//						color = colorScheme.onSurfaceVariant
-//					)
-//				}
-
 				AnimatedVisibility(
 					visible = showSteps,
 					enter =
@@ -408,28 +377,4 @@ private fun AlarmIntroStep(
 			)
 		}
 	}
-}
-
-/**
- * A single "fine print" line for the secondary detail block —
- * deliberately quiet: no icons, no card chrome, no numbered badges.
- * It should read like a caption you can skip, not a step you must follow.
- */
-@Composable
-private fun IntroDetailRow(
-	title: String,
-	description: String,
-	modifier: Modifier = Modifier
-) {
-	Text(
-		text = buildString {
-			append(title)
-			append(" — ")
-			append(description)
-		},
-		style = typography.bodySmall,
-		textAlign = TextAlign.Center,
-		color = colorScheme.onSurfaceVariant,
-		modifier = modifier.fillMaxWidth(0.85f)
-	)
 }

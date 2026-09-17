@@ -89,7 +89,7 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.dat
 					}
 				}
 			)
-		}
+		},
 	) { padding ->
 		LazyColumn(
 			modifier = Modifier.fillMaxSize().padding(padding),
