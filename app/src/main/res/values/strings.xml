@@ -101,12 +101,12 @@
     <string name="feedback_btn_submit">Submit</string>
 
 <!-- Alarm Sound card   -->
-    <string name="Sound_screen_heading">Alarm sound</string>
+    <string name="alarm_sound_title">Alarm sound</string>
     <string name="Sound_screen_Random">Random</string>
     <string name="Sound_screen_selected">Now playing</string>
     <string name="Sound_screen_preview">Tap to preview</string>
-    <string name="Sound_screen_Random_sound">A random sound will be chosen from the alarm below on every alarm</string>
-    <string name="Sound_screen_Random_sound_choosen">Each alarm gets a random sound from the list below</string>
+    <string name="Sound_screen_Random_sound">Plays a different sound for each alarm.</string>
+    <string name="Sound_screen_Random_sound_choosen">Plays a different sound for each alarm.</string>
 
     <!-- About & Rate App -->
     <string name="about_section_title">About</string>

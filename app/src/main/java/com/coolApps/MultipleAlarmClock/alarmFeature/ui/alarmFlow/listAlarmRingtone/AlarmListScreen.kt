@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -39,16 +40,19 @@ import androidx.compose.material.icons.rounded.Audiotrack
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,6 +63,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -84,12 +89,16 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.dat
 	var soundToSelect by remember { mutableStateOf(selectedAlarmSound) }
 	var isSoundToSelectRandom by remember { mutableStateOf(selectedUri == null) }
 
+	val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
 	Scaffold(
-		modifier = Modifier.padding(2.dp),
+		modifier = Modifier
+			.padding(2.dp)
+			.nestedScroll(scrollBehavior.nestedScrollConnection),
 		topBar = {
 			LargeTopAppBar(
 				title = {
-					Text(stringResource(R.string.Sound_screen_heading))
+					Text(stringResource(R.string.alarm_sound_title))
 				},
 				navigationIcon = {
 					IconButton(onClick = {
@@ -101,14 +110,17 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.dat
 							contentDescription = "Back"
 						)
 					}
-				}
+				},
+				scrollBehavior = scrollBehavior
 			)
 		},
 		bottomBar = {
 			Box(
 				modifier = Modifier
 					.fillMaxWidth()
-					.padding(16.dp),
+					.navigationBarsPadding()
+					.padding(26.dp)
+					.padding(bottom = 20.dp),
 				contentAlignment = Alignment.Center
 			) {
 				Button(
@@ -116,17 +128,27 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.dat
 						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 						onProceed(if (isSoundToSelectRandom) null else soundToSelect)
 					},
-					modifier = Modifier.fillMaxWidth()
+					colors = ButtonDefaults.buttonColors(
+						containerColor = MaterialTheme.colorScheme.primaryContainer,
+						contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+					),
+					shape = MaterialTheme.shapes.extraLarge,
+					modifier = Modifier
+						.fillMaxWidth()
+						.height(56.dp)
 				) {
-					Text("Select")
+					Text(
+						text = "Select",
+						style = MaterialTheme.typography.titleMedium
+					)
 				}
 			}
 		}
 	) { padding ->
 		LazyColumn(
 			modifier = Modifier.fillMaxSize().padding(padding),
-			contentPadding = PaddingValues(start = 15.dp, end = 15.dp, top = 0.dp, bottom = 80.dp),
-			verticalArrangement = Arrangement.spacedBy(12.dp)
+			contentPadding = PaddingValues(start = 15.dp, end = 15.dp, top = 16.dp, bottom = 80.dp),
+			verticalArrangement = Arrangement.spacedBy(8.dp)
 		) {
 			item {
 				SoundCard(
@@ -217,7 +239,7 @@ private fun SoundCard(
 					) { isPlaying ->
 						if (isPlaying) {
 							EqualizerBars(
-								color = androidx.compose.material3.LocalContentColor.current
+								color = LocalContentColor.current
 							)
 						} else {
 							Icon(
