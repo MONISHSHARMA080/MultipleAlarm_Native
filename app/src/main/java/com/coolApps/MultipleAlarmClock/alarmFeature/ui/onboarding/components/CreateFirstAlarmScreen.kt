@@ -1,7 +1,5 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components
 
-//import androidx.compose.animation.slideIntoContainer
-//import androidx.compose.animation.slideOutOfContainer
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -132,7 +130,8 @@ fun CreateFirstAlarmScreen(
 					onProceed = { sound ->
 						alarmPickerViewModel.onAlarmSoundSelected(sound)
 						currentStep = CreateFirstAlarmStep.Picker
-					}
+					},
+					linearProgressBar = linearProgressBar
 				)
 			}
 		}

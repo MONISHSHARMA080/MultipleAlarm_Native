@@ -376,8 +376,9 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		viewModelScope.launch {
 			logD("deleting the alarm $oldAlarm")
 			val repeatDays = if (fromOnboarding) null else newAlarmData.repeatDays
+			val sound = if (fromOnboarding) null else newAlarmData.sound
 			val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(
-				alarm = newAlarmData.copy(id = oldAlarm?.id ?: 0, repeatDays=repeatDays),
+				alarm = newAlarmData.copy(id = oldAlarm?.id ?: 0, repeatDays=repeatDays, sound=sound),
 				alarmManager, context
 			)
 			alarmScheduledResult.fold(

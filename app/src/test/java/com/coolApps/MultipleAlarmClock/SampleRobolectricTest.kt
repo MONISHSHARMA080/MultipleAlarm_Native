@@ -229,6 +229,174 @@ class AlarmSeriesLogicTest2 {
 		assertThat(firedCount).isEqualTo(expectedAlarmList.size )
 	}
 
+	@Test
+	fun `resetAlarmsHandler when current time is before alarm series start`() = runTest {
+		val startTime = Calendar.getInstance().apply {
+			add(Calendar.DAY_OF_YEAR, 1)
+			set(Calendar.HOUR_OF_DAY, 10)
+			set(Calendar.MINUTE, 0)
+			set(Calendar.SECOND, 0)
+			set(Calendar.MILLISECOND, 0)
+		}.timeInMillis
+		val endTime = startTime + Duration.ofHours(8).toMillis()
+
+		val alarm = AlarmData(
+			startTime = startTime, endTime = endTime, message = "test before start",
+			isReadyToUse = false, frequencyInMin = 30, repeatDays = null, sound = null
+		)
+		val alarmId = fakeAlarmRepository.saveAlarm(alarm).toInt()
+		val savedAlarm = alarm.copy(id = alarmId)
+
+		// Set time to before the start time
+		val now = startTime - Duration.ofHours(1).toMillis()
+		SystemClock.setCurrentTimeMillis(now)
+		val nowCalendar = Calendar.getInstance().apply { timeInMillis = now }
+
+		val result = controller.resetAlarmsHandler(savedAlarm, alarmManager, context, nowCalendar)
+		assertThat(result).isInstanceOf(Result.Success::class.java)
+
+		var scheduled = shadowAlarmManager.peekNextScheduledAlarm()
+		assertThat(scheduled).isNotNull()
+		assertThat(scheduled!!.triggerAtMs).isEqualTo(startTime)
+
+		var expectedTrigger = startTime
+		var firedCount = 0
+
+		while (expectedTrigger <= endTime) {
+			scheduled = shadowAlarmManager.peekNextScheduledAlarm()
+			assertThat(scheduled).isNotNull()
+			assertThat(scheduled!!.triggerAtMs).isEqualTo(expectedTrigger)
+
+			val delta = expectedTrigger - SystemClock.uptimeMillis()
+			shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(delta))
+			testDispatcher.scheduler.advanceUntilIdle()
+			shadowOf(Looper.getMainLooper()).idle()
+			testDispatcher.scheduler.advanceUntilIdle()
+			
+			firedCount++
+			expectedTrigger += Duration.ofMinutes(30).toMillis()
+		}
+		
+		val expectedAlarmListSize = savedAlarm.alarmTimeSequence().toList().size
+		assertThat(firedCount).isEqualTo(expectedAlarmListSize)
+	}
+
+	@Test
+	fun `resetAlarmsHandler when current time is in the middle of alarm series`() = runTest {
+		val startTime = Calendar.getInstance().apply {
+			add(Calendar.DAY_OF_YEAR, 1)
+			set(Calendar.HOUR_OF_DAY, 10)
+			set(Calendar.MINUTE, 0)
+			set(Calendar.SECOND, 0)
+			set(Calendar.MILLISECOND, 0)
+		}.timeInMillis
+		val endTime = startTime + Duration.ofHours(8).toMillis()
+		val frequency = Duration.ofMinutes(30).toMillis()
+
+		val alarm = AlarmData(
+			startTime = startTime, endTime = endTime, message = "test in middle",
+			isReadyToUse = false, frequencyInMin = 30, repeatDays = null, sound = null
+		)
+		val alarmId = fakeAlarmRepository.saveAlarm(alarm).toInt()
+		val savedAlarm = alarm.copy(id = alarmId)
+
+		val fullSequence = savedAlarm.alarmTimeSequence().toList()
+		val middleIndex = fullSequence.size / 2
+		
+		// Set time exactly between two alarm ticks
+		val now = fullSequence[middleIndex] + frequency / 2 
+		SystemClock.setCurrentTimeMillis(now)
+		val nowCalendar = Calendar.getInstance().apply { timeInMillis = now }
+
+		val result = controller.resetAlarmsHandler(savedAlarm, alarmManager, context, nowCalendar)
+		assertThat(result).isInstanceOf(Result.Success::class.java)
+
+		val expectedNextTick = fullSequence[middleIndex + 1]
+		var scheduled = shadowAlarmManager.peekNextScheduledAlarm()
+		
+		assertThat(scheduled).isNotNull()
+		assertThat(scheduled!!.triggerAtMs).isEqualTo(expectedNextTick)
+
+		var expectedTrigger = expectedNextTick
+		var firedCount = 0
+
+		while (expectedTrigger <= endTime) {
+			scheduled = shadowAlarmManager.peekNextScheduledAlarm()
+			assertThat(scheduled).isNotNull()
+			assertThat(scheduled!!.triggerAtMs).isEqualTo(expectedTrigger)
+
+			val delta = expectedTrigger - SystemClock.uptimeMillis()
+			shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(delta))
+			testDispatcher.scheduler.advanceUntilIdle()
+			shadowOf(Looper.getMainLooper()).idle()
+			testDispatcher.scheduler.advanceUntilIdle()
+			
+			firedCount++
+			expectedTrigger += frequency
+		}
+		
+		// The number of alarms fired should be the remaining sequence from middleIndex+1 to the end
+		val expectedAlarmListSize = fullSequence.size - (middleIndex + 1)
+		assertThat(firedCount).isEqualTo(expectedAlarmListSize)
+	}
+
+	@Test
+	fun `resetAlarmsHandler when current time is past the end time`() = runTest {
+		val startTime = Calendar.getInstance().apply {
+			add(Calendar.DAY_OF_YEAR, 1)
+			set(Calendar.HOUR_OF_DAY, 10)
+			set(Calendar.MINUTE, 0)
+			set(Calendar.SECOND, 0)
+			set(Calendar.MILLISECOND, 0)
+		}.timeInMillis
+		val endTime = startTime + Duration.ofHours(8).toMillis()
+
+		val alarm = AlarmData(
+			startTime = startTime, endTime = endTime, message = "test past end",
+			isReadyToUse = false, frequencyInMin = 30, repeatDays = null, sound = null
+		)
+		val alarmId = fakeAlarmRepository.saveAlarm(alarm).toInt()
+		val savedAlarm = alarm.copy(id = alarmId)
+
+		// Set time past the end time
+		val now = endTime + Duration.ofHours(1).toMillis()
+		SystemClock.setCurrentTimeMillis(now)
+		val nowCalendar = Calendar.getInstance().apply { timeInMillis = now }
+
+		val result = controller.resetAlarmsHandler(savedAlarm, alarmManager, context, nowCalendar)
+		assertThat(result).isInstanceOf(Result.Success::class.java)
+
+		val updatedAlarm = fakeAlarmRepository.getAlarmById(alarmId)
+		assertThat(updatedAlarm).isNotNull()
+		// Because time interval passed, rollOverIfTimeIntervalPassed should update the startTime to the next day or period
+		assertThat(updatedAlarm!!.startTime).isGreaterThan(startTime)
+		
+		var scheduled = shadowAlarmManager.peekNextScheduledAlarm()
+		assertThat(scheduled).isNotNull()
+		assertThat(scheduled!!.triggerAtMs).isEqualTo(updatedAlarm.startTime)
+
+		var expectedTrigger = updatedAlarm.startTime
+		var firedCount = 0
+
+		while (expectedTrigger <= updatedAlarm.endTime) {
+			scheduled = shadowAlarmManager.peekNextScheduledAlarm()
+			assertThat(scheduled).isNotNull()
+			assertThat(scheduled!!.triggerAtMs).isEqualTo(expectedTrigger)
+
+			val delta = expectedTrigger - SystemClock.uptimeMillis()
+			shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(delta))
+			testDispatcher.scheduler.advanceUntilIdle()
+			shadowOf(Looper.getMainLooper()).idle()
+			testDispatcher.scheduler.advanceUntilIdle()
+			
+			firedCount++
+			expectedTrigger += Duration.ofMinutes(30).toMillis()
+		}
+		
+		val expectedAlarmListSize = updatedAlarm.alarmTimeSequence().toList().size
+		assertThat(firedCount).isEqualTo(expectedAlarmListSize)
+	}
+
 	private fun logD(str: String){
 		Log.d("AAAA", "[Test] $str")
 	}

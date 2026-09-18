@@ -328,13 +328,13 @@ class AlarmsController @Inject constructor(
 	}
 
 	suspend fun resetAlarmsHandler(
-			alarmData:AlarmData, alarmManager: AlarmManager, activityContext: Context
+			alarmData:AlarmData, alarmManager: AlarmManager, activityContext: Context, now: Calendar = Calendar.getInstance()
 	): ResultCustom<Unit, ResetAlarmError> {
 		return ResultCustom.runCatching(
 			{ exception ->AlarmControllerErrorSet.Unknown(internalErrorMessage = exception.toString()) }
 		){
-			val newAlarm =	alarmData.rollOverIfTimeIntervalPassed().copy(isReadyToUse = true)
-			val newTriggerTime = newAlarm.getNextAlarmTriggerTime() ?:
+			val newAlarm =	alarmData.rollOverIfTimeIntervalPassed(now).copy(isReadyToUse = true)
+			val newTriggerTime = newAlarm.getNextAlarmTriggerTime(now) ?:
 				return ResultCustom.Failure(errorClass = AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = "[resetAlarmsHandler]Can't get first alarm to start the series\n alarmData:$newAlarm"))
 
 			val validationRes = newAlarm.validate()

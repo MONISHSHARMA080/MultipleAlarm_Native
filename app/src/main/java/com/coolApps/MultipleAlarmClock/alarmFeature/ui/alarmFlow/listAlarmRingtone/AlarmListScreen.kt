@@ -80,7 +80,9 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.dat
 	previewingUri: Uri?,
 	onBack: () -> Unit,
 	onProceed: (AlarmSound?) -> Unit,
+	linearProgressBar: (@Composable () -> Unit)? = null,
 ) {
+	val fromOnboarding = linearProgressBar != null
 	val view = LocalView.current
 	val listOfAlarms by vm.listOfAlarms.collectAsStateWithLifecycle()
 	val randomPreviewing by vm.previewingRandom.collectAsStateWithLifecycle()
@@ -94,32 +96,34 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.dat
 	Scaffold(
 		modifier = Modifier
 			.padding(2.dp)
-			.nestedScroll(scrollBehavior.nestedScrollConnection),
+			.let { if (!fromOnboarding) it.nestedScroll(scrollBehavior.nestedScrollConnection) else it },
 		topBar = {
-			LargeTopAppBar(
-				title = {
-					Text(stringResource(R.string.alarm_sound_title))
-				},
-				navigationIcon = {
-					IconButton(onClick = {
-						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-						onBack()
-					}) {
-						Icon(
-							imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-							contentDescription = "Back"
-						)
-					}
-				},
-				scrollBehavior = scrollBehavior
-			)
+			if (!fromOnboarding) {
+				LargeTopAppBar(
+					title = {
+						Text(stringResource(R.string.alarm_sound_title))
+					},
+					navigationIcon = {
+						IconButton(onClick = {
+							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+							onBack()
+						}) {
+							Icon(
+								imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+								contentDescription = "Back"
+							)
+						}
+					},
+					scrollBehavior = scrollBehavior
+				)
+			}
 		},
 		bottomBar = {
 			Box(
 				modifier = Modifier
 					.fillMaxWidth()
 					.navigationBarsPadding()
-					.padding(26.dp)
+					.padding(16.dp)
 					.padding(bottom = 20.dp),
 				contentAlignment = Alignment.Center
 			) {
