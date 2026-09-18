@@ -28,7 +28,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -39,8 +38,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Alarm
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -77,6 +74,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data.ButtonState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -88,14 +86,10 @@ import kotlin.time.Duration.Companion.milliseconds
 private const val MAX_VISIBLE_TIMELINE_ROWS = 8
 private val TIMELINE_ROW_STAGGER_MS = 90.milliseconds
 
-// Note: Replace with your actual AlarmData class and logD implementation
-// data class AlarmData(val startTime: Long, val endTime: Long, val frequencyInMin: Long)
-// fun logD(msg: String) { println(msg) }
-
-@Composable
-fun AlarmResultClaude(
+@Composable fun AlarmResultClaude(
 	alarmData: AlarmData?,
-	onNextClick: () -> Unit
+	onNextClick: () -> Unit,
+	onButtonStateChange: (ButtonState) -> Unit
 ) {
 	if (alarmData == null) {
 		Box(
@@ -107,6 +101,7 @@ fun AlarmResultClaude(
 	} else {
 		AlarmResultContent(
 			alarmData = alarmData,
+			onButtonStateChange ={onButtonStateChange(it)},
 			onNextClick = onNextClick
 		)
 	}
@@ -115,8 +110,10 @@ fun AlarmResultClaude(
 @Composable
 private fun AlarmResultContent(
 	alarmData: AlarmData,
+	onButtonStateChange: (ButtonState) -> Unit,
 	onNextClick: () -> Unit
 ) {
+	onButtonStateChange(ButtonState.Hidden)
 	val zoneId = remember { ZoneId.systemDefault() }
 	val timeFormatter = remember { DateTimeFormatter.ofPattern("h:mm a") }
 
@@ -154,6 +151,8 @@ private fun AlarmResultContent(
 			}
 
 			view.performHapticFeedback(HapticFeedbackConstants.GESTURE_END)
+			onButtonStateChange(ButtonState.Enabled)
+
 		}
 	}
 
@@ -286,40 +285,40 @@ private fun AlarmResultContent(
 		}
 
 		// Fade in bottom bar only when settled
-		AnimatedVisibility(
-			visible = isSettled,
-			modifier = Modifier.align(Alignment.BottomCenter),
-			enter = slideInVertically(initialOffsetY = { it }) + fadeIn()
-		) {
-			Box(
-				modifier = Modifier
-					.fillMaxWidth()
-					.background(colorScheme.background)
-					.navigationBarsPadding()
-					.padding(horizontal = 26.dp, vertical = 20.dp),
-				contentAlignment = Alignment.Center
-			) {
-				Button(
-					onClick = {
-						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-						onNextClick()
-					},
-					modifier = Modifier
-						.fillMaxWidth()
-						.height(56.dp),
-					shape = shapes.extraLarge,
-					colors = ButtonDefaults.buttonColors(
-						containerColor = colorScheme.primaryContainer,
-						contentColor = colorScheme.onPrimaryContainer
-					)
-				) {
-					Text(
-						text = stringResource(R.string.onboarding_result_finish),
-						style = typography.titleMedium
-					)
-				}
-			}
-		}
+//		AnimatedVisibility(
+//			visible = isSettled,
+//			modifier = Modifier.align(Alignment.BottomCenter),
+//			enter = slideInVertically(initialOffsetY = { it }) + fadeIn()
+//		) {
+//			Box(
+//				modifier = Modifier
+//					.fillMaxWidth()
+//					.background(colorScheme.background)
+//					.navigationBarsPadding()
+//					.padding(horizontal = 26.dp, vertical = 20.dp),
+//				contentAlignment = Alignment.Center
+//			) {
+//				Button(
+//					onClick = {
+//						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+//						onNextClick()
+//					},
+//					modifier = Modifier
+//						.fillMaxWidth()
+//						.height(56.dp),
+//					shape = shapes.extraLarge,
+//					colors = ButtonDefaults.buttonColors(
+//						containerColor = colorScheme.primaryContainer,
+//						contentColor = colorScheme.onPrimaryContainer
+//					)
+//				) {
+//					Text(
+//						text = stringResource(R.string.onboarding_result_finish),
+//						style = typography.titleMedium
+//					)
+//				}
+//			}
+//		}
 	}
 }
 

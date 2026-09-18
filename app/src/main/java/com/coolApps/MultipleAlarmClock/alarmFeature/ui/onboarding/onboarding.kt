@@ -3,23 +3,38 @@ package com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.shapes
+import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,17 +44,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerViewModel
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.Progress
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.AlarmResultClaude
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.CreateFirstAlarmScreen
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.FirstAlarmIntroView
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.GreetingScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.OnboardingPaywallScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.PermissionScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.ProblemScreen
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data.ButtonState
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data.DisplaySate
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.revenuecat.purchases.Offering
@@ -59,9 +78,9 @@ import com.revenuecat.purchases.awaitOfferings
 	LaunchedEffect(uiState.displaySate) {
 		viewModel.analytics.screen("Onboarding_${uiState.displaySate.name.lowercase()}")
 	}
-	// pre-fetching for caching
 	var offering by remember { mutableStateOf<Offering?>(null) }
 	var loadFailed by remember { mutableStateOf(false) }
+	var buttonState by remember { mutableStateOf(ButtonState.Enabled) }
 	val view = LocalView.current
 
 	LaunchedEffect(Unit) {
@@ -75,19 +94,20 @@ import com.revenuecat.purchases.awaitOfferings
 	}
 
 	val progress = when (uiState.displaySate) {
-		DisplaySate.Greeting -> 1f / 6f
-		DisplaySate.Problem -> 2f / 6f
-		DisplaySate.Permission -> 3f / 6f
+		DisplaySate.Greeting -> 1f / 7f
+		DisplaySate.Problem -> 2f / 7f
+		DisplaySate.Permission -> 3f / 7f
+		DisplaySate.FirstAlarmIntro -> 4f / 7f
 		DisplaySate.CreateFirstAlarm -> {
 			val subProgress = when (alarmPickerUiState.progress) {
 				Progress.StartTime -> 1f / 3f
 				Progress.EndTime -> 2f / 3f
 				Progress.FullEditor -> 3f / 3f
 			}
-			(3f / 6f) + (subProgress / 6f)
+			(4f / 7f) + (subProgress / 7f)
 		}
-		DisplaySate.AlarmResult -> 5f / 6f
-		DisplaySate.OnboardingPaywall -> 6f / 6f
+		DisplaySate.AlarmResult -> 6f / 7f
+		DisplaySate.OnboardingPaywall -> 7f / 7f
 	}
 
 	val animatedProgress by animateFloatAsState(
@@ -109,6 +129,7 @@ import com.revenuecat.purchases.awaitOfferings
 					IconButton(onClick = {
 						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 						viewModel.onPreviousClicked()
+						buttonState = ButtonState.Enabled
 					}) {
 						Icon(
 							imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
@@ -120,6 +141,52 @@ import com.revenuecat.purchases.awaitOfferings
 						progress = { animatedProgress },
 						modifier = Modifier.fillMaxWidth().padding(end = 12.dp)
 					)
+				}
+			}
+		},
+		bottomBar = {
+			if (buttonState != ButtonState.Hidden){
+				AnimatedVisibility(
+					visible = buttonState == ButtonState.Enabled,
+					enter = slideInVertically(initialOffsetY = { it }) + fadeIn()
+				) {
+					Box(
+						modifier =
+							Modifier.fillMaxWidth()
+								.background(colorScheme.background)
+								.navigationBarsPadding()
+								.padding(26.dp)
+								.padding(bottom = 20.dp)
+								.animateContentSize(),
+						contentAlignment = Alignment.Center,
+					) {
+						Row(
+							modifier = Modifier.fillMaxWidth(),
+							horizontalArrangement = Arrangement.End,
+							verticalAlignment = Alignment.CenterVertically
+						) {
+							Button(
+								onClick = {
+									view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+									viewModel.onNextClicked()
+								},
+								enabled = buttonState == ButtonState.Enabled ,
+								modifier = Modifier
+									.fillMaxWidth()
+									.height(56.dp),
+								shape = shapes.extraLarge,
+								colors = ButtonDefaults.buttonColors(
+									containerColor = colorScheme.primaryContainer,
+									contentColor = colorScheme.onPrimaryContainer
+								)
+							) {
+								Text(
+									text = stringResource(R.string.permission_continue),
+									style = typography.titleMedium
+								)
+							}
+						}
+					}
 				}
 			}
 		}
@@ -143,14 +210,26 @@ import com.revenuecat.purchases.awaitOfferings
 			},
 		) { state ->
 			when (state) {
-				DisplaySate.Greeting -> GreetingScreen(onClickNext = { viewModel.onNextClicked() })
-				DisplaySate.Problem -> ProblemScreen { viewModel.onNextClicked() }
+				DisplaySate.Greeting -> GreetingScreen(
+					onClickNext = { viewModel.onNextClicked() },
+				)
+				// here make this into one uniform animation and no click etc. and then loop
+				DisplaySate.Problem -> ProblemScreen(
+					onComplete = { viewModel.onNextClicked() },
+					onButtonStateChange = { buttonState = it }
+				)
 				DisplaySate.Permission -> {
 					PermissionScreen(
 						missingSteps = uiState.missingSteps,
 						allCriticalGranted = uiState.allCriticalGranted,
 						onNext = { viewModel.onNextClicked() },
 						refreshPermissionUiState = { viewModel.refreshPermissions() },
+						onButtonStateChange = { buttonState = it }
+					)
+				}
+				DisplaySate.FirstAlarmIntro -> {
+					FirstAlarmIntroView(
+						onButtonStateChange = { buttonState = it }
 					)
 				}
 				DisplaySate.CreateFirstAlarm -> {
@@ -162,15 +241,21 @@ import com.revenuecat.purchases.awaitOfferings
 								progress = { animatedProgress },
 								modifier = Modifier.fillMaxWidth().padding(end = 16.dp)
 							)
-						}
+						},
+						onButtonStateChange = { buttonState = it }
 					)
 				}
-				DisplaySate.AlarmResult -> AlarmResultClaude(uiState.alarmData, onNextClick = { viewModel.onNextClicked() })
+				DisplaySate.AlarmResult -> AlarmResultClaude(
+					alarmData = uiState.alarmData,
+					onNextClick = { viewModel.onNextClicked() },
+					onButtonStateChange = { buttonState = it }
+				)
 				DisplaySate.OnboardingPaywall -> {
 					OnboardingPaywallScreen(
 						onFinished = { viewModel.finishedOnboarding() }, loadFailed = loadFailed, offering = offering,
 						onPurchaseCompletedEvent = {customerInfo, storeTransaction -> viewModel.onPurchaseCompletedEvent(customerInfo,storeTransaction) },
-						onRestoreCompletedEvent = { viewModel.onRestoreCompletedEvent(it) }
+						onRestoreCompletedEvent = { viewModel.onRestoreCompletedEvent(it) },
+						onButtonStateChange = { buttonState = it }
 					)
 				}
 			}

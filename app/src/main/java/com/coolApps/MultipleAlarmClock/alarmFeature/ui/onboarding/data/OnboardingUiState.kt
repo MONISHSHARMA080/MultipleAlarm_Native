@@ -3,19 +3,27 @@ package com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data
 import com.coolApps.MultipleAlarmClock.alarmFeature.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.Permissions.PermissionStep
 
-enum class DisplaySate() {
+enum class ButtonState {
+	Enabled,
+	Disabled,
+	Hidden
+}
+
+enum class DisplaySate {
 	Greeting,
 	Problem,
 	Permission,
+	FirstAlarmIntro,
 	CreateFirstAlarm,
 	AlarmResult,
 	OnboardingPaywall;
 
 	override fun toString(): String {
-		return  when(this){
+		return when(this){
 			Greeting -> "Greeting"
 			Problem -> "Problem"
 			Permission -> "Permission"
+			FirstAlarmIntro -> "FirstAlarmIntro"
 			CreateFirstAlarm -> "CreateFirstAlarm"
 			AlarmResult -> "AlarmResult"
 			OnboardingPaywall ->"OnboardingPaywall"

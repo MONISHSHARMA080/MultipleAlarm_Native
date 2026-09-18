@@ -23,12 +23,16 @@ import com.revenuecat.purchases.ui.revenuecatui.Paywall
 import com.revenuecat.purchases.ui.revenuecatui.PaywallListener
 import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data.ButtonState
+
 @OptIn(ExperimentalPreviewRevenueCatUIPurchasesAPI::class)
+
 @Composable
  fun OnboardingPaywallScreen(
 		onFinished: () -> Unit, offering: Offering?, loadFailed:Boolean,
 		onPurchaseCompletedEvent:(customerInfo:CustomerInfo,storeTransaction: StoreTransaction)->Unit,
 		onRestoreCompletedEvent:(customerInfo:CustomerInfo)->Unit,
+		onButtonStateChange: (ButtonState) -> Unit = {}
  ) {
 	when {
 		offering != null -> {

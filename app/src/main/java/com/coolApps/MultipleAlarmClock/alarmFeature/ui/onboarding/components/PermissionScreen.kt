@@ -6,7 +6,6 @@ import android.os.Build
 import android.provider.Settings
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -22,9 +21,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -32,7 +29,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -44,7 +40,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.shapes
@@ -73,23 +68,34 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.Permissions.PermissionStep
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.Permissions.PermissionUtils
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data.ButtonState
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 
 @OptIn(ExperimentalPermissionsApi::class)
+
 @Composable
 fun PermissionScreen(
     missingSteps: List<PermissionStep>,
     refreshPermissionUiState: () -> Unit,
     onNext: () -> Unit,
-    allCriticalGranted: Boolean
+    allCriticalGranted: Boolean,
+    onButtonStateChange: (ButtonState) -> Unit = {}
 ) {
 
 	val context = LocalContext.current
 	val view = LocalView.current
 	val lifecycleOwner = LocalLifecycleOwner.current
+
+	LaunchedEffect(allCriticalGranted) {
+		if (allCriticalGranted){
+			onButtonStateChange(ButtonState.Enabled)
+		}else {
+			onButtonStateChange(ButtonState.Disabled)
+		}
+	}
 
 	LaunchedEffect(allCriticalGranted) {
 		if (allCriticalGranted) {
@@ -283,43 +289,43 @@ fun PermissionScreen(
 			Spacer(modifier = Modifier.weight(0.2f))
 		}
 
-		Box(
-			modifier =
-				Modifier.fillMaxWidth()
-					.background(colorScheme.background)
-					.navigationBarsPadding()
-					.padding(26.dp)
-					.padding(bottom = 20.dp)
-					.animateContentSize(),
-			contentAlignment = Alignment.Center,
-		) {
-			Row(
-				modifier = Modifier.fillMaxWidth(),
-				horizontalArrangement = Arrangement.End,
-				verticalAlignment = Alignment.CenterVertically
-			) {
-				Button(
-					onClick = {
-						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-						onNext()
-					},
-					enabled = allCriticalGranted,
-					modifier = Modifier
-						.fillMaxWidth()
-						.height(56.dp),
-					shape = shapes.extraLarge,
-					colors = ButtonDefaults.buttonColors(
-						containerColor = colorScheme.primaryContainer,
-						contentColor = colorScheme.onPrimaryContainer
-					)
-				) {
-					Text(
-						text = stringResource(if (allCriticalGranted)R.string.permission_continue else R.string.permission_grant_permissions),
-						style = typography.titleMedium
-					)
-				}
-			}
-		}
+//		Box(
+//			modifier =
+//				Modifier.fillMaxWidth()
+//					.background(colorScheme.background)
+//					.navigationBarsPadding()
+//					.padding(26.dp)
+//					.padding(bottom = 20.dp)
+//					.animateContentSize(),
+//			contentAlignment = Alignment.Center,
+//		) {
+//			Row(
+//				modifier = Modifier.fillMaxWidth(),
+//				horizontalArrangement = Arrangement.End,
+//				verticalAlignment = Alignment.CenterVertically
+//			) {
+//				Button(
+//					onClick = {
+//						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+//						onNext()
+//					},
+//					enabled = allCriticalGranted,
+//					modifier = Modifier
+//						.fillMaxWidth()
+//						.height(56.dp),
+//					shape = shapes.extraLarge,
+//					colors = ButtonDefaults.buttonColors(
+//						containerColor = colorScheme.primaryContainer,
+//						contentColor = colorScheme.onPrimaryContainer
+//					)
+//				) {
+//					Text(
+//						text = stringResource(if (allCriticalGranted)R.string.permission_continue else R.string.permission_grant_permissions),
+//						style = typography.titleMedium
+//					)
+//				}
+//			}
+//		}
 	}
 }
 

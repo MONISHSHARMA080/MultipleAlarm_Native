@@ -2,7 +2,6 @@ package com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components
 
 
 import android.view.HapticFeedbackConstants
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDp
@@ -11,7 +10,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,15 +18,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Alarm
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.shapes
@@ -53,6 +48,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data.ButtonState
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -62,16 +58,18 @@ private enum class ProblemPhase {
 	Crushing
 }
 
+
 @Composable
 fun ProblemScreen(
-	onComplete: () -> Unit
+	onComplete: () -> Unit,
+	onButtonStateChange: (ButtonState) -> Unit = {}
 ) {
 	val view = LocalView.current
 	var phase by remember { mutableStateOf(ProblemPhase.Building) }
 	var visibleAlarms by remember { mutableIntStateOf(0) }
 
 	val alarms = remember {
-		listOf("7:00", "7:10", "7:20", "7:30", "7:40")
+		listOf("7:00", "7:05", "7:10",  "7:15", "7:20",)
 	}
 
 	// Single source of truth for card sizing — everything else derives from these.
@@ -84,7 +82,7 @@ fun ProblemScreen(
 
 	LaunchedEffect(Unit) {
 		alarms.indices.forEach { index ->
-			delay(160.milliseconds)
+			delay(300.milliseconds)
 			visibleAlarms = index + 1
 			view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
 		}
@@ -144,54 +142,54 @@ fun ProblemScreen(
 			Spacer(modifier = Modifier.weight(1f))
 		}
 
-		Box(
-			modifier =
-				Modifier.fillMaxWidth()
-					.background(colorScheme.background)
-					.navigationBarsPadding()
-					.padding(26.dp)
-					.padding(bottom = 20.dp)
-					.animateContentSize(),
-			contentAlignment = Alignment.Center,
-		) {
-			Row(
-				modifier = Modifier.fillMaxWidth(),
-				horizontalArrangement = Arrangement.End,
-				verticalAlignment = Alignment.CenterVertically
-			) {
-				Button(
-					onClick = {
-						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-						when (phase) {
-							ProblemPhase.Crushing -> onComplete()
-							else -> {
-								phase = ProblemPhase.Crushing
-								view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-							}
-						}
-					},
-					enabled = phase != ProblemPhase.Building,
-					modifier = Modifier
-						.fillMaxWidth()
-						.height(56.dp),
-					shape = shapes.extraLarge,
-					colors = ButtonDefaults.buttonColors(
-						containerColor = colorScheme.primaryContainer,
-						contentColor = colorScheme.onPrimaryContainer
-					)
-				)
-				{
-					Text(
-						text = if (phase == ProblemPhase.Crushing) {
-							stringResource(R.string.onboarding_problem_btn_set)
-						} else {
-							stringResource(R.string.onboarding_problem_btn_fix)
-						},
-						style = typography.titleMedium
-					)
-				}
-			}
-		}
+//		Box(
+//			modifier =
+//				Modifier.fillMaxWidth()
+//					.background(colorScheme.background)
+//					.navigationBarsPadding()
+//					.padding(26.dp)
+//					.padding(bottom = 20.dp)
+//					.animateContentSize(),
+//			contentAlignment = Alignment.Center,
+//		) {
+//			Row(
+//				modifier = Modifier.fillMaxWidth(),
+//				horizontalArrangement = Arrangement.End,
+//				verticalAlignment = Alignment.CenterVertically
+//			) {
+//				Button(
+//					onClick = {
+//						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+//						when (phase) {
+//							ProblemPhase.Crushing -> onComplete()
+//							else -> {
+//								phase = ProblemPhase.Crushing
+//								view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+//							}
+//						}
+//					},
+//					enabled = phase != ProblemPhase.Building,
+//					modifier = Modifier
+//						.fillMaxWidth()
+//						.height(56.dp),
+//					shape = shapes.extraLarge,
+//					colors = ButtonDefaults.buttonColors(
+//						containerColor = colorScheme.primaryContainer,
+//						contentColor = colorScheme.onPrimaryContainer
+//					)
+//				)
+//				{
+//					Text(
+//						text = if (phase == ProblemPhase.Crushing) {
+//							stringResource(R.string.onboarding_problem_btn_set)
+//						} else {
+//							stringResource(R.string.onboarding_problem_btn_fix)
+//						},
+//						style = typography.titleMedium
+//					)
+//				}
+//			}
+//		}
 	}
 }
 

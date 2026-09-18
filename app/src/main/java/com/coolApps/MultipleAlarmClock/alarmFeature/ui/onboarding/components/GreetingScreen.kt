@@ -1,14 +1,11 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components
 
-import android.view.HapticFeedbackConstants
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.LinearEasing
+
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,18 +14,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
-import androidx.compose.material3.MaterialTheme.shapes
-import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,29 +25,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.coolApps.MultipleAlarmClock.R
 import androidx.compose.ui.unit.sp
+import com.coolApps.MultipleAlarmClock.R
 
-
-@Composable fun GreetingScreen(onClickNext:()->Unit) {
+@Composable fun GreetingScreen(
+	onClickNext:() -> Unit,
+//	onButtonStateChange: (ButtonState) -> Unit = {}
+) {
 
 	val view = LocalView.current
 
 	val infiniteTransition = rememberInfiniteTransition(
 		label = "wave_animation"
-	)
-
-	val rotation by infiniteTransition.animateFloat(
-		initialValue = -18f,
-		targetValue = 20f,
-		animationSpec = infiniteRepeatable(
-			animation = tween(durationMillis = 450, easing = LinearEasing),
-			repeatMode = RepeatMode.Reverse
-		),
-		label = "handRotation"
 	)
 
 	val handRotation by infiniteTransition.animateFloat(
@@ -115,41 +95,41 @@ import androidx.compose.ui.unit.sp
 			}
 		}
 
-		Box(
-			modifier =
-				Modifier.fillMaxWidth()
-					.background(colorScheme.background)
-					.navigationBarsPadding()
-					.padding(26.dp)
-					.padding(bottom = 20.dp)
-					.animateContentSize(),
-			contentAlignment = Alignment.Center,
-		) {
-			Row(
-				modifier = Modifier.fillMaxWidth(),
-				horizontalArrangement = Arrangement.End,
-				verticalAlignment = Alignment.CenterVertically
-			) {
-				Button(
-					onClick = {
-						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-						onClickNext()
-					},
-					modifier = Modifier
-						.fillMaxWidth()
-						.height(56.dp),
-					shape = shapes.extraLarge,
-					colors = ButtonDefaults.buttonColors(
-						containerColor = colorScheme.primaryContainer,
-						contentColor = colorScheme.onPrimaryContainer
-					)
-				) {
-					Text(
-						text = stringResource(R.string.onboarding_greeting_next),
-						style = typography.titleMedium
-					)
-				}
-			}
-		}
+//		Box(
+//			modifier =
+//				Modifier.fillMaxWidth()
+//					.background(colorScheme.background)
+//					.navigationBarsPadding()
+//					.padding(26.dp)
+//					.padding(bottom = 20.dp)
+//					.animateContentSize(),
+//			contentAlignment = Alignment.Center,
+//		) {
+//			Row(
+//				modifier = Modifier.fillMaxWidth(),
+//				horizontalArrangement = Arrangement.End,
+//				verticalAlignment = Alignment.CenterVertically
+//			) {
+//				Button(
+//					onClick = {
+//						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+//						onClickNext()
+//					},
+//					modifier = Modifier
+//						.fillMaxWidth()
+//						.height(56.dp),
+//					shape = shapes.extraLarge,
+//					colors = ButtonDefaults.buttonColors(
+//						containerColor = colorScheme.primaryContainer,
+//						contentColor = colorScheme.onPrimaryContainer
+//					)
+//				) {
+//					Text(
+//						text = stringResource(R.string.onboarding_greeting_next),
+//						style = typography.titleMedium
+//					)
+//				}
+//			}
+//		}
 	}
 }
