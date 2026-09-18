@@ -75,11 +75,8 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.dat
 	val randomPreviewing by vm.previewingRandom.collectAsStateWithLifecycle()
 	val selectedAlarmSound by vm.selectedAlarmSound.collectAsStateWithLifecycle()
 
-	// Track the temporarily selected sound (the one the user clicked on, but hasn't proceeded with yet)
-	var pendingSelectedSound by remember { mutableStateOf(selectedAlarmSound) }
-	// We also need to track if random was selected as pending, which means pendingSelectedSound is null, 
-	// but initially if selectedUri is null, then random is the pending one.
-	var isPendingRandom by remember { mutableStateOf(selectedUri == null) }
+	var soundToSelect by remember { mutableStateOf(selectedAlarmSound) }
+	var isSoundToSelectRandom by remember { mutableStateOf(selectedUri == null) }
 
 	Scaffold(
 		modifier = Modifier.padding(2.dp),
@@ -111,7 +108,7 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.dat
 				Button(
 					onClick = {
 						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-						onProceed(if (isPendingRandom) null else pendingSelectedSound)
+						onProceed(if (isSoundToSelectRandom) null else soundToSelect)
 					},
 					modifier = Modifier.fillMaxWidth()
 				) {
@@ -128,12 +125,12 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.dat
 			item {
 				SoundCard(
 					sound = null,
-					selected = isPendingRandom,
+					selected = selectedUri == null,
 					isPlaying = randomPreviewing,
 					onClick = {
 						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-						isPendingRandom = true
-						pendingSelectedSound = null
+						isSoundToSelectRandom = true
+						soundToSelect = null
 						vm.previewSound(null)
 					},
 					imageVector = Icons.Rounded.Shuffle
@@ -147,12 +144,12 @@ import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.dat
 			) { sound ->
 				SoundCard(
 					sound = sound,
-					selected = !isPendingRandom && pendingSelectedSound?.soundUri == sound.soundUri,
-					isPlaying = previewingUri == sound.soundUri,
+					selected = selectedUri == sound.soundUri,
+					isPlaying = previewingUri == sound.soundUri && !randomPreviewing,
 					onClick = {
 						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-						isPendingRandom = false
-						pendingSelectedSound = sound
+						isSoundToSelectRandom = false
+						soundToSelect = sound
 						vm.previewSound(sound)
 					}
 				)
@@ -169,11 +166,11 @@ private fun SoundCard(
 	onClick: () -> Unit,
 	imageVector: ImageVector = Icons.Rounded.Audiotrack
 ) {
-	val containerColor = if (selected)
+	val containerColor = if (isPlaying)
 		MaterialTheme.colorScheme.secondaryContainer
 	else
 		MaterialTheme.colorScheme.surfaceContainer
-	val contentColor = if (selected)
+	val contentColor = if (isPlaying)
 		MaterialTheme.colorScheme.onSecondaryContainer
 	else
 		MaterialTheme.colorScheme.onSurface
@@ -193,7 +190,7 @@ private fun SoundCard(
 			verticalAlignment = Alignment.CenterVertically
 		) {
 			Surface(
-				color = if (selected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surfaceContainerHighest,
+				color = if (isPlaying) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surfaceContainerHighest,
 				shape = CircleShape
 			) {
 				Box(
@@ -207,7 +204,7 @@ private fun SoundCard(
 					) { isPlaying ->
 						if (isPlaying) {
 							EqualizerBars(
-								color = MaterialTheme.colorScheme.onSecondary
+								color = androidx.compose.material3.LocalContentColor.current
 							)
 						} else {
 							Icon(
