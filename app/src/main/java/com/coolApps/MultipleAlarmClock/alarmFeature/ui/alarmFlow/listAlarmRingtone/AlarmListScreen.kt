@@ -234,18 +234,24 @@ private fun SoundCard(
 				) {
 					Crossfade(
 						targetState = isPlaying,
+						modifier = Modifier.fillMaxSize(),
 						animationSpec = tween(500, easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)),
 						label = "icon_swap"
-					) { isPlaying ->
-						if (isPlaying) {
-							EqualizerBars(
-								color = LocalContentColor.current
-							)
-						} else {
-							Icon(
-								imageVector = imageVector,
-								contentDescription = null,
-							)
+					) { isPlayingState ->
+						Box(
+							modifier = Modifier.fillMaxSize(),
+							contentAlignment = Alignment.Center
+						) {
+							if (isPlayingState) {
+								EqualizerBars(
+									color = LocalContentColor.current
+								)
+							} else {
+								Icon(
+									imageVector = imageVector,
+									contentDescription = null,
+								)
+							}
 						}
 					}
 				}
@@ -303,7 +309,7 @@ private fun EqualizerBars(modifier: Modifier = Modifier, color: Color) {
 		),
 	)
 	Row(
-		modifier = modifier.size(20.dp),
+		modifier = modifier.height(14.dp),
 		horizontalArrangement = Arrangement.spacedBy(2.5.dp),
 		verticalAlignment = Alignment.Bottom
 	) {
