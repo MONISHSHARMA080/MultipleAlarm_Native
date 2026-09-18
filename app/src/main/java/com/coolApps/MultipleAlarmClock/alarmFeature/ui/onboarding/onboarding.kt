@@ -9,7 +9,9 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -49,8 +51,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.R
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerViewModel
-import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.Progress
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.AlarmResultClaude
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.CreateFirstAlarmScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components.FirstAlarmIntroView
@@ -70,8 +70,6 @@ import com.revenuecat.purchases.awaitOfferings
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable fun OnboardingScreen() {
 	val viewModel : OnboardingViewModel = hiltViewModel()
-	val alarmPickerViewModel : AlarmPickerViewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory -> factory.create(null) }
-	val alarmPickerUiState by alarmPickerViewModel.uiState.collectAsStateWithLifecycle()
 
 	val uiState by viewModel.displayState.collectAsStateWithLifecycle()
 
@@ -99,12 +97,7 @@ import com.revenuecat.purchases.awaitOfferings
 		DisplaySate.Permission -> 3f / 7f
 		DisplaySate.FirstAlarmIntro -> 4f / 7f
 		DisplaySate.CreateFirstAlarm -> {
-			val subProgress = when (alarmPickerUiState.progress) {
-				Progress.StartTime -> 1f / 3f
-				Progress.EndTime -> 2f / 3f
-				Progress.FullEditor -> 3f / 3f
-			}
-			(4f / 7f) + (subProgress / 7f)
+			5/7f
 		}
 		DisplaySate.AlarmResult -> 6f / 7f
 		DisplaySate.OnboardingPaywall -> 7f / 7f
@@ -148,7 +141,8 @@ import com.revenuecat.purchases.awaitOfferings
 			if (buttonState != ButtonState.Hidden){
 				AnimatedVisibility(
 					visible = buttonState == ButtonState.Enabled,
-					enter = slideInVertically(initialOffsetY = { it }) + fadeIn()
+					enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+					exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
 				) {
 					Box(
 						modifier =
@@ -234,7 +228,6 @@ import com.revenuecat.purchases.awaitOfferings
 				}
 				DisplaySate.CreateFirstAlarm -> {
 					CreateFirstAlarmScreen(
-						alarmPickerViewModel = alarmPickerViewModel,
 						onAlarmSetProceed = { viewModel.onNextClicked() },
 						linearProgressBar = {
 							LinearProgressIndicator(
@@ -247,7 +240,6 @@ import com.revenuecat.purchases.awaitOfferings
 				}
 				DisplaySate.AlarmResult -> AlarmResultClaude(
 					alarmData = uiState.alarmData,
-					onNextClick = { viewModel.onNextClicked() },
 					onButtonStateChange = { buttonState = it }
 				)
 				DisplaySate.OnboardingPaywall -> {

@@ -13,6 +13,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerScreen
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.alarmFlow.alarmPicker.AlarmPickerViewModel
@@ -27,13 +28,13 @@ private enum class CreateFirstAlarmStep {
 
 @Composable
 fun CreateFirstAlarmScreen(
-		alarmPickerViewModel: AlarmPickerViewModel,
 		onAlarmSetProceed: () -> Unit,
 		modifier: Modifier = Modifier,
 		linearProgressBar: @Composable () -> Unit = {},
 		onButtonStateChange: (ButtonState) -> Unit = {}
 ) {
 	onButtonStateChange(ButtonState.Hidden)
+	val alarmPickerViewModel : AlarmPickerViewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory -> factory.create(null) }
 	var currentStep by remember { mutableStateOf(CreateFirstAlarmStep.Picker) }
 	val selected by alarmPickerViewModel.selectedAlarmSound.collectAsStateWithLifecycle()
 	val previewing by alarmPickerViewModel.previewingSound.collectAsStateWithLifecycle()

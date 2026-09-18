@@ -62,7 +62,7 @@ fun FirstAlarmIntroView(
 
 		// Let the user read it before introducing structure.
 		showSteps = true
-		delay(600.milliseconds)
+		delay(620.milliseconds)
 		showEditNote = true
 		onButtonStateChange(ButtonState.Enabled)
 	}

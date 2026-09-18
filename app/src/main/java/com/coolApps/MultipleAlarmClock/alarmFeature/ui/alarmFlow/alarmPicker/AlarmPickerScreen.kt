@@ -108,6 +108,7 @@ fun AlarmPickerScreen(
 	}
 	LaunchedEffect(uiState.alarmOperationCompletedGoBack) {
 		if (uiState.alarmOperationCompletedGoBack) {
+			viewModel.consumeAlarmOperationCompleted()
 			alarmSetProceed()
 		}
 	}

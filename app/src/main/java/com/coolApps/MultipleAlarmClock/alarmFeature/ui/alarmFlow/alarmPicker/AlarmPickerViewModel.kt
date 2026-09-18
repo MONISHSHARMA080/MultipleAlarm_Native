@@ -137,6 +137,11 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		}
 	}
 
+	fun consumeAlarmOperationCompleted() {
+		_uiState.update { it.copy(alarmOperationCompletedGoBack = false) }
+	}
+
+
 	fun previewSound(sound: AlarmSound?) {
 		val soundToPlay = sound ?: listOfAlarms.value.randomOrNull() ?: return
 		val sameItemTapped = (sound == null && _previewingRandom.value) || (sound != null && _previewingSound.value?.soundUri == sound.soundUri)

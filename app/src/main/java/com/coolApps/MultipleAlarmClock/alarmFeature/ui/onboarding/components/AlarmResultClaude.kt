@@ -88,7 +88,6 @@ private val TIMELINE_ROW_STAGGER_MS = 90.milliseconds
 
 @Composable fun AlarmResultClaude(
 	alarmData: AlarmData?,
-	onNextClick: () -> Unit,
 	onButtonStateChange: (ButtonState) -> Unit
 ) {
 	if (alarmData == null) {
@@ -102,7 +101,6 @@ private val TIMELINE_ROW_STAGGER_MS = 90.milliseconds
 		AlarmResultContent(
 			alarmData = alarmData,
 			onButtonStateChange ={onButtonStateChange(it)},
-			onNextClick = onNextClick
 		)
 	}
 }
@@ -111,7 +109,6 @@ private val TIMELINE_ROW_STAGGER_MS = 90.milliseconds
 private fun AlarmResultContent(
 	alarmData: AlarmData,
 	onButtonStateChange: (ButtonState) -> Unit,
-	onNextClick: () -> Unit
 ) {
 	onButtonStateChange(ButtonState.Hidden)
 	val zoneId = remember { ZoneId.systemDefault() }
