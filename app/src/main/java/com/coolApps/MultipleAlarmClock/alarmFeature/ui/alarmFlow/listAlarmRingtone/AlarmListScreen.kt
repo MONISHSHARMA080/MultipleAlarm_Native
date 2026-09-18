@@ -4,12 +4,18 @@ import android.net.Uri
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -166,14 +172,16 @@ private fun SoundCard(
 	onClick: () -> Unit,
 	imageVector: ImageVector = Icons.Rounded.Audiotrack
 ) {
-	val containerColor = if (isPlaying)
-		MaterialTheme.colorScheme.secondaryContainer
-	else
-		MaterialTheme.colorScheme.surfaceContainer
-	val contentColor = if (isPlaying)
-		MaterialTheme.colorScheme.onSecondaryContainer
-	else
-		MaterialTheme.colorScheme.onSurface
+	val containerColor by animateColorAsState(
+		targetValue = if (isPlaying) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer,
+		animationSpec = tween(500, easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)),
+		label = "containerColor"
+	)
+	val contentColor by animateColorAsState(
+		targetValue = if (isPlaying) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface,
+		animationSpec = tween(500, easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)),
+		label = "contentColor"
+	)
 
 	ElevatedCard(
 		onClick = onClick,
@@ -189,8 +197,13 @@ private fun SoundCard(
 				.padding(horizontal = 20.dp, vertical = 18.dp),
 			verticalAlignment = Alignment.CenterVertically
 		) {
+			val circleColor by animateColorAsState(
+				targetValue = if (isPlaying) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surfaceContainerHighest,
+				animationSpec = tween(500, easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)),
+				label = "circleColor"
+			)
 			Surface(
-				color = if (isPlaying) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surfaceContainerHighest,
+				color = circleColor,
 				shape = CircleShape
 			) {
 				Box(
@@ -199,7 +212,7 @@ private fun SoundCard(
 				) {
 					Crossfade(
 						targetState = isPlaying,
-						animationSpec = tween(200),
+						animationSpec = tween(500, easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)),
 						label = "icon_swap"
 					) { isPlaying ->
 						if (isPlaying) {
@@ -235,11 +248,14 @@ private fun SoundCard(
 				)
 			}
 
-			AnimatedVisibility(selected) {
+			AnimatedVisibility(
+				visible = selected,
+				enter = scaleIn(animationSpec = tween(400, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f))) + fadeIn(animationSpec = tween(400, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f))),
+				exit = scaleOut(animationSpec = tween(200, easing = CubicBezierEasing(0.3f, 0f, 0.8f, 0.15f))) + fadeOut(animationSpec = tween(200, easing = CubicBezierEasing(0.3f, 0f, 0.8f, 0.15f)))
+			) {
 				Icon(
 					imageVector = Icons.Rounded.Check,
-					contentDescription = null,
-					tint = MaterialTheme.colorScheme.secondary
+					contentDescription = null
 				)
 			}
 		}
