@@ -108,7 +108,7 @@ fun ProblemScreen(
 			delay(700.milliseconds)
 
 			showSubtitle = true
-			delay(950.milliseconds)
+			delay(780.milliseconds)
 
 			showAlarmSpace = true
 			delay(950.milliseconds)
