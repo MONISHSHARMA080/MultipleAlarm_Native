@@ -104,18 +104,16 @@
             android:exported="false" >
         </receiver>
 
+        
+
+        
+
+        
         <receiver
-            android:name="com.coolApps.MultipleAlarmClock.receiver.OfflinePushNotificationReceiver"
+            android:name="com.coolApps.MultipleAlarmClock.receiver.ScheduledNotificationReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.coolApps.MultipleAlarmClock.ACTION_SHOW_OFFLINE_NOTIFICATION" />
-            </intent-filter>
-        </receiver>
-
-        <receiver
-            android:name="com.coolApps.MultipleAlarmClock.receiver.TrialReminderReceiver"
-            android:exported="false">
-            <intent-filter>
                 <action android:name="com.coolApps.MultipleAlarmClock.ACTION_TRIAL_REMINDER" />
             </intent-filter>
         </receiver>

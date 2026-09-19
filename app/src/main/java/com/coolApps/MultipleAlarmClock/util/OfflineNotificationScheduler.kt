@@ -1,5 +1,5 @@
 package com.coolApps.MultipleAlarmClock.util
-import com.coolApps.MultipleAlarmClock.receiver.OfflinePushNotificationReceiver
+import com.coolApps.MultipleAlarmClock.receiver.ScheduledNotificationReceiver
 
 import android.app.AlarmManager
 import android.app.PendingIntent
@@ -21,7 +21,7 @@ object OfflineNotificationScheduler {
 			triggerAtMillis: Long = slot.calculateNextTriggerTime(),
 	) {
 		val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
-		val intent = OfflinePushNotificationReceiver.createIntent(context, slot)
+		val intent = ScheduledNotificationReceiver.createOfflinePushIntent(context, slot)
 		val pendingIntent = PendingIntent.getBroadcast(
 			context,
 			OFFLINE_NOTIFICATION_REQUEST_CODE,
@@ -41,7 +41,7 @@ object OfflineNotificationScheduler {
 	 */
 	fun cancelScheduledNotification(context: Context) {
 		val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
-		val intent = OfflinePushNotificationReceiver.createIntent(context)
+		val intent = ScheduledNotificationReceiver.createOfflinePushIntent(context)
 		val pendingIntent = PendingIntent.getBroadcast(
 			context,
 			OFFLINE_NOTIFICATION_REQUEST_CODE,

@@ -1,6 +1,6 @@
 package com.coolApps.MultipleAlarmClock.util
 import com.coolApps.MultipleAlarmClock.presentation.logD
-import com.coolApps.MultipleAlarmClock.receiver.TrialReminderReceiver
+import com.coolApps.MultipleAlarmClock.receiver.ScheduledNotificationReceiver
 
 import android.app.AlarmManager
 import android.app.PendingIntent
@@ -67,8 +67,8 @@ object TrialReminderScheduler {
 	}
 
 	private fun buildPendingIntent(context: Context, extraFlags: Int): PendingIntent? {
-		val intent = Intent(context, TrialReminderReceiver::class.java).apply {
-			action = TrialReminderReceiver.ACTION_TRIAL_REMINDER
+		val intent = Intent(context, ScheduledNotificationReceiver::class.java).apply {
+			action = ScheduledNotificationReceiver.ACTION_TRIAL_REMINDER
 		}
 		return PendingIntent.getBroadcast(
 			context,

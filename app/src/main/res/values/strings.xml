@@ -200,7 +200,7 @@
     <string name="offline_notification_night_msg_2">Make sure your alarms are active</string>
 
     <!-- Trial Reminder -->
-    <string name="trial_reminder_title">Trial end reminder</string>
-    <string name="trial_reminder_message">Your trial will end in a day</string>
+    <string name="trial_reminder_title">Trial reminder</string>
+    <string name="trial_reminder_message">Your trial will end soon</string>
 
 </resources>

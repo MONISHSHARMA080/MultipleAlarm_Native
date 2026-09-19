@@ -135,7 +135,6 @@ class AlarmsController @Inject constructor(
 						is AlarmControllerErrorSet.ValidationFailed -> ResultCustom.Failure(errorClass = failureRes)
 						is AlarmControllerErrorSet.PendingIntentNotFound -> ResultCustom.Failure(errorClass = failureRes)
 						is AlarmControllerErrorSet.PendingIntentAlreadyExist -> ResultCustom.Failure(errorClass = failureRes)
-						else -> ResultCustom.Failure(errorClass = AlarmControllerErrorSet.Unknown())
 					}
 				}
 			)
@@ -167,7 +166,6 @@ class AlarmsController @Inject constructor(
 						is AlarmControllerErrorSet.Unknown -> ResultCustom.Failure(errorClass = failureRes)
 						is AlarmControllerErrorSet.CancellingAlarmError -> ResultCustom.Failure(errorClass = failureRes)
 						is AlarmControllerErrorSet.ValidationFailed -> ResultCustom.Failure(errorClass = failureRes)
-						else -> ResultCustom.Failure(errorClass = AlarmControllerErrorSet.Unknown())
 					}
 				}
 			)
@@ -201,7 +199,6 @@ class AlarmsController @Inject constructor(
 						is AlarmControllerErrorSet.Unknown -> ResultCustom.Failure(errorClass = failureRes)
 						is AlarmControllerErrorSet.CancellingAlarmError -> ResultCustom.Failure(errorClass = failureRes)
 						is AlarmControllerErrorSet.ValidationFailed -> ResultCustom.Failure(errorClass = failureRes)
-						else -> ResultCustom.Failure(errorClass = AlarmControllerErrorSet.Unknown())
 					}
 				}
 			)
@@ -357,7 +354,6 @@ class AlarmsController @Inject constructor(
 						is AlarmControllerErrorSet.ValidationFailed -> ResultCustom.Failure(errorClass = failureRes)
 						is AlarmControllerErrorSet.PendingIntentNotFound -> ResultCustom.Failure(errorClass = failureRes)
 						is AlarmControllerErrorSet.PendingIntentAlreadyExist -> ResultCustom.Failure(errorClass = failureRes)
-						else -> ResultCustom.Failure(errorClass = AlarmControllerErrorSet.Unknown())
 					}
 				}
 			)
