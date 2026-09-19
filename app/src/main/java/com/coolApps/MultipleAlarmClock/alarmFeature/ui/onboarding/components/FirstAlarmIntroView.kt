@@ -60,10 +60,10 @@ fun FirstAlarmIntroView(
 		delay(700.milliseconds)
 
 		moveTitleToTop = true
-		delay(600.milliseconds)
+		delay(800.milliseconds)
 
 		showContent = true
-		delay(400.milliseconds)
+		delay(600.milliseconds)
 		onButtonStateChange(ButtonState.Enabled)
 	}
 
@@ -74,7 +74,7 @@ fun FirstAlarmIntroView(
 			dampingRatio = 0.8f,
 			stiffness = Spring.StiffnessLow
 		),
-		initialOffsetY = { 40 }
+		initialOffsetY = { 90 }
 	) + scaleIn(
 		initialScale = 0.95f,
 		animationSpec = spring(
@@ -85,7 +85,7 @@ fun FirstAlarmIntroView(
 
 	val contentAlpha by animateFloatAsState(
 		targetValue = if (showContent) 1f else 0f,
-		animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing),
+		animationSpec = tween(durationMillis = 700, easing = FastOutSlowInEasing),
 		label = "contentAlpha"
 	)
 
@@ -129,11 +129,14 @@ fun FirstAlarmIntroView(
 					Column(
 						modifier = Modifier
 							.fillMaxWidth()
+							.padding(horizontal = 24.dp)
 							.graphicsLayer { alpha = contentAlpha },
 						horizontalAlignment = Alignment.CenterHorizontally
 					) {
 						StepsContent()
 						EditNoteContent()
+
+						Spacer(modifier = Modifier.height(120.dp))
 					}
 				}
 			}
