@@ -1,7 +1,12 @@
 package com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.components
 
-
 import android.view.HapticFeedbackConstants
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDp
@@ -10,6 +15,13 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,6 +53,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
@@ -58,138 +71,184 @@ private enum class ProblemPhase {
 	Crushing
 }
 
-
 @Composable
 fun ProblemScreen(
-	onComplete: () -> Unit,
 	onButtonStateChange: (ButtonState) -> Unit = {}
 ) {
 	val view = LocalView.current
 	var phase by remember { mutableStateOf(ProblemPhase.Building) }
 	var visibleAlarms by remember { mutableIntStateOf(0) }
+	
+	var showAlarmSpace by remember { mutableStateOf(false) }
+	var showTitle by remember { mutableStateOf(false) }
+	var showSubtitle by remember { mutableStateOf(false) }
+	var showAnimation by remember { mutableStateOf(false) }
 
 	val alarms = remember {
 		listOf("7:00", "7:05", "7:10",  "7:15", "7:20",)
 	}
 
-	// Single source of truth for card sizing — everything else derives from these.
 	val cardHeight = 64.dp
 	val cardGap = 12.dp
 	val cardSpacing = cardHeight + cardGap
-	// Exact vertical room the stack needs, so the container never clips
-	// or forces overlap into the text below, regardless of alarm count.
 	val animationHeight = cardHeight + cardSpacing * (alarms.size - 1)
 
 	LaunchedEffect(Unit) {
+		onButtonStateChange(ButtonState.Disabled)
+
+		showTitle = true
+		delay(700.milliseconds)
+
+		showSubtitle = true
+		delay(950.milliseconds)
+
+		showAlarmSpace = true
+		delay(850.milliseconds)
+
+		showAnimation = true
+
 		alarms.indices.forEach { index ->
-			delay(300.milliseconds)
+			delay(250.milliseconds)
 			visibleAlarms = index + 1
 			view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
 		}
-		delay(400.milliseconds)
+		delay(450.milliseconds)
 		phase = ProblemPhase.ShowingProblem
+		
+		delay(500.milliseconds)
+
+		phase = ProblemPhase.Crushing
+		view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+
+		delay(500.milliseconds)
+
+		onButtonStateChange(ButtonState.Enabled)
 	}
+
+	val enterReveal = fadeIn(
+		animationSpec = tween(700, easing = FastOutSlowInEasing)
+	) + slideInVertically(
+		animationSpec = spring(
+			dampingRatio = 0.8f,
+			stiffness = Spring.StiffnessLow
+		),
+		initialOffsetY = { 40 }
+	) + scaleIn(
+		initialScale = 0.95f,
+		animationSpec = spring(
+			dampingRatio = 0.8f,
+			stiffness = Spring.StiffnessLow
+		)
+	)
+
+	val textChangeTransition: AnimatedContentTransitionScope<Boolean>.() -> androidx.compose.animation.ContentTransform = {
+		(fadeIn(animationSpec = tween(400)) + slideInVertically(
+			animationSpec = spring(
+				dampingRatio = 0.85f,
+				stiffness = Spring.StiffnessLow
+			),
+			initialOffsetY = { -30 }
+		)).togetherWith(
+			fadeOut(animationSpec = tween(400)) + slideOutVertically(
+				animationSpec = spring(
+					dampingRatio = 0.85f,
+					stiffness = Spring.StiffnessLow
+				),
+				targetOffsetY = { 30 }
+			)
+		)
+	}
+	
 	Column(
 		modifier = Modifier.fillMaxSize(),
 		horizontalAlignment = Alignment.CenterHorizontally
 	) {
-		Column(
+		Box(
 			modifier = Modifier
 				.fillMaxWidth()
 				.weight(1f),
-			horizontalAlignment = Alignment.CenterHorizontally
+			contentAlignment = Alignment.Center
 		) {
-			Spacer(modifier = Modifier.weight(0.8f))
-
-			ProblemAnimation(
-				phase = phase,
-				alarms = alarms,
-				visibleAlarms = visibleAlarms,
-				cardHeight = cardHeight,
-				cardSpacing = cardSpacing,
+			Column(
 				modifier = Modifier
 					.fillMaxWidth()
-					.height(animationHeight)
-			)
+					.animateContentSize(
+						animationSpec = tween(
+							durationMillis = 450,
+							easing = FastOutSlowInEasing
+						),
+						alignment = Alignment.BottomCenter
+					),
+				horizontalAlignment = Alignment.CenterHorizontally
+			) {
+				AnimatedVisibility(
+					visible = showAlarmSpace,
+					enter = expandVertically(
+						animationSpec = tween(
+							durationMillis = 450,
+							easing = FastOutSlowInEasing
+						),
+						expandFrom = Alignment.Top
+					)
+				) {
+					Column(
+						modifier = Modifier
+							.fillMaxWidth()
+							.height(animationHeight + 34.dp),
+						horizontalAlignment = Alignment.CenterHorizontally,
+						verticalArrangement = Arrangement.Center
+					) {
+						AnimatedVisibility(
+							visible = showAnimation,
+							enter = enterReveal
+						) {
+							Column(horizontalAlignment = Alignment.CenterHorizontally) {
+								ProblemAnimation(
+									phase = phase,
+									alarms = alarms,
+									visibleAlarms = visibleAlarms,
+									cardHeight = cardHeight,
+									cardSpacing = cardSpacing,
+									modifier = Modifier
+										.fillMaxWidth()
+										.height(animationHeight)
+								)
+								Spacer(modifier = Modifier.height(34.dp))
+							}
+						}
+					}
+				}
 
-			Spacer(modifier = Modifier.height(34.dp)) // was 52dp — animationHeight already sized correctly now
+				AnimatedVisibility(
+					visible = showTitle,
+					enter = enterReveal
+				) {
+					AnimatedContent(
+						targetState = phase == ProblemPhase.Crushing,
+						transitionSpec = textChangeTransition,
+						label = "title_transition"
+					) { isCrushing ->
+						Text(
+							text = if (isCrushing) {
+								stringResource(R.string.onboarding_problem_better_way_title)
+							} else {
+								stringResource(R.string.onboarding_problem_title)
+							},
+							style = typography.headlineLarge,
+							textAlign = TextAlign.Center,
+							color = colorScheme.onBackground
+						)
+					}
+				}
 
-			Text(
-				text = if (phase == ProblemPhase.Crushing) {
-					stringResource(R.string.onboarding_problem_better_way_title)
-				} else {
-					stringResource(R.string.onboarding_problem_title)
-				},
-				style = typography.headlineLarge,
-				textAlign = TextAlign.Center,
-				color = colorScheme.onBackground
-			)
-
-			Spacer(modifier = Modifier.height(10.dp))
-
-			Text(
-				text = if (phase == ProblemPhase.Crushing) {
-					stringResource(R.string.onboarding_problem_better_way_subtitle)
-				} else {
-					stringResource(R.string.onboarding_problem_subtitle)
-				},
-				style = typography.bodyMedium,
-				textAlign = TextAlign.Center,
-				color = colorScheme.onBackground.copy(alpha = 0.72f),
-				modifier = Modifier.fillMaxWidth(0.88f)
-			)
-
-			Spacer(modifier = Modifier.weight(1f))
+				SubtitleBlock(
+					showSubtitle = showSubtitle,
+					phase = phase,
+					enterReveal = enterReveal,
+					textChangeTransition = textChangeTransition
+				)
+			}
 		}
-
-//		Box(
-//			modifier =
-//				Modifier.fillMaxWidth()
-//					.background(colorScheme.background)
-//					.navigationBarsPadding()
-//					.padding(26.dp)
-//					.padding(bottom = 20.dp)
-//					.animateContentSize(),
-//			contentAlignment = Alignment.Center,
-//		) {
-//			Row(
-//				modifier = Modifier.fillMaxWidth(),
-//				horizontalArrangement = Arrangement.End,
-//				verticalAlignment = Alignment.CenterVertically
-//			) {
-//				Button(
-//					onClick = {
-//						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-//						when (phase) {
-//							ProblemPhase.Crushing -> onComplete()
-//							else -> {
-//								phase = ProblemPhase.Crushing
-//								view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-//							}
-//						}
-//					},
-//					enabled = phase != ProblemPhase.Building,
-//					modifier = Modifier
-//						.fillMaxWidth()
-//						.height(56.dp),
-//					shape = shapes.extraLarge,
-//					colors = ButtonDefaults.buttonColors(
-//						containerColor = colorScheme.primaryContainer,
-//						contentColor = colorScheme.onPrimaryContainer
-//					)
-//				)
-//				{
-//					Text(
-//						text = if (phase == ProblemPhase.Crushing) {
-//							stringResource(R.string.onboarding_problem_btn_set)
-//						} else {
-//							stringResource(R.string.onboarding_problem_btn_fix)
-//						},
-//						style = typography.titleMedium
-//					)
-//				}
-//			}
-//		}
 	}
 }
 
@@ -210,8 +269,8 @@ private fun ProblemAnimation(
 	val crushProgress by transition.animateFloat(
 		transitionSpec = {
 			spring(
-				dampingRatio = Spring.DampingRatioNoBouncy,
-				stiffness = Spring.StiffnessMediumLow
+				dampingRatio = 0.85f,
+				stiffness = Spring.StiffnessLow
 			)
 		},
 		label = "crush progress"
@@ -226,8 +285,8 @@ private fun ProblemAnimation(
 	val finalCardWidth by transition.animateDp(
 		transitionSpec = {
 			spring(
-				dampingRatio = Spring.DampingRatioNoBouncy,
-				stiffness = Spring.StiffnessMediumLow
+				dampingRatio = 0.85f,
+				stiffness = Spring.StiffnessLow
 			)
 		},
 		label = "final card width"
@@ -242,8 +301,8 @@ private fun ProblemAnimation(
 	val finalCardHeight by transition.animateDp(
 		transitionSpec = {
 			spring(
-				dampingRatio = Spring.DampingRatioNoBouncy,
-				stiffness = Spring.StiffnessMediumLow
+				dampingRatio = 0.85f,
+				stiffness = Spring.StiffnessLow
 			)
 		},
 		label = "final card height"
@@ -258,7 +317,7 @@ private fun ProblemAnimation(
 	val finalCardAlpha by transition.animateFloat(
 		transitionSpec = {
 			tween(
-				durationMillis = 450,
+				durationMillis = 600,
 				easing = FastOutSlowInEasing
 			)
 		},
@@ -310,15 +369,15 @@ private fun CrushingAlarm(
 
 	val entrance by animateFloatAsState(
 		targetValue = if (visible) 1f else 0f,
-		animationSpec = spring(
-			dampingRatio = Spring.DampingRatioMediumBouncy,
-			stiffness = Spring.StiffnessLow
+		animationSpec = tween(
+			durationMillis = 500,
+			easing = FastOutSlowInEasing
 		),
 		label = "entrance"
 	)
 
 	val restingY = normalDistance * (1f - crushProgress)
-	val enterOffsetY = (1f - entrance) * 90f
+	val enterOffsetY = (1f - entrance) * -90f
 	val y = restingY + enterOffsetY
 
 	val height = cardHeight.value * (1f - crushProgress)
@@ -434,6 +493,64 @@ private fun CrushingAlarm(
 				)
 			)
 
+		}
+	}
+}
+
+@Composable
+private fun SubtitleBlock(
+		showSubtitle: Boolean,
+		phase: ProblemPhase,
+		enterReveal: EnterTransition,
+		textChangeTransition: AnimatedContentTransitionScope<Boolean>.() -> ContentTransform
+) {
+	Box(contentAlignment = Alignment.TopCenter) {
+		Box(modifier = Modifier.alpha(0f)) {
+			Column(horizontalAlignment = Alignment.CenterHorizontally) {
+				Spacer(modifier = Modifier.height(10.dp))
+				Text(
+					text = stringResource(R.string.onboarding_problem_subtitle),
+					style = typography.bodyMedium,
+					modifier = Modifier.fillMaxWidth(0.88f)
+				)
+			}
+			Column(horizontalAlignment = Alignment.CenterHorizontally) {
+				Spacer(modifier = Modifier.height(10.dp))
+				Text(
+					text = stringResource(R.string.onboarding_problem_better_way_subtitle),
+					style = typography.bodyMedium,
+					modifier = Modifier.fillMaxWidth(0.88f)
+				)
+			}
+		}
+		AnimatedVisibility(
+			visible = showSubtitle,
+			enter = enterReveal
+		) {
+			Column(horizontalAlignment = Alignment.CenterHorizontally) {
+				AnimatedVisibility(
+					visible = phase != ProblemPhase.Crushing
+				) {
+					Spacer(modifier = Modifier.height(10.dp))
+				}
+				AnimatedContent(
+					targetState = phase == ProblemPhase.Crushing,
+					transitionSpec = textChangeTransition,
+					label = "subtitle_transition"
+				) { isCrushing ->
+					Text(
+						text = if (isCrushing) {
+							stringResource(R.string.onboarding_problem_better_way_subtitle)
+						} else {
+							stringResource(R.string.onboarding_problem_subtitle)
+						},
+						style = typography.bodyMedium,
+						textAlign = TextAlign.Center,
+						color = colorScheme.onBackground.copy(alpha = 0.72f),
+						modifier = Modifier.fillMaxWidth(0.88f)
+					)
+				}
+			}
 		}
 	}
 }

@@ -138,47 +138,45 @@ import com.revenuecat.purchases.awaitOfferings
 			}
 		},
 		bottomBar = {
-			if (buttonState != ButtonState.Hidden){
-				AnimatedVisibility(
-					visible = buttonState == ButtonState.Enabled,
-					enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-					exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+			AnimatedVisibility(
+				visible = buttonState != ButtonState.Hidden,
+				enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+				exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+			) {
+				Box(
+					modifier =
+						Modifier.fillMaxWidth()
+							.background(colorScheme.background)
+							.navigationBarsPadding()
+							.padding(26.dp)
+							.padding(bottom = 20.dp)
+							.animateContentSize(),
+					contentAlignment = Alignment.Center,
 				) {
-					Box(
-						modifier =
-							Modifier.fillMaxWidth()
-								.background(colorScheme.background)
-								.navigationBarsPadding()
-								.padding(26.dp)
-								.padding(bottom = 20.dp)
-								.animateContentSize(),
-						contentAlignment = Alignment.Center,
+					Row(
+						modifier = Modifier.fillMaxWidth(),
+						horizontalArrangement = Arrangement.End,
+						verticalAlignment = Alignment.CenterVertically
 					) {
-						Row(
-							modifier = Modifier.fillMaxWidth(),
-							horizontalArrangement = Arrangement.End,
-							verticalAlignment = Alignment.CenterVertically
+						Button(
+							onClick = {
+								view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+								viewModel.onNextClicked()
+							},
+							enabled = buttonState == ButtonState.Enabled ,
+							modifier = Modifier
+								.fillMaxWidth()
+								.height(56.dp),
+							shape = shapes.extraLarge,
+							colors = ButtonDefaults.buttonColors(
+								containerColor = colorScheme.primaryContainer,
+								contentColor = colorScheme.onPrimaryContainer
+							)
 						) {
-							Button(
-								onClick = {
-									view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-									viewModel.onNextClicked()
-								},
-								enabled = buttonState == ButtonState.Enabled ,
-								modifier = Modifier
-									.fillMaxWidth()
-									.height(56.dp),
-								shape = shapes.extraLarge,
-								colors = ButtonDefaults.buttonColors(
-									containerColor = colorScheme.primaryContainer,
-									contentColor = colorScheme.onPrimaryContainer
-								)
-							) {
-								Text(
-									text = stringResource(R.string.permission_continue),
-									style = typography.titleMedium
-								)
-							}
+							Text(
+								text = stringResource(R.string.permission_continue),
+								style = typography.titleMedium
+							)
 						}
 					}
 				}
@@ -193,7 +191,6 @@ import com.revenuecat.purchases.awaitOfferings
 			transitionSpec = {
 				// Use natural enum ordering to determine navigation direction
 				val isForward = targetState > initialState
-
 				slideIntoContainer(
 					towards = if (isForward) AnimatedContentTransitionScope.SlideDirection.Left else AnimatedContentTransitionScope.SlideDirection.Right,
 					animationSpec = tween(370, easing = FastOutSlowInEasing)
@@ -204,19 +201,15 @@ import com.revenuecat.purchases.awaitOfferings
 			},
 		) { state ->
 			when (state) {
-				DisplaySate.Greeting -> GreetingScreen(
-					onClickNext = { viewModel.onNextClicked() },
-				)
+				DisplaySate.Greeting -> GreetingScreen()
 				// here make this into one uniform animation and no click etc. and then loop
 				DisplaySate.Problem -> ProblemScreen(
-					onComplete = { viewModel.onNextClicked() },
 					onButtonStateChange = { buttonState = it }
 				)
 				DisplaySate.Permission -> {
 					PermissionScreen(
 						missingSteps = uiState.missingSteps,
 						allCriticalGranted = uiState.allCriticalGranted,
-						onNext = { viewModel.onNextClicked() },
 						refreshPermissionUiState = { viewModel.refreshPermissions() },
 						onButtonStateChange = { buttonState = it }
 					)

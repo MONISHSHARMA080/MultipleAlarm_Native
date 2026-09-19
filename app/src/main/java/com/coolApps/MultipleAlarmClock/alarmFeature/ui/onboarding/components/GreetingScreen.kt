@@ -32,8 +32,6 @@ import androidx.compose.ui.unit.sp
 import com.coolApps.MultipleAlarmClock.R
 
 @Composable fun GreetingScreen(
-	onClickNext:() -> Unit,
-//	onButtonStateChange: (ButtonState) -> Unit = {}
 ) {
 
 	val view = LocalView.current

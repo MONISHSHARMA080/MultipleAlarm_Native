@@ -80,7 +80,6 @@ import com.google.accompanist.permissions.shouldShowRationale
 fun PermissionScreen(
     missingSteps: List<PermissionStep>,
     refreshPermissionUiState: () -> Unit,
-    onNext: () -> Unit,
     allCriticalGranted: Boolean,
     onButtonStateChange: (ButtonState) -> Unit = {}
 ) {
@@ -194,7 +193,6 @@ fun PermissionScreen(
 				modifier = Modifier.graphicsLayer {
 					translationY = floatingOffsetY.toPx()
 				},
-				label = "permission_icon_transition"
 			) { granted ->
 
 				Icon(

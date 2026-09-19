@@ -9,3 +9,4 @@
   4) Coroutines and flows
   5) Dependency injection best practices 
 - don't go exploring the files that are not needed, try to stick to files mentioned or implicitly mentioned, exploring other files that you know we don't need wasted token and bloat context
+- Use your native code editing commands and not shell hacks(like cat, sed, etc use your own read and edit/write etc)
