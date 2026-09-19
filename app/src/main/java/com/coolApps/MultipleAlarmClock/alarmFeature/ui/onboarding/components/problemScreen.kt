@@ -64,6 +64,7 @@ import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.alarmFeature.ui.onboarding.data.ButtonState
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 private enum class ProblemPhase {
 	Building,
@@ -94,35 +95,56 @@ fun ProblemScreen(
 	val animationHeight = cardHeight + cardSpacing * (alarms.size - 1)
 
 	LaunchedEffect(Unit) {
-		onButtonStateChange(ButtonState.Disabled)
+		var isFirstRun = true
+		while (true) {
+			if (isFirstRun) {
+				onButtonStateChange(ButtonState.Disabled)
+			}
 
-		showTitle = true
-		delay(700.milliseconds)
+			phase = ProblemPhase.Building
+			visibleAlarms = 0
 
-		showSubtitle = true
-		delay(950.milliseconds)
+			showTitle = true
+			delay(700.milliseconds)
 
-		showAlarmSpace = true
-		delay(850.milliseconds)
+			showSubtitle = true
+			delay(950.milliseconds)
 
-		showAnimation = true
+			showAlarmSpace = true
+			delay(950.milliseconds)
 
-		alarms.indices.forEach { index ->
-			delay(250.milliseconds)
-			visibleAlarms = index + 1
-			view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+			showAnimation = true
+
+			alarms.indices.forEach { index ->
+				delay(250.milliseconds)
+				visibleAlarms = index + 1
+				view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+			}
+			delay(450.milliseconds)
+			phase = ProblemPhase.ShowingProblem
+			
+			delay(800.milliseconds)
+
+			phase = ProblemPhase.Crushing
+			view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+
+			delay(500.milliseconds)
+
+			if (isFirstRun) {
+				onButtonStateChange(ButtonState.Enabled)
+				isFirstRun = false
+			}
+
+			// repat it
+			delay(2.5.seconds)
+
+			showTitle = false
+			showSubtitle = false
+			showAlarmSpace = false
+			showAnimation = false
+
+			delay(600.milliseconds)
 		}
-		delay(450.milliseconds)
-		phase = ProblemPhase.ShowingProblem
-		
-		delay(500.milliseconds)
-
-		phase = ProblemPhase.Crushing
-		view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-
-		delay(500.milliseconds)
-
-		onButtonStateChange(ButtonState.Enabled)
 	}
 
 	val enterReveal = fadeIn(
@@ -141,7 +163,7 @@ fun ProblemScreen(
 		)
 	)
 
-	val textChangeTransition: AnimatedContentTransitionScope<Boolean>.() -> androidx.compose.animation.ContentTransform = {
+	val textChangeTransition: AnimatedContentTransitionScope<Boolean>.() -> ContentTransform = {
 		(fadeIn(animationSpec = tween(400)) + slideInVertically(
 			animationSpec = spring(
 				dampingRatio = 0.85f,
@@ -202,7 +224,9 @@ fun ProblemScreen(
 							visible = showAnimation,
 							enter = enterReveal
 						) {
-							Column(horizontalAlignment = Alignment.CenterHorizontally) {
+							Column(
+								horizontalAlignment = Alignment.CenterHorizontally,
+							) {
 								ProblemAnimation(
 									phase = phase,
 									alarms = alarms,
