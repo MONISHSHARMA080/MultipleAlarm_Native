@@ -1,0 +1,76 @@
+package com.coolApps.MultipleAlarmClock.data.background
+
+
+import android.content.Context
+import androidx.hilt.work.HiltWorker
+import androidx.work.CoroutineWorker
+import androidx.work.WorkerParameters
+import com.coolApps.MultipleAlarmClock.data.local.AlarmDao
+import com.coolApps.MultipleAlarmClock.util.Analytics
+import com.coolApps.MultipleAlarmClock.util.OfflineNotificationScheduler
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+
+
+@HiltWorker
+class EngagementWorker @AssistedInject constructor(
+		@Assisted appContext: Context,
+		@Assisted workerParams: WorkerParameters,
+		private val alarmDao: AlarmDao,
+		private val analytics: Analytics,
+) : CoroutineWorker(appContext, workerParams) {
+
+	override suspend fun doWork(): Result {
+
+		val now = System.currentTimeMillis()
+		val config = analytics.getEngagementConfig()
+
+		if (!config.enabled) {
+//			scheduleNextCheck(now + config.checkIntervalHours.hoursToMillis)
+			return Result.success()
+		}
+
+		// we want to schedule the alarm if
+		// a) not alarm in future
+		// b) the last alarm in past is some time back
+
+		val nextAlarm = alarmDao.getNextUpcomingAlarm(now)
+		if (nextAlarm != null) {
+			return Result.success()
+		}
+
+		val lastAlarmEnd = alarmDao.getLastCompletedAlarmTime(now) ?: run {
+			return Result.success()
+		}
+
+		val eligibleAt = lastAlarmEnd + config.inactiveDays.daysToMillis
+
+		if (now < eligibleAt) {
+			return Result.success()
+		}
+
+		// send notification
+		OfflineNotificationScheduler.scheduleNotification(
+			context = applicationContext, slot = config.notificationTimeSlot
+		)
+
+		// should also comment it out as of no use I want to measure when the notification is received
+		analytics.captureEvent(
+			"engagement_notification_scheduled",
+			mapOf(
+				"inactive_days" to config.inactiveDays,
+				"notificaton_time_slot" to config.notificationTimeSlot
+			)
+		)
+
+		return Result.success()
+	}
+}
+
+private val Long.hoursToMillis: Long
+	get() = this.hours.inWholeMilliseconds
+
+private val Long.daysToMillis: Long
+	get() = this.days.inWholeMilliseconds

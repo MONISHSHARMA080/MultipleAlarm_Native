@@ -48,13 +48,13 @@
         </provider>
 
         <service
-            android:name="com.coolApps.MultipleAlarmClock.services.AlarmService"
+            android:name="com.coolApps.MultipleAlarmClock.receiver.AlarmService"
             android:foregroundServiceType="mediaPlayback"
             android:exported="false">
         </service>
 
         <activity
-            android:name="com.coolApps.MultipleAlarmClock.MainActivity"
+            android:name="com.coolApps.MultipleAlarmClock.presentation.MainActivity"
             android:theme="@style/Theme.App.Starting"
             android:launchMode="standard"
             android:windowSoftInputMode="adjustResize"
@@ -73,7 +73,7 @@
         </activity>
 
         <receiver
-            android:name="com.coolApps.MultipleAlarmClock.BroadCastReceivers.BootReceiver"
+            android:name="com.coolApps.MultipleAlarmClock.receiver.BootReceiver"
             android:enabled="true"
             android:exported="false"
             android:directBootAware="false">
@@ -84,7 +84,7 @@
         </receiver>
 
         <activity
-            android:name="com.coolApps.MultipleAlarmClock.alarmFeature.activities.AlarmActivity"
+            android:name="com.coolApps.MultipleAlarmClock.presentation.trigger.AlarmActivity"
             android:launchMode="singleInstance"
             android:theme="@style/Theme.Trying_native.Fullscreen"
             android:showOnLockScreen="true"
@@ -92,25 +92,20 @@
             android:excludeFromRecents="true"
             android:exported="true" />
 
-        <receiver android:name="com.coolApps.MultipleAlarmClock.alarmFeature.receiver.LastAlarmUpdateDBReceiver"
-            android:exported="false" />
+        
         <receiver
-            android:name="com.coolApps.MultipleAlarmClock.alarmFeature.receiver.AlarmReceiver"
+            android:name="com.coolApps.MultipleAlarmClock.receiver.AlarmReceiver"
             android:exported="false" >
-            <intent-filter>
-                <action android:name="4.65
-
-" />
-            </intent-filter>
+            
         </receiver>
 
         <receiver
-            android:name="com.coolApps.MultipleAlarmClock.alarmFeature.receiver.AlarmInfoNotification"
+            android:name="com.coolApps.MultipleAlarmClock.receiver.AlarmInfoNotification"
             android:exported="false" >
         </receiver>
 
         <receiver
-            android:name="com.coolApps.MultipleAlarmClock.notification.offline.OfflinePushNotificationReceiver"
+            android:name="com.coolApps.MultipleAlarmClock.receiver.OfflinePushNotificationReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.coolApps.MultipleAlarmClock.ACTION_SHOW_OFFLINE_NOTIFICATION" />
@@ -118,7 +113,7 @@
         </receiver>
 
         <receiver
-            android:name="com.coolApps.MultipleAlarmClock.notification.trial.TrialReminderReceiver"
+            android:name="com.coolApps.MultipleAlarmClock.receiver.TrialReminderReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.coolApps.MultipleAlarmClock.ACTION_TRIAL_REMINDER" />
@@ -136,7 +131,7 @@
             android:resource="@color/notification_accent" />
 
         <service
-            android:name=".services.FirebaseMessagingService"
+            android:name=".receiver.FirebaseMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

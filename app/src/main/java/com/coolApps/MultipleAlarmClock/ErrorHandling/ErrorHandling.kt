@@ -1,12 +1,13 @@
 package com.coolApps.MultipleAlarmClock.ErrorHandling
+import com.coolApps.MultipleAlarmClock.domain.model.toDebugString
+import com.coolApps.MultipleAlarmClock.presentation.util.getDetailedDebugString
 
 import android.util.Log
-import com.coolApps.MultipleAlarmClock.AlarmLogic.AlarmControllerError
-import com.coolApps.MultipleAlarmClock.AlarmLogic.toDebugString
-import com.coolApps.MultipleAlarmClock.analytics.Analytics
-import com.coolApps.MultipleAlarmClock.notification.NotificationChannelType
-import com.coolApps.MultipleAlarmClock.notification.NotificationHandler
-import com.coolApps.MultipleAlarmClock.utils.Result.Result
+import com.coolApps.MultipleAlarmClock.domain.model.AlarmControllerError
+import com.coolApps.MultipleAlarmClock.util.Analytics
+import com.coolApps.MultipleAlarmClock.util.NotificationChannelType
+import com.coolApps.MultipleAlarmClock.util.NotificationHandler
+import com.coolApps.MultipleAlarmClock.util.Result
 import jakarta.inject.Inject
 
 
@@ -23,7 +24,7 @@ class ErrorHandler @Inject constructor(val notificationHandler: NotificationHand
 			displayMessage = resolvedMessage,
 			displayTitle = resolvedTitle,
 			internalErrorMessage = internalErrorMessage,
-			errorClassName = error.errorClass.toDebugString(notificationHandler.context)
+			errorClassName = error.errorClass.getDetailedDebugString(notificationHandler.context)
 		)
 	}
 	fun  handleError(displayMessage:String, displayTitle:String, internalErrorMessage: String, errorClassName:String ): Unit {

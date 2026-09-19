@@ -1,0 +1,22 @@
+package com.coolApps.MultipleAlarmClock.util
+
+import com.coolApps.MultipleAlarmClock.util.OfflineNotificationTimeSlot
+
+data class FeatureFlagsData(
+		val minDaysSinceInstall: Int = 7,
+		val minAlarmsCreated: Int = 3,
+		val cooldownDays: Int = 8,
+		val inAppReviewEnabled: Boolean = true,
+)
+
+data class EngagementConfig(
+		val enabled: Boolean,
+		val inactiveDays: Long,
+//		val cooldownDays: Long,
+		val checkIntervalHours: Long,
+		val notificationTimeSlot: OfflineNotificationTimeSlot
+) {
+	override fun toString(): String {
+		return "EngagementConfig(enabled=$enabled, inactiveDays=$inactiveDays, checkIntervalHours=$checkIntervalHours, notificationTimeSlot=$notificationTimeSlot)"
+	}
+}
