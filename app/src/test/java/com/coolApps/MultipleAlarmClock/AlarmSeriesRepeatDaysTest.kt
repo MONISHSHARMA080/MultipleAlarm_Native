@@ -21,9 +21,6 @@ import dagger.hilt.android.testing.HiltTestApplication
 import dagger.hilt.android.testing.UninstallModules
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -84,7 +81,7 @@ class AlarmSeriesRepeatDaysTest {
 	}
 
 	private fun generateRandomRepeatDays(): RepeatDays {
-		val allDays = DayOfWeek.values().toList()
+		val allDays = DayOfWeek.entries
 		val randomDaysCount = Random.nextInt(1, 8)
 		val randomDays = allDays.shuffled().take(randomDaysCount).toSet()
 		return RepeatDays.of(randomDays)!!
@@ -188,14 +185,15 @@ class AlarmSeriesRepeatDaysTest {
 		
 		val startTime = startCal.timeInMillis
 		val endTime = startTime + Duration.ofHours(3).toMillis() // 8:00 PM
-		val frequency = Duration.ofMinutes(30).toMillis()
+		val freqInMin = Random.nextLong(15, 61)
+		val frequency = Duration.ofMinutes(freqInMin).toMillis()
 
 		val alarm = AlarmData(
 			startTime = startTime,
 			endTime = endTime,
 			message = "test alarm repeat days",
 			isReadyToUse = false,
-			frequencyInMin = 30,
+			frequencyInMin = freqInMin,
 			repeatDays = repeatDays,
 			sound = null
 		)
@@ -217,7 +215,7 @@ class AlarmSeriesRepeatDaysTest {
 		assertThat(storedAlarm.isReadyToUse).isTrue()
 		assertThat(storedAlarm.startTime).isEqualTo(startTime)
 		assertThat(storedAlarm.endTime).isEqualTo(endTime)
-		assertThat(storedAlarm.frequencyInMin).isEqualTo(30)
+		assertThat(storedAlarm.frequencyInMin).isEqualTo(freqInMin)
 
 		val startDate = LocalDate.of(startCal.get(Calendar.YEAR), startCal.get(Calendar.MONTH) + 1, startCal.get(Calendar.DAY_OF_MONTH))
 		verifyAlarmsWithNestedLoops(expectedAlarmList, startDate, repeatDays, testWeeks)
@@ -230,7 +228,7 @@ class AlarmSeriesRepeatDaysTest {
 
 		val startTime = startCal.timeInMillis
 		val endTime = startTime + Duration.ofHours(3).toMillis() // 8:00 AM
-		val freqInMin = 30L
+		val freqInMin = Random.nextLong(15, 61)
 		val frequency = Duration.ofMinutes(freqInMin).toMillis()
 		
 		val alarm = AlarmData(
@@ -276,11 +274,12 @@ class AlarmSeriesRepeatDaysTest {
 
 		val startTime = startCal.timeInMillis
 		val endTime = startTime + Duration.ofHours(8).toMillis()
-		val frequency = Duration.ofMinutes(30).toMillis()
+		val freqInMin = Random.nextLong(15, 61)
+		val frequency = Duration.ofMinutes(freqInMin).toMillis()
 		
 		val alarm = AlarmData(
 			startTime = startTime, endTime = endTime, message = "test before start",
-			isReadyToUse = false, frequencyInMin = 30, repeatDays = repeatDays, sound = null
+			isReadyToUse = false, frequencyInMin = freqInMin, repeatDays = repeatDays, sound = null
 		)
 		val alarmId = fakeAlarmRepository.saveAlarm(alarm).toInt()
 		val savedAlarm = alarm.copy(id = alarmId)
@@ -305,11 +304,12 @@ class AlarmSeriesRepeatDaysTest {
 
 		val startTime = startCal.timeInMillis
 		val endTime = startTime + Duration.ofHours(8).toMillis()
-		val frequency = Duration.ofMinutes(30).toMillis()
+		val freqInMin = Random.nextLong(15, 61)
+		val frequency = Duration.ofMinutes(freqInMin).toMillis()
 		
 		val alarm = AlarmData(
 			startTime = startTime, endTime = endTime, message = "test in middle",
-			isReadyToUse = false, frequencyInMin = 30, repeatDays = repeatDays, sound = null
+			isReadyToUse = false, frequencyInMin = freqInMin, repeatDays = repeatDays, sound = null
 		)
 		val alarmId = fakeAlarmRepository.saveAlarm(alarm).toInt()
 		val savedAlarm = alarm.copy(id = alarmId)
@@ -337,11 +337,12 @@ class AlarmSeriesRepeatDaysTest {
 
 		val startTime = startCal.timeInMillis
 		val endTime = startTime + Duration.ofHours(8).toMillis()
-		val frequency = Duration.ofMinutes(30).toMillis()
+		val freqInMin = Random.nextLong(15, 61)
+		val frequency = Duration.ofMinutes(freqInMin).toMillis()
 
 		val alarm = AlarmData(
 			startTime = startTime, endTime = endTime, message = "test past end",
-			isReadyToUse = false, frequencyInMin = 30, repeatDays = repeatDays, sound = null
+			isReadyToUse = false, frequencyInMin = freqInMin, repeatDays = repeatDays, sound = null
 		)
 		val alarmId = fakeAlarmRepository.saveAlarm(alarm).toInt()
 		val savedAlarm = alarm.copy(id = alarmId)
