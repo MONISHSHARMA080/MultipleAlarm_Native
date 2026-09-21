@@ -7,7 +7,7 @@ import androidx.annotation.IntRange
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -101,7 +101,7 @@ fun LinearProgressForNewAlarm(modifier: Modifier = Modifier, progress: Progress)
 	// Add the Material 3 animation spec here to make it glide smoothly
 	val progressFraction by animateFloatAsState(
 		targetValue = step / total.toFloat(),
-		animationSpec = tween(durationMillis = 190, easing = FastOutSlowInEasing),
+		animationSpec = spring(),
 		label = "progress_animation"
 	)
 

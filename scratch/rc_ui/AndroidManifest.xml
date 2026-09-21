@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.revenuecat.purchases.ui.revenuecatui" >
+
+    <uses-sdk android:minSdkVersion="24" />
+
+    <application>
+        <activity
+            android:name="com.revenuecat.purchases.ui.revenuecatui.activity.PaywallActivity"
+            android:exported="false" />
+        <activity
+            android:name="com.revenuecat.purchases.ui.revenuecatui.customercenter.CustomerCenterActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.NoTitleBar" />
+        <activity
+            android:name="com.revenuecat.purchases.ui.revenuecatui.checkpoints.CheckpointWorkflowActivity"
+            android:exported="false" />
+    </application>
+
+</manifest>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="OK">בסדר</string>
+    <string name="all_plans">כל המנויים</string>
+    <string name="annual">שנתי</string>
+    <string name="bimonthly">חודש 2</string>
+    <string name="cannot_open_link">הקישור אינו חוקי. לא ניתן לפתוח.</string>
+    <string name="continue_cta">לְהַמשִׁיך</string>
+    <string name="default_offer_details_with_intro_offer">התחל את תקופת הניסיון של {{ sub_offer_duration }} ולאחר מכן {{ total_price_and_per_month }}.</string>
+    <string name="lifetime">לכל החיים</string>
+    <string name="monthly">יַרחוֹן</string>
+    <string name="no_browser_cannot_open_link">אין דפדפן מותקן. לא ניתן לפתוח את הקישור.</string>
+    <string name="package_discount">%1$d%% הנחה</string>
+    <string name="privacy">פְּרָטִיוּת</string>
+    <string name="privacy_policy">מדיניות הפרטיות</string>
+    <string name="quarter">3 חודשים</string>
+    <string name="restore">לשחזר</string>
+    <string name="restore_purchases">לשחזר רכישות</string>
+    <string name="revenuecatui_purchase">לרכוש</string>
+    <string name="revenuecatui_restore_purchases">@string/restore_purchases</string>
+    <string name="semester">6 חודשים</string>
+    <string name="terms">תנאים</string>
+    <string name="terms_and_conditions">תנאים</string>
+    <string name="weekly">שְׁבוּעִי</string>
+</resources>

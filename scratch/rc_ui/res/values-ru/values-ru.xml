@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="OK">OK</string>
+    <string name="all_plans">Все подписки</string>
+    <string name="annual">Ежегодно</string>
+    <string name="bimonthly">2 месяца</string>
+    <string name="cannot_open_link">Неверная ссылка. Не удалось открыть.</string>
+    <string name="continue_cta">Продолжить</string>
+    <string name="default_offer_details_with_intro_offer">Начните пробную версию на {{ sub_offer_duration }}, затем {{ total_price_and_per_month }}.</string>
+    <string name="lifetime">Бессрочно</string>
+    <string name="monthly">Ежемесячно</string>
+    <string name="no_browser_cannot_open_link">Браузер не установлен. Ссылка не может быть открыта.</string>
+    <string name="package_discount">Скидка %1$d%%</string>
+    <string name="privacy">Конфиденциальность</string>
+    <string name="privacy_policy">Политика конфиденциальности</string>
+    <string name="quarter">3 месяца</string>
+    <string name="restore">Восстановить</string>
+    <string name="restore_purchases">Восстановить покупки</string>
+    <string name="revenuecatui_purchase">Купить</string>
+    <string name="revenuecatui_restore_purchases">@string/restore_purchases</string>
+    <string name="semester">6 месяцев</string>
+    <string name="terms">Условия</string>
+    <string name="terms_and_conditions">Условия использования</string>
+    <string name="weekly">Еженедельно</string>
+</resources>

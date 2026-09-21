@@ -163,10 +163,9 @@ fun PermissionScreen(
 				transitionSpec = {
 					(
 							fadeIn(
-								animationSpec = tween(
-									durationMillis = 320,
-									delayMillis = 180,
-									easing = FastOutSlowInEasing
+								animationSpec = spring(
+									dampingRatio = 0.8f,
+									stiffness = Spring.StiffnessLow
 								)
 							) +
 									scaleIn(
@@ -178,16 +177,16 @@ fun PermissionScreen(
 									)
 							) togetherWith (
 							fadeOut(
-								animationSpec = tween(
-									durationMillis = 320,
-									easing = FastOutLinearInEasing
+								animationSpec = spring(
+									dampingRatio = 0.8f,
+									stiffness = Spring.StiffnessLow
 								)
 							) +
 									scaleOut(
 										targetScale = 0.79f,
-										animationSpec = tween(
-											durationMillis = 120,
-											easing = FastOutLinearInEasing
+										animationSpec = spring(
+											dampingRatio = 0.8f,
+											stiffness = Spring.StiffnessLow
 										)
 									)
 							)
@@ -367,7 +366,7 @@ private fun PermissionItem(
 					view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 					onAction()
 				},
-                shape = shapes.extraLarge,
+                shape = shapes.full,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(

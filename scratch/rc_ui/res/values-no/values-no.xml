@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="OK">OK</string>
+    <string name="all_plans">Alle abonnementer</string>
+    <string name="annual">Årlig</string>
+    <string name="bimonthly">2 måneder</string>
+    <string name="cannot_open_link">Ugyldig lenke. Kunne ikke åpnes.</string>
+    <string name="continue_cta">Fortsette</string>
+    <string name="default_offer_details_with_intro_offer">Start prøveperioden på {{ sub_offer_duration }}, og deretter {{ total_price_and_per_month }}.</string>
+    <string name="lifetime">Livstid</string>
+    <string name="monthly">Månedlig</string>
+    <string name="no_browser_cannot_open_link">Ingen nettleser installert. Lenken kunne ikke åpnes.</string>
+    <string name="package_discount">%1$d%% rabatt</string>
+    <string name="privacy">Personvern</string>
+    <string name="privacy_policy">Personvernerklæring</string>
+    <string name="quarter">3 måneder</string>
+    <string name="restore">Gjenopprett</string>
+    <string name="restore_purchases">Gjenopprette kjøp</string>
+    <string name="revenuecatui_purchase">Kjøp</string>
+    <string name="revenuecatui_restore_purchases">@string/restore_purchases</string>
+    <string name="semester">6 måneder</string>
+    <string name="terms">Vilkår</string>
+    <string name="terms_and_conditions">Vilkår og betingelser</string>
+    <string name="weekly">Ukentlig</string>
+</resources>

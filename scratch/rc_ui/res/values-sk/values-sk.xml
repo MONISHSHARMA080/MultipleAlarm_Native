@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="OK">OK</string>
+    <string name="all_plans">Všetky odbery</string>
+    <string name="annual">Výročný</string>
+    <string name="bimonthly">2 mesiace</string>
+    <string name="cannot_open_link">Neplatný odkaz. Nedalo sa otvoriť.</string>
+    <string name="continue_cta">ďalej</string>
+    <string name="default_offer_details_with_intro_offer">Začnite skúšobnú verziu {{ sub_offer_duration }}, potom {{ total_price_and_per_month }}.</string>
+    <string name="lifetime">Život</string>
+    <string name="monthly">Mesačne</string>
+    <string name="no_browser_cannot_open_link">Nie je nainštalovaný prehliadač. Odkaz sa nepodarilo otvoriť.</string>
+    <string name="package_discount">%1$d%% zľava</string>
+    <string name="privacy">Ochrana osobných údajov</string>
+    <string name="privacy_policy">Zásady ochrany osobných údajov</string>
+    <string name="quarter">3 mesiac</string>
+    <string name="restore">Obnoviť</string>
+    <string name="restore_purchases">Obnoviť nákupy</string>
+    <string name="revenuecatui_purchase">Kúpiť</string>
+    <string name="revenuecatui_restore_purchases">@string/restore_purchases</string>
+    <string name="semester">6 mesiacov</string>
+    <string name="terms">Podmienky</string>
+    <string name="terms_and_conditions">Podmienky</string>
+    <string name="weekly">Týždenne</string>
+</resources>

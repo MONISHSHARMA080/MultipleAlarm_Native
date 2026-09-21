@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="OK">D\'acord</string>
+    <string name="all_plans">Totes les subscripcions</string>
+    <string name="annual">Anual</string>
+    <string name="bimonthly">2 mesos</string>
+    <string name="cannot_open_link">Enllaç no vàlid. No s’ha pogut obrir.</string>
+    <string name="continue_cta">Continua</string>
+    <string name="default_offer_details_with_intro_offer">Inicieu la vostra prova de {{ sub_offer_duration }} i després {{ total_price_and_per_month }}.</string>
+    <string name="lifetime">Tota una vida</string>
+    <string name="monthly">Mensual</string>
+    <string name="no_browser_cannot_open_link">No hi ha cap navegador instal·lat. No s\'ha pogut obrir l\'enllaç.</string>
+    <string name="package_discount">%1$d%% de descompte</string>
+    <string name="privacy">Privadesa</string>
+    <string name="privacy_policy">Política de privacitat</string>
+    <string name="quarter">3 mesos</string>
+    <string name="restore">Restaurar</string>
+    <string name="restore_purchases">Restaurar les compres</string>
+    <string name="revenuecatui_purchase">Comprar</string>
+    <string name="revenuecatui_restore_purchases">@string/restore_purchases</string>
+    <string name="semester">6 mesos</string>
+    <string name="terms">Termes</string>
+    <string name="terms_and_conditions">Termes i condicions</string>
+    <string name="weekly">Setmanalment</string>
+</resources>

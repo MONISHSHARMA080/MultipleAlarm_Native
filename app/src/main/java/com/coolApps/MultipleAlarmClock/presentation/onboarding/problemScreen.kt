@@ -167,14 +167,14 @@ fun ProblemScreen(
 	)
 
 	val textChangeTransition: AnimatedContentTransitionScope<Boolean>.() -> ContentTransform = {
-		(fadeIn(animationSpec = tween(400)) + slideInVertically(
+		(fadeIn(animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessLow)) + slideInVertically(
 			animationSpec = spring(
 				dampingRatio = 0.85f,
 				stiffness = Spring.StiffnessLow
 			),
 			initialOffsetY = { -30 }
 		)).togetherWith(
-			fadeOut(animationSpec = tween(400)) + slideOutVertically(
+			fadeOut(animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessLow)) + slideOutVertically(
 				animationSpec = spring(
 					dampingRatio = 0.85f,
 					stiffness = Spring.StiffnessLow
@@ -343,10 +343,7 @@ private fun ProblemAnimation(
 
 	val finalCardAlpha by transition.animateFloat(
 		transitionSpec = {
-			tween(
-				durationMillis = 600,
-				easing = FastOutSlowInEasing
-			)
+			spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessLow)
 		},
 		label = "final card alpha"
 	) { state ->
@@ -396,9 +393,9 @@ private fun CrushingAlarm(
 
 	val entrance by animateFloatAsState(
 		targetValue = if (visible) 1f else 0f,
-		animationSpec = tween(
-			durationMillis = 500,
-			easing = FastOutSlowInEasing
+		animationSpec = spring(
+			dampingRatio = 0.85f,
+			stiffness = Spring.StiffnessLow
 		),
 		label = "entrance"
 	)

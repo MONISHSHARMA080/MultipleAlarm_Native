@@ -11,7 +11,8 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.SnapSpec
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.MutatorMutex
@@ -211,23 +212,23 @@ internal fun Float.toMinute(): Int {
 
 @OptIn(ExperimentalMaterial3Api::class)
 internal fun TimePickerColors.timeSelectorContainerColor(selected: Boolean): Color =
-    if (selected) timeSelectorSelectedContainerColor else androidx.compose.ui.graphics.Color.Transparent
+    if (selected) timeSelectorSelectedContainerColor else timeSelectorUnselectedContainerColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 internal fun TimePickerColors.timeSelectorContentColor(selected: Boolean): Color =
-    if (selected) timeSelectorSelectedContentColor else androidx.compose.ui.graphics.Color.Black
+    if (selected) timeSelectorSelectedContentColor else timeSelectorUnselectedContentColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 internal fun TimePickerColors.periodSelectorContainerColor(selected: Boolean): Color =
-    if (selected) periodSelectorSelectedContainerColor else androidx.compose.ui.graphics.Color.Transparent
+    if (selected) periodSelectorSelectedContainerColor else periodSelectorUnselectedContainerColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 internal fun TimePickerColors.periodSelectorContentColor(selected: Boolean): Color =
-    if (selected) periodSelectorSelectedContentColor else androidx.compose.ui.graphics.Color.Black
+    if (selected) periodSelectorSelectedContentColor else periodSelectorUnselectedContentColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 internal fun TimePickerColors.clockDialContentColor(selected: Boolean): Color =
-    if (selected) clockDialSelectedContentColor else androidx.compose.ui.graphics.Color.Black
+    if (selected) clockDialSelectedContentColor else clockDialUnselectedContentColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 internal val TimePickerState.hourForDisplay: Int
@@ -1371,7 +1372,7 @@ internal fun ClockFace(
                         state = state,
                         autoSwitchToMinute = autoSwitchToMinute,
                         selection = state.selection,
-                        animationSpec = tween(300),
+                        animationSpec = spring(),
                         minHour = minHour,
                         minMinute = minMinute,
                         onDisabledTimeSelected = onDisabledTimeSelected,
@@ -1379,7 +1380,7 @@ internal fun ClockFace(
                 )
                 .drawSelector(state, colors),
         targetState = state.clockFaceValues,
-        animationSpec = tween(300),
+        animationSpec = spring(),
     ) { screen ->
         CircularLayout(
             modifier = Modifier.fillMaxSize().semantics { selectableGroup() },

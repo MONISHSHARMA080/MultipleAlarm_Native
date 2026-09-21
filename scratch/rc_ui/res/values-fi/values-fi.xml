@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="OK">OK</string>
+    <string name="all_plans">Kaikki tilaukset</string>
+    <string name="annual">Vuosittainen</string>
+    <string name="bimonthly">2 kuukautta</string>
+    <string name="cannot_open_link">Virheellinen linkki. Ei voitu avata.</string>
+    <string name="continue_cta">Jatkaa</string>
+    <string name="default_offer_details_with_intro_offer">Aloita {{ sub_offer_duration }} -kokeilu ja sitten {{ total_price_and_per_month }}.</string>
+    <string name="lifetime">Elinikä</string>
+    <string name="monthly">Kuukausittain</string>
+    <string name="no_browser_cannot_open_link">Selainta ei ole asennettu. Linkkiä ei voitu avata.</string>
+    <string name="package_discount">%1$d%% alennus</string>
+    <string name="privacy">Yksityisyys</string>
+    <string name="privacy_policy">Tietosuojakäytäntö</string>
+    <string name="quarter">3 kuukautta</string>
+    <string name="restore">Palauta</string>
+    <string name="restore_purchases">Palauta ostot</string>
+    <string name="revenuecatui_purchase">Osta</string>
+    <string name="revenuecatui_restore_purchases">@string/restore_purchases</string>
+    <string name="semester">6 kuukautta</string>
+    <string name="terms">Ehdot</string>
+    <string name="terms_and_conditions">Käyttöehdot</string>
+    <string name="weekly">Viikoittain</string>
+</resources>

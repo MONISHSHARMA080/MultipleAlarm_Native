@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="OK">Εντάξει</string>
+    <string name="all_plans">Όλες οι συνδρομές</string>
+    <string name="annual">Ετήσιο</string>
+    <string name="bimonthly">2 μηνών</string>
+    <string name="cannot_open_link">Μη έγκυρος σύνδεσμος. Δεν μπόρεσε να ανοιχτεί.</string>
+    <string name="continue_cta">Να συνεχίσει</string>
+    <string name="default_offer_details_with_intro_offer">Ξεκινήστε τη δοκιμή {{ sub_offer_duration }} και μετά {{ total_price_and_per_month }}.</string>
+    <string name="lifetime">Διάρκεια Ζωής</string>
+    <string name="monthly">Μηνιαίο</string>
+    <string name="no_browser_cannot_open_link">Δεν είναι εγκατεστημένος περιηγητής. Ο σύνδεσμος δεν μπόρεσε να ανοιχτεί.</string>
+    <string name="package_discount">Έκπτωση %1$d%%</string>
+    <string name="privacy">Μυστικότητα</string>
+    <string name="privacy_policy">Πολιτική απορρήτου</string>
+    <string name="quarter">3 μήνες</string>
+    <string name="restore">Επαναφέρω</string>
+    <string name="restore_purchases">Επαναφορά αγορών</string>
+    <string name="revenuecatui_purchase">Αγορά</string>
+    <string name="revenuecatui_restore_purchases">@string/restore_purchases</string>
+    <string name="semester">6 μήνες</string>
+    <string name="terms">Οροι</string>
+    <string name="terms_and_conditions">Οροι και Προϋποθέσεις</string>
+    <string name="weekly">Εβδομαδιαίος</string>
+</resources>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="OK">OK</string>
+    <string name="all_plans">Alle Abonnements</string>
+    <string name="annual">Jährlich</string>
+    <string name="bimonthly">2 Monate</string>
+    <string name="cannot_open_link">Ungültiger Link. Konnte nicht geöffnet werden.</string>
+    <string name="continue_cta">Weitermachen</string>
+    <string name="default_offer_details_with_intro_offer">Starten Sie Ihre Testversion für {{ sub_offer_duration }} und dann für {{ total_price_and_per_month }}.</string>
+    <string name="lifetime">Lebensdauer</string>
+    <string name="monthly">Monatlich</string>
+    <string name="no_browser_cannot_open_link">Kein Browser installiert. Link konnte nicht geöffnet werden.</string>
+    <string name="package_discount">%1$d%% Rabatt</string>
+    <string name="privacy">Privatsphäre</string>
+    <string name="privacy_policy">Datenschutzrichtlinie</string>
+    <string name="quarter">3 Monate</string>
+    <string name="restore">Wiederherstellen</string>
+    <string name="restore_purchases">Einkäufe wiederherstellen</string>
+    <string name="revenuecatui_purchase">Kaufen</string>
+    <string name="revenuecatui_restore_purchases">@string/restore_purchases</string>
+    <string name="semester">6 Monate</string>
+    <string name="terms">Bedingungen</string>
+    <string name="terms_and_conditions">Geschäftsbedingungen</string>
+    <string name="weekly">Wöchentlich</string>
+</resources>

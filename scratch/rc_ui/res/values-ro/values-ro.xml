@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="OK">Bine</string>
+    <string name="all_plans">Toate abonamentele</string>
+    <string name="annual">Anual</string>
+    <string name="bimonthly">2 luni</string>
+    <string name="cannot_open_link">Link invalid. Nu a putut fi deschis.</string>
+    <string name="continue_cta">Continua</string>
+    <string name="default_offer_details_with_intro_offer">Începeți perioada de încercare de {{ sub_offer_duration }}, apoi {{ total_price_and_per_month }}.</string>
+    <string name="lifetime">Durata de viață</string>
+    <string name="monthly">Lunar</string>
+    <string name="no_browser_cannot_open_link">Niciun browser instalat. Linkul nu a putut fi deschis.</string>
+    <string name="package_discount">%1$d%% reducere</string>
+    <string name="privacy">Confidențialitate</string>
+    <string name="privacy_policy">Politica de confidențialitate</string>
+    <string name="quarter">3 luni</string>
+    <string name="restore">Restabili</string>
+    <string name="restore_purchases">Restabiliți achizițiile</string>
+    <string name="revenuecatui_purchase">Cumpără</string>
+    <string name="revenuecatui_restore_purchases">@string/restore_purchases</string>
+    <string name="semester">6 luni</string>
+    <string name="terms">Termeni</string>
+    <string name="terms_and_conditions">Termeni și condiții</string>
+    <string name="weekly">Săptămânal</string>
+</resources>

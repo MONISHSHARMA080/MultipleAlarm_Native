@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="OK">Добре</string>
+    <string name="all_plans">Всички абонаменти</string>
+    <string name="annual">Годишен</string>
+    <string name="bimonthly">2 месеца</string>
+    <string name="cannot_open_link">Невалиден линк. Не може да бъде отворен.</string>
+    <string name="continue_cta">продължи</string>
+    <string name="default_offer_details_with_intro_offer">Започнете своя пробен период от {{ sub_offer_duration }}, след което {{ total_price_and_per_month }}.</string>
+    <string name="lifetime">Живот</string>
+    <string name="monthly">Месечно</string>
+    <string name="no_browser_cannot_open_link">Няма инсталиран браузър. Връзката не може да бъде отворена.</string>
+    <string name="package_discount">%1$d%% намаление</string>
+    <string name="privacy">поверителност</string>
+    <string name="privacy_policy">Политика за поверителност</string>
+    <string name="quarter">3 месеца</string>
+    <string name="restore">Възстанови</string>
+    <string name="restore_purchases">Възстановяване на покупките</string>
+    <string name="revenuecatui_purchase">Купи</string>
+    <string name="revenuecatui_restore_purchases">@string/restore_purchases</string>
+    <string name="semester">6 месеца</string>
+    <string name="terms">Условия</string>
+    <string name="terms_and_conditions">Правила и условия</string>
+    <string name="weekly">Ежеседмично</string>
+</resources>

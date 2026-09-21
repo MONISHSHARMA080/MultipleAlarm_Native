@@ -9,6 +9,8 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -99,7 +101,10 @@ import com.revenuecat.purchases.awaitOfferings
 
 	val animatedProgress by animateFloatAsState(
 		targetValue = progress,
-		animationSpec = tween(durationMillis = 400),
+		animationSpec = spring(
+			dampingRatio = Spring.DampingRatioNoBouncy,
+			stiffness = Spring.StiffnessLow
+		),
 		label = "progress"
 	)
 
@@ -134,8 +139,8 @@ import com.revenuecat.purchases.awaitOfferings
 		bottomBar = {
 			AnimatedVisibility(
 				visible = buttonState != ButtonState.Hidden,
-				enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-				exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+				enter = slideInVertically(initialOffsetY = { it }, animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessLow)) + fadeIn(animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessLow)),
+				exit = slideOutVertically(targetOffsetY = { it }, animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessLow)) + fadeOut(animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessLow))
 			) {
 				Box(
 					modifier =
@@ -161,7 +166,7 @@ import com.revenuecat.purchases.awaitOfferings
 							modifier = Modifier
 								.fillMaxWidth()
 								.height(56.dp),
-							shape = shapes.extraLargeIncreased,
+							shape = shapes.full,
 							colors = ButtonDefaults.buttonColors(
 								containerColor = colorScheme.primaryContainer,
 								contentColor = colorScheme.onPrimaryContainer
@@ -187,10 +192,10 @@ import com.revenuecat.purchases.awaitOfferings
 				val isForward = targetState > initialState
 				slideIntoContainer(
 					towards = if (isForward) AnimatedContentTransitionScope.SlideDirection.Left else AnimatedContentTransitionScope.SlideDirection.Right,
-					animationSpec = tween(370, easing = FastOutSlowInEasing)
+					animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessLow)
 				) togetherWith slideOutOfContainer(
 					towards = if (isForward) AnimatedContentTransitionScope.SlideDirection.Left else AnimatedContentTransitionScope.SlideDirection.Right,
-					animationSpec = tween(370, easing = FastOutSlowInEasing)
+					animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessLow)
 				)
 			},
 		) { state ->
