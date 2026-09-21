@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.picker
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import android.view.HapticFeedbackConstants
 import androidx.annotation.IntRange
@@ -79,7 +82,7 @@ fun TimePickerWithoutDialog(
 			}
 			Text(
 				text =  stringResource(R.string.alarm_error_fix_alarm_time, startTimeString ),
-				style = typography.bodyMedium,
+				style = typography.bodyMediumEmphasized,
 				color = colorScheme.error,
 				modifier = Modifier.padding(top = 16.dp),
 				textAlign = TextAlign.Center

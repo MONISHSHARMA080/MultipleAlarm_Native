@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.onboarding
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedVisibility
@@ -208,7 +211,7 @@ private fun AlarmResultContent(
 					Column(horizontalAlignment = Alignment.CenterHorizontally) {
 						Text(
 							text = stringResource(R.string.onboarding_result_title),
-							style = typography.headlineLarge,
+							style = typography.headlineLargeEmphasized,
 							fontWeight = FontWeight.SemiBold,
 							color = colorScheme.onBackground,
 							textAlign = TextAlign.Center
@@ -241,7 +244,7 @@ private fun AlarmResultContent(
 						Spacer(modifier = Modifier.height(24.dp))
 						Text(
 							text = stringResource(R.string.onboarding_result_ring_on),
-							style = typography.titleSmall,
+							style = typography.titleSmallEmphasized,
 							fontWeight = FontWeight.Normal,
 							color = colorScheme.onSurface.copy(alpha = 0.67f)
 						)
@@ -413,7 +416,7 @@ private fun AlarmCard(
 	) {
 		Surface(
 			modifier = Modifier.fillMaxWidth(),
-			shape = shapes.extraLarge,
+			shape = shapes.extraExtraLarge,
 			color = colorScheme.surfaceContainer
 		) {
 			Row(
@@ -422,7 +425,7 @@ private fun AlarmCard(
 			) {
 				Surface(
 					modifier = Modifier.size(48.dp),
-					shape = shapes.large,
+					shape = shapes.extraLarge,
 					color = colorScheme.primaryContainer
 				) {
 					Box(contentAlignment = Alignment.Center) {
@@ -441,7 +444,7 @@ private fun AlarmCard(
 					Row(verticalAlignment = Alignment.CenterVertically) {
 						Text(
 							text = formatEpochMillis(startTime, formatter, zoneId),
-							style = typography.titleMedium,
+							style = typography.titleMediumEmphasized,
 							fontWeight = FontWeight.Normal,
 							color = colorScheme.onSurface
 						)
@@ -453,7 +456,7 @@ private fun AlarmCard(
 						)
 						Text(
 							text = formatEpochMillis(endTime, formatter, zoneId),
-							style = typography.titleMedium,
+							style = typography.titleMediumEmphasized,
 							fontWeight = FontWeight.Normal,
 							color = colorScheme.onSurface
 						)
@@ -530,7 +533,7 @@ private fun TimelineRow(
 		Column(modifier = Modifier.padding(bottom = 16.dp)) {
 			Text(
 				text = formattedTime,
-				style = typography.titleMedium,
+				style = typography.titleMediumEmphasized,
 				color = colorScheme.onBackground
 			)
 		}
@@ -567,7 +570,7 @@ private fun ExpandableMoreRow(
 			} else {
 				stringResource(R.string.onboarding_result_show_more, hiddenCount)
 			},
-			style = typography.bodySmall,
+			style = typography.bodySmallEmphasized,
 			color = colorScheme.onBackground.copy(alpha = 0.7f)
 		)
 		Spacer(Modifier.size(8.dp))

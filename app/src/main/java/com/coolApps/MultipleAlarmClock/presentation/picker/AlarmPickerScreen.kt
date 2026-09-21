@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.picker
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import android.os.Build
 import android.view.HapticFeedbackConstants
@@ -29,7 +32,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Button
@@ -431,12 +434,12 @@ fun CancelAndDeleteButton(
       TextButton(
               onClick = onClick,
               modifier = modifier.height(56.dp),
-              shape = RoundedCornerShape(32.dp),
+              shape = androidx.compose.foundation.shape.CircleShape,
               colors = ButtonDefaults.textButtonColors(contentColor = colorScheme.error)
       ) {
         Text(
                 text = stringResource(R.string.alarm_picker_delete_alarm),
-                style = typography.bodyLarge,
+                style = typography.bodyLargeEmphasized,
         )
       }
     } else {
@@ -444,7 +447,7 @@ fun CancelAndDeleteButton(
               onClick = onClick,
               modifier = modifier.height(56.dp),
               contentPadding = PaddingValues(horizontal = 28.dp, vertical = 0.dp),
-              shape = RoundedCornerShape(32.dp)
+              shape = androidx.compose.foundation.shape.CircleShape
       ) {
         AnimatedContent(
                 targetState = currentProgress,
@@ -459,7 +462,7 @@ fun CancelAndDeleteButton(
 				Progress.EndTime -> stringResource(R.string.alarm_picker_previous)
 				Progress.FullEditor -> stringResource(R.string.alarm_picker_previous)
 			  },
-			  style = typography.bodyLarge,
+			  style = typography.bodyLargeEmphasized,
           )
         }
       }
@@ -500,11 +503,11 @@ fun PrimaryActionButton(
                 },
                 modifier = modifier.height(56.dp),
                 contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
-                shape = RoundedCornerShape(28.dp)
+                shape = androidx.compose.material3.ShapeDefaults.ExtraLarge
         ) {
           Text(
                   stringResource(R.string.alarm_picker_ok),
-                  style = typography.bodyLarge,
+                  style = typography.bodyLargeEmphasized,
           )
         }
       }
@@ -532,7 +535,7 @@ fun PrimaryActionButton(
                 },
                 modifier = modifier.height(56.dp),
                 contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
-                shape = RoundedCornerShape(28.dp)
+                shape = androidx.compose.material3.ShapeDefaults.ExtraLarge
         ) {
           AnimatedContent(
                   targetState = canSetAlarm,
@@ -546,7 +549,7 @@ fun PrimaryActionButton(
                       isValid -> stringResource(R.string.alarm_picker_btn_set)
                       else -> stringResource(R.string.alarm_picker_btn_fix)
                     },
-                    style = typography.bodyLarge,
+                    style = typography.bodyLargeEmphasized,
             )
           }
         }

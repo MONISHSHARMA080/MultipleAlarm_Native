@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.onboarding
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
@@ -258,7 +261,7 @@ fun ProblemScreen(
 							} else {
 								stringResource(R.string.onboarding_problem_title)
 							},
-							style = typography.headlineLarge,
+							style = typography.headlineLargeEmphasized,
 							textAlign = TextAlign.Center,
 							color = colorScheme.onBackground
 						)
@@ -419,7 +422,7 @@ private fun CrushingAlarm(
 				this.alpha = alpha
 				scaleX = horizontalScale
 			},
-		shape = shapes.large,
+		shape = shapes.extraLarge,
 		color = colorScheme.surfaceContainerHigh,
 		tonalElevation = 1.dp
 	) {
@@ -435,7 +438,7 @@ private fun CrushingAlarm(
 			) {
 				Text(
 					text = time,
-					style = typography.titleLarge,
+					style = typography.titleLargeEmphasized,
 					color = colorScheme.onSurface
 				)
 				Text(
@@ -469,7 +472,7 @@ private fun CrushingAlarm(
 			.graphicsLayer {
 				this.alpha = alpha
 			},
-		shape = shapes.extraLarge,
+		shape = shapes.extraExtraLarge,
 		color = colorScheme.primaryContainer
 	) {
 		Row(
@@ -481,7 +484,7 @@ private fun CrushingAlarm(
 		) {
 			Surface(
 				modifier = Modifier.size(48.dp),
-				shape = shapes.large,
+				shape = shapes.extraLarge,
 				color = colorScheme.primary.copy(alpha = 0.12f)
 			) {
 				Box(contentAlignment = Alignment.Center) {
@@ -496,7 +499,7 @@ private fun CrushingAlarm(
 			Column {
 				Text(
 					text = stringResource(R.string.onboarding_problem_preview_interval),
-					style = typography.titleLarge,
+					style = typography.titleLargeEmphasized,
 					color = colorScheme.onPrimaryContainer
 				)
 				Spacer(modifier = Modifier.height(3.dp))

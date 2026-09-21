@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.onboarding
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import androidx.compose.animation.AnimatedVisibility
@@ -254,7 +257,7 @@ fun AlarmResultOpenAi(
 				) {
 					Text(
 						text = stringResource(R.string.onboarding_result_title),
-						style = typography.headlineLarge,
+						style = typography.headlineLargeEmphasized,
 						fontWeight = FontWeight.SemiBold,
 						color = colorScheme.onBackground,
 						textAlign = TextAlign.Center
@@ -310,7 +313,7 @@ fun AlarmResultOpenAi(
 
 					Text(
 						text = stringResource(R.string.onboarding_result_notifications_on),
-						style = typography.titleSmall,
+						style = typography.titleSmallEmphasized,
 						fontWeight = FontWeight.Medium,
 						color = colorScheme.onBackground
 					)
@@ -319,7 +322,7 @@ fun AlarmResultOpenAi(
 
 					Surface(
 						modifier = Modifier.fillMaxWidth(),
-						shape = shapes.extraLarge,
+						shape = shapes.extraExtraLarge,
 						color = colorScheme.surfaceContainer
 					) {
 						Column(
@@ -381,7 +384,7 @@ fun AlarmResultOpenAi(
 
 	Surface(
 		modifier = Modifier.size(72.dp),
-		shape = MaterialTheme.shapes.extraLarge,
+		shape = MaterialTheme.shapes.extraExtraLarge,
 		color = colorScheme.primaryContainer
 	) {
 		Box(
@@ -407,7 +410,7 @@ private fun AlarmCard(
 
 	Surface(
 		modifier = Modifier.fillMaxWidth(),
-		shape = MaterialTheme.shapes.extraLarge,
+		shape = MaterialTheme.shapes.extraExtraLarge,
 		color = colorScheme.primaryContainer
 	) {
 		Column(
@@ -420,7 +423,7 @@ private fun AlarmCard(
 			) {
 				Surface(
 					modifier = Modifier.size(48.dp),
-					shape = MaterialTheme.shapes.large,
+					shape = MaterialTheme.shapes.extraLarge,
 					color = colorScheme.primary.copy(alpha = 0.12f)
 				) {
 					Box(
@@ -440,7 +443,7 @@ private fun AlarmCard(
 				Column {
 					Text(
 						text = "${startTime.formatAlarmTime()} → ${endTime.formatAlarmTime()}",
-						style = typography.titleLarge,
+						style = typography.titleLargeEmphasized,
 						fontWeight = FontWeight.SemiBold,
 						color = colorScheme.onPrimaryContainer
 					)
@@ -500,7 +503,7 @@ private fun AlarmTimeRow(
 
 		Text(
 			text = time.formatAlarmTime(),
-			style = typography.bodyLarge,
+			style = typography.bodyLargeEmphasized,
 			fontWeight = FontWeight.Medium,
 			color = colorScheme.onSurface
 		)

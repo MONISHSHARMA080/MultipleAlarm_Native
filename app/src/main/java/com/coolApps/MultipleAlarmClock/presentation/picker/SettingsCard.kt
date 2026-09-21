@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.picker
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import android.view.HapticFeedbackConstants
 import androidx.activity.compose.BackHandler
@@ -30,7 +33,7 @@ import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
@@ -107,7 +110,7 @@ fun SettingsCard(
 		repeatDayToggled: (DayOfWeek) -> Unit
 ) {
 	Surface(
-		shape = RoundedCornerShape(29.dp),
+		shape = androidx.compose.material3.MaterialTheme.shapes.extraLarge,
 		color = colorScheme.surfaceContainer,
 		modifier = Modifier.fillMaxWidth()
 	) {
@@ -233,7 +236,7 @@ fun MessageRow(
 	val focusRequester = remember { FocusRequester() }
 	val bringIntoViewRequester = remember { BringIntoViewRequester() }
 
-	val titleStyle = typography.titleSmall
+	val titleStyle = typography.titleSmallEmphasized
 	val messageStyle = typography.bodyMedium
 
 	if (isEditing) {
@@ -366,7 +369,7 @@ fun RepeatDaysRow(
 		Row(verticalAlignment = Alignment.CenterVertically) {
 			Icon(imageVector = icon, contentDescription = null, tint = colorScheme.onSurfaceVariant)
 			Spacer(modifier = Modifier.width(16.dp))
-			Text(text = title, color = colorScheme.onBackground, style = typography.titleSmall)
+			Text(text = title, color = colorScheme.onBackground, style = typography.titleSmallEmphasized)
 		}
 		Spacer(modifier = Modifier.height(12.dp))
 		Row(
@@ -446,7 +449,7 @@ private fun RepeatDayButton(
 		Box(contentAlignment = Alignment.Center) {
 			Text(
 				text = narrowLabel,
-				style = typography.labelLarge,
+				style = typography.labelLargeEmphasized,
 				color = contentColor
 			)
 		}
@@ -468,7 +471,7 @@ private fun RepeatDayButton(
 		Text(
 			text = title,
 			color = colorScheme.onBackground,
-			style = typography.titleSmall,
+			style = typography.titleSmallEmphasized,
 		)
 		Spacer(modifier = Modifier.weight(1f))
 		Text(
@@ -508,7 +511,7 @@ private fun RepeatDayButton(
 				Text(
 					text = title,
 					color = colorScheme.onBackground,
-					style = typography.titleSmall,
+					style = typography.titleSmallEmphasized,
 					modifier = Modifier.weight(1f)
 				)
 				Row(
@@ -518,7 +521,7 @@ private fun RepeatDayButton(
 							color =
 								if (doWeHaveFrequencyError) colorScheme.errorContainer
 								else colorScheme.secondaryContainer,
-							shape = RoundedCornerShape(12.dp)
+							shape = androidx.compose.material3.MaterialTheme.shapes.medium
 						)
 							.padding(4.dp)
 				) {
@@ -565,7 +568,7 @@ private fun RepeatDayButton(
 						visualTransformation = minSuffixTransformation,
 						modifier = Modifier.width(55.dp),
 						textStyle =
-							typography.titleMedium.copy(
+							typography.titleMediumEmphasized.copy(
 								textAlign = TextAlign.Center,
 								color = colorScheme.onSecondaryContainer,
 								fontWeight = FontWeight.Bold

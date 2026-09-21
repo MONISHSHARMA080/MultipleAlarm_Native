@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import android.content.Intent
 import android.net.Uri

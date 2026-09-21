@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.settings
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

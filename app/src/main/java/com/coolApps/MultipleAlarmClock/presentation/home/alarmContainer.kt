@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.home
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import android.app.Activity
 import android.os.Build
@@ -148,7 +151,7 @@ import java.util.Calendar
 			) { snackBarData ->
 				Snackbar(
 					snackbarData = snackBarData,
-					shape = RoundedCornerShape(45.dp),
+					shape = MaterialTheme.shapes.extraExtraLarge,
 					containerColor = colorScheme.inverseSurface,
 					contentColor = colorScheme.inverseOnSurface,
 					modifier = Modifier.fillMaxWidth()
@@ -190,7 +193,7 @@ import java.util.Calendar
 						FilledTonalIconButton(
 							onClick = onNavigateToSettings,
 							modifier = Modifier.size(45.dp),
-							shape = RoundedCornerShape(18.dp)
+							shape = MaterialTheme.shapes.largeIncreased
 						) {
 							Icon(
 								imageVector = Icons.Outlined.Settings,
@@ -289,8 +292,7 @@ fun EmptyState(modifier: Modifier = Modifier) {
 		Spacer(modifier = Modifier.height(24.dp))
 		Text(
 			text = stringResource(R.string.empty_state_title),
-			style = MaterialTheme.typography.headlineMedium,
-			fontWeight = FontWeight.Bold,
+			style = MaterialTheme.typography.headlineMediumEmphasized,
 			color = MaterialTheme.colorScheme.onSurface
 		)
 		Spacer(modifier = Modifier.height(8.dp))
@@ -330,7 +332,7 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 				.widthIn(min = 178.dp)
 				.zIndex(5f),
 			interactionSource = interactionSource,
-			shape = RoundedCornerShape(45.dp),
+			shape = MaterialTheme.shapes.extraExtraLarge,
 			containerColor = colorScheme.tertiaryContainer,
 			contentColor = colorScheme.onTertiaryContainer,
 			elevation = FloatingActionButtonDefaults.elevation(
@@ -347,8 +349,7 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 			text = {
 				Text(
 					text = stringResource(R.string.add_alarm_button_text),
-					style = MaterialTheme.typography.titleMedium,
-					fontWeight = FontWeight.Bold,
+					style = MaterialTheme.typography.titleMediumEmphasized,
 					letterSpacing = 0.1.sp,
 					maxLines = 1
 				)

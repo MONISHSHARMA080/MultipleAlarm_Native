@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.onboarding
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -109,8 +112,7 @@ fun FirstAlarmIntroView(
 				) {
 					Text(
 						text = stringResource(R.string.onboarding_create_alarm_title),
-						style = typography.headlineLarge,
-						fontWeight = FontWeight.Bold,
+						style = typography.headlineLargeEmphasized,
 						textAlign = TextAlign.Center,
 						color = colorScheme.onBackground
 					)
@@ -180,7 +182,7 @@ private fun EditNoteContent() {
 	Text(
 		text = stringResource(R.string.onboarding_create_alarm_edit_note),
 		modifier = Modifier.padding(top = 22.dp),
-		style = typography.bodyMedium,
+		style = typography.bodyMediumEmphasized,
 		textAlign = TextAlign.Center,
 		color = colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
 	)
@@ -202,14 +204,13 @@ private fun AlarmIntroStep(
 			modifier = Modifier
 				.padding(top = 2.dp)
 				.size(32.dp)
-				.clip(CircleShape)
+				.clip(androidx.compose.foundation.shape.CircleShape)
 				.background(colorScheme.primaryContainer),
 			contentAlignment = Alignment.Center
 		) {
 			Text(
 				text = number,
-				style = typography.labelLarge,
-				fontWeight = FontWeight.Bold,
+				style = typography.labelLargeEmphasized,
 				color = colorScheme.onPrimaryContainer
 			)
 		}
@@ -221,8 +222,7 @@ private fun AlarmIntroStep(
 		) {
 			Text(
 				text = title,
-				style = typography.titleMedium,
-				fontWeight = FontWeight.SemiBold,
+				style = typography.titleMediumEmphasized,
 				color = colorScheme.onBackground
 			)
 

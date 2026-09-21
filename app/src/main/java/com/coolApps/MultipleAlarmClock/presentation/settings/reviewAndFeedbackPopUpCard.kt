@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.settings
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
@@ -80,7 +83,7 @@ fun FeedbackCardContent(
         }
         Card(
                 modifier = modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(28.dp),
+                shape = MaterialTheme.shapes.extraLarge,
                 colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ),
@@ -122,7 +125,7 @@ fun FeedbackCardContent(
                                 // ── Title ──
                                 Text(
                                         text = stringResource(R.string.feedback_card),
-                                        style = MaterialTheme.typography.headlineSmall,
+                                        style = MaterialTheme.typography.titleLargeEmphasized,
                                         color = MaterialTheme.colorScheme.onSurface,
                                 )
                         }
@@ -157,7 +160,7 @@ fun FeedbackCardContent(
                                 textStyle = MaterialTheme.typography.bodyMedium.copy(
                                         color = MaterialTheme.colorScheme.onSurface,
                                 ),
-                                shape = RoundedCornerShape(16.dp),
+                                shape = MaterialTheme.shapes.large,
                                 colors = OutlinedTextFieldDefaults.colors(
                                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                                         unfocusedBorderColor = MaterialTheme.colorScheme.outline,
@@ -198,11 +201,11 @@ fun FeedbackCardContent(
                                 if (showMaybeLaterButton){
                                         TextButton(
                                                 onClick = onDismiss,
-                                                shape = RoundedCornerShape(50),
+                                                shape = MaterialTheme.shapes.extraExtraLarge,
                                         ) {
                                                 Text(
                                                         text = stringResource(R.string.feedback_btn_maybe_later),
-                                                        style = MaterialTheme.typography.labelLarge,
+                                                        style = MaterialTheme.typography.labelLargeEmphasized,
                                                         color = MaterialTheme.colorScheme.onSurface,
                                                 )
                                         }
@@ -211,7 +214,7 @@ fun FeedbackCardContent(
                                 Button(
                                         onClick = onSubmit,
                                         enabled = isSubmitEnabled,
-                                        shape = RoundedCornerShape(50),
+                                        shape = MaterialTheme.shapes.extraExtraLarge,
                                         colors = ButtonDefaults.buttonColors(
                                                 containerColor = MaterialTheme.colorScheme.primary,
                                                 contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -219,7 +222,7 @@ fun FeedbackCardContent(
                                                 disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.66f),
                                         ),
                                 ) {
-                                        Text(text = stringResource(R.string.feedback_btn_submit), style = MaterialTheme.typography.labelLarge)
+                                        Text(text = stringResource(R.string.feedback_btn_submit), style = MaterialTheme.typography.labelLargeEmphasized)
                                 }
                         }
                 }

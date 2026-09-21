@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.home
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import android.os.Build
 import android.view.HapticFeedbackConstants
@@ -92,7 +95,7 @@ fun AlarmCard(
 	)
 	val view = LocalView.current
 	val dismissState = rememberSwipeToDismissBoxState()
-	val cardShape = RoundedCornerShape(45.dp)
+	val cardShape = androidx.compose.material3.ShapeDefaults.ExtraLargeIncreased
 	val horizontalPadding = 10.dp
 
 	SwipeToDismissBox(
@@ -176,9 +179,8 @@ fun AlarmCard(
 							alarmStartMs = alarmData.startTime,
 							todayStartMs = todayStartMs,
 						),
-						style = typography.labelMedium,
-						color = secondaryContentColor,
-						fontWeight = FontWeight.Medium
+						style = typography.labelMediumEmphasized,
+						color = secondaryContentColor
 					)
 
 					Spacer(modifier = Modifier.height(10.dp))
@@ -197,7 +199,7 @@ fun AlarmCard(
 						) {
 							TimeDisplay(
 								millis = alarmData.startTime,
-								textStyle = typography.displaySmall,
+								textStyle = if (isActive) typography.displaySmallEmphasized else typography.displaySmall,
 								contentColor = contentColor, isActive = isActive
 							)
 							Icon(
@@ -208,7 +210,7 @@ fun AlarmCard(
 							)
 							TimeDisplay(
 								millis = alarmData.endTime,
-								textStyle = typography.displaySmall,
+								textStyle = if (isActive) typography.displaySmallEmphasized else typography.displaySmall,
 								contentColor = contentColor, isActive = isActive
 							)
 						}
@@ -263,7 +265,6 @@ private fun TimeDisplay(
 		Text(
 			text = formatTime12h(millis, "h:mm"),
 			style = textStyle,
-			fontWeight = if (isActive) FontWeight.Medium else FontWeight.Normal,
 			color = contentColor.copy(alpha = timeAlpha),
 			modifier = Modifier.alignByBaseline(),
 			softWrap = false,
@@ -272,8 +273,7 @@ private fun TimeDisplay(
 		Spacer(modifier = Modifier.width(4.dp))
 		Text(
 			text = formatTime12h(millis, "a"),
-			style = typography.labelSmall,
-			fontWeight = FontWeight.Bold,
+			style = typography.labelSmallEmphasized,
 			color = contentColor.copy(alpha = amPmAlpha),
 			modifier = Modifier.alignByBaseline(),
 			softWrap = false,

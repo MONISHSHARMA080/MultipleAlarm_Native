@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.trigger
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import android.content.Intent
 import android.os.Bundle
@@ -221,7 +224,7 @@ class AlarmActivity : ComponentActivity() {
 						onFinish()
 				  	},
                     colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primaryContainer, contentColor = colorScheme.onPrimaryContainer),
-                    shape = RoundedCornerShape(45.dp),
+                    shape = MaterialTheme.shapes.extraExtraLarge,
                     modifier = Modifier.height(83.dp).fillMaxWidth(0.92f)
                 ) {
                     Icon(
@@ -230,7 +233,7 @@ class AlarmActivity : ComponentActivity() {
                         contentDescription = "Cancel"
                     )
                     Spacer(modifier = Modifier.width(10.dp)) // Space between icon and text
-                    Text(text = "Stop", style = typography.headlineLarge, fontWeight = FontWeight.Bold)
+                    Text(text = "Stop", style = typography.headlineLargeEmphasized)
                 }
             }
         }
@@ -260,8 +263,7 @@ class AlarmActivity : ComponentActivity() {
 						Text(
 							text = currentTime,
 							color = colorScheme.primary,
-							fontWeight = FontWeight.Medium,
-							style = typography.displayLarge
+							style = typography.displayLargeEmphasized
 						)
 
 						Spacer(modifier = Modifier.width(8.dp))
@@ -269,9 +271,8 @@ class AlarmActivity : ComponentActivity() {
 						Text(
 							text = amPm,
 							color = colorScheme.secondary,
-							fontWeight = FontWeight.SemiBold,
 							modifier = Modifier.padding(bottom = 12.dp),
-							style = typography.titleLarge,
+							style = typography.titleLargeEmphasized,
 						)
 					}
 

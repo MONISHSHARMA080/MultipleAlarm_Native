@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.settings
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import android.content.Context
 import android.content.Intent
@@ -88,8 +91,7 @@ fun SettingsScreen(
 				title = {
 					Text(
 						text = stringResource(R.string.settings_title),
-						style = MaterialTheme.typography.headlineSmall,
-						fontWeight = FontWeight.SemiBold,
+						style = MaterialTheme.typography.titleLargeEmphasized,
 					)
 				},
 				navigationIcon = {
@@ -180,7 +182,6 @@ fun SettingsScreen(
 						Text(
 							text = stringResource(R.string.settings_feedback_improve_app),
 							style = MaterialTheme.typography.labelLarge,
-							fontWeight = FontWeight.Medium
 						)
 
 						Text(
@@ -206,7 +207,7 @@ fun SettingsScreen(
 									)
 								)
 							},
-							shape = RoundedCornerShape(20.dp),
+							shape = MaterialTheme.shapes.extraLarge,
 							maxLines = 6,
 							supportingText = {
 								Text(
@@ -243,7 +244,7 @@ fun SettingsScreen(
 									feedbackText = ""
 								},
 								enabled = feedbackText.isNotBlank(),
-								shape = RoundedCornerShape(16.dp)
+								shape = MaterialTheme.shapes.extraLarge
 							) {
 								Icon(
 									imageVector = Icons.AutoMirrored.Outlined.Send,
@@ -386,7 +387,7 @@ private fun SettingsListItem(
 	Surface(
 		modifier = Modifier
 			.fillMaxWidth()
-			.clip(RoundedCornerShape(24.dp))
+			.clip(MaterialTheme.shapes.extraLarge)
 			.then(
 				if (onClick != null) {
 					Modifier.clickable(onClick = onClick)
@@ -440,9 +441,8 @@ private fun SettingsListItem(
 			) {
 				Text(
 					text = title,
-					style = MaterialTheme.typography.bodyLarge,
-					color = contentColor,
-					fontWeight = FontWeight.Medium
+					style = MaterialTheme.typography.bodyLargeEmphasized,
+					color = contentColor
 				)
 
 				Spacer(
@@ -481,9 +481,8 @@ private fun SettingsSection(
 	) {
 		Text(
 			text = title.uppercase(),
-			style = MaterialTheme.typography.bodyLarge,
+			style = MaterialTheme.typography.titleMediumEmphasized,
 			color = MaterialTheme.colorScheme.primary,
-			fontWeight = FontWeight.SemiBold,
 			modifier = Modifier.padding(
 				start = 4.dp,
 				bottom = 2.dp

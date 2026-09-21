@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.onboarding
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 
 import androidx.compose.animation.core.RepeatMode
@@ -76,8 +79,7 @@ import com.coolApps.MultipleAlarmClock.R
 			) {
 				Text(
 					text = stringResource(R.string.onboarding_greeting_hello),
-					style = MaterialTheme.typography.displayLarge,
-					fontWeight = FontWeight.SemiBold,
+					style = MaterialTheme.typography.displayLargeEmphasized,
 					color = colorScheme.onBackground
 				)
 				Spacer(modifier = Modifier.width(10.dp))

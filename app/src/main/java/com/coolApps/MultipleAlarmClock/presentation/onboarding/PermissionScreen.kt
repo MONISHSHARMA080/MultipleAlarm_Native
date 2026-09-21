@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.onboarding
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import android.content.Intent
 import android.net.Uri
@@ -212,7 +215,7 @@ fun PermissionScreen(
 			AnimatedContent(targetState = allCriticalGranted) { granted ->
 				Text(
 					text = stringResource(if (granted) R.string.permission_all_set else R.string.permission_title),
-					style = typography.headlineLarge,
+					style = typography.headlineLargeEmphasized,
 					fontWeight = FontWeight.SemiBold,
 					color = colorScheme.onBackground
 				)
@@ -335,8 +338,8 @@ private fun PermissionItem(
 ) {
 	val view = LocalView.current
     Surface(
-        shape = shapes.large,
-        color = colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        shape = shapes.extraLarge,
+        color = colorScheme.surfaceContainer,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -348,7 +351,7 @@ private fun PermissionItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = stringResource(step.titleRes),
-                    style = typography.titleMedium,
+                    style = typography.titleMediumEmphasized,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
@@ -365,7 +368,7 @@ private fun PermissionItem(
 					view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 					onAction()
 				},
-                shape = RoundedCornerShape(12.dp),
+                shape = shapes.extraLarge,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(

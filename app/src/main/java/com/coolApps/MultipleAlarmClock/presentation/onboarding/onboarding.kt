@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.onboarding
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
@@ -167,7 +170,7 @@ import com.revenuecat.purchases.awaitOfferings
 							modifier = Modifier
 								.fillMaxWidth()
 								.height(56.dp),
-							shape = shapes.extraLarge,
+							shape = shapes.extraLargeIncreased,
 							colors = ButtonDefaults.buttonColors(
 								containerColor = colorScheme.primaryContainer,
 								contentColor = colorScheme.onPrimaryContainer
@@ -175,7 +178,7 @@ import com.revenuecat.purchases.awaitOfferings
 						) {
 							Text(
 								text = stringResource(R.string.permission_continue),
-								style = typography.titleMedium
+								style = typography.titleMediumEmphasized
 							)
 						}
 					}

@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.picker
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -138,7 +141,7 @@ fun AddMoreDatesCard(onClick: () -> Unit) {
 	val colorScheme = MaterialTheme.colorScheme
 	Surface(
 		onClick = onClick,
-		shape = RoundedCornerShape(25.dp),
+		shape = androidx.compose.material3.ShapeDefaults.ExtraLarge,
 		color = colorScheme.surface,
 		border = BorderStroke(2.dp, colorScheme.secondary),
 		modifier = Modifier

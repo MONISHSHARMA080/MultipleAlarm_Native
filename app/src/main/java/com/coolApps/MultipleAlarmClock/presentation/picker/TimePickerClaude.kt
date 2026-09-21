@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.picker
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 ///*
 // * CustomTimePicker.kt
@@ -929,7 +932,7 @@ package com.coolApps.MultipleAlarmClock.presentation.picker
 //	val style =
 //		TextStyle(
 //			textAlign = TextAlign.Center,
-//			fontSize = MaterialTheme.typography.displayMedium.fontSize,
+//			fontSize = MaterialTheme.typography.displayMediumEmphasized.fontSize,
 //			lineHeightStyle =
 //				LineHeightStyle(
 //					alignment = LineHeightStyle.Alignment.Center,
@@ -974,7 +977,7 @@ package com.coolApps.MultipleAlarmClock.presentation.picker
 //					},
 //				text = value.toLocalString(minDigits = 2),
 //				color = contentColor,
-//				style = MaterialTheme.typography.displayMedium,
+//				style = MaterialTheme.typography.displayMediumEmphasized,
 //			)
 //		}
 //	}
@@ -1105,16 +1108,18 @@ package com.coolApps.MultipleAlarmClock.presentation.picker
 //) {
 //	val contentColor = colors.periodSelectorContentColor(checked)
 //	val containerColor = colors.periodSelectorContainerColor(checked)
-//	TextButton(
+//	FilledTonalButton(
 //		modifier =
-//			Modifier.androidx_zIndex(if (checked) 0f else 1f)
-//				.androidx_fillMaxSize()
-//				.semantics { selected = checked },
+//			Modifier.zIndex(if (checked) 0f else 1f).fillMaxSize().semantics { selected = checked },
 //		contentPadding = PaddingValues(0.dp),
 //		shape = shape,
 //		onClick = onClick,
 //		content = content,
-//		colors = ButtonDefaults.textButtonColors(contentColor = contentColor, containerColor = containerColor),
+//		colors =
+//			ButtonDefaults.filledTonalButtonColors(
+//				contentColor = contentColor,
+//				containerColor = containerColor,
+//			),
 //	)
 //}
 //
@@ -1238,7 +1243,7 @@ package com.coolApps.MultipleAlarmClock.presentation.picker
 //		autoSwitchToMinute: Boolean,
 //		colors: CustomTimePickerColors,
 //) {
-//	val style = MaterialTheme.typography.bodyLarge
+//	val style = MaterialTheme.typography.bodyLargeEmphasized
 //	val density: Density = LocalDensity.current
 //	val maxDist = with(density) { PickerDimens.MaxDistance.toPx() }
 //	var center by remember { mutableStateOf(Offset.Zero) }
@@ -1582,7 +1587,7 @@ package com.coolApps.MultipleAlarmClock.presentation.picker
 //
 //	val TimeSelectorContainerWidth = 96.dp
 //	val TimeSelectorContainerHeight = 80.dp
-//	val TimeSelectorShape = RoundedCornerShape(24.dp)
+//	val TimeSelectorShape = MaterialTheme.shapes.extraLarge
 //
 //	val PeriodSelectorVerticalContainerWidth = 52.dp
 //	val PeriodSelectorVerticalContainerHeight = 80.dp

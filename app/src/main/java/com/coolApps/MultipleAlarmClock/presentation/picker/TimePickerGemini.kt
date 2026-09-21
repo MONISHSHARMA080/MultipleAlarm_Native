@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.picker
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import androidx.annotation.FloatRange
 import androidx.collection.IntList
@@ -48,6 +51,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.TimePickerColors
 import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.TimePickerLayoutType
@@ -207,23 +211,23 @@ internal fun Float.toMinute(): Int {
 
 @OptIn(ExperimentalMaterial3Api::class)
 internal fun TimePickerColors.timeSelectorContainerColor(selected: Boolean): Color =
-    if (selected) timeSelectorSelectedContainerColor else timeSelectorUnselectedContainerColor
+    if (selected) timeSelectorSelectedContainerColor else androidx.compose.ui.graphics.Color.Transparent
 
 @OptIn(ExperimentalMaterial3Api::class)
 internal fun TimePickerColors.timeSelectorContentColor(selected: Boolean): Color =
-    if (selected) timeSelectorSelectedContentColor else timeSelectorUnselectedContentColor
+    if (selected) timeSelectorSelectedContentColor else androidx.compose.ui.graphics.Color.Black
 
 @OptIn(ExperimentalMaterial3Api::class)
 internal fun TimePickerColors.periodSelectorContainerColor(selected: Boolean): Color =
-    if (selected) periodSelectorSelectedContainerColor else periodSelectorUnselectedContainerColor
+    if (selected) periodSelectorSelectedContainerColor else androidx.compose.ui.graphics.Color.Transparent
 
 @OptIn(ExperimentalMaterial3Api::class)
 internal fun TimePickerColors.periodSelectorContentColor(selected: Boolean): Color =
-    if (selected) periodSelectorSelectedContentColor else periodSelectorUnselectedContentColor
+    if (selected) periodSelectorSelectedContentColor else androidx.compose.ui.graphics.Color.Black
 
 @OptIn(ExperimentalMaterial3Api::class)
 internal fun TimePickerColors.clockDialContentColor(selected: Boolean): Color =
-    if (selected) clockDialSelectedContentColor else clockDialUnselectedContentColor
+    if (selected) clockDialSelectedContentColor else androidx.compose.ui.graphics.Color.Black
 
 @OptIn(ExperimentalMaterial3Api::class)
 internal val TimePickerState.hourForDisplay: Int
@@ -678,7 +682,7 @@ private fun TimeInputImpl(
         verticalAlignment = Alignment.Top,
     ) {
         val textStyle =
-            MaterialTheme.typography.displayLarge.copy(
+            MaterialTheme.typography.displayLargeEmphasized.copy(
                 textAlign = TextAlign.Center,
                 color = colors.timeSelectorContentColor(true),
             )
@@ -860,7 +864,7 @@ private fun VerticalClockDisplay(
 @ExperimentalMaterial3Api
 private fun ClockDisplayNumbers(state: TimePickerState, colors: TimePickerColors) {
     CompositionLocalProvider(
-        LocalTextStyle provides MaterialTheme.typography.displayLarge,
+        LocalTextStyle provides MaterialTheme.typography.displayLargeEmphasized,
         LocalLayoutDirection provides LayoutDirection.Ltr,
     ) {
         Row {
@@ -923,7 +927,7 @@ private fun HorizontalPeriodToggle(
         }
     }
 
-    val shape = RoundedCornerShape(8.dp)
+    val shape = MaterialTheme.shapes.extraLarge
 
     PeriodToggleImpl(
         modifier = modifier,
@@ -976,7 +980,7 @@ private fun VerticalPeriodToggle(
         }
     }
 
-    val shape = RoundedCornerShape(8.dp)
+    val shape = MaterialTheme.shapes.extraLarge
 
     PeriodToggleImpl(
         modifier = modifier,
@@ -1006,7 +1010,7 @@ private fun PeriodToggleImpl(
 ) {
     val borderStroke =
         BorderStroke(PeriodSelectorOutlineWidth, colors.periodSelectorBorderColor)
-    val shape = RoundedCornerShape(8.dp)
+    val shape = MaterialTheme.shapes.extraLarge
 //    val amDisabled = isPeriodAmDisabled(minHour)
 //    val pmDisabled = isPeriodPmDisabled(minHour)
 	val amDisabled = false
@@ -1084,7 +1088,7 @@ private fun ToggleItem(
     val contentColor = if (isDisabled) rawContentColor.copy(alpha = 0.38f) else rawContentColor
     val containerColor = if (isDisabled) rawContainerColor.copy(alpha = 0.38f) else rawContainerColor
 
-    TextButton(
+    FilledTonalButton(
         modifier =
             Modifier.zIndex(if (checked) 0f else 1f).fillMaxSize().semantics { selected = checked },
         contentPadding = PaddingValues(0.dp),
@@ -1092,7 +1096,7 @@ private fun ToggleItem(
         onClick = onClick,
         content = content,
         colors =
-            ButtonDefaults.textButtonColors(
+            ButtonDefaults.filledTonalButtonColors(
                 contentColor = contentColor,
                 containerColor = containerColor,
             ),
@@ -1143,7 +1147,7 @@ private fun TimeSelector(
             }
         },
         selected = selected,
-        shape = RoundedCornerShape(8.dp),
+        shape = MaterialTheme.shapes.extraLarge,
         color = containerColor,
     ) {
         val valueContentDescription =
@@ -1521,7 +1525,7 @@ private fun ClockText(
     minMinute: Int?,
     onDisabledTimeSelected: (() -> Unit)?,
 ) {
-    val style = MaterialTheme.typography.bodyLarge
+    val style = MaterialTheme.typography.bodyLargeEmphasized
     val density: Density = LocalDensity.current
     val maxDist = with(density) { MaxDistance.toPx() }
     var center by remember { mutableStateOf(Offset.Zero) }
@@ -1765,7 +1769,7 @@ private fun TimePickerTextField(
                             enabled = true,
                             isError = false,
                             interactionSource = interactionSource,
-                            shape = RoundedCornerShape(8.dp),
+                            shape = MaterialTheme.shapes.extraLarge,
                             colors = textFieldColors,
                         )
                     },
@@ -1777,7 +1781,7 @@ private fun TimePickerTextField(
             modifier = Modifier.offset(y = SupportLabelTop).clearAndSetSemantics {},
             text = if (selection == TimePickerSelectionMode.Hour) "Hour" else "Minute",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodySmallEmphasized,
         )
     }
 

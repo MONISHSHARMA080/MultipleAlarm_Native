@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.picker.listAlarmRingtone
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import android.net.Uri
 import android.view.HapticFeedbackConstants
@@ -33,7 +36,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Audiotrack
@@ -143,7 +146,7 @@ import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmSound
 				) {
 					Text(
 						text = "Select",
-						style = MaterialTheme.typography.titleMedium
+						style = MaterialTheme.typography.titleMediumEmphasized
 					)
 				}
 			}
@@ -266,7 +269,7 @@ private fun SoundCard(
 			Column(modifier = Modifier.weight(1f)) {
 				Text(
 					text = sound?.title ?: stringResource(R.string.Sound_screen_Random),
-					style = MaterialTheme.typography.titleMedium
+					style = MaterialTheme.typography.titleMediumEmphasized
 				)
 				Text(
 					text = when {
@@ -322,7 +325,7 @@ private fun EqualizerBars(modifier: Modifier = Modifier, color: Color) {
 				modifier = Modifier
 					.width(3.dp)
 					.height(height.value.dp)
-					.clip(RoundedCornerShape(2.dp))
+					.clip(CircleShape)
 					.background(color)
 			)
 		}

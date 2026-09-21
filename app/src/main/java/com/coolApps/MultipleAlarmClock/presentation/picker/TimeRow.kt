@@ -1,4 +1,7 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.picker
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedVisibility
@@ -23,6 +26,7 @@ import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -61,8 +65,8 @@ fun TimeRow(
 	val density = LocalDensity.current
 	val containerSize = LocalWindowInfo.current.containerSize
 	val screenHeightDp = with(density) { containerSize.height.toDp() }
-	val timeStyle = typography.displayMedium.copy(fontWeight = FontWeight.Bold)
-	val amPmStyle = typography.bodyMedium
+	val timeStyle = typography.displayMediumEmphasized
+	val amPmStyle = typography.bodyMediumEmphasized
 
 
 	val titleSpacing = (screenHeightDp * 0.04f).coerceIn(12.dp, 36.dp)
@@ -92,7 +96,7 @@ fun TimeRow(
 		TimePickerDialog(
 			onDismissRequest = { showStartTimePicker = false },
 			confirmButton = {
-				TextButton(
+				FilledTonalButton(
 					onClick = {
 						val newTime =
 							(startTime.clone() as Calendar).apply {
@@ -111,7 +115,7 @@ fun TimeRow(
 				Column {
 					Text(
 						text = stringResource(R.string.alarm_picker_select_start_time),
-						style = typography.titleMedium,
+						style = typography.titleMediumEmphasized,
 						color = colorScheme.onSurfaceVariant,
 						maxLines = 1,
 						softWrap = false,
@@ -145,7 +149,7 @@ fun TimeRow(
 		TimePickerDialog(
 			onDismissRequest = { showEndTimePicker = false },
 			confirmButton = {
-				TextButton(
+				FilledTonalButton(
 					onClick = {
 						onEndTimeChange(candidateEnd)
 						showEndTimePicker = false
@@ -158,7 +162,7 @@ fun TimeRow(
 				Column {
 					Text(
 						text = stringResource(R.string.alarm_picker_select_end_time),
-						style = typography.titleMedium,
+						style = typography.titleMediumEmphasized,
 						color = colorScheme.onSurfaceVariant,
 					)
 					AnimatedVisibility(visible = isCandidateInvalid) {
@@ -168,7 +172,7 @@ fun TimeRow(
 						}
 						Text(
 							text = stringResource(R.string.alarm_error_fix_alarm_time, startTimeString),
-							style = typography.labelMedium,
+							style = typography.labelMediumEmphasized,
 							color = colorScheme.error,
 							modifier = Modifier.padding(top = 4.dp)
 						)
@@ -263,7 +267,7 @@ fun TimeRow(
 		) {
 			Text(
 				text = errorMessage.orEmpty(),
-				style = typography.labelMedium,
+				style = typography.labelMediumEmphasized,
 				textAlign = TextAlign.Start,
 				modifier = Modifier.padding(top = 5.dp),
 				color = colorScheme.onErrorContainer
