@@ -1,10 +1,8 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.navigation
-
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn

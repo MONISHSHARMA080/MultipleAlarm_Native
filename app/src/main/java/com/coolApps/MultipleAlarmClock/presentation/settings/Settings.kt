@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Send
@@ -181,7 +180,7 @@ fun SettingsScreen(
 
 						Text(
 							text = stringResource(R.string.settings_feedback_improve_app),
-							style = MaterialTheme.typography.labelLarge,
+							style = MaterialTheme.typography.labelLargeEmphasized,
 						)
 
 						Text(

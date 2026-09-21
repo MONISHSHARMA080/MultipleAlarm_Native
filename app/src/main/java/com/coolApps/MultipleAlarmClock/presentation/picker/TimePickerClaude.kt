@@ -73,7 +73,6 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 //import androidx.compose.foundation.layout.width
 //import androidx.compose.foundation.selection.selectableGroup
 //import androidx.compose.foundation.shape.CircleShape
-//import androidx.compose.foundation.shape.RoundedCornerShape
 //import androidx.compose.material3.ButtonDefaults
 //import androidx.compose.material3.MaterialTheme
 //import androidx.compose.material3.Surface
@@ -1595,15 +1594,15 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 //	val PeriodSelectorHorizontalContainerHeight = 38.dp
 //	val PeriodSelectorOutlineWidth = 1.dp
 //	private val PeriodSelectorCornerRadius = 12.dp
-//	val PeriodSelectorOutlineShape = RoundedCornerShape(PeriodSelectorCornerRadius)
+//	val PeriodSelectorOutlineShape = MaterialTheme.shapes.small
 //	val PeriodSelectorStartShape =
-//		RoundedCornerShape(topStart = PeriodSelectorCornerRadius, bottomStart = PeriodSelectorCornerRadius, topEnd = 0.dp, bottomEnd = 0.dp)
+//		MaterialTheme.shapes.small
 //	val PeriodSelectorEndShape =
-//		RoundedCornerShape(topEnd = PeriodSelectorCornerRadius, bottomEnd = PeriodSelectorCornerRadius, topStart = 0.dp, bottomStart = 0.dp)
+//		MaterialTheme.shapes.small
 //	val PeriodSelectorTopShape =
-//		RoundedCornerShape(topStart = PeriodSelectorCornerRadius, topEnd = PeriodSelectorCornerRadius, bottomStart = 0.dp, bottomEnd = 0.dp)
+//		MaterialTheme.shapes.small
 //	val PeriodSelectorBottomShape =
-//		RoundedCornerShape(bottomStart = PeriodSelectorCornerRadius, bottomEnd = PeriodSelectorCornerRadius, topStart = 0.dp, topEnd = 0.dp)
+//		MaterialTheme.shapes.small
 //
 //	// -- given: taken verbatim from the stock source you pasted --
 //	val ClockDisplayBottomMargin = 36.dp

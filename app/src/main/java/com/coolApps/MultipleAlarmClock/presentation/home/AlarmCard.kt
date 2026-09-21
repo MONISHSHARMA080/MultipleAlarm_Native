@@ -1,9 +1,8 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.home
 
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-
+import androidx.compose.material3.MaterialTheme
 import android.os.Build
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -22,7 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Delete
@@ -95,7 +94,7 @@ fun AlarmCard(
 	)
 	val view = LocalView.current
 	val dismissState = rememberSwipeToDismissBoxState()
-	val cardShape = androidx.compose.material3.ShapeDefaults.ExtraLargeIncreased
+	val cardShape = MaterialTheme.shapes.extraLargeIncreased
 	val horizontalPadding = 10.dp
 
 	SwipeToDismissBox(

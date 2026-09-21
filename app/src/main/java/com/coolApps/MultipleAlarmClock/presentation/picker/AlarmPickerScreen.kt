@@ -1,4 +1,3 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.picker
 
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -503,7 +502,7 @@ fun PrimaryActionButton(
                 },
                 modifier = modifier.height(56.dp),
                 contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
-                shape = androidx.compose.material3.ShapeDefaults.ExtraLarge
+                shape = androidx.compose.material3.MaterialTheme.shapes.extraLarge
         ) {
           Text(
                   stringResource(R.string.alarm_picker_ok),
@@ -535,7 +534,7 @@ fun PrimaryActionButton(
                 },
                 modifier = modifier.height(56.dp),
                 contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
-                shape = androidx.compose.material3.ShapeDefaults.ExtraLarge
+                shape = androidx.compose.material3.MaterialTheme.shapes.extraLarge
         ) {
           AnimatedContent(
                   targetState = canSetAlarm,

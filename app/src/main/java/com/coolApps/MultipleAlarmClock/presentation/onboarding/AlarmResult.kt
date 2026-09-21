@@ -71,7 +71,7 @@ fun AlarmResultOpenAi(
 		) {
 			Text(
 				text = stringResource(R.string.error_generic),
-				style = MaterialTheme.typography.bodyLarge
+				style = MaterialTheme.typography.bodyLargeEmphasized
 			)
 		}
 		return
@@ -198,7 +198,7 @@ fun AlarmResultOpenAi(
 					) {
 						Text(
 							text = stringResource(R.string.onboarding_result_done),
-							style = typography.titleMedium
+							style = typography.labelLargeEmphasized
 						)
 					}
 				}

@@ -1,4 +1,3 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.picker.listAlarmRingtone
 
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi

@@ -1,10 +1,8 @@
-@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 package com.coolApps.MultipleAlarmClock.presentation.home
-
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 import android.app.Activity
 import android.os.Build
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import android.view.HapticFeedbackConstants
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.core.LinearEasing
@@ -37,7 +35,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AlarmAdd
 import androidx.compose.material.icons.outlined.Alarm

@@ -54,15 +54,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.R
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.AlarmResultClaude
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.CreateFirstAlarmScreen
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.FirstAlarmIntroView
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.GreetingScreen
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingPaywallScreen
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.PermissionScreen
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.ProblemScreen
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.DisplaySate
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.revenuecat.purchases.Offering
 import com.revenuecat.purchases.Purchases

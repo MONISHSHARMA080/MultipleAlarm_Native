@@ -1,3 +1,8 @@
+@file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
+package com.coolApps.MultipleAlarmClock.presentation.picker
+
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+
 //package com.coolApps.MultipleAlarmClock
 //
 //import android.R.attr.onClick
@@ -56,7 +61,8 @@
 //import kotlinx.coroutines.coroutineScope
 //import kotlinx.coroutines.launch
 //
-//internal class RestrictedAnalogTimePickerState @OptIn(ExperimentalMaterial3Api::class) constructor(
+//@OptIn(ExperimentalMaterial3Api::class)
+//internal class RestrictedAnalogTimePickerState constructor(
 //		val state: TimePickerState,
 //		val restriction: TimePickerRestriction,
 //		val userOverride: Ref<Boolean> = Ref<Boolean>(),
@@ -471,6 +477,7 @@
 //}
 //
 //
+//@OptIn(ExperimentalMaterial3Api::class)
 //internal class RestrictedAnalogTimePickerState(
 //		val state: TimePickerState,
 //		val restriction: TimePickerRestriction,

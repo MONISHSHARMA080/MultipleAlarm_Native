@@ -43,7 +43,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -204,7 +203,7 @@ private fun AlarmIntroStep(
 			modifier = Modifier
 				.padding(top = 2.dp)
 				.size(32.dp)
-				.clip(androidx.compose.foundation.shape.CircleShape)
+				.clip(CircleShape)
 				.background(colorScheme.primaryContainer),
 			contentAlignment = Alignment.Center
 		) {
