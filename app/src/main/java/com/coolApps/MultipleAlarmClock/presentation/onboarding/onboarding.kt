@@ -3,18 +3,11 @@ package com.coolApps.MultipleAlarmClock.presentation.onboarding
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -138,113 +131,111 @@ import com.revenuecat.purchases.awaitOfferings
 					)
 				}
 			}
-		},
-		bottomBar = {
-			AnimatedVisibility(
-				visible = buttonState != ButtonState.Hidden,
-				enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-				exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
-			) {
-				Box(
-					modifier =
-						Modifier.fillMaxWidth()
-							.background(colorScheme.background)
-							.navigationBarsPadding()
-							.padding(26.dp)
-							.padding(bottom = 20.dp)
-							.animateContentSize(),
-					contentAlignment = Alignment.Center,
-				) {
-					Row(
-						modifier = Modifier.fillMaxWidth(),
-						horizontalArrangement = Arrangement.End,
-						verticalAlignment = Alignment.CenterVertically
-					) {
-						Button(
-							onClick = {
-								view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-								viewModel.onNextClicked()
+		}
+	) { innerPadding ->
+		// Box overlay: content always gets the same innerPadding (no bottomBar),
+		// button floats on top without affecting layout measurements.
+		Box(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(innerPadding)
+		) {
+			AnimatedContent(
+				targetState = uiState.displaySate,
+				modifier = Modifier.fillMaxSize(),
+				transitionSpec = {
+					// Use natural enum ordering to determine navigation direction
+					val isForward = targetState > initialState
+					slideIntoContainer(
+						towards = if (isForward) AnimatedContentTransitionScope.SlideDirection.Left else AnimatedContentTransitionScope.SlideDirection.Right,
+						animationSpec = tween(370, easing = FastOutSlowInEasing)
+					) togetherWith slideOutOfContainer(
+						towards = if (isForward) AnimatedContentTransitionScope.SlideDirection.Left else AnimatedContentTransitionScope.SlideDirection.Right,
+						animationSpec = tween(370, easing = FastOutSlowInEasing)
+					)
+				},
+			) { state ->
+				when (state) {
+					DisplaySate.Greeting -> GreetingScreen()
+					// here make this into one uniform animation and no click etc. and then loop
+					DisplaySate.Problem -> ProblemScreen(
+						onButtonStateChange = { buttonState = it }
+					)
+					DisplaySate.Permission -> {
+						PermissionScreen(
+							missingSteps = uiState.missingSteps,
+							allCriticalGranted = uiState.allCriticalGranted,
+							refreshPermissionUiState = { viewModel.refreshPermissions() },
+							onButtonStateChange = { buttonState = it }
+						)
+					}
+					DisplaySate.FirstAlarmIntro -> {
+						FirstAlarmIntroView(
+							onButtonStateChange = { buttonState = it }
+						)
+					}
+					DisplaySate.CreateFirstAlarm -> {
+						CreateFirstAlarmScreen(
+							onAlarmSetProceed = { viewModel.onNextClicked() },
+							linearProgressBar = {
+								LinearProgressIndicator(
+									progress = { animatedProgress },
+									modifier = Modifier.fillMaxWidth().padding(end = 16.dp)
+								)
 							},
-							enabled = buttonState == ButtonState.Enabled ,
-							modifier = Modifier
-								.fillMaxWidth()
-								.height(56.dp),
-							shape = shapes.extraLarge,
-							colors = ButtonDefaults.buttonColors(
-								containerColor = colorScheme.primaryContainer,
-								contentColor = colorScheme.onPrimaryContainer
-							)
-						) {
-							Text(
-								text = stringResource(R.string.permission_continue),
-								style = typography.titleMedium
-							)
-						}
+							onButtonStateChange = { buttonState = it },
+							onShowPaywall = onNavigateToPaywall
+						)
+					}
+					DisplaySate.AlarmResult -> AlarmResultClaude(
+						alarmData = uiState.alarmData,
+						onButtonStateChange = { buttonState = it }
+					)
+					DisplaySate.OnboardingPaywall -> {
+						OnboardingPaywallScreen(
+							onFinished = { viewModel.finishedOnboarding() }, loadFailed = loadFailed, offering = offering,
+							onPurchaseCompletedEvent = {customerInfo, storeTransaction -> viewModel.onPurchaseCompletedEvent(customerInfo,storeTransaction) },
+							onRestoreCompletedEvent = { viewModel.onRestoreCompletedEvent(it) },
+							onButtonStateChange = { buttonState = it }
+						)
 					}
 				}
 			}
-		}
-	) { innerPadding ->
-		AnimatedContent(
-			targetState = uiState.displaySate,
-			modifier = Modifier
-				.fillMaxSize()
-				.padding(innerPadding),
-			transitionSpec = {
-				// Use natural enum ordering to determine navigation direction
-				val isForward = targetState > initialState
-				slideIntoContainer(
-					towards = if (isForward) AnimatedContentTransitionScope.SlideDirection.Left else AnimatedContentTransitionScope.SlideDirection.Right,
-					animationSpec = tween(370, easing = FastOutSlowInEasing)
-				) togetherWith slideOutOfContainer(
-					towards = if (isForward) AnimatedContentTransitionScope.SlideDirection.Left else AnimatedContentTransitionScope.SlideDirection.Right,
-					animationSpec = tween(370, easing = FastOutSlowInEasing)
-				)
-			},
-		) { state ->
-			when (state) {
-				DisplaySate.Greeting -> GreetingScreen()
-				// here make this into one uniform animation and no click etc. and then loop
-				DisplaySate.Problem -> ProblemScreen(
-					onButtonStateChange = { buttonState = it }
-				)
-				DisplaySate.Permission -> {
-					PermissionScreen(
-						missingSteps = uiState.missingSteps,
-						allCriticalGranted = uiState.allCriticalGranted,
-						refreshPermissionUiState = { viewModel.refreshPermissions() },
-						onButtonStateChange = { buttonState = it }
-					)
-				}
-				DisplaySate.FirstAlarmIntro -> {
-					FirstAlarmIntroView(
-						onButtonStateChange = { buttonState = it }
-					)
-				}
-				DisplaySate.CreateFirstAlarm -> {
-					CreateFirstAlarmScreen(
-						onAlarmSetProceed = { viewModel.onNextClicked() },
-						linearProgressBar = {
-							LinearProgressIndicator(
-								progress = { animatedProgress },
-								modifier = Modifier.fillMaxWidth().padding(end = 16.dp)
-							)
+
+			// Continue button — floating overlay, doesn't affect layout sizing.
+			// Instant show/hide: no animation, so zero layout shift during
+			// screen transitions.
+			if (buttonState != ButtonState.Hidden) {
+				Box(
+					modifier = Modifier
+						.fillMaxWidth()
+						.align(Alignment.BottomCenter)
+						.background(colorScheme.background)
+						.navigationBarsPadding()
+						.padding(26.dp)
+						.padding(bottom = 20.dp),
+					contentAlignment = Alignment.Center,
+				) {
+					Button(
+						onClick = {
+							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+							viewModel.onNextClicked()
 						},
-						onButtonStateChange = { buttonState = it },
-						onShowPaywall = onNavigateToPaywall
-					)
-				}
-				DisplaySate.AlarmResult -> AlarmResultClaude(
-					alarmData = uiState.alarmData,
-					onButtonStateChange = { buttonState = it }
-				)
-				DisplaySate.OnboardingPaywall -> {
-					OnboardingPaywallScreen(
-						onFinished = { viewModel.finishedOnboarding() }, loadFailed = loadFailed, offering = offering,
-						onPurchaseCompletedEvent = {customerInfo, storeTransaction -> viewModel.onPurchaseCompletedEvent(customerInfo,storeTransaction) },
-						onRestoreCompletedEvent = { viewModel.onRestoreCompletedEvent(it) },
-						onButtonStateChange = { buttonState = it }
-					)
+						enabled = buttonState == ButtonState.Enabled,
+						modifier = Modifier
+							.fillMaxWidth()
+							.height(56.dp),
+						shape = shapes.extraLarge,
+						colors = ButtonDefaults.buttonColors(
+							containerColor = colorScheme.primaryContainer,
+							contentColor = colorScheme.onPrimaryContainer
+						)
+					) {
+						Text(
+							text = stringResource(R.string.permission_continue),
+							style = typography.titleMedium
+						)
+					}
 				}
 			}
 		}
