@@ -70,7 +70,7 @@ fun FirstAlarmIntroView(
 	}
 
 	val enterReveal = fadeIn(
-		animationSpec = tween(700, easing = FastOutSlowInEasing)
+		animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessLow)
 	) + slideInVertically(
 		animationSpec = spring(
 			dampingRatio = 0.8f,
@@ -87,7 +87,7 @@ fun FirstAlarmIntroView(
 
 	val contentAlpha by animateFloatAsState(
 		targetValue = if (showContent) 1f else 0f,
-		animationSpec = tween(durationMillis = 700, easing = FastOutSlowInEasing),
+		animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessLow),
 		label = "contentAlpha"
 	)
 
@@ -113,17 +113,14 @@ fun FirstAlarmIntroView(
 						text = stringResource(R.string.onboarding_create_alarm_title),
 						style = typography.headlineLargeEmphasized,
 						textAlign = TextAlign.Center,
-						color = colorScheme.onBackground
+						color = colorScheme.onSurface
 					)
 				}
 
 				AnimatedVisibility(
 					visible = moveTitleToTop,
 					enter = expandVertically(
-						animationSpec = tween(
-							durationMillis = 800,
-							easing = FastOutSlowInEasing
-						),
+						animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessLow),
 						expandFrom = Alignment.Top
 					)
 				) {
@@ -222,7 +219,7 @@ private fun AlarmIntroStep(
 			Text(
 				text = title,
 				style = typography.titleMediumEmphasized,
-				color = colorScheme.onBackground
+				color = colorScheme.onSurface
 			)
 
 			Spacer(modifier = Modifier.height(3.dp))

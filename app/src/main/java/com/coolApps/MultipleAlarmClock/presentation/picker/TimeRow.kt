@@ -89,8 +89,8 @@ fun TimeRow(
 
 	val doWeHaveError = uiState.validationResult is AlarmDataValidationResult.TimeIntervalError
 	val errorMessage = if (uiState.validationResult is AlarmDataValidationResult.TimeIntervalError) uiState.validationResult.errorMessageToDisplayToUser.asString() else ""
-	val timeColor = if (doWeHaveError) colorScheme.error else colorScheme.onBackground
-	val amPmColor = if (doWeHaveError) colorScheme.error else colorScheme.onBackground
+	val timeColor = if (doWeHaveError) colorScheme.error else colorScheme.onSurface
+	val amPmColor = if (doWeHaveError) colorScheme.error else colorScheme.onSurface
 
 	if (showStartTimePicker) {
 		TimePickerDialog(
@@ -230,7 +230,7 @@ fun TimeRow(
 		Icon(
 			imageVector = Icons.AutoMirrored.Filled.ArrowForward,
 			contentDescription = null,
-			tint = colorScheme.onBackground,
+			tint = colorScheme.onSurface,
 			modifier = Modifier.size(32.dp)
 		)
 		Row(
@@ -270,7 +270,7 @@ fun TimeRow(
 				style = typography.labelMediumEmphasized,
 				textAlign = TextAlign.Start,
 				modifier = Modifier.padding(top = 5.dp),
-				color = colorScheme.onErrorContainer
+				color = colorScheme.error
 			)
 		}
 	}

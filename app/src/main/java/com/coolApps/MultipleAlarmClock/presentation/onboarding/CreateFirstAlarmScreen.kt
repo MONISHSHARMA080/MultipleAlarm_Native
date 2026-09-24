@@ -7,6 +7,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -49,19 +50,19 @@ fun CreateFirstAlarmScreen(
 			if (isForward) {
 				(slideIntoContainer(
 					towards = AnimatedContentTransitionScope.SlideDirection.Left,
-					animationSpec = tween(320, easing = FastOutSlowInEasing)
-				) + fadeIn(tween(250))) togetherWith (slideOutOfContainer(
+					animationSpec = spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow)
+				) + fadeIn(spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow))) togetherWith (slideOutOfContainer(
 					towards = AnimatedContentTransitionScope.SlideDirection.Left,
-					animationSpec = tween(220, easing = FastOutSlowInEasing)
-				) + fadeOut(tween(190)))
+					animationSpec = spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow)
+				) + fadeOut(spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow)))
 			} else {
 				(slideIntoContainer(
 					towards = AnimatedContentTransitionScope.SlideDirection.Right,
-					animationSpec = tween(320, easing = FastOutSlowInEasing)
-				) + fadeIn(tween(250))) togetherWith (slideOutOfContainer(
+					animationSpec = spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow)
+				) + fadeIn(spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow))) togetherWith (slideOutOfContainer(
 					towards = AnimatedContentTransitionScope.SlideDirection.Right,
-					animationSpec = tween(220, easing = FastOutSlowInEasing)
-				) + fadeOut(tween(190)))
+					animationSpec = spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow)
+				) + fadeOut(spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow)))
 			}
 		},
 	) { step ->

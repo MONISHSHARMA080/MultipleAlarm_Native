@@ -11,6 +11,7 @@ import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -311,21 +312,15 @@ fun AlarmPickerScreen(
 					}
 					slideIntoContainer(
 						towards = direction,
-						animationSpec = tween(
-							270,
-							easing = FastOutSlowInEasing
-						)
+						animationSpec = spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow)
 					) + fadeIn(
-						animationSpec = tween(250)
+						animationSpec = spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow)
 					) togetherWith
 							slideOutOfContainer(
 								towards = direction,
-								animationSpec = tween(
-									110,
-									easing = FastOutSlowInEasing
-								)
+								animationSpec = spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow)
 							) + fadeOut(
-						animationSpec = tween(190)
+						animationSpec = spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow)
 					)
 				},
 				contentAlignment = Alignment.Center,

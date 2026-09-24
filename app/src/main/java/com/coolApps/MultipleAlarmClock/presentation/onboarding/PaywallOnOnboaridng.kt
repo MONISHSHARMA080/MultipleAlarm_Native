@@ -36,6 +36,9 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 		onRestoreCompletedEvent:(customerInfo:CustomerInfo)->Unit,
 		onButtonStateChange: (ButtonState) -> Unit = {}
  ) {
+	LaunchedEffect(Unit) {
+		onButtonStateChange(ButtonState.Hidden)
+	}
 	when {
 		offering != null -> {
 			Box(modifier = Modifier.fillMaxSize()) {

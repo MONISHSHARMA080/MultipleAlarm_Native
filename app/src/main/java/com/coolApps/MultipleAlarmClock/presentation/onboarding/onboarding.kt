@@ -166,7 +166,7 @@ import com.revenuecat.purchases.awaitOfferings
 							modifier = Modifier
 								.fillMaxWidth()
 								.height(56.dp),
-							shape = shapes.full,
+							shape = androidx.compose.foundation.shape.CircleShape,
 							colors = ButtonDefaults.buttonColors(
 								containerColor = colorScheme.primaryContainer,
 								contentColor = colorScheme.onPrimaryContainer

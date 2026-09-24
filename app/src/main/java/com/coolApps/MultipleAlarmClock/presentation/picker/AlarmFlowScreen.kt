@@ -46,33 +46,33 @@ fun AlarmFlowScreen(
 		},
 		transitionSpec = {
 			slideInHorizontally(
-				animationSpec = tween(330, easing = FastOutSlowInEasing),
+				animationSpec = spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow),
 				initialOffsetX = { it }
-			) + fadeIn(tween(210, easing = LinearEasing)) togetherWith
+			) + fadeIn(spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow)) togetherWith
 					slideOutHorizontally(
-						animationSpec = tween(330, easing = FastOutSlowInEasing),
+						animationSpec = spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow),
 						targetOffsetX = { -it }
-					) + fadeOut(tween(210, easing = LinearEasing))
+					) + fadeOut(spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow))
 		},
 		popTransitionSpec = {
 			slideInHorizontally(
-				animationSpec = tween(240, easing = FastOutSlowInEasing),
+				animationSpec = spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow),
 				initialOffsetX = { -it }
-			) + fadeIn(tween(180, easing = LinearEasing)) togetherWith
+			) + fadeIn(spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow)) togetherWith
 					slideOutHorizontally(
-						animationSpec = tween(240, easing = FastOutSlowInEasing),
+						animationSpec = spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow),
 						targetOffsetX = { it }
-					) + fadeOut(tween(140, easing = LinearEasing))
+					) + fadeOut(spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow))
 		},
 		predictivePopTransitionSpec = {
 			slideInHorizontally(
-				animationSpec = tween(240, easing = FastOutSlowInEasing),
+				animationSpec = spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow),
 				initialOffsetX = { (-it * 0.3f).toInt() }
-			) + fadeIn(tween(150, easing = LinearEasing)) togetherWith
+			) + fadeIn(spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow)) togetherWith
 					slideOutHorizontally(
-						animationSpec = tween(190, easing = FastOutSlowInEasing),
+						animationSpec = spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow),
 						targetOffsetX = { it }
-					) + fadeOut(tween(120, easing = LinearEasing))
+					) + fadeOut(spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow))
 		},
 		entryProvider = entryProvider {
 			entry<AlarmFlowRoute.AlarmPicker> {

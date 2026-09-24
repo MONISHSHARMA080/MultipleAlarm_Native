@@ -366,7 +366,7 @@ private fun PermissionItem(
 					view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 					onAction()
 				},
-                shape = shapes.full,
+                shape = androidx.compose.foundation.shape.CircleShape,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(

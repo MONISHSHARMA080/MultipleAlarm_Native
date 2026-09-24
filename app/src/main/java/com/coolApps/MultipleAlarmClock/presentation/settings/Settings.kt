@@ -83,7 +83,7 @@ fun SettingsScreen(
 	val context = LocalContext.current
 
 	Scaffold(
-		containerColor = MaterialTheme.colorScheme.background,
+		containerColor = MaterialTheme.colorScheme.surface,
 		contentWindowInsets = WindowInsets.safeDrawing,
 		topBar = {
 			TopAppBar(

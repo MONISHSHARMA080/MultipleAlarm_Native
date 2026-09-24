@@ -404,12 +404,12 @@ private fun RepeatDayButton(
 
 	val containerColor by animateColorAsState(
 		targetValue = if (isSelected) colorScheme.primaryContainer else colorScheme.surfaceContainerHighest,
-		animationSpec = tween(durationMillis = tweenDuration, easing = FastOutLinearInEasing),
+		animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessLow),
 		label = "day_container_color"
 	)
 	val contentColor by animateColorAsState(
 		targetValue = if (isSelected) colorScheme.onPrimaryContainer else colorScheme.onSurfaceVariant,
-		animationSpec = tween(durationMillis = tweenDuration, easing = FastOutSlowInEasing),
+		animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessLow),
 		label = "day_content_color"
 	)
 

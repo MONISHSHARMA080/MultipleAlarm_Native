@@ -210,25 +210,25 @@ internal fun Float.toMinute(): Int {
     return if (minute < 0) (minute % 60 + 60) % 60 else minute % 60
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-internal fun TimePickerColors.timeSelectorContainerColor(selected: Boolean): Color =
-    if (selected) timeSelectorSelectedContainerColor else timeSelectorUnselectedContainerColor
+@Composable
+internal fun timeSelectorContainerColor(selected: Boolean): Color =
+    if (selected) androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer else androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainerHighest
 
-@OptIn(ExperimentalMaterial3Api::class)
-internal fun TimePickerColors.timeSelectorContentColor(selected: Boolean): Color =
-    if (selected) timeSelectorSelectedContentColor else timeSelectorUnselectedContentColor
+@Composable
+internal fun timeSelectorContentColor(selected: Boolean): Color =
+    if (selected) androidx.compose.material3.MaterialTheme.colorScheme.onPrimaryContainer else androidx.compose.material3.MaterialTheme.colorScheme.onSurface
 
-@OptIn(ExperimentalMaterial3Api::class)
-internal fun TimePickerColors.periodSelectorContainerColor(selected: Boolean): Color =
-    if (selected) periodSelectorSelectedContainerColor else periodSelectorUnselectedContainerColor
+@Composable
+internal fun periodSelectorContainerColor(selected: Boolean): Color =
+    if (selected) androidx.compose.material3.MaterialTheme.colorScheme.tertiaryContainer else androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainerHighest
 
-@OptIn(ExperimentalMaterial3Api::class)
-internal fun TimePickerColors.periodSelectorContentColor(selected: Boolean): Color =
-    if (selected) periodSelectorSelectedContentColor else periodSelectorUnselectedContentColor
+@Composable
+internal fun periodSelectorContentColor(selected: Boolean): Color =
+    if (selected) androidx.compose.material3.MaterialTheme.colorScheme.onTertiaryContainer else androidx.compose.material3.MaterialTheme.colorScheme.onSurface
 
-@OptIn(ExperimentalMaterial3Api::class)
-internal fun TimePickerColors.clockDialContentColor(selected: Boolean): Color =
-    if (selected) clockDialSelectedContentColor else clockDialUnselectedContentColor
+@Composable
+internal fun clockDialContentColor(selected: Boolean): Color =
+    if (selected) androidx.compose.material3.MaterialTheme.colorScheme.onPrimary else androidx.compose.material3.MaterialTheme.colorScheme.onSurface
 
 @OptIn(ExperimentalMaterial3Api::class)
 internal val TimePickerState.hourForDisplay: Int
@@ -685,7 +685,7 @@ private fun TimeInputImpl(
         val textStyle =
             MaterialTheme.typography.displayLargeEmphasized.copy(
                 textAlign = TextAlign.Center,
-                color = colors.timeSelectorContentColor(true),
+                color = timeSelectorContentColor(true),
             )
 
         CompositionLocalProvider(
@@ -1010,7 +1010,7 @@ private fun PeriodToggleImpl(
     onDisabledTimeSelected: (() -> Unit)?,
 ) {
     val borderStroke =
-        BorderStroke(PeriodSelectorOutlineWidth, colors.periodSelectorBorderColor)
+        BorderStroke(PeriodSelectorOutlineWidth, periodSelectorBorderColor)
     val shape = MaterialTheme.shapes.extraLarge
 //    val amDisabled = isPeriodAmDisabled(minHour)
 //    val pmDisabled = isPeriodPmDisabled(minHour)
@@ -1051,7 +1051,7 @@ private fun PeriodToggleImpl(
         Modifier.layoutId("Spacer")
             .zIndex(SeparatorZIndex)
             .fillMaxSize()
-            .background(color = colors.periodSelectorBorderColor)
+            .background(color = periodSelectorBorderColor)
     )
     ToggleItem(
         checked = state.isPm,
@@ -1084,8 +1084,8 @@ private fun ToggleItem(
     colors: TimePickerColors,
     content: @Composable RowScope.() -> Unit,
 ) {
-    val rawContentColor = colors.periodSelectorContentColor(checked)
-    val rawContainerColor = colors.periodSelectorContainerColor(checked)
+    val rawContentColor = periodSelectorContentColor(checked)
+    val rawContainerColor = periodSelectorContainerColor(checked)
     val contentColor = if (isDisabled) rawContentColor.copy(alpha = 0.38f) else rawContentColor
     val containerColor = if (isDisabled) rawContainerColor.copy(alpha = 0.38f) else rawContainerColor
 
@@ -1134,8 +1134,8 @@ private fun TimeSelector(
     val selectorContentDescription =
         if (selection == TimePickerSelectionMode.Hour) "Select Hour" else "Select Minute"
 
-    val containerColor = colors.timeSelectorContainerColor(selected)
-    val contentColor = colors.timeSelectorContentColor(selected)
+    val containerColor = timeSelectorContainerColor(selected)
+    val contentColor = timeSelectorContentColor(selected)
     Surface(
         modifier =
             modifier.semantics(mergeDescendants = true) {
@@ -1365,7 +1365,7 @@ internal fun ClockFace(
     Crossfade(
         modifier =
             modifier
-                .background(shape = CircleShape, color = colors.clockDialColor)
+                .background(shape = CircleShape, color = clockDialColor)
                 .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
                 .then(
                     ClockDialModifier(
@@ -1387,7 +1387,7 @@ internal fun ClockFace(
             radiusToSizeRatio = OuterCircleToSizeRatio,
         ) {
             CompositionLocalProvider(
-                LocalContentColor provides colors.clockDialContentColor(false)
+                LocalContentColor provides clockDialContentColor(false)
             ) {
                 repeat(screen.size) { index ->
                     val outerValue =
@@ -1456,7 +1456,8 @@ internal fun ClockFace(
 @ExperimentalMaterial3Api
 private fun Modifier.drawSelector(
     state: AnalogTimePickerState,
-    colors: TimePickerColors,
+    selectorColor: Color,
+    contentColor: Color
 ): Modifier =
     this.drawWithContent {
         val selectorOffsetPx = Offset(state.selectorPos.x.toPx(), state.selectorPos.y.toPx())
@@ -1464,7 +1465,6 @@ private fun Modifier.drawSelector(
         val selectorRadius =
             ClockDialSelectorHandleContainerSize.toPx() / 2f * state.currentDiameter.roundToPx() /
                 ClockDialContainerSize.roundToPx()
-        val selectorColor = colors.selectorColor
 
         drawCircle(
             radius = selectorRadius,
@@ -1508,7 +1508,7 @@ private fun Modifier.drawSelector(
         drawCircle(
             radius = selectorRadius,
             center = selectorOffsetPx,
-            color = colors.clockDialContentColor(selected = true),
+            color = clockDialContentColor(selected = true),
             blendMode = BlendMode.DstOver,
         )
     }
@@ -1544,7 +1544,7 @@ private fun ClockText(
             }
         }
 
-    val textColor = colors.clockDialContentColor(selected)
+    val textColor = clockDialContentColor(selected)
 
     Box(
         contentAlignment = Alignment.Center,
@@ -1708,9 +1708,9 @@ private fun TimePickerTextField(
     val focusRequester = remember { FocusRequester() }
     val textFieldColors =
         OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = colors.timeSelectorContainerColor(true),
-            unfocusedContainerColor = colors.timeSelectorContainerColor(true),
-            focusedTextColor = colors.timeSelectorContentColor(true),
+            focusedContainerColor = timeSelectorContainerColor(true),
+            unfocusedContainerColor = timeSelectorContainerColor(true),
+            focusedTextColor = timeSelectorContentColor(true),
         )
     val selected = selection == state.selection
     Column(modifier = modifier) {
