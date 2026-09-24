@@ -69,7 +69,18 @@ import com.revenuecat.purchases.awaitOfferings
 	}
 	var offering by remember { mutableStateOf<Offering?>(null) }
 	var loadFailed by remember { mutableStateOf(false) }
+	// Pre-compute the initial button state from the display state so it's set
+	// *before* AnimatedContent composes the new screen – prevents layout jitter
+	// from child screens changing it during their first composition frame.
 	var buttonState by remember { mutableStateOf(ButtonState.Enabled) }
+	LaunchedEffect(uiState.displaySate) {
+		buttonState = when (uiState.displaySate) {
+			DisplaySate.CreateFirstAlarm,
+			DisplaySate.AlarmResult,
+			DisplaySate.OnboardingPaywall -> ButtonState.Hidden
+			else -> buttonState  // keep current; child screens will refine via callback
+		}
+	}
 	val view = LocalView.current
 
 	LaunchedEffect(Unit) {

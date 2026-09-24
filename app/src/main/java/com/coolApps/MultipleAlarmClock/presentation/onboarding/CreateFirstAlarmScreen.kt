@@ -33,7 +33,7 @@ fun CreateFirstAlarmScreen(
 		onButtonStateChange: (ButtonState) -> Unit = {},
 		onShowPaywall: (Boolean) -> Unit = {}
 ) {
-	onButtonStateChange(ButtonState.Hidden)
+	// buttonState is now pre-set by the parent before this screen composes
 	val alarmPickerViewModel : AlarmPickerViewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory -> factory.create(null) }
 	var currentStep by remember { mutableStateOf(CreateFirstAlarmStep.Picker) }
 	val selected by alarmPickerViewModel.selectedAlarmSound.collectAsStateWithLifecycle()

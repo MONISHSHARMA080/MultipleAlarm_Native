@@ -32,7 +32,7 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 		onRestoreCompletedEvent:(customerInfo:CustomerInfo)->Unit,
 		onButtonStateChange: (ButtonState) -> Unit = {}
  ) {
-	 onButtonStateChange(ButtonState.Hidden)
+	 // buttonState is now pre-set by the parent before this screen composes
 	when {
 		offering != null -> {
 			Box(modifier = Modifier.fillMaxSize()) {

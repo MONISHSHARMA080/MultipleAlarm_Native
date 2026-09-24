@@ -110,7 +110,7 @@ private fun AlarmResultContent(
 	alarmData: AlarmData,
 	onButtonStateChange: (ButtonState) -> Unit,
 ) {
-	onButtonStateChange(ButtonState.Hidden)
+	// buttonState is now pre-set by the parent before this screen composes
 	val zoneId = remember { ZoneId.systemDefault() }
 	val timeFormatter = remember { DateTimeFormatter.ofPattern("h:mm a") }
 
