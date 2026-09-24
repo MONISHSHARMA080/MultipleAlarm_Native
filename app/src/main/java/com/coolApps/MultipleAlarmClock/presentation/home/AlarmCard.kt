@@ -155,6 +155,7 @@ fun AlarmCard(
 				modifier = Modifier
 					.fillMaxWidth()
 					.padding(horizontal = horizontalPadding, vertical = animatedVerticalPadding)
+					.clip(cardShape)
 					.combinedClickable(
 						onClick = { onEdit(alarmData) },
 						onLongClick = { onLongPress(alarmData) }

@@ -175,8 +175,18 @@ import kotlinx.coroutines.launch
 	}
 	AnimatedVisibility(
 		showPaywall,
-		enter = slideInVertically { it },
-		exit = slideOutVertically { it }
+		enter = slideInVertically(
+			animationSpec = tween(420, easing = FastOutSlowInEasing),
+			initialOffsetY = { it }
+		) + fadeIn(
+			animationSpec = tween(300, delayMillis = 10, easing = LinearEasing)
+		),
+		exit = slideOutVertically(
+			animationSpec = tween(420, easing = FastOutSlowInEasing),
+			targetOffsetY = { it }
+		) + fadeOut(
+			animationSpec = tween(250, easing = LinearEasing)
+		)
 	) {
 		PremiumPaywallDialog(false,
 			onPurchaseCompletedEvent = {customerInfo, storeTransaction -> navViewModel.onPurchaseCompletedEvent(customerInfo,storeTransaction) },
