@@ -1,4 +1,5 @@
 package com.coolApps.MultipleAlarmClock.presentation.picker
+import androidx.compose.foundation.layout.width
 
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
@@ -46,6 +47,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -184,24 +187,24 @@ fun AlarmPickerScreen(
 		contentWindowInsets = WindowInsets.safeDrawing,
 		topBar = {
 			if (!fromOnboarding) {
-				Row(
-					modifier = Modifier
-						.fillMaxWidth()
-						.statusBarsPadding()
-						.padding(horizontal = 8.dp, vertical = 8.dp),
-					verticalAlignment = Alignment.CenterVertically
-				) {
-					IconButton(
-						onClick = {
-							settingAlarmCancelled()
+				TopAppBar(
+					title = { },
+					navigationIcon = {
+						IconButton(
+							onClick = {
+								settingAlarmCancelled()
+							}
+						) {
+							Icon(
+								imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+								contentDescription = stringResource(R.string.alarm_picker_back_desc)
+							)
 						}
-					) {
-						Icon(
-							imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-							contentDescription = stringResource(R.string.alarm_picker_back_desc)
-						)
-					}
-				}
+					},
+					colors = TopAppBarDefaults.topAppBarColors(
+						containerColor = androidx.compose.ui.graphics.Color.Transparent
+					)
+				)
 			}
 		},
 		bottomBar = {
@@ -211,13 +214,13 @@ fun AlarmPickerScreen(
 						.background(colorScheme.background)
 						.navigationBarsPadding()
 						.padding(16.dp)
-						.padding(bottom = 20.dp)
+						.padding(bottom = 24.dp)
 						.animateContentSize(),
 				contentAlignment = Alignment.Center
 			) {
 				Row(
 					modifier = Modifier.widthIn(max = 600.dp).fillMaxWidth(),
-					horizontalArrangement = Arrangement.SpaceBetween,
+					horizontalArrangement = Arrangement.End,
 					verticalAlignment = Alignment.CenterVertically
 				) {
 					CancelAndDeleteButton(
@@ -245,6 +248,8 @@ fun AlarmPickerScreen(
 							}
 						}
 					)
+
+					Spacer(modifier = Modifier.width(8.dp))
 
 					PrimaryActionButton(
 						currentProgress = currentProgress,
@@ -294,6 +299,8 @@ fun AlarmPickerScreen(
 			}
 		}
 	) { screenPadding ->
+		val spatialSpec = androidx.compose.material3.MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.IntOffset>()
+		val effectsSpec = androidx.compose.material3.MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
 		Column(
 			modifier = Modifier
 				.fillMaxSize()
@@ -312,15 +319,15 @@ fun AlarmPickerScreen(
 					}
 					slideIntoContainer(
 						towards = direction,
-						animationSpec = spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow)
+						animationSpec = spatialSpec
 					) + fadeIn(
-						animationSpec = spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow)
+						animationSpec = effectsSpec
 					) togetherWith
 							slideOutOfContainer(
 								towards = direction,
-								animationSpec = spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow)
+								animationSpec = spatialSpec
 							) + fadeOut(
-						animationSpec = spring(dampingRatio = 0.8f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow)
+						animationSpec = effectsSpec
 					)
 				},
 				contentAlignment = Alignment.Center,
@@ -427,7 +434,7 @@ fun CancelAndDeleteButton(
     if (targetIsDelete) {
       TextButton(
               onClick = onClick,
-              modifier = modifier.height(56.dp),
+              modifier = modifier,
               shape = androidx.compose.foundation.shape.CircleShape,
               colors = ButtonDefaults.textButtonColors(contentColor = colorScheme.error)
       ) {
@@ -439,7 +446,7 @@ fun CancelAndDeleteButton(
     } else {
       OutlinedButton(
               onClick = onClick,
-              modifier = modifier.height(56.dp),
+              modifier = modifier,
               contentPadding = PaddingValues(horizontal = 28.dp, vertical = 0.dp),
               shape = androidx.compose.foundation.shape.CircleShape
       ) {
@@ -495,7 +502,7 @@ fun PrimaryActionButton(
                           contentColor = colorScheme.onSurfaceVariant
                   )
                 },
-                modifier = modifier.height(56.dp),
+                modifier = modifier,
                 contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
         ) {
           Text(
@@ -526,7 +533,7 @@ fun PrimaryActionButton(
                   }
                   else -> ButtonDefaults.buttonColors()
                 },
-                modifier = modifier.height(56.dp),
+                modifier = modifier,
                 contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
         ) {
           AnimatedContent(
@@ -554,10 +561,8 @@ fun onDisabledTimeSelected(view: View){
 	view.performHapticFeedback(HapticFeedbackConstants.REJECT)
 }
 
-@Composable fun rememberAdaptiveHorizontalPadding(percent: Float = 0.0066f, min: Dp = 14.dp, max: Dp = 30.dp): Dp {
-  val density = LocalDensity.current
-  val screenWidthDp = with(density) { LocalWindowInfo.current.containerSize.width.toDp() }
-  return (screenWidthDp * percent).coerceIn(min, max)
+@Composable fun rememberAdaptiveHorizontalPadding(): Dp {
+  return 24.dp
 }
 
 

@@ -1,0 +1,13 @@
+--- app/src/main/java/com/coolApps/MultipleAlarmClock/presentation/picker/SettingsCard.kt
++++ app/src/main/java/com/coolApps/MultipleAlarmClock/presentation/picker/SettingsCard.kt
+@@ -1,6 +1,8 @@
+-import androidx.compose.material3.SegmentedButton
+-import MultiChoiceSegmentedButtonRow
+-import SegmentedButtonDefaults
+ package com.coolApps.MultipleAlarmClock.presentation.picker
+ 
++import androidx.compose.material3.SegmentedButton
++import androidx.compose.material3.MultiChoiceSegmentedButtonRow
++import androidx.compose.material3.SegmentedButtonDefaults
++
+ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi

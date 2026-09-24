@@ -144,12 +144,12 @@ import java.util.Calendar
 				hostState = snackBarHostState,
 				modifier = Modifier
 					.align(Alignment.BottomCenter)
-					.padding(bottom = 106.dp)
+					.padding(bottom = 104.dp)
 					.zIndex(10f)
 			) { snackBarData ->
 				Snackbar(
 					snackbarData = snackBarData,
-					shape = MaterialTheme.shapes.extraExtraLarge,
+					shape = MaterialTheme.shapes.small,
 					containerColor = colorScheme.inverseSurface,
 					contentColor = colorScheme.inverseOnSurface,
 					modifier = Modifier.fillMaxWidth()
@@ -169,13 +169,13 @@ import java.util.Calendar
 			}
 
 			LazyVerticalGrid(
-				columns = GridCells.Adaptive(minSize = 500.dp),
+				columns = GridCells.Adaptive(minSize = 300.dp),
 				modifier = Modifier.fillMaxSize(),
 				contentPadding = PaddingValues(
 					start = edgeToEdgePadding.calculateStartPadding(LocalLayoutDirection.current),
 					top = edgeToEdgePadding.calculateTopPadding(),
 					end = edgeToEdgePadding.calculateEndPadding(LocalLayoutDirection.current),
-					bottom = edgeToEdgePadding.calculateBottomPadding() + 155.dp
+					bottom = edgeToEdgePadding.calculateBottomPadding() + 160.dp
 				),
 				horizontalArrangement = Arrangement.spacedBy(0.dp),
 				verticalArrangement = Arrangement.spacedBy(0.dp)
@@ -184,13 +184,13 @@ import java.util.Calendar
 					Row(
 						modifier = Modifier
 							.fillMaxWidth()
-							.padding(bottom = 23.dp, end = 10.dp),
+							.padding(bottom = 24.dp, end = 8.dp),
 						horizontalArrangement = Arrangement.End,
 						verticalAlignment = Alignment.CenterVertically
 					) {
 						FilledTonalIconButton(
 							onClick = onNavigateToSettings,
-							modifier = Modifier.size(45.dp),
+							modifier = Modifier.size(48.dp),
 							shape = MaterialTheme.shapes.largeIncreased
 						) {
 							Icon(
@@ -268,7 +268,7 @@ fun EmptyState(modifier: Modifier = Modifier) {
 		initialValue = 0f,
 		targetValue = 7f,
 		animationSpec = infiniteRepeatable(
-			animation = tween(durationMillis = 1222, easing = LinearEasing),
+			animation = tween(durationMillis = 1000),
 			repeatMode = RepeatMode.Reverse
 		),
 		label = "EmptyStateIconOffset"
@@ -315,43 +315,38 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 	)
 	val colorScheme = colorScheme
 
-	// 🔑 Lock font scale so button looks identical on every device
-	CompositionLocalProvider(
-		LocalDensity provides Density(density = LocalDensity.current.density, fontScale = 1f)
-	) {
-		ExtendedFloatingActionButton(
-			onClick = {
-				coroutineScope.launch { onClick() }
-			},
-			modifier = modifier
-				.padding(bottom = 29.dp, end = 16.dp)
-				.scale(scale)
-				.height(75.dp)
-				.widthIn(min = 178.dp)
-				.zIndex(5f),
-			interactionSource = interactionSource,
-			shape = MaterialTheme.shapes.extraExtraLarge,
-			containerColor = colorScheme.tertiaryContainer,
-			contentColor = colorScheme.onTertiaryContainer,
-			elevation = FloatingActionButtonDefaults.elevation(
-				defaultElevation = 6.dp,
-				pressedElevation = 6.dp
-			),
-			icon = {
-				Icon(
-					imageVector = Icons.Default.AlarmAdd,
-					contentDescription = null,
-					modifier = Modifier.size(28.dp)
-				)
-			},
-			text = {
-				Text(
-					text = stringResource(R.string.add_alarm_button_text),
-					style = MaterialTheme.typography.titleMediumEmphasized,
-					letterSpacing = 0.1.sp,
-					maxLines = 1
-				)
-			}
-		)
-	}
+	ExtendedFloatingActionButton(
+		onClick = {
+			coroutineScope.launch { onClick() }
+		},
+		modifier = modifier
+			.padding(bottom = 32.dp, end = 16.dp)
+			.scale(scale)
+			.height(64.dp)
+			.widthIn(min = 176.dp)
+			.zIndex(5f),
+		interactionSource = interactionSource,
+		shape = MaterialTheme.shapes.extraExtraLarge,
+		containerColor = colorScheme.tertiaryContainer,
+		contentColor = colorScheme.onTertiaryContainer,
+		elevation = FloatingActionButtonDefaults.elevation(
+			defaultElevation = 6.dp,
+			pressedElevation = 6.dp
+		),
+		icon = {
+			Icon(
+				imageVector = Icons.Default.AlarmAdd,
+				contentDescription = null,
+				modifier = Modifier.size(28.dp)
+			)
+		},
+		text = {
+			Text(
+				text = stringResource(R.string.add_alarm_button_text),
+				style = MaterialTheme.typography.titleMediumEmphasized,
+				letterSpacing = 0.1.sp,
+				maxLines = 1
+			)
+		}
+	)
 }

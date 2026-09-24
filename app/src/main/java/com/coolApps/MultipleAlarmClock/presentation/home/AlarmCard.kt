@@ -95,7 +95,7 @@ fun AlarmCard(
 	val view = LocalView.current
 	val dismissState = rememberSwipeToDismissBoxState()
 	val cardShape = MaterialTheme.shapes.extraLargeIncreased
-	val horizontalPadding = 10.dp
+	val horizontalPadding = 8.dp
 
 	SwipeToDismissBox(
 		state = dismissState,
@@ -146,45 +146,38 @@ fun AlarmCard(
 	) {
 		val secondaryContentColor = contentColor.copy(alpha = 0.7f)
 
-		// 🔑 Lock font scale to ensure the card looks identical on all devices as per AGENTS.md
-		CompositionLocalProvider(
-			LocalDensity provides Density(
-				density = LocalDensity.current.density,
-				fontScale = 1f
-			)
-		) {
-			Card(
-				modifier = Modifier
-					.fillMaxWidth()
-					.padding(horizontal = horizontalPadding, vertical = animatedVerticalPadding)
-					.combinedClickable(
-						onClick = { onEdit(alarmData) },
-						onLongClick = { onLongPress(alarmData) }
-					),
-				colors = CardDefaults.cardColors(
-					containerColor = containerColor,
-					contentColor = contentColor
+		Card(
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(horizontal = horizontalPadding, vertical = animatedVerticalPadding)
+				.combinedClickable(
+					onClick = { onEdit(alarmData) },
+					onLongClick = { onLongPress(alarmData) }
 				),
-				shape = cardShape,
-				elevation = CardDefaults.cardElevation()
+			colors = CardDefaults.cardColors(
+				containerColor = containerColor,
+				contentColor = contentColor
+			),
+			shape = cardShape,
+			elevation = CardDefaults.cardElevation()
+		) {
+			Column(
+				modifier = Modifier
+					.padding(24.dp)
+					.fillMaxWidth()
 			) {
-				Column(
-					modifier = Modifier
-						.padding(24.dp)
-						.fillMaxWidth()
-				) {
-					Text(
-						text = formatRelativeDate(
-							alarmStartMs = alarmData.startTime,
-							todayStartMs = todayStartMs,
-						),
-						style = typography.labelMediumEmphasized,
-						color = secondaryContentColor
-					)
+				Text(
+					text = formatRelativeDate(
+						alarmStartMs = alarmData.startTime,
+						todayStartMs = todayStartMs,
+					),
+					style = typography.labelMediumEmphasized,
+					color = secondaryContentColor
+				)
 
-					Spacer(modifier = Modifier.height(10.dp))
+				Spacer(modifier = Modifier.height(8.dp))
 
-					// Conditional styling for time display to satisfy emphasis requirements
+				// Conditional styling for time display to satisfy emphasis requirements
 
 					// Time and Toggle Row
 					Row(
@@ -236,7 +229,6 @@ fun AlarmCard(
 					}
 				}
 			}
-		}
 	}
 }
 

@@ -28,6 +28,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
@@ -57,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.IntentCompat
 import androidx.lifecycle.lifecycleScope
+import com.coolApps.MultipleAlarmClock.presentation.theme.AppTheme
 import com.coolApps.MultipleAlarmClock.presentation.trigger.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.util.Analytics
 import com.coolApps.MultipleAlarmClock.presentation.logD
@@ -92,8 +98,7 @@ class AlarmActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 		this.intentReceived = intent
         setContent {
-			val colorScheme = if (isSystemInDarkTheme()) { dynamicDarkColorScheme(LocalContext.current) } else { dynamicLightColorScheme(LocalContext.current) }
-            MaterialTheme(colorScheme = colorScheme) {
+            AppTheme {
                 var messageVarToSet by remember { mutableStateOf("") }
                 var intentData by remember { mutableStateOf<AlarmActivityIntentData?>(null)  }
 
@@ -213,7 +218,7 @@ class AlarmActivity : ComponentActivity() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .padding(bottom = 12.dp),
+                    .padding(bottom = 16.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Button(
@@ -223,14 +228,14 @@ class AlarmActivity : ComponentActivity() {
 				  	},
                     colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primaryContainer, contentColor = colorScheme.onPrimaryContainer),
                     shape = MaterialTheme.shapes.extraExtraLarge,
-                    modifier = Modifier.height(83.dp).fillMaxWidth(0.92f)
+                    modifier = Modifier.height(72.dp).widthIn(max = 400.dp).fillMaxWidth()
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Cancel,
-                        modifier = Modifier.size(31.dp),
+                        modifier = Modifier.size(32.dp),
                         contentDescription = "Cancel"
                     )
-                    Spacer(modifier = Modifier.width(10.dp)) // Space between icon and text
+                    Spacer(modifier = Modifier.width(8.dp)) // Space between icon and text
                     Text(text = "Stop", style = typography.headlineLargeEmphasized)
                 }
             }
@@ -240,7 +245,7 @@ class AlarmActivity : ComponentActivity() {
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(top = innerPadding.calculateTopPadding() + 21.dp)
+                .padding(top = 24.dp)
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = if (message.isEmpty()) Arrangement.Center else Arrangement.Top
@@ -248,8 +253,14 @@ class AlarmActivity : ComponentActivity() {
             // ------
             // animate the state change so it won't be jarring
             // ------
-			AnimatedContent(targetState = message.isEmpty()) { messageIsEmpty ->
-				if (!messageIsEmpty) Spacer(modifier = Modifier.height(60.dp))
+			AnimatedContent(
+                targetState = message.isEmpty(),
+                transitionSpec = {
+                    fadeIn(animationSpec = spring()) togetherWith fadeOut(animationSpec = spring())
+                },
+                label = "Message Transition"
+            ) { messageIsEmpty ->
+				if (!messageIsEmpty) Spacer(modifier = Modifier.height(64.dp))
 				Column(
 					modifier = modifier.fillMaxSize(),
 					horizontalAlignment = Alignment.CenterHorizontally,

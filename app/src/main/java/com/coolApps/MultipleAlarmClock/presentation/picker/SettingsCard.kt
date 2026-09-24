@@ -1,4 +1,7 @@
 package com.coolApps.MultipleAlarmClock.presentation.picker
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.MultiChoiceSegmentedButtonRow
+import androidx.compose.material3.SegmentedButtonDefaults
 
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
@@ -48,6 +51,7 @@ import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
@@ -281,7 +285,7 @@ fun MessageRow(
 		) {
 			Text(
 				text = title,
-				color = colorScheme.onBackground,
+				color = colorScheme.onSurface,
 				style = titleStyle,
 				modifier = Modifier.padding(top = 1.dp),
 				maxLines = 1,
@@ -347,6 +351,7 @@ fun MessageRow(
 }
 
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun RepeatDaysRow(
 		icon: ImageVector,
@@ -368,89 +373,22 @@ fun RepeatDaysRow(
 		Row(verticalAlignment = Alignment.CenterVertically) {
 			Icon(imageVector = icon, contentDescription = null, tint = colorScheme.onSurfaceVariant)
 			Spacer(modifier = Modifier.width(16.dp))
-			Text(text = title, color = colorScheme.onBackground, style = typography.titleSmallEmphasized)
+			Text(text = title, color = colorScheme.onSurface, style = typography.titleSmallEmphasized)
 		}
 		Spacer(modifier = Modifier.height(12.dp))
-		Row(
-			modifier = Modifier.fillMaxWidth(),
-			horizontalArrangement = Arrangement.SpaceBetween
+		MultiChoiceSegmentedButtonRow(
+			modifier = Modifier.fillMaxWidth()
 		) {
-			orderedDays.forEach { day ->
-				RepeatDayButton(
-					day = day,
-					isSelected = day in selectedDays,
-					onToggle = onDayToggled
-				)
+			orderedDays.forEachIndexed { index, day ->
+				val narrowLabel = remember(day, locale) { day.getDisplayName(TextStyle.NARROW, locale) }
+				SegmentedButton(
+					checked = day in selectedDays,
+					onCheckedChange = { onDayToggled(day) },
+					shape = SegmentedButtonDefaults.itemShape(index = index, count = orderedDays.size)
+				) {
+					Text(text = narrowLabel)
+				}
 			}
-		}
-	}
-}
-
-@Composable
-private fun RepeatDayButton(
-	day: DayOfWeek,
-	isSelected: Boolean,
-	onToggle: (DayOfWeek) -> Unit,
-	modifier: Modifier = Modifier
-) {
-	val locale = LocalLocale.current.platformLocale
-	val narrowLabel = remember(day, locale) { day.getDisplayName(TextStyle.NARROW, locale) }
-	val fullLabel = remember(day, locale) { day.getDisplayName(TextStyle.FULL, locale) }
-	val view = LocalView.current
-	val coroutineScope = rememberCoroutineScope()
-	val scale = remember { Animatable(1f) }
-	val tweenDuration = 12
-
-
-	val containerColor by animateColorAsState(
-		targetValue = if (isSelected) colorScheme.primaryContainer else colorScheme.surfaceContainerHighest,
-		animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessLow),
-		label = "day_container_color"
-	)
-	val contentColor by animateColorAsState(
-		targetValue = if (isSelected) colorScheme.onPrimaryContainer else colorScheme.onSurfaceVariant,
-		animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessLow),
-		label = "day_content_color"
-	)
-
-	Surface(
-		onClick = {
-			view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-			coroutineScope.launch {
-				scale.snapTo(1f)
-				scale.animateTo(
-					targetValue = 1.18f,
-					animationSpec = spring(
-						dampingRatio = Spring.DampingRatioMediumBouncy,
-						stiffness = Spring.StiffnessMedium
-					)
-				)
-				scale.animateTo(
-					targetValue = 1f,
-					animationSpec = spring(
-						dampingRatio = Spring.DampingRatioMediumBouncy,
-						stiffness = Spring.StiffnessMediumLow
-					)
-				)
-			}
-			onToggle(day)
-		},
-		shape = CircleShape,
-		color = containerColor.copy(alpha = 0.7f),
-		modifier = modifier
-			.size(40.dp)
-			.graphicsLayer {
-				scaleX = scale.value
-				scaleY = scale.value
-			}
-			.semantics { contentDescription = fullLabel }
-	) {
-		Box(contentAlignment = Alignment.Center) {
-			Text(
-				text = narrowLabel,
-				style = typography.labelLargeEmphasized,
-				color = contentColor
-			)
 		}
 	}
 }
@@ -461,7 +399,7 @@ private fun RepeatDayButton(
 		modifier =
 			Modifier.fillMaxWidth()
 				.clickable(onClick = onClick)
-				.padding(horizontal = 16.dp, vertical = 20.dp)
+				.padding(horizontal = 16.dp, vertical = 24.dp)
 				.animateContentSize(),
 		verticalAlignment = Alignment.CenterVertically
 	) {
@@ -469,7 +407,7 @@ private fun RepeatDayButton(
 		Spacer(modifier = Modifier.width(16.dp))
 		Text(
 			text = title,
-			color = colorScheme.onBackground,
+			color = colorScheme.onSurface,
 			style = typography.titleSmallEmphasized,
 		)
 		Spacer(modifier = Modifier.weight(1f))
@@ -509,20 +447,12 @@ private fun RepeatDayButton(
 				Spacer(modifier = Modifier.width(16.dp))
 				Text(
 					text = title,
-					color = colorScheme.onBackground,
+					color = colorScheme.onSurface,
 					style = typography.titleSmallEmphasized,
 					modifier = Modifier.weight(1f)
 				)
 				Row(
-					verticalAlignment = Alignment.CenterVertically,
-					modifier =
-						Modifier.background(
-							color =
-								if (doWeHaveFrequencyError) colorScheme.errorContainer
-								else colorScheme.secondaryContainer,
-							shape = androidx.compose.material3.MaterialTheme.shapes.medium
-						)
-							.padding(4.dp)
+					verticalAlignment = Alignment.CenterVertically
 				) {
 					IconButton(
 						onClick = {
@@ -532,13 +462,11 @@ private fun RepeatDayButton(
 							} else {
 								view.performHapticFeedback(HapticFeedbackConstants.REJECT)
 							}
-						},
-						modifier = Modifier.size(36.dp)
+						}
 					) {
 						Icon(
 							imageVector = Icons.Rounded.Remove,
-							contentDescription = stringResource(R.string.alarm_picker_decrease_desc),
-							tint = colorScheme.onSecondaryContainer
+							contentDescription = stringResource(R.string.alarm_picker_decrease_desc)
 						)
 					}
 
@@ -555,7 +483,7 @@ private fun RepeatDayButton(
 						}
 					}
 
-					BasicTextField(
+					androidx.compose.material3.OutlinedTextField(
 						value = textValue,
 						onValueChange = { newValue ->
 							val digitsOnly = newValue.filter { it.isDigit() }
@@ -565,15 +493,14 @@ private fun RepeatDayButton(
 							digitsOnly.toLongOrNull()?.let { onValueChange(it) }
 						},
 						visualTransformation = minSuffixTransformation,
-						modifier = Modifier.width(55.dp),
-						textStyle =
-							typography.titleMediumEmphasized.copy(
-								textAlign = TextAlign.Center,
-								color = colorScheme.onSecondaryContainer,
-								fontWeight = FontWeight.Bold
-							),
+						modifier = Modifier.width(96.dp).padding(horizontal = 4.dp),
+						textStyle = typography.titleMediumEmphasized.copy(
+							textAlign = TextAlign.Center,
+							fontWeight = FontWeight.Bold
+						),
 						keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-						singleLine = true
+						singleLine = true,
+						isError = doWeHaveFrequencyError
 					)
 
 					IconButton(
@@ -584,13 +511,11 @@ private fun RepeatDayButton(
 							} else {
 								view.performHapticFeedback(HapticFeedbackConstants.REJECT)
 							}
-						},
-						modifier = Modifier.size(36.dp)
+						}
 					) {
 						Icon(
 							imageVector = Icons.Rounded.Add,
-							contentDescription = stringResource(R.string.alarm_picker_increase_desc),
-							tint = colorScheme.onSecondaryContainer
+							contentDescription = stringResource(R.string.alarm_picker_increase_desc)
 						)
 					}
 				}

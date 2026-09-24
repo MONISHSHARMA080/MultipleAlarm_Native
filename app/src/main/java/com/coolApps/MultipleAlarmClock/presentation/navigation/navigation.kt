@@ -61,6 +61,8 @@ fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) 
 		modifier = Modifier.fillMaxSize(),
 		color = MaterialTheme.colorScheme.background
 	) {
+		val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<androidx.compose.ui.unit.IntOffset>()
+		val effectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
 
 		NavDisplay(
 			backStack = backStack,
@@ -73,35 +75,35 @@ fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) 
 
 			transitionSpec = {
 				slideInHorizontally(
-					animationSpec = tween(330, easing = FastOutSlowInEasing),
+					animationSpec = spatialSpec,
 					initialOffsetX = { it }
-				) + fadeIn(tween(210, easing = LinearEasing)) togetherWith
+				) + fadeIn(effectsSpec) togetherWith
 						slideOutHorizontally(
-							animationSpec = tween(330, easing = FastOutSlowInEasing),
+							animationSpec = spatialSpec,
 							targetOffsetX = { -it }
-						) + fadeOut(tween(210, easing = LinearEasing))
+						) + fadeOut(effectsSpec)
 			},
 
 			popTransitionSpec = {
 				slideInHorizontally(
-					animationSpec = tween(240, easing = FastOutSlowInEasing),
+					animationSpec = spatialSpec,
 					initialOffsetX = { -it }
-				) + fadeIn(tween(180, easing = LinearEasing)) togetherWith
+				) + fadeIn(effectsSpec) togetherWith
 						slideOutHorizontally(
-							animationSpec = tween(240, easing = FastOutSlowInEasing),
+							animationSpec = spatialSpec,
 							targetOffsetX = { it }
-						) + fadeOut(tween(140, easing = LinearEasing))
+						) + fadeOut(effectsSpec)
 			},
 
 			predictivePopTransitionSpec = {
 				slideInHorizontally(
-					animationSpec = tween(240, easing = FastOutSlowInEasing),
+					animationSpec = spatialSpec,
 					initialOffsetX = { (-it * 0.3f).toInt() }
-				) + fadeIn(tween(150, easing = LinearEasing)) togetherWith
+				) + fadeIn(effectsSpec) togetherWith
 						slideOutHorizontally(
-							animationSpec = tween(190, easing = FastOutSlowInEasing),
+							animationSpec = spatialSpec,
 							targetOffsetX = { it }
-						) + fadeOut(tween(120, easing = LinearEasing))
+						) + fadeOut(effectsSpec)
 			},
 
 			entryProvider = entryProvider {

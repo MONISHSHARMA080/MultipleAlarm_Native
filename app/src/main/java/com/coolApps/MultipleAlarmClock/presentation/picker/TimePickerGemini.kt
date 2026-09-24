@@ -230,6 +230,14 @@ internal fun periodSelectorContentColor(selected: Boolean): Color =
 internal fun clockDialContentColor(selected: Boolean): Color =
     if (selected) androidx.compose.material3.MaterialTheme.colorScheme.onPrimary else androidx.compose.material3.MaterialTheme.colorScheme.onSurface
 
+@Composable
+internal fun periodSelectorBorderColor(): Color =
+    androidx.compose.material3.MaterialTheme.colorScheme.outline
+
+@Composable
+internal fun clockDialColor(): Color =
+    androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainerHighest
+
 @OptIn(ExperimentalMaterial3Api::class)
 internal val TimePickerState.hourForDisplay: Int
     get() = when {
@@ -1010,7 +1018,7 @@ private fun PeriodToggleImpl(
     onDisabledTimeSelected: (() -> Unit)?,
 ) {
     val borderStroke =
-        BorderStroke(PeriodSelectorOutlineWidth, periodSelectorBorderColor)
+        BorderStroke(PeriodSelectorOutlineWidth, periodSelectorBorderColor())
     val shape = MaterialTheme.shapes.extraLarge
 //    val amDisabled = isPeriodAmDisabled(minHour)
 //    val pmDisabled = isPeriodPmDisabled(minHour)
@@ -1051,7 +1059,7 @@ private fun PeriodToggleImpl(
         Modifier.layoutId("Spacer")
             .zIndex(SeparatorZIndex)
             .fillMaxSize()
-            .background(color = periodSelectorBorderColor)
+            .background(color = periodSelectorBorderColor())
     )
     ToggleItem(
         checked = state.isPm,
@@ -1365,7 +1373,7 @@ internal fun ClockFace(
     Crossfade(
         modifier =
             modifier
-                .background(shape = CircleShape, color = clockDialColor)
+                .background(shape = CircleShape, color = clockDialColor())
                 .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
                 .then(
                     ClockDialModifier(
@@ -1378,7 +1386,7 @@ internal fun ClockFace(
                         onDisabledTimeSelected = onDisabledTimeSelected,
                     )
                 )
-                .drawSelector(state, colors),
+                .drawSelector(state, androidx.compose.material3.MaterialTheme.colorScheme.primary, androidx.compose.material3.MaterialTheme.colorScheme.onPrimary),
         targetState = state.clockFaceValues,
         animationSpec = spring(),
     ) { screen ->
@@ -1508,7 +1516,7 @@ private fun Modifier.drawSelector(
         drawCircle(
             radius = selectorRadius,
             center = selectorOffsetPx,
-            color = clockDialContentColor(selected = true),
+            color = contentColor,
             blendMode = BlendMode.DstOver,
         )
     }
