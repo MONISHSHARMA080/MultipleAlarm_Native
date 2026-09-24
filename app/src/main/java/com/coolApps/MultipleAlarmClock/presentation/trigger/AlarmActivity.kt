@@ -2,7 +2,6 @@ package com.coolApps.MultipleAlarmClock.presentation.trigger
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import android.os.PowerManager
 import android.view.HapticFeedbackConstants
 import android.view.WindowManager
@@ -10,8 +9,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,13 +28,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
@@ -43,8 +40,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -55,18 +50,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.IntentCompat
 import androidx.lifecycle.lifecycleScope
-import com.coolApps.MultipleAlarmClock.presentation.theme.AppTheme
-import com.coolApps.MultipleAlarmClock.presentation.trigger.AlarmActivityIntentData
-import com.coolApps.MultipleAlarmClock.util.Analytics
 import com.coolApps.MultipleAlarmClock.presentation.logD
+import com.coolApps.MultipleAlarmClock.presentation.theme.AppTheme
 import com.coolApps.MultipleAlarmClock.receiver.AlarmService
+import com.coolApps.MultipleAlarmClock.util.Analytics
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -250,9 +242,6 @@ class AlarmActivity : ComponentActivity() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = if (message.isEmpty()) Arrangement.Center else Arrangement.Top
         ) {
-            // ------
-            // animate the state change so it won't be jarring
-            // ------
 			AnimatedContent(
                 targetState = message.isEmpty(),
                 transitionSpec = {
@@ -298,7 +287,7 @@ class AlarmActivity : ComponentActivity() {
 								Text(
 									text = message,
 									color = colorScheme.onSurface,
-									style = typography.titleLargeEmphasized,
+									style = typography.titleMediumEmphasized,
 									lineHeight = 35.sp
 								)
 								Spacer(modifier = Modifier.height(20.dp))
