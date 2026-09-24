@@ -64,11 +64,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.local.AlarmDataValidationResult
-import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.AlarmPermissionDialog
-import com.coolApps.MultipleAlarmClock.presentation.picker.SettingsCard
-import com.coolApps.MultipleAlarmClock.presentation.picker.TimePickerWithoutDialog
-import com.coolApps.MultipleAlarmClock.presentation.picker.TimeRow
 import com.coolApps.MultipleAlarmClock.presentation.logD
+import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.AlarmPermissionDialog
 import java.util.Calendar
 
 
@@ -91,11 +88,6 @@ fun AlarmPickerScreen(
 	val view = LocalView.current
 	val timeStyle = typography.headlineSmall
 	val context = LocalContext.current
-
-
-	LaunchedEffect(Unit) {
-		viewModel.screen("AlarmPickerScreen")
-	}
 
 	LaunchedEffect(fromOnboarding) {
 		viewModel.fromOnboarding = fromOnboarding

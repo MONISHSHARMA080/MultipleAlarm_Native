@@ -7,32 +7,51 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 sealed interface Screen : NavKey {
-	@Serializable
-	data object OnboardingScreen : Screen
+	val screenName: String
 
 	@Serializable
-	data object AlarmContainer : Screen
+	data object OnboardingScreen : Screen {
+		override val screenName = "OnboardingScreen"
+	}
+
+	@Serializable
+	data object AlarmContainer : Screen {
+		override val screenName = "AlarmContainer"
+	}
 
 	@Serializable
 	data class AlarmFlow(
-		val alarmData: AlarmData? = null
-	) : Screen
+			val alarmData: AlarmData? = null
+	) : Screen {
+		override val screenName = "AlarmFlow"
+	}
 
 	@Serializable
-	data object SettingsScreen : Screen
+	data object SettingsScreen : Screen {
+		override val screenName = "SettingsScreen"
+	}
 
 	@Serializable
-	data object Paywall : Screen
+	data object Paywall : Screen {
+		override val screenName = "Paywall"
+	}
 
 	@Serializable
-	data object CustomerCenter : Screen
+	data object CustomerCenter : Screen {
+		override val screenName = "CustomerCenter"
+	}
 }
 
 @Serializable
  sealed interface AlarmFlowRoute : NavKey {
+	val screenName: String
 	@Serializable
-	data object AlarmPicker : AlarmFlowRoute
+	data object AlarmPicker : AlarmFlowRoute{
+		override val screenName ="AlarmPicker"
+	}
 
 	@Serializable
-	data object AlarmSoundListScreen : AlarmFlowRoute
+	data object AlarmSoundListScreen : AlarmFlowRoute{
+		override val screenName ="AlarmSoundListScreen"
+	}
 }

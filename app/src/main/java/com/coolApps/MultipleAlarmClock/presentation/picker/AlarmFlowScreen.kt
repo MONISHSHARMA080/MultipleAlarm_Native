@@ -10,16 +10,16 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import com.coolApps.MultipleAlarmClock.presentation.navigation.AlarmFlowRoute
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
-import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmPickerScreen
-import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmPickerViewModel
+import com.coolApps.MultipleAlarmClock.presentation.navigation.AlarmFlowRoute
+import com.coolApps.MultipleAlarmClock.presentation.navigation.Screen
 import com.coolApps.MultipleAlarmClock.presentation.picker.listAlarmRingtone.ListAlarmSoundScreen
 
 @Composable
@@ -32,6 +32,11 @@ fun AlarmFlowScreen(
 		factory.create(alarmData)
 	}
 	val flowBackStack = rememberNavBackStack(AlarmFlowRoute.AlarmPicker)
+	val currentScreen = flowBackStack.lastOrNull() as? Screen
+	LaunchedEffect(currentScreen) {
+		currentScreen?.let { viewModel.screen(it.screenName) }
+	}
+
 
 	NavDisplay(
 		backStack = flowBackStack,

@@ -29,18 +29,17 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.coolApps.MultipleAlarmClock.presentation.home.AlarmContainer
-import com.coolApps.MultipleAlarmClock.presentation.settings.SettingsScreen
-import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmFlowScreen
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingScreen
+import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmFlowScreen
 import com.coolApps.MultipleAlarmClock.presentation.settings.PremiumPaywallDialog
+import com.coolApps.MultipleAlarmClock.presentation.settings.SettingsScreen
 import com.revenuecat.purchases.ui.revenuecatui.Paywall
 import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 import com.revenuecat.purchases.ui.revenuecatui.customercenter.CustomerCenter
 import kotlinx.coroutines.launch
 
 
-@Composable
-fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) {
+@Composable fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) {
 	val isFirstLaunch by navViewModel.isFirstLaunch.collectAsStateWithLifecycle()
 	if (isFirstLaunch == null) return
 	val startKey = remember(deepLinkScreen, isFirstLaunch) {
@@ -54,6 +53,15 @@ fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) 
 		if (isFirstLaunch == false && deepLinkScreen == null) {
 			backStack.clear()
 			backStack.add(Screen.AlarmContainer)
+		}
+	}
+	val currentScreen = backStack.lastOrNull() as? Screen
+	LaunchedEffect(currentScreen) {
+		currentScreen?.let { navViewModel.screen(it.screenName) }
+	}
+	LaunchedEffect(showPaywall) {
+		if (showPaywall) {
+			navViewModel.screen("Paywall")
 		}
 	}
 	Surface(
@@ -128,33 +136,14 @@ fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) 
 					AlarmContainer(
 						onNavigateToEdit = { alarm ->
 							backStack.add(Screen.AlarmFlow(alarm))
-							coroutineScope.launch {
-								navViewModel.screen(
-									"AlarmPicker",
-									mapOf(
-										"is_to_edit_alarm" to true,
-										"alarmData to edit" to alarm.toString()
-									)
-								)
-							}
 						},
 						onNavigateToCreate = {
 							backStack.add(Screen.AlarmFlow(null))
-							coroutineScope.launch {
-								navViewModel.screen(
-									"AlarmPicker",
-									mapOf("is_to_create_new_alarm" to true)
-								)
-							}
 						},
 						onNavigateToSettings = {
 							backStack.add(Screen.SettingsScreen)
 						}
 					)
-
-					LaunchedEffect(Unit) {
-						navViewModel.screen("AlarmContainer")
-					}
 				}
 
 				entry<Screen.AlarmFlow> { key ->
@@ -166,15 +155,6 @@ fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) 
 							showPaywall = it
 						}
 					)
-
-					LaunchedEffect(key.alarmData) {
-						navViewModel.screen(
-							"AlarmFlow",
-							mapOf(
-								"alarmData" to (key.alarmData?.toString() ?: "null")
-							)
-						)
-					}
 				}
 
 				entry<Screen.Paywall> {
@@ -201,6 +181,11 @@ fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) 
 		PremiumPaywallDialog(false,
 			onPurchaseCompletedEvent = {customerInfo, storeTransaction -> navViewModel.onPurchaseCompletedEvent(customerInfo,storeTransaction) },
 			onRestoreCompletedEvent = { navViewModel.onRestoreCompletedEvent(it) }
-			) { showPaywall = false }
+			) {
+			showPaywall = false
+			coroutineScope.launch {
+				navViewModel.captureEvent("paywall_dismissed", mapOf())
+			}
+		}
 	}
 }
