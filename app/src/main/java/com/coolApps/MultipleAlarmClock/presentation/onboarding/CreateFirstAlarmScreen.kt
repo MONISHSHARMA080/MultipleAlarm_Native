@@ -18,7 +18,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmPickerScreen
 import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmPickerViewModel
 import com.coolApps.MultipleAlarmClock.presentation.picker.listAlarmRingtone.ListAlarmSoundScreen
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
 
 private enum class CreateFirstAlarmStep {
 	Picker,
@@ -30,8 +29,9 @@ private enum class CreateFirstAlarmStep {
 fun CreateFirstAlarmScreen(
 		onAlarmSetProceed: () -> Unit,
 		modifier: Modifier = Modifier,
-		linearProgressBar: @Composable () -> Unit = {},
-		onButtonStateChange: (ButtonState) -> Unit = {}
+		linearProgressBar: (@Composable () -> Unit)? = null,
+		onButtonStateChange: (ButtonState) -> Unit = {},
+		onShowPaywall: (Boolean) -> Unit = {}
 ) {
 	onButtonStateChange(ButtonState.Hidden)
 	val alarmPickerViewModel : AlarmPickerViewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory -> factory.create(null) }
@@ -75,7 +75,7 @@ fun CreateFirstAlarmScreen(
 					settingAlarmCancelled = {
 						// Optionally handle cancellation, maybe go back to previous Onboarding screen
 					},
-					onNavigateToPaywall = {},
+					onNavigateToPaywall = onShowPaywall,
 					linearProgressBar = linearProgressBar
 				)
 			}
@@ -90,9 +90,9 @@ fun CreateFirstAlarmScreen(
 					},
 					onProceed = { sound ->
 						alarmPickerViewModel.onAlarmSoundSelected(sound)
-						currentStep = CreateFirstAlarmStep.Picker
 					},
-					linearProgressBar = linearProgressBar
+					linearProgressBar = linearProgressBar,
+					onNavigateToPaywall = onShowPaywall
 				)
 			}
 		}

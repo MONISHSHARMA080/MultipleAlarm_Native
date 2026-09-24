@@ -54,6 +54,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -81,12 +82,28 @@ import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmSound
 	onBack: () -> Unit,
 	onProceed: (AlarmSound?) -> Unit,
 	linearProgressBar: (@Composable () -> Unit)? = null,
+	onNavigateToPaywall: (Boolean) -> Unit = {}
 ) {
 	val fromOnboarding = linearProgressBar != null
 	val view = LocalView.current
 	val listOfAlarms by vm.listOfAlarms.collectAsStateWithLifecycle()
 	val randomPreviewing by vm.previewingRandom.collectAsStateWithLifecycle()
 	val selectedAlarmSound by vm.selectedAlarmSound.collectAsStateWithLifecycle()
+	val uiState by vm.uiState.collectAsStateWithLifecycle()
+
+	LaunchedEffect(uiState.showPaywall) {
+		if (uiState.showPaywall) {
+			onNavigateToPaywall(true)
+			vm.navigationToPaywallComplete()
+		}
+	}
+	
+	LaunchedEffect(uiState.soundSelectionCompletedGoBack) {
+		if (uiState.soundSelectionCompletedGoBack) {
+			vm.consumeSoundSelectionCompleted()
+			onBack()
+		}
+	}
 
 	var soundToSelect by remember { mutableStateOf(selectedAlarmSound) }
 	var isSoundToSelectRandom by remember { mutableStateOf(selectedUri == null) }

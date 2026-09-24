@@ -114,7 +114,7 @@ import kotlinx.coroutines.launch
 			entryProvider = entryProvider {
 
 				entry<Screen.OnboardingScreen> {
-					OnboardingScreen()
+					OnboardingScreen(onNavigateToPaywall = { showPaywall = it })
 				}
 
 				entry<Screen.SettingsScreen> {

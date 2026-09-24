@@ -23,8 +23,6 @@ import com.revenuecat.purchases.ui.revenuecatui.Paywall
 import com.revenuecat.purchases.ui.revenuecatui.PaywallListener
 import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
-
 @OptIn(ExperimentalPreviewRevenueCatUIPurchasesAPI::class)
 
 @Composable
@@ -34,6 +32,7 @@ import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
 		onRestoreCompletedEvent:(customerInfo:CustomerInfo)->Unit,
 		onButtonStateChange: (ButtonState) -> Unit = {}
  ) {
+	 onButtonStateChange(ButtonState.Hidden)
 	when {
 		offering != null -> {
 			Box(modifier = Modifier.fillMaxSize()) {

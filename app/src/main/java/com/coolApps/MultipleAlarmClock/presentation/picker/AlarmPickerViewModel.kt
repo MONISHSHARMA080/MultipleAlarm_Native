@@ -1,8 +1,4 @@
 package com.coolApps.MultipleAlarmClock.presentation.picker
-import com.coolApps.MultipleAlarmClock.domain.model.*
-import com.coolApps.MultipleAlarmClock.domain.model.StartAlarmSeriesHandlerError
-import com.coolApps.MultipleAlarmClock.domain.model.DeleteAlarmHandlerError
-import com.coolApps.MultipleAlarmClock.domain.model.AlarmControllerError
 
 import android.Manifest
 import android.app.AlarmManager
@@ -12,20 +8,19 @@ import androidx.core.content.ContextCompat
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
-import com.coolApps.MultipleAlarmClock.data.preferences.Settings
-import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.data.billing.EntitlementManager
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.data.local.RepeatDays
+import com.coolApps.MultipleAlarmClock.data.preferences.Settings
+import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.data.repository.AlarmSoundRepository
-import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionUtils
-import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmSound
-import com.coolApps.MultipleAlarmClock.util.Analytics
+import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
 import com.coolApps.MultipleAlarmClock.presentation.logD
+import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionUtils
 import com.coolApps.MultipleAlarmClock.receiver.PlayAlarm
+import com.coolApps.MultipleAlarmClock.util.Analytics
 import com.coolApps.MultipleAlarmClock.util.Result
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -73,7 +68,6 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	)
 	val uiState: StateFlow<AlarmPickerUiState> = _uiState.asStateFlow()
 
-	var fromOnboarding = false
 
 	val listOfAlarms: StateFlow<List<AlarmSound>> = alarmSoundRepository
 		.getAlarmSoundsStream()
@@ -145,6 +139,9 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		_uiState.update { it.copy(alarmOperationCompletedGoBack = false) }
 	}
 
+	fun consumeSoundSelectionCompleted() {
+		_uiState.update { it.copy(soundSelectionCompletedGoBack = false) }
+	}
 
 	fun previewSound(sound: AlarmSound?) {
 		val soundToPlay = sound ?: listOfAlarms.value.randomOrNull() ?: return
@@ -223,10 +220,21 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	}
 
 	fun onAlarmSoundSelected(sound: AlarmSound?) {
+		if (!isPremium.value && sound != null) {
+			_uiState.update {
+				it.copy(
+					showPaywall = true,
+					pendingSound = sound
+				)
+			}
+			return
+		}
+
 		_selectedAlarmSound.value = sound
 		_uiState.update {
 			it.copy(
-				alarmData = it.alarmData.copy(sound = sound?.soundUri?.toString())
+				alarmData = it.alarmData.copy(sound = sound?.soundUri?.toString()),
+				soundSelectionCompletedGoBack = true
 			)
 		}
 		captureUiStateAndSendAnalytics(_uiState.value)
@@ -384,10 +392,8 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	private fun setNewOrUpdateAlarm(newAlarmData: AlarmData, oldAlarm: AlarmData? ){
 		viewModelScope.launch {
 			logD("deleting the alarm $oldAlarm")
-			val repeatDays = if (fromOnboarding) null else newAlarmData.repeatDays
-			val sound = if (fromOnboarding) null else newAlarmData.sound
 			val alarmScheduledResult = alarmsController.startAlarmSeriesHandler(
-				alarm = newAlarmData.copy(id = oldAlarm?.id ?: 0, repeatDays=repeatDays, sound=sound),
+				alarm = newAlarmData.copy(id = oldAlarm?.id ?: 0),
 				alarmManager, context
 			)
 			alarmScheduledResult.fold(
@@ -416,7 +422,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	fun onRepeatDayClicked(day: DayOfWeek) {
 		viewModelScope.launch {
 			when{
-				fromOnboarding || isPremium.value ->{
+				isPremium.value ->{
 					toggleRepeatDay(day)
 				}
 				else ->{
@@ -479,14 +485,28 @@ class AlarmPickerViewModel @AssistedInject constructor(
 			entitlementManager.isPremium.collect { isPremium ->
 				if (isPremium) {
 					val pendingDay = _uiState.value.pendingRepeatDay
+					val pendingSound = _uiState.value.pendingSound
 
 					if (pendingDay != null) {
 						toggleRepeatDay(pendingDay)
+					}
 
+					if (pendingSound != null) {
+						_selectedAlarmSound.value = pendingSound
+						_uiState.update {
+							it.copy(
+								alarmData = it.alarmData.copy(sound = pendingSound.soundUri.toString()),
+								soundSelectionCompletedGoBack = true
+							)
+						}
+					}
+
+					if (pendingDay != null || pendingSound != null) {
 						_uiState.update {
 							it.copy(
 								showPaywall = false,
-								pendingRepeatDay = null
+								pendingRepeatDay = null,
+								pendingSound = null
 							)
 						}
 					}

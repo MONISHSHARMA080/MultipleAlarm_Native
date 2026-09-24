@@ -89,9 +89,6 @@ fun AlarmPickerScreen(
 	val timeStyle = typography.headlineSmall
 	val context = LocalContext.current
 
-	LaunchedEffect(fromOnboarding) {
-		viewModel.fromOnboarding = fromOnboarding
-	}
 
 	LaunchedEffect(uiState, isPremium) {
 		logD("ui state:$uiState")
