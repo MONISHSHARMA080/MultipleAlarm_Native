@@ -377,6 +377,10 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		_uiState.update { it.copy(alarmData = it.alarmData.copy(message = newMessage)) }
 	}
 
+	fun updateIsForceLoudVolume(isForceLoudVolume: Boolean) {
+		_uiState.update { it.copy(alarmData = it.alarmData.copy(isForceLoudVolume = isForceLoudVolume)) }
+	}
+
 	fun captureEvent(name:String, properties: Map<String, Any>){
 		viewModelScope.launch {
 			analytics.captureEvent(name, properties)

@@ -51,6 +51,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -101,6 +102,7 @@ fun SettingsCard(
 		uiState: AlarmPickerUiState,
 		selectedSoundName: String,
 		messageValueChanged: (String) -> Unit,
+		updateIsForceLoudVolume: (Boolean) -> Unit,
 		updateFrequency: (Long) -> Unit,
 		calenderButtonClicked: () -> Unit,
 		selectSoundButtonClicked: () -> Unit,
@@ -186,6 +188,22 @@ fun SettingsCard(
 				color = colorScheme.outlineVariant
 			)
 
+			SwitchRow(
+				icon = Icons.Rounded.Notifications,
+				title = stringResource(
+					R.string.alarm_picker_force_loud_volume
+				),
+				checked = uiState.alarmData.isForceLoudVolume,
+				onCheckedChange = { isChecked ->
+					updateIsForceLoudVolume(isChecked)
+				}
+			)
+
+			HorizontalDivider(
+				modifier = Modifier.padding(horizontal = 16.dp),
+				color = colorScheme.outlineVariant
+			)
+
 			MessageRow(
 				icon = Icons.AutoMirrored.Rounded.Message,
 				title = stringResource(
@@ -197,6 +215,41 @@ fun SettingsCard(
 		}
 	}
 }
+
+@Composable
+fun SwitchRow(
+	icon: ImageVector,
+	title: String,
+	checked: Boolean,
+	onCheckedChange: (Boolean) -> Unit
+) {
+	Row(
+		modifier = Modifier
+			.fillMaxWidth()
+			.clickable(onClick = { onCheckedChange(!checked) })
+			.padding(horizontal = 16.dp, vertical = 20.dp)
+			.animateContentSize(),
+		verticalAlignment = Alignment.CenterVertically
+	) {
+		Icon(
+			imageVector = icon,
+			contentDescription = null,
+			tint = colorScheme.onSurfaceVariant
+		)
+		Spacer(modifier = Modifier.width(16.dp))
+		Text(
+			text = title,
+			color = colorScheme.onBackground,
+			style = typography.titleSmall,
+		)
+		Spacer(modifier = Modifier.weight(1f))
+		Switch(
+			checked = checked,
+			onCheckedChange = null // Handled by Row click
+		)
+	}
+}
+
 
 
 @OptIn(ExperimentalLayoutApi::class)

@@ -25,13 +25,14 @@ data class AlarmData(
 	@ColumnInfo(name = "freq_used_to_skip_start_alarm") val frequencyInMin: Long,
 	val sound: String?,
 	@ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean,
-	@ColumnInfo(name = "repeat_days", defaultValue = "NULL") val repeatDays: RepeatDays? = null
+	@ColumnInfo(name = "repeat_days", defaultValue = "NULL") val repeatDays: RepeatDays? = null,
+	@ColumnInfo(name = "is_force_loud_volume", defaultValue = "0") val isForceLoudVolume: Boolean = false
 ){
 	private fun getDateTimeFormatted(time:Long):String{
 		return SimpleDateFormat("hh:mm a dd/MM/yyyy", Locale.getDefault()).format(time)
 	}
 	override fun toString(): String {
-		return "AlarmData: startTime:${getDateTimeFormatted(startTime)}, endTime:${getDateTimeFormatted(endTime)}, message:$message freqGottenAfterCallback:$frequencyInMin alarmSoundUri:$sound repeatDays:$repeatDays, id:$id, isREadyToUse:$isReadyToUse"
+		return "AlarmData: startTime:${getDateTimeFormatted(startTime)}, endTime:${getDateTimeFormatted(endTime)}, message:$message freqGottenAfterCallback:$frequencyInMin alarmSoundUri:$sound repeatDays:$repeatDays, id:$id, isREadyToUse:$isReadyToUse, isForceLoudVolume:$isForceLoudVolume"
 	}
 
 	val startTimeCalendar: Calendar get() = Calendar.getInstance().apply { timeInMillis = startTime }
@@ -70,7 +71,8 @@ data class AlarmData(
 			message = this.message,
 			isReadyToUse = this.isReadyToUse,
 			repeatDays = this.repeatDays,
-			id = id
+			id = id,
+			isForceLoudVolume = this.isForceLoudVolume
 		)
 	}
 

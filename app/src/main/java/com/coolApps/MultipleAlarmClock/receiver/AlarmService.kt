@@ -98,8 +98,9 @@ class AlarmService: Service() {
 		coroutineScope.launch {
 			val alarmData = alarmDao.getAlarmById(alarmIntentData.alarmIdInDb)
 			val soundUri = alarmData?.sound?.toUri() ?: getRandomAlarm()
+			val isForceLoudVolume = alarmData?.isForceLoudVolume ?: false
 			withContext(Dispatchers.Main){
-				playAlarm.play(soundUri)
+				playAlarm.play(soundUri, isForceLoudVolume)
 			}
 		}
         return START_REDELIVER_INTENT

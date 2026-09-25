@@ -78,8 +78,20 @@ class PlayAlarm @Inject constructor(
 			}
 		}
 
-	fun play(soundUri: Uri) {
+	private var originalAlarmVolume: Int? = null
+
+	fun play(soundUri: Uri, isForceLoudVolume: Boolean = false) {
 		stop(abandonFocus = true)
+		
+		if (isForceLoudVolume) {
+			try {
+				originalAlarmVolume = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
+				val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
+				audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0)
+			} catch (e: SecurityException) {
+				logD("Failed to set stream volume: ${e.message}")
+			}
+		}
 
 		val player = try {
 			MediaPlayer().apply {
@@ -188,6 +200,15 @@ class PlayAlarm @Inject constructor(
 	}
 
 	fun stop(abandonFocus: Boolean = true) {
+		
+		originalAlarmVolume?.let { originalVolume ->
+			try {
+				audioManager.setStreamVolume(AudioManager.STREAM_ALARM, originalVolume, 0)
+			} catch (e: SecurityException) {
+				logD("Failed to restore stream volume: ${e.message}")
+			}
+			originalAlarmVolume = null
+		}
 
 
 		playJob?.cancel()
