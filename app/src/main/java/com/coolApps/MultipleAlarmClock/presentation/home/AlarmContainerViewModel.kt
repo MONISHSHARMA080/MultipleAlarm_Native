@@ -1,23 +1,19 @@
 package com.coolApps.MultipleAlarmClock.presentation.home
-import com.coolApps.MultipleAlarmClock.domain.model.*
-import com.coolApps.MultipleAlarmClock.domain.model.DeleteAlarmHandlerError
-import com.coolApps.MultipleAlarmClock.domain.model.ResetAlarmError
-import com.coolApps.MultipleAlarmClock.domain.model.CancelAlarmHandlerError
 
 import android.app.AlarmManager
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
-import com.coolApps.MultipleAlarmClock.data.preferences.Settings
-import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
+import com.coolApps.MultipleAlarmClock.data.preferences.Settings
+import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.domain.repository.AlarmRepository
+import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
 import com.coolApps.MultipleAlarmClock.domain.usecase.InAppReviewEligibilityChecker
-import com.coolApps.MultipleAlarmClock.util.Analytics
 import com.coolApps.MultipleAlarmClock.presentation.logD
+import com.coolApps.MultipleAlarmClock.util.Analytics
 import com.coolApps.MultipleAlarmClock.util.Result
 import com.google.android.gms.tasks.Task
 import com.google.android.play.core.review.ReviewException
@@ -26,10 +22,12 @@ import com.google.android.play.core.review.model.ReviewErrorCode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -39,7 +37,7 @@ import kotlin.time.Duration.Companion.seconds
 @HiltViewModel
 class AlarmContainerViewModel @Inject constructor(
 	val analytics: Analytics,
-	alarmRepository: AlarmRepository,
+	private val alarmRepository: AlarmRepository,
 	private val alarmManager: AlarmManager,
 	private val dataStore: DataStore<Settings>,
 	private val alarmsController: AlarmsController,
@@ -48,49 +46,14 @@ class AlarmContainerViewModel @Inject constructor(
 ) : ViewModel(){
 
 	private val eligibilityChecker: InAppReviewEligibilityChecker = InAppReviewEligibilityChecker()
+	private val _showReviewUi = MutableStateFlow(false)
 
-	val alarmControllerUi: StateFlow<AlarmContainerUiState> = combine(dataStore.data, alarmRepository.getAlarmsStream(), analytics.featureFlagsData){ settingsData , alarmList, featureFlag->
-		when{
-			featureFlag == null -> {
-				AlarmContainerUiState(
-					alarmList = alarmList,
-					reviewInelligiblityReason = null,
-					showReviewUi = false
-				)
-			}
-			alarmList.isEmpty() -> {
-				AlarmContainerUiState(
-					alarmList = alarmList,
-					reviewInelligiblityReason = null,
-					showReviewUi = false
-				)
-			}
-			else ->{
-				val highestIdAlarm = alarmList.maxBy { it.id }
-				val res = eligibilityChecker.evaluate(
-					installEpochTimeMs = settingsData.installEpochTimeMs,
-					alarmCount = highestIdAlarm.id,
-					lastReviewAttemptEpochTimeMs = settingsData.lastReviewAttemptedAt,
-					config = featureFlag
-				)
-				when(res){
-					is InAppReviewEligibilityChecker.Result.Eligible ->{
-						AlarmContainerUiState(
-							alarmList = alarmList,
-							reviewInelligiblityReason = null,
-							showReviewUi = true
-						)
-					}
-					is InAppReviewEligibilityChecker.Result.NotEligible -> {
-						AlarmContainerUiState(
-							alarmList = alarmList,
-							reviewInelligiblityReason = res.reason,
-							showReviewUi = false
-						)
-					}
-				}
-			}
-		}
+	val alarmControllerUi: StateFlow<AlarmContainerUiState> = combine(dataStore.data, alarmRepository.getAlarmsStream(), _showReviewUi){ settingsData , alarmList, showReviewUi->
+		AlarmContainerUiState(
+			alarmList = alarmList,
+			reviewInelligiblityReason = null,
+			showReviewUi = showReviewUi
+		)
 	}.stateIn(
 		scope = viewModelScope,
 		started = SharingStarted.WhileSubscribed(5_000),
@@ -98,6 +61,27 @@ class AlarmContainerViewModel @Inject constructor(
 	)
 
 
+	fun onPositiveUserAction() {
+		viewModelScope.launch {
+			val settingsData = dataStore.data.first()
+			val featureFlag = analytics.featureFlagsData.value
+			val alarmList = alarmRepository.getAlarmsStream().first()
+
+			if (featureFlag != null && alarmList.isNotEmpty()) {
+				val highestIdAlarm = alarmList.maxByOrNull { it.id } ?: return@launch
+				val res = eligibilityChecker.evaluate(
+					installEpochTimeMs = settingsData.installEpochTimeMs,
+					alarmCount = highestIdAlarm.id,
+					lastReviewAttemptEpochTimeMs = settingsData.lastReviewAttemptedAt,
+					config = featureFlag
+				)
+				logD("checked for review and it was $res, ")
+				if (res is InAppReviewEligibilityChecker.Result.Eligible) {
+					_showReviewUi.value = true
+				}
+			}
+		}
+	}
 
 	val showFeedbackUIState: StateFlow<Boolean> = dataStore.data
 		.map { settings ->
@@ -107,8 +91,7 @@ class AlarmContainerViewModel @Inject constructor(
 
 	fun setInAppReviewConsumed(task: Task<ReviewInfo>) {
 		viewModelScope.launch {
-			// if the isSuccessful == false or true that doesn't mean that the user saw the popup and failure could be
-			// due to any reason, so better to back of and not get rate limited as the api can change any time
+			_showReviewUi.value = false
 			val isSuccessful = task.isSuccessful
 			val reviewException = task.exception as? ReviewException
 			val message = reviewException?.message ?: ""
@@ -135,11 +118,6 @@ class AlarmContainerViewModel @Inject constructor(
 					"error_code" to errorCode
 				)
 			)
-			// isSuccessful == true doesn't mean the user saw the dialog (quota can
-			// silently block it with no error), and isSuccessful == false doesn't
-			// mean we should give up permanently - only INTERNAL_ERROR is transient.
-			// INVALID_REQUEST/PLAY_STORE_NOT_FOUND will fail identically next time too,
-			// so there's no point holding eligibility open for those.
 			if (! isTransientFailure){
 				dataStore.updateData {
 					it.copy {lastReviewAttemptedAt = System.currentTimeMillis() }

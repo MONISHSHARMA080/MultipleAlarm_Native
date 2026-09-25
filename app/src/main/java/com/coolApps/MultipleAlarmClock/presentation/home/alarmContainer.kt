@@ -75,10 +75,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation3.runtime.result.ResultEffect
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
-import com.coolApps.MultipleAlarmClock.presentation.settings.FeedbackPopUpCard
 import com.coolApps.MultipleAlarmClock.presentation.logD
+import com.coolApps.MultipleAlarmClock.presentation.settings.FeedbackPopUpCard
 import com.google.android.play.core.review.ReviewManagerFactory
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -90,6 +91,13 @@ import java.util.Calendar
 	val alarmContainerViewModel :AlarmContainerViewModel = hiltViewModel()
 	val snackBarHostState = remember { SnackbarHostState() }
 	val view = LocalView.current
+	ResultEffect<Boolean> { isNewAlarm ->
+		if (isNewAlarm) {
+			alarmContainerViewModel.onPositiveUserAction()
+			logD("new_alarm event received in the alarm container and called, alarmContainerViewModel.onPositiveUserAction() ")
+		}
+	}
+
 	val uiState by alarmContainerViewModel.alarmControllerUi.collectAsStateWithLifecycle()
 	val alarmList = uiState.alarmList
 	var selectedAlarmId by remember { mutableStateOf<Int?>(null) }
@@ -213,12 +221,14 @@ import java.util.Calendar
 							onToggle = { alarmData, isChecked ->
 								if (isChecked){
 									alarmContainerViewModel.resetAlarm(alarmData)
+									alarmContainerViewModel.onPositiveUserAction()
 									if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
 										view.performHapticFeedback(HapticFeedbackConstants.TOGGLE_OFF)
 									}
 								}
 								else {
 									alarmContainerViewModel.stopAlarm(alarmData)
+//									alarmContainerViewModel.onPositiveUserAction()
 									if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
 										view.performHapticFeedback(HapticFeedbackConstants.TOGGLE_OFF)
 									}

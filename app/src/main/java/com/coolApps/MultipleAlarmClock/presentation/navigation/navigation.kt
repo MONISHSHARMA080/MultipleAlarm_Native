@@ -27,6 +27,7 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.runtime.result.rememberResultEventBusNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.coolApps.MultipleAlarmClock.presentation.home.AlarmContainer
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingScreen
@@ -75,7 +76,8 @@ import kotlinx.coroutines.launch
 
 			entryDecorators = listOf(
 				rememberSaveableStateHolderNavEntryDecorator(),
-				rememberViewModelStoreNavEntryDecorator()
+				rememberViewModelStoreNavEntryDecorator(),
+				rememberResultEventBusNavEntryDecorator()
 			),
 
 			transitionSpec = {

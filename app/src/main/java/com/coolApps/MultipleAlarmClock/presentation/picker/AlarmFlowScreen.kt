@@ -16,6 +16,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.result.LocalResultEventBus
 import androidx.navigation3.ui.NavDisplay
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.presentation.navigation.AlarmFlowRoute
@@ -79,9 +80,15 @@ fun AlarmFlowScreen(
 		},
 		entryProvider = entryProvider {
 			entry<AlarmFlowRoute.AlarmPicker> {
+				val resultBus = LocalResultEventBus.current
 				AlarmPickerScreen(
 					viewModel = viewModel,
-					alarmSetProceed = onCloseFlow,
+					alarmSetProceed = {
+						if (alarmData == null) {
+							resultBus.sendResult(true)
+						}
+						onCloseFlow()
+					},
 					settingAlarmCancelled = onCloseFlow,
 					forNewAlarm = alarmData == null,
 					onNavigateToSoundList = {
