@@ -56,6 +56,8 @@ import com.revenuecat.purchases.awaitOfferings
 	val viewModel : OnboardingViewModel = hiltViewModel()
 
 	val uiState by viewModel.displayState.collectAsStateWithLifecycle()
+	val featureFlags by viewModel.analytics.featureFlagsData.collectAsStateWithLifecycle()
+	val isHardPaywall = featureFlags?.isHardPaywallEnabled ?: false
 
 	LaunchedEffect(uiState.displaySate) {
 		viewModel.analytics.screen("Onboarding_${uiState.displaySate.name.lowercase()}")
@@ -192,10 +194,30 @@ import com.revenuecat.purchases.awaitOfferings
 						onButtonStateChange = { buttonState = it }
 					)
 					DisplaySate.OnboardingPaywall -> {
+						LaunchedEffect(isHardPaywall) {
+							if (isHardPaywall) {
+								uiState.alarmData?.let { viewModel.stopAlarm(it) }
+							}
+						}
 						OnboardingPaywallScreen(
+							isHardPaywall = isHardPaywall,
+							onBackPress = {
+								viewModel.onPreviousClicked()
+								uiState.alarmData?.let { viewModel.stopAlarm(it) }
+							},
 							onFinished = { viewModel.finishedOnboarding() }, loadFailed = loadFailed, offering = offering,
-							onPurchaseCompletedEvent = {customerInfo, storeTransaction -> viewModel.onPurchaseCompletedEvent(customerInfo,storeTransaction) },
-							onRestoreCompletedEvent = { viewModel.onRestoreCompletedEvent(it) },
+							onPurchaseCompletedEvent = {customerInfo, storeTransaction -> 
+								if (isHardPaywall) {
+									uiState.alarmData?.let { viewModel.resetAlarm(it) }
+								}
+								viewModel.onPurchaseCompletedEvent(customerInfo,storeTransaction) 
+							},
+							onRestoreCompletedEvent = { 
+								if (isHardPaywall) {
+									uiState.alarmData?.let { viewModel.resetAlarm(it) }
+								}
+								viewModel.onRestoreCompletedEvent(it) 
+							},
 							onButtonStateChange = { buttonState = it }
 						)
 					}

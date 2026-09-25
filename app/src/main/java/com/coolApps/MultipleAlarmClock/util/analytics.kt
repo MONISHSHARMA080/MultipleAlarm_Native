@@ -26,6 +26,7 @@ import java.util.UUID
 
 object FeatureFlagKeys {
 	const val IN_APP_REVIEW_ENABLED = "in_app_review_enabled"
+	const val HARD_PAYWALL_ENABLED = "hard_paywall_enabled"
 	const val MIN_ALARMS_CREATED = "min_alarms_created"
 	const val COOLDOWN_DAYS = "cooldown_days"
 	const val MIN_DAYS_SINCE_INSTALL = "min_days_since_install"
@@ -112,7 +113,8 @@ class Analytics(
 				inAppReviewEnabled = false,
 				minAlarmsCreated = 3,
 				cooldownDays = 7,
-				minDaysSinceInstall = 3
+				minDaysSinceInstall = 3,
+				isHardPaywallEnabled = false
 			)
 		}
 	}
@@ -131,11 +133,12 @@ class Analytics(
 	private fun loadFeatureFlagsFromPostHog() {
 		if (!isEnabled) return
 		val enabled = PostHog.isFeatureEnabled(FeatureFlagKeys.IN_APP_REVIEW_ENABLED, defaultValue = true)
+		val isHardPaywall = PostHog.isFeatureEnabled(FeatureFlagKeys.HARD_PAYWALL_ENABLED, defaultValue = false)
 		val minAlarms = getIntFeatureFlag(FeatureFlagKeys.MIN_ALARMS_CREATED)
 		val cooldownDays = getIntFeatureFlag(FeatureFlagKeys.COOLDOWN_DAYS)
 		val minDaysSinceInstall = getIntFeatureFlag(FeatureFlagKeys.MIN_DAYS_SINCE_INSTALL)
 
-		logD("loading feature flag for posthog, got enabled:$enabled, minAlarm:$minAlarms, coolDownDays:$cooldownDays, minDaysSinceInstall:$minDaysSinceInstall")
+		logD("loading feature flag for posthog, got enabled:$enabled, minAlarm:$minAlarms, coolDownDays:$cooldownDays, minDaysSinceInstall:$minDaysSinceInstall, hardPaywall:$isHardPaywall")
 		if (minAlarms == null || cooldownDays == null || minDaysSinceInstall == null) {
 			this.captureEvent( "loading_featureFlags_failed",
 				mapOf(
@@ -150,7 +153,8 @@ class Analytics(
 					inAppReviewEnabled = enabled,
 					minAlarmsCreated = minAlarms,
 					cooldownDays = cooldownDays,
-					minDaysSinceInstall = minDaysSinceInstall
+					minDaysSinceInstall = minDaysSinceInstall,
+					isHardPaywallEnabled = isHardPaywall
 		)
 	}
 

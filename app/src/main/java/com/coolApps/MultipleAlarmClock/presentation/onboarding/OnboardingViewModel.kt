@@ -14,6 +14,9 @@ import com.coolApps.MultipleAlarmClock.util.Analytics
 import com.coolApps.MultipleAlarmClock.util.TrialReminderScheduler
 import com.coolApps.MultipleAlarmClock.util.toAnalyticsString
 import com.revenuecat.purchases.CustomerInfo
+import android.app.AlarmManager
+import com.coolApps.MultipleAlarmClock.data.local.AlarmData
+import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
 import com.revenuecat.purchases.models.StoreTransaction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -30,6 +33,8 @@ import kotlinx.coroutines.launch
 	val analytics: Analytics,
 	alarmRepository: AlarmRepository,
 	private val settingsDataStore: DataStore<Settings>,
+	private val alarmsController: AlarmsController,
+	private val alarmManager: AlarmManager,
 	@ApplicationContext val context: Context
 ) : ViewModel() {
 
@@ -106,6 +111,32 @@ import kotlinx.coroutines.launch
 	}
 
 
+
+	fun stopAlarm(alarmData: AlarmData) {
+		viewModelScope.launch {
+			alarmsController.cancelAlarmHandler(alarmData, context, alarmManager).fold(
+				onSuccess = {},
+				onError = { error ->
+					// Handle error if needed
+				}
+			)
+		}
+	}
+
+	fun resetAlarm(alarmData: AlarmData) {
+		viewModelScope.launch {
+			alarmsController.resetAlarmsHandler(
+				alarmData = alarmData,
+				alarmManager = alarmManager,
+				activityContext = context,
+			).fold(
+				onSuccess = {},
+				onError = { error ->
+					// Handle error if needed
+				}
+			)
+		}
+	}
 
 	  fun finishedOnboarding(){
 		 analytics.captureEvent("onboarding_finished", emptyMap())

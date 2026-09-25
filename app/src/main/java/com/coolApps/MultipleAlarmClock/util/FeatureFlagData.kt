@@ -7,6 +7,7 @@ data class FeatureFlagsData(
 		val minAlarmsCreated: Int = 3,
 		val cooldownDays: Int = 8,
 		val inAppReviewEnabled: Boolean = true,
+		val isHardPaywallEnabled: Boolean = false,
 )
 
 data class EngagementConfig(

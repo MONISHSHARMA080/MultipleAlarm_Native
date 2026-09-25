@@ -10,6 +10,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -27,11 +28,17 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 
 @Composable
  fun OnboardingPaywallScreen(
+		isHardPaywall: Boolean,
+		onBackPress: () -> Unit,
 		onFinished: () -> Unit, offering: Offering?, loadFailed:Boolean,
 		onPurchaseCompletedEvent:(customerInfo:CustomerInfo,storeTransaction: StoreTransaction)->Unit,
 		onRestoreCompletedEvent:(customerInfo:CustomerInfo)->Unit,
 		onButtonStateChange: (ButtonState) -> Unit = {}
  ) {
+	BackHandler {
+		onBackPress()
+	}
+
 	 // buttonState is now pre-set by the parent before this screen composes
 	when {
 		offering != null -> {
@@ -57,17 +64,19 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 						.build()
 				)
 
-				FilledTonalIconButton(
-					onClick = onFinished,
-					colors = IconButtonDefaults.filledTonalIconButtonColors(),
-					modifier = Modifier
-						.statusBarsPadding()
-						.padding(16.dp)
-				) {
-					Icon(
-						painterResource(R.drawable.clear),
-						null
-					)
+				if (!isHardPaywall) {
+					FilledTonalIconButton(
+						onClick = onFinished,
+						colors = IconButtonDefaults.filledTonalIconButtonColors(),
+						modifier = Modifier
+							.statusBarsPadding()
+							.padding(16.dp)
+					) {
+						Icon(
+							painterResource(R.drawable.clear),
+							null
+						)
+					}
 				}
 			}
 
