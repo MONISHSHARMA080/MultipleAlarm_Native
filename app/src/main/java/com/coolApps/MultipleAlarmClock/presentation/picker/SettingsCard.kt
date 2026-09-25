@@ -114,21 +114,15 @@ fun SettingsCard(
 		color = colorScheme.surfaceContainer,
 		modifier = modifier.fillMaxWidth()
 	) {
-		val scrollState = rememberScrollState()
 		val density = androidx.compose.ui.platform.LocalDensity.current
+		val initialScroll = remember { with(density) { 62.dp.toPx().toInt() } }
+		val scrollState = rememberScrollState(initial = initialScroll)
 
 		LaunchedEffect(Unit) {
-			kotlinx.coroutines.delay(600)
-			if (scrollState.maxValue > 0) {
-				val scrollAmount = with(density) { 60.dp.toPx().toInt() }.coerceAtMost(scrollState.maxValue)
-				scrollState.animateScrollTo(
-					value = scrollAmount,
-					animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
-				)
-				kotlinx.coroutines.delay(100)
+			if (scrollState.value > 0) {
 				scrollState.animateScrollTo(
 					value = 0,
-					animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)
+					animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
 				)
 			}
 		}
