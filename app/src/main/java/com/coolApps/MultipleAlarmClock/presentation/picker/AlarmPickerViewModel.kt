@@ -378,7 +378,11 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	}
 
 	fun updateIsForceLoudVolume(isForceLoudVolume: Boolean) {
-		_uiState.update { it.copy(alarmData = it.alarmData.copy(isForceLoudVolume = isForceLoudVolume)) }
+		if (isPremium.value) {
+			_uiState.update { it.copy(alarmData = it.alarmData.copy(isForceLoudVolume = isForceLoudVolume)) }
+		} else {
+			_uiState.update { it.copy(showPaywall = true) }
+		}
 	}
 
 	fun captureEvent(name:String, properties: Map<String, Any>){

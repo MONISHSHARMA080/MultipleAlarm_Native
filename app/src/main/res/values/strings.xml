@@ -43,7 +43,7 @@
     <string name="alarm_picker_repeat_days">Repeat</string>
     <string name="alarm_picker_sound">sound</string>
     <string name="alarm_picker_sound_random">Random</string>
-    <string name="alarm_picker_force_loud_volume">Force Loud Volume</string>
+    <string name="alarm_picker_force_loud_volume">Max Volume Override</string>
     <string name="alarm_picker_message">message</string>
     <string name="alarm_picker_message_placeholder">Add message…</string>
     <string name="alarm_picker_ok">Select</string>

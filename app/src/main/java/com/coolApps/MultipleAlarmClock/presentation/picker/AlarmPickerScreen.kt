@@ -362,7 +362,8 @@ fun AlarmPickerScreen(
 									calenderButtonClicked = { showCalendar = true },
 									selectSoundButtonClicked = onNavigateToSoundList,
 									repeatDayToggled = {day -> viewModel.onRepeatDayClicked(day)},
-									selectedSoundName = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random)
+									selectedSoundName = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random),
+									modifier = Modifier.weight(1f, fill = false)
 								)
 								Spacer(modifier = Modifier.weight(0.04f))
 							}
@@ -391,7 +392,8 @@ fun AlarmPickerScreen(
 							calenderButtonClicked = { showCalendar = true },
 							selectSoundButtonClicked = onNavigateToSoundList,
 							repeatDayToggled = {day -> viewModel.onRepeatDayClicked(day)},
-							selectedSoundName = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random)
+							selectedSoundName = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random),
+							modifier = Modifier.weight(1f, fill = false)
 						)
 						Spacer(modifier = Modifier.weight(0.04f))
 					}

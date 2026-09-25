@@ -39,6 +39,7 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Message
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.EventRepeat
@@ -89,7 +90,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.local.AlarmDataValidationResult
-import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmPickerUiState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -106,18 +106,38 @@ fun SettingsCard(
 		updateFrequency: (Long) -> Unit,
 		calenderButtonClicked: () -> Unit,
 		selectSoundButtonClicked: () -> Unit,
-		repeatDayToggled: (DayOfWeek) -> Unit
+		repeatDayToggled: (DayOfWeek) -> Unit,
+		modifier: Modifier = Modifier
 ) {
 	Surface(
 		shape = RoundedCornerShape(29.dp),
 		color = colorScheme.surfaceContainer,
-		modifier = Modifier.fillMaxWidth()
+		modifier = modifier.fillMaxWidth()
 	) {
+		val scrollState = rememberScrollState()
+		val density = androidx.compose.ui.platform.LocalDensity.current
+
+		LaunchedEffect(Unit) {
+			kotlinx.coroutines.delay(600)
+			if (scrollState.maxValue > 0) {
+				val scrollAmount = with(density) { 60.dp.toPx().toInt() }.coerceAtMost(scrollState.maxValue)
+				scrollState.animateScrollTo(
+					value = scrollAmount,
+					animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
+				)
+				kotlinx.coroutines.delay(100)
+				scrollState.animateScrollTo(
+					value = 0,
+					animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)
+				)
+			}
+		}
+
 		Column(
 			modifier = Modifier
 				.fillMaxWidth()
 				.verticalScroll(
-					rememberScrollState()
+					scrollState
 				)
 				.imePadding()
 		) {
@@ -188,22 +208,6 @@ fun SettingsCard(
 				color = colorScheme.outlineVariant
 			)
 
-			SwitchRow(
-				icon = Icons.Rounded.Notifications,
-				title = stringResource(
-					R.string.alarm_picker_force_loud_volume
-				),
-				checked = uiState.alarmData.isForceLoudVolume,
-				onCheckedChange = { isChecked ->
-					updateIsForceLoudVolume(isChecked)
-				}
-			)
-
-			HorizontalDivider(
-				modifier = Modifier.padding(horizontal = 16.dp),
-				color = colorScheme.outlineVariant
-			)
-
 			MessageRow(
 				icon = Icons.AutoMirrored.Rounded.Message,
 				title = stringResource(
@@ -211,6 +215,22 @@ fun SettingsCard(
 				),
 				value = uiState.alarmData.message,
 				onValueChange = messageValueChanged
+			)
+
+			HorizontalDivider(
+				modifier = Modifier.padding(horizontal = 16.dp),
+				color = colorScheme.outlineVariant
+			)
+
+			SwitchRow(
+				icon = Icons.AutoMirrored.Rounded.VolumeUp,
+				title = stringResource(
+					R.string.alarm_picker_force_loud_volume
+				),
+				checked = uiState.alarmData.isForceLoudVolume,
+				onCheckedChange = { isChecked ->
+					updateIsForceLoudVolume(isChecked)
+				}
 			)
 		}
 	}
