@@ -12,6 +12,7 @@ enum class ButtonState {
 enum class DisplaySate {
 	Greeting,
 	Problem,
+	UserStruggles,
 	Permission,
 	FirstAlarmIntro,
 	CreateFirstAlarm,
@@ -22,6 +23,7 @@ enum class DisplaySate {
 		return when(this){
 			Greeting -> "Greeting"
 			Problem -> "Problem"
+			UserStruggles -> "UserStruggles"
 			Permission -> "Permission"
 			FirstAlarmIntro -> "FirstAlarmIntro"
 			CreateFirstAlarm -> "CreateFirstAlarm"

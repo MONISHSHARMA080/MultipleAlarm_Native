@@ -133,6 +133,14 @@
     <string name="onboarding_greeting_next">Next</string>
     <string name="onboarding_greeting_hello">Hello</string>
 
+    <!-- Onboarding Struggles Screen -->
+    <string name="onboarding_struggles_title">What are your main challenges?</string>
+    <string name="onboarding_struggles_subtitle">Choose all that apply.</string>
+    <string name="onboarding_struggle_waking_up">Waking up on time</string>
+    <string name="onboarding_struggle_being_on_time">Being on time</string>
+    <string name="onboarding_struggle_heavy_sleeper">Heavy sleeper</string>
+    <string name="onboarding_struggle_ignoring_alarms">Ignoring alarms</string>
+
     <!-- Onboarding Problem Screen -->
     <string name="onboarding_problem_btn_set">Set my own</string>
     <string name="onboarding_problem_btn_fix">Fix this</string>

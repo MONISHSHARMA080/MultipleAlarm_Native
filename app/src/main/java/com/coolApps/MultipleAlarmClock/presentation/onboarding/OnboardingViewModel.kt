@@ -60,14 +60,26 @@ import kotlinx.coroutines.launch
 		_displayState.update { it.copy(missingSteps = missing, allCriticalGranted = allCriticalGranted ) }
 	}
 
+	private var selectedStruggles = emptySet<String>()
+
+	fun onStrugglesSelected(struggles: Set<String>) {
+		selectedStruggles = struggles
+	}
+
 	fun onNextClicked()  {
 		val currentStep = _displayState.value.displaySate.name
 		analytics.captureEvent("onboarding_next_clicked", mapOf("step" to currentStep, "onBoardingUiState" to displayState.value.toString() ))
+		
+		if (_displayState.value.displaySate == DisplaySate.UserStruggles && selectedStruggles.isNotEmpty()) {
+			analytics.captureEvent("onboarding_struggles_submitted", mapOf("struggles" to selectedStruggles.toList()))
+		}
+		
 		// increment the state
 		_displayState.update { value ->
 			when(value.displaySate){
 				DisplaySate.Greeting -> value.copy(displaySate = DisplaySate.Problem)
-				DisplaySate.Problem -> value.copy(displaySate = DisplaySate.Permission)
+				DisplaySate.Problem -> value.copy(displaySate = DisplaySate.UserStruggles)
+				DisplaySate.UserStruggles -> value.copy(displaySate = DisplaySate.Permission)
 				DisplaySate.Permission -> value.copy(displaySate = DisplaySate.FirstAlarmIntro)
 				DisplaySate.FirstAlarmIntro -> value.copy(displaySate = DisplaySate.CreateFirstAlarm)
 				DisplaySate.CreateFirstAlarm ->value.copy(displaySate = DisplaySate.AlarmResult)
@@ -84,7 +96,8 @@ import kotlinx.coroutines.launch
 			when(value.displaySate){
 				DisplaySate.Greeting -> value.copy(displaySate = DisplaySate.Greeting)
 				DisplaySate.Problem -> value.copy(displaySate = DisplaySate.Greeting)
-				DisplaySate.Permission -> value.copy(displaySate = DisplaySate.Problem)
+				DisplaySate.UserStruggles -> value.copy(displaySate = DisplaySate.Problem)
+				DisplaySate.Permission -> value.copy(displaySate = DisplaySate.UserStruggles)
 				DisplaySate.FirstAlarmIntro -> value.copy(displaySate = DisplaySate.Permission)
 				DisplaySate.CreateFirstAlarm ->value.copy(displaySate = DisplaySate.FirstAlarmIntro)
 				DisplaySate.AlarmResult -> value.copy(displaySate = DisplaySate.CreateFirstAlarm)

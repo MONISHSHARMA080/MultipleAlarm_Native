@@ -61,7 +61,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -111,7 +110,8 @@ fun ProblemScreen(
 			delay(780.milliseconds)
 
 			showAlarmSpace = true
-			delay(950.milliseconds)
+			// break for the eyes to pause form the movement and focus somewhere else
+			delay(240.milliseconds)
 
 			showAnimation = true
 
@@ -123,7 +123,7 @@ fun ProblemScreen(
 			delay(450.milliseconds)
 			phase = ProblemPhase.ShowingProblem
 			
-			delay(800.milliseconds)
+			delay(1.3.seconds)
 
 			phase = ProblemPhase.Crushing
 			view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
