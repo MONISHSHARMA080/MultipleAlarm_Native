@@ -13,6 +13,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import com.coolApps.MultipleAlarmClock.R
 
+data class StruggleOption(
+    val stringResId: Int,
+    val analyticsString: String
+)
+
 @Composable
 fun UserStrugglesScreen(
     onButtonStateChange: (ButtonState) -> Unit,
@@ -20,10 +25,10 @@ fun UserStrugglesScreen(
 ) {
 	onButtonStateChange(ButtonState.Enabled)
 	val struggles = listOf(
-        stringResource(id = R.string.onboarding_struggle_waking_up),
-        stringResource(id = R.string.onboarding_struggle_being_on_time),
-        stringResource(id = R.string.onboarding_struggle_heavy_sleeper),
-        stringResource(id = R.string.onboarding_struggle_ignoring_alarms)
+        StruggleOption(R.string.onboarding_struggle_waking_up, "Waking up on time"),
+        StruggleOption(R.string.onboarding_struggle_being_on_time, "Being on time"),
+        StruggleOption(R.string.onboarding_struggle_heavy_sleeper, "Heavy sleeper"),
+        StruggleOption(R.string.onboarding_struggle_ignoring_alarms, "Ignoring alarms")
     )
 
     var selectedStruggles by remember { mutableStateOf(emptySet<String>()) }
@@ -58,8 +63,12 @@ fun UserStrugglesScreen(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(struggles) { struggle ->
-                val isSelected = selectedStruggles.contains(struggle)
+            items(struggles) { option ->
+                val stringResId = option.stringResId
+                val analyticsString = option.analyticsString
+                val isSelected = selectedStruggles.contains(analyticsString)
+                val localizedText = stringResource(id = stringResId)
+
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.medium,
@@ -72,9 +81,9 @@ fun UserStrugglesScreen(
                     ),
                     onClick = {
                         selectedStruggles = if (isSelected) {
-                            selectedStruggles - struggle
+                            selectedStruggles - analyticsString
                         } else {
-                            selectedStruggles + struggle
+                            selectedStruggles + analyticsString
                         }
                     }
                 ) {
@@ -85,7 +94,7 @@ fun UserStrugglesScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = struggle,
+                            text = localizedText,
                             style = MaterialTheme.typography.bodyLarge,
                             color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f)
