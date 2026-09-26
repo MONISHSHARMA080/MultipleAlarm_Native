@@ -2,6 +2,9 @@ package com.coolApps.MultipleAlarmClock.presentation.picker
 
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -47,13 +50,16 @@ import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmPickerUiState
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun TimeRow(
 	uiState: AlarmPickerUiState,
 	onStartTimeChange: (Calendar) -> Unit,
 	onEndTimeChange: (Calendar) -> Unit,
-	onDisabledTimeSelected:()->Unit
+	onDisabledTimeSelected:()->Unit,
+	sharedTransitionScope: SharedTransitionScope? = null,
+	animatedVisibilityScope: AnimatedVisibilityScope? = null,
+	alarmId: Int? = null
 ) {
 	val startTime = uiState.alarmData.startTimeCalendar
 	val endTime = uiState.alarmData.endTimeCalendar
@@ -195,13 +201,28 @@ fun TimeRow(
 		}
 	}
 
+	// Helper to conditionally apply sharedElement modifier
+	val canAnimate = sharedTransitionScope != null && animatedVisibilityScope != null && alarmId != null
+
 	Row(
 		modifier = Modifier.fillMaxWidth(),
 		verticalAlignment = Alignment.CenterVertically,
 	) {
 		Row(
 			verticalAlignment = Alignment.Bottom,
-			modifier = Modifier.weight(1f).clickable { showStartTimePicker = !showStartTimePicker },
+			modifier = Modifier
+				.weight(1f)
+				.then(
+					if (canAnimate) {
+						with(sharedTransitionScope) {
+							Modifier.sharedElement(
+								sharedContentState = rememberSharedContentState(key = "start_time_${alarmId}"),
+								animatedVisibilityScope = animatedVisibilityScope,
+							)
+						}
+					} else Modifier
+				)
+				.clickable { showStartTimePicker = !showStartTimePicker },
 			horizontalArrangement = Arrangement.Start
 		) {
 			Text(
@@ -227,11 +248,34 @@ fun TimeRow(
 			imageVector = Icons.AutoMirrored.Filled.ArrowForward,
 			contentDescription = null,
 			tint = colorScheme.onBackground,
-			modifier = Modifier.size(32.dp)
+			modifier = Modifier
+				.size(32.dp)
+				.then(
+					if (canAnimate) {
+						with(sharedTransitionScope) {
+							Modifier.sharedElement(
+								sharedContentState = rememberSharedContentState(key = "arrow_${alarmId}"),
+								animatedVisibilityScope = animatedVisibilityScope,
+							)
+						}
+					} else Modifier
+				)
 		)
 		Row(
 			verticalAlignment = Alignment.Bottom,
-			modifier = Modifier.weight(1f).clickable { showEndTimePicker = !showEndTimePicker },
+			modifier = Modifier
+				.weight(1f)
+				.then(
+					if (canAnimate) {
+						with(sharedTransitionScope) {
+							Modifier.sharedElement(
+								sharedContentState = rememberSharedContentState(key = "end_time_${alarmId}"),
+								animatedVisibilityScope = animatedVisibilityScope,
+							)
+						}
+					} else Modifier
+				)
+				.clickable { showEndTimePicker = !showEndTimePicker },
 			horizontalArrangement = Arrangement.End
 		) {
 			Text(

@@ -4,6 +4,9 @@ import android.app.Activity
 import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.activity.compose.ReportDrawnWhen
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -85,8 +88,10 @@ import kotlinx.coroutines.launch
 import java.util.Calendar
 
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable fun AlarmContainer(
-	onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit, onNavigateToSettings:()->Unit
+	onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit, onNavigateToSettings:()->Unit,
+	sharedTransitionScope: SharedTransitionScope, animatedVisibilityScope: AnimatedVisibilityScope
 ){
 	val alarmContainerViewModel :AlarmContainerViewModel = hiltViewModel()
 	val snackBarHostState = remember { SnackbarHostState() }
@@ -238,6 +243,8 @@ import java.util.Calendar
 							onLongPress = { alarmData ->
 								selectedAlarmId = if (selectedAlarmId == alarmData.id) null else alarmData.id
 							},
+							sharedTransitionScope = sharedTransitionScope,
+							animatedVisibilityScope = animatedVisibilityScope,
 							modifier = Modifier.animateItem()
 						)
 					}

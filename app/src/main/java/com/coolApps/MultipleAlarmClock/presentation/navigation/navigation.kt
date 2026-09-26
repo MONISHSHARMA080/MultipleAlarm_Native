@@ -1,6 +1,8 @@
 package com.coolApps.MultipleAlarmClock.presentation.navigation
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -29,6 +31,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.runtime.result.rememberResultEventBusNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import com.coolApps.MultipleAlarmClock.presentation.home.AlarmContainer
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingScreen
 import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmFlowScreen
@@ -40,6 +43,7 @@ import com.revenuecat.purchases.ui.revenuecatui.customercenter.CustomerCenter
 import kotlinx.coroutines.launch
 
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) {
 	val isFirstLaunch by navViewModel.isFirstLaunch.collectAsStateWithLifecycle()
 	if (isFirstLaunch == null) return
@@ -70,110 +74,118 @@ import kotlinx.coroutines.launch
 		color = MaterialTheme.colorScheme.background
 	) {
 
-		NavDisplay(
-			backStack = backStack,
-			onBack = { backStack.removeLastOrNull() },
+		SharedTransitionLayout {
+			val sharedTransitionScope = this
 
-			entryDecorators = listOf(
-				rememberSaveableStateHolderNavEntryDecorator(),
-				rememberViewModelStoreNavEntryDecorator(),
-				rememberResultEventBusNavEntryDecorator()
-			),
+			NavDisplay(
+				backStack = backStack,
+				onBack = { backStack.removeLastOrNull() },
 
-			transitionSpec = {
-				slideInHorizontally(
-					animationSpec = tween(330, easing = FastOutSlowInEasing),
-					initialOffsetX = { it }
-				) + fadeIn(tween(210, easing = LinearEasing)) togetherWith
-						slideOutHorizontally(
-							animationSpec = tween(330, easing = FastOutSlowInEasing),
-							targetOffsetX = { -it }
-						) + fadeOut(tween(210, easing = LinearEasing))
-			},
+				entryDecorators = listOf(
+					rememberSaveableStateHolderNavEntryDecorator(),
+					rememberViewModelStoreNavEntryDecorator(),
+					rememberResultEventBusNavEntryDecorator()
+				),
 
-			popTransitionSpec = {
-				slideInHorizontally(
-					animationSpec = tween(240, easing = FastOutSlowInEasing),
-					initialOffsetX = { -it }
-				) + fadeIn(tween(180, easing = LinearEasing)) togetherWith
-						slideOutHorizontally(
-							animationSpec = tween(240, easing = FastOutSlowInEasing),
-							targetOffsetX = { it }
-						) + fadeOut(tween(140, easing = LinearEasing))
-			},
+				transitionSpec = {
+					slideInHorizontally(
+						animationSpec = tween(330, easing = FastOutSlowInEasing),
+						initialOffsetX = { it }
+					) + fadeIn(tween(210, easing = LinearEasing)) togetherWith
+							slideOutHorizontally(
+								animationSpec = tween(330, easing = FastOutSlowInEasing),
+								targetOffsetX = { -it }
+							) + fadeOut(tween(210, easing = LinearEasing))
+				},
 
-			predictivePopTransitionSpec = {
-				slideInHorizontally(
-					animationSpec = tween(240, easing = FastOutSlowInEasing),
-					initialOffsetX = { (-it * 0.3f).toInt() }
-				) + fadeIn(tween(150, easing = LinearEasing)) togetherWith
-						slideOutHorizontally(
-							animationSpec = tween(190, easing = FastOutSlowInEasing),
-							targetOffsetX = { it }
-						) + fadeOut(tween(120, easing = LinearEasing))
-			},
+				popTransitionSpec = {
+					slideInHorizontally(
+						animationSpec = tween(240, easing = FastOutSlowInEasing),
+						initialOffsetX = { -it }
+					) + fadeIn(tween(180, easing = LinearEasing)) togetherWith
+							slideOutHorizontally(
+								animationSpec = tween(240, easing = FastOutSlowInEasing),
+								targetOffsetX = { it }
+							) + fadeOut(tween(140, easing = LinearEasing))
+				},
 
-			entryProvider = entryProvider {
+				predictivePopTransitionSpec = {
+					slideInHorizontally(
+						animationSpec = tween(240, easing = FastOutSlowInEasing),
+						initialOffsetX = { (-it * 0.3f).toInt() }
+					) + fadeIn(tween(150, easing = LinearEasing)) togetherWith
+							slideOutHorizontally(
+								animationSpec = tween(190, easing = FastOutSlowInEasing),
+								targetOffsetX = { it }
+							) + fadeOut(tween(120, easing = LinearEasing))
+				},
 
-				entry<Screen.OnboardingScreen> {
-					OnboardingScreen(onNavigateToPaywall = { showPaywall = it })
+				entryProvider = entryProvider {
+
+					entry<Screen.OnboardingScreen> {
+						OnboardingScreen(onNavigateToPaywall = { showPaywall = it })
+					}
+
+					entry<Screen.SettingsScreen> {
+						SettingsScreen(
+							onNavigateBack = {
+								backStack.removeLastOrNull() ?: backStack.add(Screen.AlarmContainer)
+							},
+							onNavigateToPaywall = {
+								showPaywall = it
+							},
+
+							onNavigateToCustomerCenter = {
+								backStack.add(Screen.CustomerCenter)
+							}
+						)
+					}
+
+					entry<Screen.AlarmContainer> {
+						AlarmContainer(
+							onNavigateToEdit = { alarm ->
+								backStack.add(Screen.AlarmFlow(alarm))
+							},
+							onNavigateToCreate = {
+								backStack.add(Screen.AlarmFlow(null))
+							},
+							onNavigateToSettings = {
+								backStack.add(Screen.SettingsScreen)
+							},
+							sharedTransitionScope = sharedTransitionScope,
+							animatedVisibilityScope = LocalNavAnimatedContentScope.current
+						)
+					}
+
+					entry<Screen.AlarmFlow> { key ->
+
+						AlarmFlowScreen(
+							alarmData = key.alarmData,
+							onCloseFlow = { backStack.removeLastOrNull() },
+							onNavigateToPaywall = {
+								showPaywall = it
+							},
+							sharedTransitionScope = sharedTransitionScope,
+							animatedVisibilityScope = LocalNavAnimatedContentScope.current
+						)
+					}
+
+					entry<Screen.Paywall> {
+						Paywall(
+							options = PaywallOptions.Builder(
+								dismissRequest = { backStack.removeLastOrNull() }
+							).build()
+						)
+					}
+
+					entry<Screen.CustomerCenter> {
+						CustomerCenter(
+							onDismiss = { backStack.removeLastOrNull() }
+						)
+					}
 				}
-
-				entry<Screen.SettingsScreen> {
-					SettingsScreen(
-						onNavigateBack = {
-							backStack.removeLastOrNull() ?: backStack.add(Screen.AlarmContainer)
-						},
-						onNavigateToPaywall = {
-							showPaywall = it
-						},
-
-						onNavigateToCustomerCenter = {
-							backStack.add(Screen.CustomerCenter)
-						}
-					)
-				}
-
-				entry<Screen.AlarmContainer> {
-					AlarmContainer(
-						onNavigateToEdit = { alarm ->
-							backStack.add(Screen.AlarmFlow(alarm))
-						},
-						onNavigateToCreate = {
-							backStack.add(Screen.AlarmFlow(null))
-						},
-						onNavigateToSettings = {
-							backStack.add(Screen.SettingsScreen)
-						}
-					)
-				}
-
-				entry<Screen.AlarmFlow> { key ->
-
-					AlarmFlowScreen(
-						alarmData = key.alarmData,
-						onCloseFlow = { backStack.removeLastOrNull() },
-						onNavigateToPaywall = {
-							showPaywall = it
-						}
-					)
-				}
-
-				entry<Screen.Paywall> {
-					Paywall(
-						options = PaywallOptions.Builder(
-							dismissRequest = { backStack.removeLastOrNull() }
-						).build()
-					)
-				}
-
-				entry<Screen.CustomerCenter> {
-					CustomerCenter(
-						onDismiss = { backStack.removeLastOrNull() }
-					)
-				}
-			}
-		)
+			)
+		}
 	}
 	AnimatedVisibility(
 		showPaywall,

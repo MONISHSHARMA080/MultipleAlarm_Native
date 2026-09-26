@@ -1,5 +1,8 @@
 package com.coolApps.MultipleAlarmClock.presentation.picker
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -23,11 +26,14 @@ import com.coolApps.MultipleAlarmClock.presentation.navigation.AlarmFlowRoute
 import com.coolApps.MultipleAlarmClock.presentation.navigation.Screen
 import com.coolApps.MultipleAlarmClock.presentation.picker.listAlarmRingtone.ListAlarmSoundScreen
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AlarmFlowScreen(
 	alarmData: AlarmData?,
 	onCloseFlow: () -> Unit,
-	onNavigateToPaywall: (Boolean) -> Unit
+	onNavigateToPaywall: (Boolean) -> Unit,
+	sharedTransitionScope: SharedTransitionScope,
+	animatedVisibilityScope: AnimatedVisibilityScope
 ) {
 	val viewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory ->
 		factory.create(alarmData)
@@ -94,6 +100,9 @@ fun AlarmFlowScreen(
 					onNavigateToSoundList = {
 						flowBackStack.add(AlarmFlowRoute.AlarmSoundListScreen)
 					}, onNavigateToPaywall = onNavigateToPaywall,
+					sharedTransitionScope = sharedTransitionScope,
+					animatedVisibilityScope = animatedVisibilityScope,
+					alarmId = alarmData?.id
 				)
 			}
 

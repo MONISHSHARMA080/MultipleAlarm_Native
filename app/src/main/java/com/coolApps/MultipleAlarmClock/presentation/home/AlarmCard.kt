@@ -2,6 +2,9 @@ package com.coolApps.MultipleAlarmClock.presentation.home
 
 import android.os.Build
 import android.view.HapticFeedbackConstants
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -61,6 +64,7 @@ import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AlarmCard(
 	alarmData: AlarmData,
@@ -69,7 +73,9 @@ fun AlarmCard(
 	onToggle: (AlarmData, Boolean) -> Unit,
 	onDelete: (AlarmData) -> Unit,
 	modifier: Modifier = Modifier,
-	onLongPress: (AlarmData) -> Unit = {}
+	onLongPress: (AlarmData) -> Unit = {},
+	sharedTransitionScope: SharedTransitionScope,
+	animatedVisibilityScope: AnimatedVisibilityScope
 ) {
 	val colorScheme = colorScheme
 	val typography = typography
@@ -151,22 +157,27 @@ fun AlarmCard(
 				fontScale = 1f
 			)
 		) {
-			Card(
-				modifier = Modifier
-					.fillMaxWidth()
-					.padding(horizontal = horizontalPadding, vertical = animatedVerticalPadding)
-					.clip(cardShape)
-					.combinedClickable(
-						onClick = { onEdit(alarmData) },
-						onLongClick = { onLongPress(alarmData) }
+			with(sharedTransitionScope) {
+				Card(
+					modifier = Modifier
+						.sharedBounds(
+							sharedContentState = rememberSharedContentState(key = "alarm_card_${alarmData.id}"),
+							animatedVisibilityScope = animatedVisibilityScope,
+						)
+						.fillMaxWidth()
+						.padding(horizontal = horizontalPadding, vertical = animatedVerticalPadding)
+						.clip(cardShape)
+						.combinedClickable(
+							onClick = { onEdit(alarmData) },
+							onLongClick = { onLongPress(alarmData) }
+						),
+					colors = CardDefaults.cardColors(
+						containerColor = containerColor,
+						contentColor = contentColor
 					),
-				colors = CardDefaults.cardColors(
-					containerColor = containerColor,
-					contentColor = contentColor
-				),
-				shape = cardShape,
-				elevation = CardDefaults.cardElevation()
-			) {
+					shape = cardShape,
+					elevation = CardDefaults.cardElevation()
+				) {
 				Column(
 					modifier = Modifier
 						.padding(24.dp)
@@ -199,18 +210,32 @@ fun AlarmCard(
 							TimeDisplay(
 								millis = alarmData.startTime,
 								textStyle = typography.displaySmall,
-								contentColor = contentColor, isActive = isActive
+								contentColor = contentColor, isActive = isActive,
+								modifier = Modifier.sharedElement(
+									sharedContentState = rememberSharedContentState(key = "start_time_${alarmData.id}"),
+									animatedVisibilityScope = animatedVisibilityScope,
+								)
 							)
 							Icon(
 								imageVector = Icons.AutoMirrored.Filled.ArrowForward,
 								contentDescription = null,
-								modifier = Modifier.padding(horizontal = 8.dp).size(20.dp),
+								modifier = Modifier
+									.padding(horizontal = 8.dp)
+									.size(20.dp)
+									.sharedElement(
+										sharedContentState = rememberSharedContentState(key = "arrow_${alarmData.id}"),
+										animatedVisibilityScope = animatedVisibilityScope,
+									),
 								tint = secondaryContentColor
 							)
 							TimeDisplay(
 								millis = alarmData.endTime,
 								textStyle = typography.displaySmall,
-								contentColor = contentColor, isActive = isActive
+								contentColor = contentColor, isActive = isActive,
+								modifier = Modifier.sharedElement(
+									sharedContentState = rememberSharedContentState(key = "end_time_${alarmData.id}"),
+									animatedVisibilityScope = animatedVisibilityScope,
+								)
 							)
 						}
 
@@ -234,6 +259,7 @@ fun AlarmCard(
 							)
 						)
 					}
+				}
 				}
 			}
 		}

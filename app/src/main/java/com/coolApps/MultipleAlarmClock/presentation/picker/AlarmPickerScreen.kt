@@ -5,6 +5,9 @@ import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -69,7 +72,7 @@ import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.AlarmPermis
 import java.util.Calendar
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun AlarmPickerScreen(
 		alarmSetProceed: () -> Unit,
@@ -78,7 +81,10 @@ fun AlarmPickerScreen(
 		onNavigateToPaywall:(Boolean)->Unit,
 		forNewAlarm: Boolean,
 		linearProgressBar: (@Composable () -> Unit)? = null,
-		viewModel: AlarmPickerViewModel
+		viewModel: AlarmPickerViewModel,
+		sharedTransitionScope: SharedTransitionScope? = null,
+		animatedVisibilityScope: AnimatedVisibilityScope? = null,
+		alarmId: Int? = null
 ) {
 	val uiState by viewModel.uiState.collectAsState()
 	val isPremium by viewModel.isPremium.collectAsState()
@@ -370,33 +376,48 @@ fun AlarmPickerScreen(
 						}
 					}
 				}else{
+					val canAnimate = sharedTransitionScope != null && animatedVisibilityScope != null && alarmId != null
 					Column(
-						modifier = Modifier.fillMaxSize()
+						modifier = Modifier
+							.then(
+								if (canAnimate) {
+									with(sharedTransitionScope) {
+										Modifier.sharedBounds(
+											sharedContentState = rememberSharedContentState(key = "alarm_card_${alarmId}"),
+											animatedVisibilityScope = animatedVisibilityScope,
+										)
+									}
+								} else Modifier
+							)
+							.fillMaxSize()
 							.padding(horizontal = horizontalPadding)
 							.animateContentSize(),
-						horizontalAlignment = Alignment.CenterHorizontally
-					) {
-						Spacer(modifier = Modifier.weight(0.44f))
-						TimeRow(
-							uiState,
-							{ viewModel.updateStartTime(it) },
-							{ viewModel.updateEndTime(it) },
-							onDisabledTimeSelected = {onDisabledTimeSelected(view)}
-						)
-						Spacer(modifier = Modifier.weight(0.45f))
-						SettingsCard(
-							uiState = uiState,
-							updateFrequency = { viewModel.updateFrequency(it) },
-							messageValueChanged = { viewModel.updateMessage(it) },
-							updateIsForceLoudVolume = { viewModel.updateIsForceLoudVolume(it) },
-							calenderButtonClicked = { showCalendar = true },
-							selectSoundButtonClicked = onNavigateToSoundList,
-							repeatDayToggled = {day -> viewModel.onRepeatDayClicked(day)},
-							selectedSoundName = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random),
-							modifier = Modifier.weight(1f, fill = false)
-						)
-						Spacer(modifier = Modifier.weight(0.04f))
-					}
+							horizontalAlignment = Alignment.CenterHorizontally
+						) {
+							Spacer(modifier = Modifier.weight(0.44f))
+							TimeRow(
+								uiState,
+								{ viewModel.updateStartTime(it) },
+								{ viewModel.updateEndTime(it) },
+								onDisabledTimeSelected = {onDisabledTimeSelected(view)},
+								sharedTransitionScope = sharedTransitionScope,
+								animatedVisibilityScope = animatedVisibilityScope,
+								alarmId = alarmId
+							)
+							Spacer(modifier = Modifier.weight(0.45f))
+							SettingsCard(
+								uiState = uiState,
+								updateFrequency = { viewModel.updateFrequency(it) },
+								messageValueChanged = { viewModel.updateMessage(it) },
+								updateIsForceLoudVolume = { viewModel.updateIsForceLoudVolume(it) },
+								calenderButtonClicked = { showCalendar = true },
+								selectSoundButtonClicked = onNavigateToSoundList,
+								repeatDayToggled = {day -> viewModel.onRepeatDayClicked(day)},
+								selectedSoundName = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random),
+								modifier = Modifier.weight(1f, fill = false)
+							)
+							Spacer(modifier = Modifier.weight(0.04f))
+						}
 				}
 			}
 		}
