@@ -88,36 +88,51 @@ import kotlinx.coroutines.launch
 				),
 
 				transitionSpec = {
-					slideInHorizontally(
-						animationSpec = tween(330, easing = FastOutSlowInEasing),
-						initialOffsetX = { it }
-					) + fadeIn(tween(210, easing = LinearEasing)) togetherWith
-							slideOutHorizontally(
-								animationSpec = tween(330, easing = FastOutSlowInEasing),
-								targetOffsetX = { -it }
-							) + fadeOut(tween(210, easing = LinearEasing))
+					val isEdit = (targetState.key as? Screen.AlarmFlow)?.alarmData != null
+					if (isEdit) {
+						fadeIn(tween(210, easing = LinearEasing)) togetherWith fadeOut(tween(210, easing = LinearEasing))
+					} else {
+						slideInHorizontally(
+							animationSpec = tween(330, easing = FastOutSlowInEasing),
+							initialOffsetX = { it }
+						) + fadeIn(tween(210, easing = LinearEasing)) togetherWith
+								slideOutHorizontally(
+									animationSpec = tween(330, easing = FastOutSlowInEasing),
+									targetOffsetX = { -it }
+								) + fadeOut(tween(210, easing = LinearEasing))
+					}
 				},
 
 				popTransitionSpec = {
-					slideInHorizontally(
-						animationSpec = tween(240, easing = FastOutSlowInEasing),
-						initialOffsetX = { -it }
-					) + fadeIn(tween(180, easing = LinearEasing)) togetherWith
-							slideOutHorizontally(
-								animationSpec = tween(240, easing = FastOutSlowInEasing),
-								targetOffsetX = { it }
-							) + fadeOut(tween(140, easing = LinearEasing))
+					val isEdit = (initialState.key as? Screen.AlarmFlow)?.alarmData != null
+					if (isEdit) {
+						fadeIn(tween(210, easing = LinearEasing)) togetherWith fadeOut(tween(210, easing = LinearEasing))
+					} else {
+						slideInHorizontally(
+							animationSpec = tween(240, easing = FastOutSlowInEasing),
+							initialOffsetX = { -it }
+						) + fadeIn(tween(180, easing = LinearEasing)) togetherWith
+								slideOutHorizontally(
+									animationSpec = tween(240, easing = FastOutSlowInEasing),
+									targetOffsetX = { it }
+								) + fadeOut(tween(140, easing = LinearEasing))
+					}
 				},
 
 				predictivePopTransitionSpec = {
-					slideInHorizontally(
-						animationSpec = tween(240, easing = FastOutSlowInEasing),
-						initialOffsetX = { (-it * 0.3f).toInt() }
-					) + fadeIn(tween(150, easing = LinearEasing)) togetherWith
-							slideOutHorizontally(
-								animationSpec = tween(190, easing = FastOutSlowInEasing),
-								targetOffsetX = { it }
-							) + fadeOut(tween(120, easing = LinearEasing))
+					val isEdit = (initialState.key as? Screen.AlarmFlow)?.alarmData != null
+					if (isEdit) {
+						fadeIn(tween(150, easing = LinearEasing)) togetherWith fadeOut(tween(120, easing = LinearEasing))
+					} else {
+						slideInHorizontally(
+							animationSpec = tween(240, easing = FastOutSlowInEasing),
+							initialOffsetX = { (-it * 0.3f).toInt() }
+						) + fadeIn(tween(150, easing = LinearEasing)) togetherWith
+								slideOutHorizontally(
+									animationSpec = tween(190, easing = FastOutSlowInEasing),
+									targetOffsetX = { it }
+								) + fadeOut(tween(120, easing = LinearEasing))
+					}
 				},
 
 				entryProvider = entryProvider {
