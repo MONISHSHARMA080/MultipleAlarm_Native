@@ -369,7 +369,8 @@ fun AlarmPickerScreen(
 									selectSoundButtonClicked = onNavigateToSoundList,
 									repeatDayToggled = {day -> viewModel.onRepeatDayClicked(day)},
 									selectedSoundName = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random),
-									modifier = Modifier.weight(1f, fill = false)
+									modifier = Modifier.weight(1f, fill = false),
+									animateScroll = forNewAlarm
 								)
 								Spacer(modifier = Modifier.weight(0.04f))
 							}
@@ -414,7 +415,8 @@ fun AlarmPickerScreen(
 								selectSoundButtonClicked = onNavigateToSoundList,
 								repeatDayToggled = {day -> viewModel.onRepeatDayClicked(day)},
 								selectedSoundName = selectedSound?.title ?: stringResource(R.string.alarm_picker_sound_random),
-								modifier = Modifier.weight(1f, fill = false)
+								modifier = Modifier.weight(1f, fill = false),
+								animateScroll = forNewAlarm
 							)
 							Spacer(modifier = Modifier.weight(0.04f))
 						}

@@ -107,7 +107,8 @@ fun SettingsCard(
 		calenderButtonClicked: () -> Unit,
 		selectSoundButtonClicked: () -> Unit,
 		repeatDayToggled: (DayOfWeek) -> Unit,
-		modifier: Modifier = Modifier
+		modifier: Modifier = Modifier,
+		animateScroll: Boolean = true
 ) {
 	Surface(
 		shape = RoundedCornerShape(29.dp),
@@ -115,11 +116,13 @@ fun SettingsCard(
 		modifier = modifier.fillMaxWidth()
 	) {
 		val density = androidx.compose.ui.platform.LocalDensity.current
-		val initialScroll = remember { with(density) { 62.dp.toPx().toInt() } }
+		val initialScroll = remember(animateScroll) { 
+			if (animateScroll) with(density) { 62.dp.toPx().toInt() } else 0 
+		}
 		val scrollState = rememberScrollState(initial = initialScroll)
 
-		LaunchedEffect(Unit) {
-			if (scrollState.value > 0) {
+		LaunchedEffect(animateScroll) {
+			if (animateScroll && scrollState.value > 0) {
 				scrollState.animateScrollTo(
 					value = 0,
 					animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
