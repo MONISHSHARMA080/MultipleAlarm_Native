@@ -67,7 +67,7 @@ fun CreateFirstAlarmScreen(
 			CreateFirstAlarmStep.Picker -> {
 				AlarmPickerScreen(
 					alarmSetProceed = onAlarmSetProceed,
-					forNewAlarm = true,
+					alarmData = null,
 					viewModel = alarmPickerViewModel,
 					onNavigateToSoundList = {
 						currentStep = CreateFirstAlarmStep.SoundList

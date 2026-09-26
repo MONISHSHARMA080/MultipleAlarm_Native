@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.AlarmPermissionDialog
@@ -79,17 +80,18 @@ fun AlarmPickerScreen(
 		settingAlarmCancelled: ()->Unit,
 		onNavigateToSoundList: () -> Unit,
 		onNavigateToPaywall:(Boolean)->Unit,
-		forNewAlarm: Boolean,
+		alarmData: AlarmData? = null,
 		linearProgressBar: (@Composable () -> Unit)? = null,
 		viewModel: AlarmPickerViewModel,
 		sharedTransitionScope: SharedTransitionScope? = null,
-		animatedVisibilityScope: AnimatedVisibilityScope? = null,
-		alarmId: Int? = null
+		animatedVisibilityScope: AnimatedVisibilityScope? = null
 ) {
 	val uiState by viewModel.uiState.collectAsState()
 	val isPremium by viewModel.isPremium.collectAsState()
 	val selectedSound by viewModel.selectedAlarmSound.collectAsState()
 
+	val forNewAlarm = alarmData == null
+	val alarmId = alarmData?.id
 	val fromOnboarding = linearProgressBar != null
 	val view = LocalView.current
 	val timeStyle = typography.headlineSmall

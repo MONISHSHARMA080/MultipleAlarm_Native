@@ -96,13 +96,12 @@ fun AlarmFlowScreen(
 						onCloseFlow()
 					},
 					settingAlarmCancelled = onCloseFlow,
-					forNewAlarm = alarmData == null,
+					alarmData = alarmData,
 					onNavigateToSoundList = {
 						flowBackStack.add(AlarmFlowRoute.AlarmSoundListScreen)
 					}, onNavigateToPaywall = onNavigateToPaywall,
 					sharedTransitionScope = sharedTransitionScope,
-					animatedVisibilityScope = animatedVisibilityScope,
-					alarmId = alarmData?.id
+					animatedVisibilityScope = animatedVisibilityScope
 				)
 			}
 
