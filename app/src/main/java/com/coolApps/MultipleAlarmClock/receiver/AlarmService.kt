@@ -18,9 +18,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.IntentCompat
 import androidx.core.net.toUri
 import com.coolApps.MultipleAlarmClock.R
-import com.coolApps.MultipleAlarmClock.presentation.trigger.AlarmActivityIntentData
-import com.coolApps.MultipleAlarmClock.presentation.trigger.AlarmActivity
 import com.coolApps.MultipleAlarmClock.data.local.AlarmDao
+import com.coolApps.MultipleAlarmClock.presentation.trigger.AlarmActivity
+import com.coolApps.MultipleAlarmClock.presentation.trigger.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.util.Analytics
 import com.coolApps.MultipleAlarmClock.util.NotificationChannelType
 import dagger.hilt.android.AndroidEntryPoint
@@ -81,13 +81,10 @@ class AlarmService: Service() {
 
     /** launches the notification with full screen intent, plays the alarm sound , and puts intent in the hashMap if required*/
     private fun startPlayingAlarm(intent: Intent):Int{
-		logD("a")
         val res = buildNotification(this, intent).getOrElse { exception ->
             logD(" Error building notification: ${exception.message} ")
             return problemSoStopTheService(" Error building notification: ${exception.message} ", mapOf("function" to "startPlayingAlarm"))
         }
-		logD("b, res:$res")
-
         val notification: Notification = res.first
         val alarmIntentData: AlarmActivityIntentData = res.second
 		// alarmIntentData.alarmIdInDb shouldn't be 0

@@ -130,10 +130,10 @@ fun SettingsCard(
 		Column(
 			modifier = Modifier
 				.fillMaxWidth()
+				.imePadding()
 				.verticalScroll(
 					scrollState
 				)
-				.imePadding()
 		) {
 
 			RepeatDaysRow(
