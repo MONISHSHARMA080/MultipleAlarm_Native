@@ -5,6 +5,7 @@ import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -63,6 +64,20 @@ import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
+
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.ui.geometry.Rect
+
+// ─── Spring physics for the alarm card ↔ edit screen hero transition ────────
+private val AlarmMotionSpring = spring<Rect>(
+    dampingRatio = Spring.DampingRatioLowBouncy,
+    stiffness = Spring.StiffnessMediumLow
+)
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+private val AlarmBoundsTransform = BoundsTransform { _initialBounds, _targetBounds -> AlarmMotionSpring }
+
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable fun AlarmCard(
@@ -164,7 +179,8 @@ import kotlin.math.abs
 						.sharedBounds(
 							sharedContentState = rememberSharedContentState(key = "alarm_card_${alarmData.id}"),
 							animatedVisibilityScope = animatedVisibilityScope,
-							clipInOverlayDuringTransition = OverlayClip(cardShape)
+							clipInOverlayDuringTransition = OverlayClip(cardShape),
+							boundsTransform = AlarmBoundsTransform
 						)
 						.clip(cardShape)
 						.combinedClickable(
@@ -214,6 +230,7 @@ import kotlin.math.abs
 								modifier = Modifier.sharedElement(
 									sharedContentState = rememberSharedContentState(key = "start_time_${alarmData.id}"),
 									animatedVisibilityScope = animatedVisibilityScope,
+									boundsTransform = AlarmBoundsTransform
 								)
 							)
 							Icon(
@@ -225,6 +242,7 @@ import kotlin.math.abs
 									.sharedElement(
 										sharedContentState = rememberSharedContentState(key = "arrow_${alarmData.id}"),
 										animatedVisibilityScope = animatedVisibilityScope,
+										boundsTransform = AlarmBoundsTransform
 									),
 								tint = secondaryContentColor
 							)
@@ -235,6 +253,7 @@ import kotlin.math.abs
 								modifier = Modifier.sharedElement(
 									sharedContentState = rememberSharedContentState(key = "end_time_${alarmData.id}"),
 									animatedVisibilityScope = animatedVisibilityScope,
+									boundsTransform = AlarmBoundsTransform
 								)
 							)
 						}

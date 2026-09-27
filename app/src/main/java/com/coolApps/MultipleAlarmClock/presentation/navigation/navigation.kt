@@ -36,7 +36,8 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import com.coolApps.MultipleAlarmClock.presentation.home.AlarmContainer
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingScreen
-import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmFlowScreen
+import com.coolApps.MultipleAlarmClock.presentation.picker.EditAlarmFlowScreen
+import com.coolApps.MultipleAlarmClock.presentation.picker.NewAlarmFlowScreen
 import com.coolApps.MultipleAlarmClock.presentation.settings.PremiumPaywallDialog
 import com.coolApps.MultipleAlarmClock.presentation.settings.SettingsScreen
 import com.revenuecat.purchases.ui.revenuecatui.Paywall
@@ -89,65 +90,36 @@ import kotlinx.coroutines.launch
 					rememberResultEventBusNavEntryDecorator()
 				),
 
+				// Default forward transition used for all routes that don't override via metadata
 				transitionSpec = {
-					when (targetState.key) {
-						is Screen.AlarmEditRoute -> {
-							EnterTransition.None togetherWith ExitTransition.None
-						}
-						is Screen.AlarmCreateRoute -> {
-							fadeIn(tween(210, easing = LinearEasing)) togetherWith fadeOut(tween(210, easing = LinearEasing))
-						}
-						else -> {
-							slideInHorizontally(
+					slideInHorizontally(
+						animationSpec = tween(330, easing = FastOutSlowInEasing),
+						initialOffsetX = { it }
+					) + fadeIn(tween(210, easing = LinearEasing)) togetherWith
+							slideOutHorizontally(
 								animationSpec = tween(330, easing = FastOutSlowInEasing),
-								initialOffsetX = { it }
-							) + fadeIn(tween(210, easing = LinearEasing)) togetherWith
-									slideOutHorizontally(
-										animationSpec = tween(330, easing = FastOutSlowInEasing),
-										targetOffsetX = { -it }
-									) + fadeOut(tween(210, easing = LinearEasing))
-						}
-					}
+								targetOffsetX = { -it }
+							) + fadeOut(tween(210, easing = LinearEasing))
 				},
 				popTransitionSpec = {
-					when (initialState.key) {
-						is Screen.AlarmEditRoute -> {
-							EnterTransition.None togetherWith ExitTransition.None
-						}
-						is Screen.AlarmCreateRoute -> {
-							fadeIn(tween(180, easing = LinearEasing)) togetherWith fadeOut(tween(140, easing = LinearEasing))
-						}
-						else -> {
-							slideInHorizontally(
+					slideInHorizontally(
+						animationSpec = tween(240, easing = FastOutSlowInEasing),
+						initialOffsetX = { -it }
+					) + fadeIn(tween(180, easing = LinearEasing)) togetherWith
+							slideOutHorizontally(
 								animationSpec = tween(240, easing = FastOutSlowInEasing),
-								initialOffsetX = { -it }
-							) + fadeIn(tween(180, easing = LinearEasing)) togetherWith
-									slideOutHorizontally(
-										animationSpec = tween(240, easing = FastOutSlowInEasing),
-										targetOffsetX = { it }
-									) + fadeOut(tween(140, easing = LinearEasing))
-						}
-					}
+								targetOffsetX = { it }
+							) + fadeOut(tween(140, easing = LinearEasing))
 				},
 				predictivePopTransitionSpec = {
-					when (initialState.key) {
-						is Screen.AlarmEditRoute -> {
-							EnterTransition.None togetherWith ExitTransition.None
-						}
-						is Screen.AlarmCreateRoute -> {
-							fadeIn(tween(150, easing = LinearEasing)) togetherWith fadeOut(tween(120, easing = LinearEasing))
-						}
-						else -> {
-							slideInHorizontally(
-								animationSpec = tween(240, easing = FastOutSlowInEasing),
-								initialOffsetX = { (-it * 0.3f).toInt() }
-							) + fadeIn(tween(150, easing = LinearEasing)) togetherWith
-									slideOutHorizontally(
-										animationSpec = tween(190, easing = FastOutSlowInEasing),
-										targetOffsetX = { it }
-									) + fadeOut(tween(120, easing = LinearEasing))
-						}
-					}
+					slideInHorizontally(
+						animationSpec = tween(240, easing = FastOutSlowInEasing),
+						initialOffsetX = { (-it * 0.3f).toInt() }
+					) + fadeIn(tween(150, easing = LinearEasing)) togetherWith
+							slideOutHorizontally(
+								animationSpec = tween(190, easing = FastOutSlowInEasing),
+								targetOffsetX = { it }
+							) + fadeOut(tween(120, easing = LinearEasing))
 				},
 
 				entryProvider = entryProvider {
@@ -187,8 +159,13 @@ import kotlinx.coroutines.launch
 						)
 					}
 
-					entry<Screen.AlarmEditRoute> { key ->
-						AlarmFlowScreen(
+					// Edit route — suppress nav transition so the shared-element hero plays unobstructed
+					entry<Screen.AlarmEditRoute>(
+						metadata = NavDisplay.transitionSpec { EnterTransition.None togetherWith ExitTransition.None }
+								+ NavDisplay.popTransitionSpec { EnterTransition.None togetherWith ExitTransition.None }
+								+ NavDisplay.predictivePopTransitionSpec { EnterTransition.None togetherWith ExitTransition.None }
+					) { key ->
+						EditAlarmFlowScreen(
 							alarmData = key.alarmData,
 							onCloseFlow = { backStack.removeLastOrNull() },
 							onNavigateToPaywall = { showPaywall = it },
@@ -197,13 +174,11 @@ import kotlinx.coroutines.launch
 						)
 					}
 
+					// Create route — default forward-slide transition (no metadata override needed)
 					entry<Screen.AlarmCreateRoute> {
-						AlarmFlowScreen(
-							alarmData = null,
+						NewAlarmFlowScreen(
 							onCloseFlow = { backStack.removeLastOrNull() },
-							onNavigateToPaywall = { showPaywall = it },
-							sharedTransitionScope = sharedTransitionScope,
-							animatedVisibilityScope = LocalNavAnimatedContentScope.current
+							onNavigateToPaywall = { showPaywall = it }
 						)
 					}
 
@@ -250,3 +225,4 @@ import kotlinx.coroutines.launch
 		}
 	}
 }
+

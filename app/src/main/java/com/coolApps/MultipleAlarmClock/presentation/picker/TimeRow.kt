@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -56,10 +57,13 @@ fun TimeRow(
 	uiState: AlarmPickerUiState,
 	onStartTimeChange: (Calendar) -> Unit,
 	onEndTimeChange: (Calendar) -> Unit,
-	onDisabledTimeSelected:()->Unit,
+	onDisabledTimeSelected: () -> Unit,
 	sharedTransitionScope: SharedTransitionScope? = null,
 	animatedVisibilityScope: AnimatedVisibilityScope? = null,
-	alarmId: Int? = null
+	alarmId: Int? = null,
+	boundsTransform: BoundsTransform = BoundsTransform { _i, _t ->
+		androidx.compose.animation.core.spring<androidx.compose.ui.geometry.Rect>()
+	}
 ) {
 	val startTime = uiState.alarmData.startTimeCalendar
 	val endTime = uiState.alarmData.endTimeCalendar
@@ -256,6 +260,7 @@ fun TimeRow(
 							Modifier.sharedElement(
 								sharedContentState = rememberSharedContentState(key = "arrow_${alarmId}"),
 								animatedVisibilityScope = animatedVisibilityScope,
+								boundsTransform = boundsTransform
 							)
 						}
 					} else Modifier
@@ -271,6 +276,7 @@ fun TimeRow(
 							Modifier.sharedElement(
 								sharedContentState = rememberSharedContentState(key = "end_time_${alarmId}"),
 								animatedVisibilityScope = animatedVisibilityScope,
+								boundsTransform = boundsTransform
 							)
 						}
 					} else Modifier
