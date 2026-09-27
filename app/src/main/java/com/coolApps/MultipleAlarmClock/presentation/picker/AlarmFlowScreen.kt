@@ -10,6 +10,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -55,14 +57,18 @@ fun AlarmFlowScreen(
 			}
 		},
 		transitionSpec = {
-			slideInHorizontally(
-				animationSpec = tween(330, easing = FastOutSlowInEasing),
-				initialOffsetX = { it }
-			) + fadeIn(tween(210, easing = LinearEasing)) togetherWith
-					slideOutHorizontally(
-						animationSpec = tween(330, easing = FastOutSlowInEasing),
-						targetOffsetX = { -it }
-					) + fadeOut(tween(210, easing = LinearEasing))
+			if (alarmData != null && initialState == targetState) {
+				EnterTransition.None togetherWith ExitTransition.None
+			} else {
+				slideInHorizontally(
+					animationSpec = tween(330, easing = FastOutSlowInEasing),
+					initialOffsetX = { it }
+				) + fadeIn(tween(210, easing = LinearEasing)) togetherWith
+						slideOutHorizontally(
+							animationSpec = tween(330, easing = FastOutSlowInEasing),
+							targetOffsetX = { -it }
+						) + fadeOut(tween(210, easing = LinearEasing))
+			}
 		},
 		popTransitionSpec = {
 			slideInHorizontally(
