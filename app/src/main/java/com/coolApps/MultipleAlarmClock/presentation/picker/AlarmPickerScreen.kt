@@ -324,7 +324,7 @@ fun NewAlarmScreen(
 	}
 
 	val horizontalPadding = rememberAdaptiveHorizontalPadding()
-	val currentProgress = uiState.progress
+	val currentProgress = if (fromOnboarding) uiState.progress else Progress.FullEditor
 
 	val startTimePickerState = key(currentProgress, uiState.alarmData.startTime) {
 		rememberTimePickerState(
@@ -387,6 +387,7 @@ fun NewAlarmScreen(
 					CancelAndDeleteButton(
 						currentProgress = currentProgress,
 						isNewAlarm = true,
+						fromOnboarding = fromOnboarding,
 						onClick = {
 							when (currentProgress) {
 								Progress.StartTime -> settingAlarmCancelled()
@@ -397,10 +398,14 @@ fun NewAlarmScreen(
 									viewModel.updateProgress(Progress.StartTime)
 								}
 								Progress.FullEditor -> {
-									if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-										view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
+									if (fromOnboarding) {
+										if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+											view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
+										}
+										viewModel.updateProgress(Progress.EndTime)
+									} else {
+										settingAlarmCancelled()
 									}
-									viewModel.updateProgress(Progress.EndTime)
 								}
 							}
 						}
@@ -609,9 +614,10 @@ private fun AlarmEditorBody(
 @Composable
 fun CancelAndDeleteButton(
         currentProgress: Progress,
+        modifier: Modifier = Modifier,
         isNewAlarm: Boolean,
+        fromOnboarding: Boolean = false,
         onClick: () -> Unit,
-        modifier: Modifier = Modifier
 ) {
   val isDeleteMode = currentProgress == Progress.FullEditor && !isNewAlarm
 
@@ -652,7 +658,11 @@ fun CancelAndDeleteButton(
 			  text = when (progress) {
 				Progress.StartTime -> stringResource(R.string.alarm_picker_cancel)
 				Progress.EndTime -> stringResource(R.string.alarm_picker_previous)
-				Progress.FullEditor -> stringResource(R.string.alarm_picker_previous)
+				Progress.FullEditor -> if (isNewAlarm && !fromOnboarding) {
+					stringResource(R.string.alarm_picker_cancel)
+				} else {
+					stringResource(R.string.alarm_picker_previous)
+				}
 			  },
 			  style = typography.bodyLarge,
           )
