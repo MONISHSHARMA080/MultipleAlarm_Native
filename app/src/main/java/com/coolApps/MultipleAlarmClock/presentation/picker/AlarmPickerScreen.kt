@@ -173,7 +173,22 @@ fun AlarmPickerScreen(
 
 	val isCandidateInvalid = currentProgress != Progress.StartTime &&  candidateEnd.timeInMillis <= uiState.alarmData.startTime
 
+	val canAnimate = !fromOnboarding && sharedTransitionScope != null && animatedVisibilityScope != null && alarmId != null
+
+	val scaffoldModifier = if (canAnimate) {
+		with(sharedTransitionScope) {
+			Modifier.sharedBounds(
+				sharedContentState = rememberSharedContentState(key = "alarm_card_${alarmId}"),
+				animatedVisibilityScope = animatedVisibilityScope,
+				clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(0.dp))
+			)
+		}
+	} else {
+		Modifier
+	}
+
 	Scaffold(
+		modifier = scaffoldModifier,
 		contentWindowInsets = WindowInsets.safeDrawing,
 		topBar = {
 			if (!fromOnboarding) {
@@ -383,12 +398,7 @@ fun AlarmPickerScreen(
 						modifier = Modifier
 							.then(
 								if (canAnimate) {
-									with(sharedTransitionScope) {
-										Modifier.sharedBounds(
-											sharedContentState = rememberSharedContentState(key = "alarm_card_${alarmId}"),
-											animatedVisibilityScope = animatedVisibilityScope,
-										)
-									}
+									Modifier
 								} else Modifier
 							)
 							.fillMaxSize()

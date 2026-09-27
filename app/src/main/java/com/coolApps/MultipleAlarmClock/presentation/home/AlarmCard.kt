@@ -160,12 +160,13 @@ fun AlarmCard(
 			with(sharedTransitionScope) {
 				Card(
 					modifier = Modifier
+						.fillMaxWidth()
+						.padding(horizontal = horizontalPadding, vertical = animatedVerticalPadding)
 						.sharedBounds(
 							sharedContentState = rememberSharedContentState(key = "alarm_card_${alarmData.id}"),
 							animatedVisibilityScope = animatedVisibilityScope,
+							clipInOverlayDuringTransition = OverlayClip(cardShape)
 						)
-						.fillMaxWidth()
-						.padding(horizontal = horizontalPadding, vertical = animatedVerticalPadding)
 						.clip(cardShape)
 						.combinedClickable(
 							onClick = { onEdit(alarmData) },
