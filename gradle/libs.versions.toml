@@ -55,6 +55,7 @@ runtimeSaveable = "1.12.0"
 robolectric = "4.17"
 mockk = "1.14.11"
 truth = "1.4.5"
+animation = "1.12.1"
 #firebaseFunctionsKtx = "22.1.1"
 
 [libraries]
@@ -122,6 +123,7 @@ review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "rev
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
+androidx-compose-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

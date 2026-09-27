@@ -1,7 +1,9 @@
 package com.coolApps.MultipleAlarmClock.presentation.navigation
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
@@ -90,7 +92,9 @@ import kotlinx.coroutines.launch
 				transitionSpec = {
 					val isEdit = (targetState.key as? Screen.AlarmFlow)?.alarmData != null
 					if (isEdit) {
-						fadeIn(tween(210, easing = LinearEasing)) togetherWith fadeOut(tween(210, easing = LinearEasing))
+						// Keep the destination stationary so only the matching alarm-card
+						// shared elements animate into the editor.
+						EnterTransition.None togetherWith ExitTransition.None
 					} else {
 						slideInHorizontally(
 							animationSpec = tween(330, easing = FastOutSlowInEasing),
@@ -106,7 +110,7 @@ import kotlinx.coroutines.launch
 				popTransitionSpec = {
 					val isEdit = (initialState.key as? Screen.AlarmFlow)?.alarmData != null
 					if (isEdit) {
-						fadeIn(tween(210, easing = LinearEasing)) togetherWith fadeOut(tween(210, easing = LinearEasing))
+						EnterTransition.None togetherWith ExitTransition.None
 					} else {
 						slideInHorizontally(
 							animationSpec = tween(240, easing = FastOutSlowInEasing),
@@ -122,7 +126,7 @@ import kotlinx.coroutines.launch
 				predictivePopTransitionSpec = {
 					val isEdit = (initialState.key as? Screen.AlarmFlow)?.alarmData != null
 					if (isEdit) {
-						fadeIn(tween(150, easing = LinearEasing)) togetherWith fadeOut(tween(120, easing = LinearEasing))
+						EnterTransition.None togetherWith ExitTransition.None
 					} else {
 						slideInHorizontally(
 							animationSpec = tween(240, easing = FastOutSlowInEasing),

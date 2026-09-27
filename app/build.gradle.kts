@@ -169,6 +169,7 @@ dependencies {
 		exclude(group = "com.google.protobuf", module = "protobuf-lite")
 	}
 	implementation(platform(libs.firebase.bom))
+	implementation(libs.androidx.compose.animation)
 	implementation(libs.androidx.compose.runtime.saveable)
 	implementation(libs.firebase.messaging)
     implementation(libs.hilt.android)

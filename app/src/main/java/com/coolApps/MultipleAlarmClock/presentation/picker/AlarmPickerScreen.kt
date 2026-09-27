@@ -94,7 +94,6 @@ fun AlarmPickerScreen(
 	val alarmId = alarmData?.id
 	val fromOnboarding = linearProgressBar != null
 	val view = LocalView.current
-	val timeStyle = typography.headlineSmall
 	val context = LocalContext.current
 
 
