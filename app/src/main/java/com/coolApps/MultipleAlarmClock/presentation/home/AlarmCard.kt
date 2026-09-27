@@ -65,8 +65,7 @@ import java.util.Locale
 import kotlin.math.abs
 
 @OptIn(ExperimentalSharedTransitionApi::class)
-@Composable
-fun AlarmCard(
+@Composable fun AlarmCard(
 	alarmData: AlarmData,
 	todayStartMs: Long,
 	onEdit: (AlarmData) -> Unit,
