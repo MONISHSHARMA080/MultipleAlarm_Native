@@ -75,12 +75,68 @@ import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun AlarmPickerScreen(
+fun EditAlarmScreen(
 		alarmSetProceed: () -> Unit,
 		settingAlarmCancelled: ()->Unit,
 		onNavigateToSoundList: () -> Unit,
 		onNavigateToPaywall:(Boolean)->Unit,
-		alarmData: AlarmData? = null,
+		alarmData: AlarmData,
+		viewModel: AlarmPickerViewModel,
+		sharedTransitionScope: SharedTransitionScope? = null,
+		animatedVisibilityScope: AnimatedVisibilityScope? = null
+) {
+	AlarmEditorBody(
+		forNewAlarm = false,
+		fromOnboarding = false,
+		alarmId = alarmData.id,
+		alarmSetProceed = alarmSetProceed,
+		settingAlarmCancelled = settingAlarmCancelled,
+		onNavigateToSoundList = onNavigateToSoundList,
+		onNavigateToPaywall = onNavigateToPaywall,
+		linearProgressBar = null,
+		viewModel = viewModel,
+		sharedTransitionScope = sharedTransitionScope,
+		animatedVisibilityScope = animatedVisibilityScope
+	)
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+@Composable
+fun NewAlarmScreen(
+		alarmSetProceed: () -> Unit,
+		settingAlarmCancelled: ()->Unit,
+		onNavigateToSoundList: () -> Unit,
+		onNavigateToPaywall:(Boolean)->Unit,
+		linearProgressBar: (@Composable () -> Unit)? = null,
+		viewModel: AlarmPickerViewModel,
+		sharedTransitionScope: SharedTransitionScope? = null,
+		animatedVisibilityScope: AnimatedVisibilityScope? = null
+) {
+	AlarmEditorBody(
+		forNewAlarm = true,
+		fromOnboarding = linearProgressBar != null,
+		alarmId = null,
+		alarmSetProceed = alarmSetProceed,
+		settingAlarmCancelled = settingAlarmCancelled,
+		onNavigateToSoundList = onNavigateToSoundList,
+		onNavigateToPaywall = onNavigateToPaywall,
+		linearProgressBar = linearProgressBar,
+		viewModel = viewModel,
+		sharedTransitionScope = sharedTransitionScope,
+		animatedVisibilityScope = animatedVisibilityScope
+	)
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+@Composable
+private fun AlarmEditorBody(
+		forNewAlarm: Boolean,
+		fromOnboarding: Boolean,
+		alarmId: Int?,
+		alarmSetProceed: () -> Unit,
+		settingAlarmCancelled: ()->Unit,
+		onNavigateToSoundList: () -> Unit,
+		onNavigateToPaywall:(Boolean)->Unit,
 		linearProgressBar: (@Composable () -> Unit)? = null,
 		viewModel: AlarmPickerViewModel,
 		sharedTransitionScope: SharedTransitionScope? = null,
@@ -89,10 +145,6 @@ fun AlarmPickerScreen(
 	val uiState by viewModel.uiState.collectAsState()
 	val isPremium by viewModel.isPremium.collectAsState()
 	val selectedSound by viewModel.selectedAlarmSound.collectAsState()
-
-	val forNewAlarm = alarmData == null
-	val alarmId = alarmData?.id
-	val fromOnboarding = linearProgressBar != null
 	val view = LocalView.current
 	val context = LocalContext.current
 
@@ -393,14 +445,8 @@ fun AlarmPickerScreen(
 						}
 					}
 				}else{
-					val canAnimate = sharedTransitionScope != null && animatedVisibilityScope != null && alarmId != null
 					Column(
 						modifier = Modifier
-							.then(
-								if (canAnimate) {
-									Modifier
-								} else Modifier
-							)
 							.fillMaxSize()
 							.padding(horizontal = horizontalPadding)
 							.animateContentSize(),

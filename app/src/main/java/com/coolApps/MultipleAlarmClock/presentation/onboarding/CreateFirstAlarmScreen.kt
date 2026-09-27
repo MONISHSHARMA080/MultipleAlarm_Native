@@ -15,7 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmPickerScreen
+import com.coolApps.MultipleAlarmClock.presentation.picker.NewAlarmScreen
 import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmPickerViewModel
 import com.coolApps.MultipleAlarmClock.presentation.picker.listAlarmRingtone.ListAlarmSoundScreen
 
@@ -65,9 +65,9 @@ fun CreateFirstAlarmScreen(
 	) { step ->
 		when (step) {
 			CreateFirstAlarmStep.Picker -> {
-				AlarmPickerScreen(
+				NewAlarmScreen(
 					alarmSetProceed = onAlarmSetProceed,
-					alarmData = null,
+					
 					viewModel = alarmPickerViewModel,
 					onNavigateToSoundList = {
 						currentStep = CreateFirstAlarmStep.SoundList

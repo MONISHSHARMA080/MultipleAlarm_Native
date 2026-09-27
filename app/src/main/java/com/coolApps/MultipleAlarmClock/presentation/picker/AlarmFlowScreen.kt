@@ -93,22 +93,31 @@ fun AlarmFlowScreen(
 		entryProvider = entryProvider {
 			entry<AlarmFlowRoute.AlarmPicker> {
 				val resultBus = LocalResultEventBus.current
-				AlarmPickerScreen(
-					viewModel = viewModel,
-					alarmSetProceed = {
-						if (alarmData == null) {
+				if (alarmData != null) {
+					EditAlarmScreen(
+						viewModel = viewModel,
+						alarmData = alarmData,
+						alarmSetProceed = { onCloseFlow() },
+						settingAlarmCancelled = onCloseFlow,
+						onNavigateToSoundList = { flowBackStack.add(AlarmFlowRoute.AlarmSoundListScreen) },
+						onNavigateToPaywall = onNavigateToPaywall,
+						sharedTransitionScope = sharedTransitionScope,
+						animatedVisibilityScope = animatedVisibilityScope
+					)
+				} else {
+					NewAlarmScreen(
+						viewModel = viewModel,
+						alarmSetProceed = {
 							resultBus.sendResult(true)
-						}
-						onCloseFlow()
-					},
-					settingAlarmCancelled = onCloseFlow,
-					alarmData = alarmData,
-					onNavigateToSoundList = {
-						flowBackStack.add(AlarmFlowRoute.AlarmSoundListScreen)
-					}, onNavigateToPaywall = onNavigateToPaywall,
-					sharedTransitionScope = sharedTransitionScope,
-					animatedVisibilityScope = animatedVisibilityScope
-				)
+							onCloseFlow()
+						},
+						settingAlarmCancelled = onCloseFlow,
+						onNavigateToSoundList = { flowBackStack.add(AlarmFlowRoute.AlarmSoundListScreen) },
+						onNavigateToPaywall = onNavigateToPaywall,
+						sharedTransitionScope = sharedTransitionScope,
+						animatedVisibilityScope = animatedVisibilityScope
+					)
+				}
 			}
 
 			entry<AlarmFlowRoute.AlarmSoundListScreen> {

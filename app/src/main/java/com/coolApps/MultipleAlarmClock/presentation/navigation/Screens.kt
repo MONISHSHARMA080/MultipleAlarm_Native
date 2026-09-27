@@ -20,10 +20,15 @@ sealed interface Screen : NavKey {
 	}
 
 	@Serializable
-	data class AlarmFlow(
-			val alarmData: AlarmData? = null
+	data class AlarmEditRoute(
+			val alarmData: AlarmData
 	) : Screen {
-		override val screenName = "AlarmFlow"
+		override val screenName = "AlarmEditRoute"
+	}
+
+	@Serializable
+	data object AlarmCreateRoute : Screen {
+		override val screenName = "AlarmCreateRoute"
 	}
 
 	@Serializable

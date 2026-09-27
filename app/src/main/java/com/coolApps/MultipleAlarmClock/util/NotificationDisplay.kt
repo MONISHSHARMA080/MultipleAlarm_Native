@@ -125,7 +125,7 @@ class NotificationHandler @Inject constructor(@ApplicationContext val context: C
 		return when (screen) {
 			is Screen.AlarmContainer -> "alarmapp://home".toUri()
 			is Screen.SettingsScreen -> "alarmapp://settings".toUri()
-			is Screen.AlarmFlow -> "alarmapp://create".toUri()
+			is Screen.AlarmEditRoute, is Screen.AlarmCreateRoute -> "alarmapp://create".toUri()
 			is Screen.OnboardingScreen -> "alarmapp://onboarding".toUri()
 			is Screen.Paywall -> "alarmapp://paywall".toUri()
 			is Screen.CustomerCenter -> "alarmapp://customercenter".toUri()

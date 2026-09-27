@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
 		return when (data.scheme) {
 			"alarmapp" if data.host == "home" -> Screen.AlarmContainer
 			"alarmapp" if data.host == "settings" -> Screen.SettingsScreen
-			"alarmapp" if data.host == "create" -> Screen.AlarmFlow(null)
+			"alarmapp" if data.host == "create" -> Screen.AlarmCreateRoute
 			"alarmapp" if data.host == "onboarding" -> Screen.OnboardingScreen
 			else -> null
 		}
