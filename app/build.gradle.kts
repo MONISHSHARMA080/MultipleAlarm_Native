@@ -23,7 +23,23 @@ fun Project.configureAndroid() {
 
     val revenueCatApiKey = System.getenv("REVENUECAT_API_KEY")
         ?: project.findProperty("REVENUECAT_API_KEY")?.toString()
-        ?: "test_iTBvEbpLqrrFccKaYXPOWMgAYBI"
+        ?: ""
+    val revenueCatTestApiKey = "test_iTBvEbpLqrrFccKaYXPOWMgAYBI"
+
+    // RevenueCat crashes release builds that use a Test Store key, so block release artifacts without a real key.
+    val verifyReleaseRevenueCatKey = tasks.register("verifyReleaseRevenueCatKey") {
+        doLast {
+            if (revenueCatApiKey.isBlank() || revenueCatApiKey.startsWith("test_")) {
+                throw GradleException(
+                    "Release builds need a production RevenueCat key. " +
+                        "Set REVENUECAT_API_KEY in the environment or as a Gradle property, and do not use a test_ key."
+                )
+            }
+        }
+    }
+    tasks.matching { it.name == "packageRelease" || it.name == "packageReleaseBundle" }.configureEach {
+        dependsOn(verifyReleaseRevenueCatKey)
+    }
 
     val postHogApiKey = System.getenv("POSTHOG_API_KEY")
         ?: project.findProperty("POSTHOG_API_KEY")?.toString()
@@ -92,6 +108,7 @@ fun Project.configureAndroid() {
 				resValue("string", "app_name", myAppName)
                 buildConfigField("boolean", "SKIP_POSTHOG", "true")
                 buildConfigField("String", "POSTHOG_API_KEY", "\"\"")
+                buildConfigField("String", "REVENUECAT_API_KEY", "\"${revenueCatApiKey.ifBlank { revenueCatTestApiKey }}\"")
             }
         }
 
