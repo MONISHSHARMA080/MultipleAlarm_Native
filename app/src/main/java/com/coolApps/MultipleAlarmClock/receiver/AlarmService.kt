@@ -37,6 +37,7 @@ class AlarmService: Service() {
     companion object {
         const val ACTION_START_ALARM = "ACTION_START_ALARM"
         const val ACTION_DISMISS_ALARM = "ACTION_DISMISS_ALARM"
+        private const val PLACEHOLDER_NOTIFICATION_ID = -1
     }
     // if we receive more intents than we will use this; if the intent is from same alarm(see id) then we will replace it /not put it in / dismiss it as
     // it is same and no need to display same message again; if it is diff then we will put it in and when dismissed then we might need to display it
@@ -46,6 +47,7 @@ class AlarmService: Service() {
 	val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 	@Inject lateinit var alarmDao: AlarmDao
 	var context: Context = this
+	private var isInForeground = false
 
     override fun onBind(intent: Intent?) = null
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -65,10 +67,13 @@ class AlarmService: Service() {
 
         when (intent.action) {
             ACTION_START_ALARM -> {
-                return handleStartAlarm(intent)
+                // Android crashes the app if the service stops before startForeground() for a startForegroundService() request,
+                // so go foreground before any queueing or early return
+                startForegroundWithPlaceholderIfNeeded()
+                return handleStartAlarm(intent, startId)
             }
             ACTION_DISMISS_ALARM -> {
-                return handleDismissAlarm(intent)
+                return handleDismissAlarm(intent, startId)
             }
             else -> {
                 logD("\n\n [ERROR] Unknown action: ${intent.action}")
@@ -80,15 +85,16 @@ class AlarmService: Service() {
 
 
     /** launches the notification with full screen intent, plays the alarm sound , and puts intent in the hashMap if required*/
-    private fun startPlayingAlarm(intent: Intent):Int{
+    private fun startPlayingAlarm(intent: Intent, startId: Int):Int{
         val res = buildNotification(this, intent).getOrElse { exception ->
             logD(" Error building notification: ${exception.message} ")
-            return problemSoStopTheService(" Error building notification: ${exception.message} ", mapOf("function" to "startPlayingAlarm"))
+            return problemSoStopTheService(" Error building notification: ${exception.message} ", mapOf("function" to "startPlayingAlarm"), startId)
         }
         val notification: Notification = res.first
         val alarmIntentData: AlarmActivityIntentData = res.second
 		// alarmIntentData.alarmIdInDb shouldn't be 0
 		ServiceCompat.startForeground(this, alarmIntentData.alarmIdInDb, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+		isInForeground = true
         intentHashMap.putIfAbsent(alarmIntentData.alarmIdInDb, intent)
 		logD("c,  and hashMapSize:${intentHashMap.size}")
 
@@ -118,8 +124,8 @@ class AlarmService: Service() {
 	}
 
 
-    private  fun handleStartAlarm(intent:Intent):Int{
-        val intentData = IntentCompat.getParcelableExtra(intent, "intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService("intentData parsed is null", mapOf("fun" to "handleStartAlarm() "))
+    private  fun handleStartAlarm(intent:Intent, startId: Int):Int{
+        val intentData = IntentCompat.getParcelableExtra(intent, "intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService("intentData parsed is null", mapOf("fun" to "handleStartAlarm() "), startId)
         val isFirstAlarm = intentHashMap.isEmpty()
 		logD("the alarm action in the service is ${intent.action} and he hashMap size is ${intentHashMap.size}")
 
@@ -138,7 +144,7 @@ class AlarmService: Service() {
 		logD("isFirstAlarm:$isFirstAlarm")
 
         if (isFirstAlarm){
-            startPlayingAlarm(intent)
+            startPlayingAlarm(intent, startId)
         }else{
             logD("one alarm is already there so not-playing/ waiting on another one ")
         }
@@ -146,15 +152,15 @@ class AlarmService: Service() {
 
     }
 
-    private fun handleDismissAlarm(intent:Intent):Int{
+    private fun handleDismissAlarm(intent:Intent, startId: Int):Int{
         // remove this intent from the hashmap, and then if we have other in the hashMap then start playing those
-        // assert that this intent is in the hashMap if not then we have a problem
         // 1. Remove the dismissed alarm from the queue
-        val intentData = IntentCompat.getParcelableExtra(intent,"intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService("intentData parsed is null, in handleStartAlarm  ",mapOf("fun" to "handleDismissAlarm() ") )
-        intentHashMap.remove(intentData.alarmIdInDb)
+        val intentData = IntentCompat.getParcelableExtra(intent,"intentData", AlarmActivityIntentData::class.java) ?: return problemSoStopTheService("intentData parsed is null, in handleStartAlarm  ",mapOf("fun" to "handleDismissAlarm() "), startId)
+        val wasAlarmInQueue = intentHashMap.remove(intentData.alarmIdInDb) != null
         coroutineScope.launch {
             analytics.captureEvent("handling dismiss of alarm", mapOf(
                 "intentData" to intentData.toString(),
+                "wasAlarmInQueue" to wasAlarmInQueue,
                 "isLastAlarm" to intentHashMap.isEmpty(),
                 "areWePullingOtherAlarmFromHashMapAndPlayingThose" to intentHashMap.isNotEmpty(),
                 "class" to "AlarmService"
@@ -162,28 +168,66 @@ class AlarmService: Service() {
             )
         }
 
+        if (!wasAlarmInQueue) {
+            // stale dismiss (e.g. from an old AlarmActivity or a redelivered intent), so the ringing or pending alarms stay as they are
+            if (intentHashMap.isEmpty()) stopSelf(startId)
+            return START_NOT_STICKY
+        }
+
         when(intentHashMap.isEmpty()){
             true ->{
                 // nothing in the hashMap so we can stop this activity
                 playAlarm.stop()
                 stopForeground(STOP_FOREGROUND_REMOVE)
-                stopSelf()
-                return START_REDELIVER_INTENT
+                isInForeground = false
+                // stopSelf(startId) does not stop the service if a newer start request is pending, as that start must still reach startForeground
+                stopSelf(startId)
+                return START_NOT_STICKY
             }
             false ->{
-             return   startPlayingAlarm(intentHashMap.entries.first().value)
+             return   startPlayingAlarm(intentHashMap.entries.first().value, startId)
             }
         }
     }
 
-    private  fun problemSoStopTheService(errorMessage: String, properties: Map<String, Any> ):Int{
+    private  fun problemSoStopTheService(errorMessage: String, properties: Map<String, Any>, startId: Int):Int{
             analytics.captureEvent("error occurred, so we are stopping the alarm(s)", mapOf(
                 "error" to errorMessage,
             ) + properties
 			)
-        stopSelf()
+        stopSelf(startId)
         return  START_NOT_STICKY
     }
+
+	/** keeps the notification of the ringing alarm if we are already in the foreground, as startForeground with a different id replaces it */
+	private fun startForegroundWithPlaceholderIfNeeded() {
+		if (isInForeground) return
+		val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+		createAlarmNotificationChannel(notificationManager)
+		val notification = NotificationCompat.Builder(this, NotificationChannelType.AlarmNotification.channelId)
+			.setSmallIcon(R.drawable.ic_notification)
+			.setContentTitle("Alarm")
+			.setContentText("Alarm is starting")
+			.setCategory(NotificationCompat.CATEGORY_ALARM)
+			.setSilent(true)
+			.build()
+		ServiceCompat.startForeground(this, PLACEHOLDER_NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+		isInForeground = true
+	}
+
+	private fun createAlarmNotificationChannel(notificationManager: NotificationManager) {
+		val channel = NotificationChannel(
+			NotificationChannelType.AlarmNotification.channelId,
+			"Alarm Notification",
+			NotificationManager.IMPORTANCE_HIGH // Necessary for heads-up
+		).apply {
+			lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+			enableVibration(true)
+			setSound(null,null)
+			setBypassDnd(true)
+		}
+		notificationManager.createNotificationChannel(channel)
+	}
 
     override fun onDestroy() {
         runCatching {
@@ -204,18 +248,7 @@ class AlarmService: Service() {
             val intentData = IntentCompat.getParcelableExtra( originalIntent,"intentData", AlarmActivityIntentData::class.java)
                 ?: return Result.failure(Exception("Expected to intent data to be in the intent but got it as null"))
 
-            val channel = NotificationChannel(
-                channelId,
-                "Alarm Notification",
-                NotificationManager.IMPORTANCE_HIGH // Necessary for heads-up
-
-            ).apply {
-                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
-                enableVibration(true)
-                setSound(null,null)
-               setBypassDnd(true)
-            }
-            notificationManager.createNotificationChannel(channel)
+            createAlarmNotificationChannel(notificationManager)
 
             // 2. Create the Intent for your AlarmActivity
             val fullScreenIntent = Intent(context, AlarmActivity::class.java).apply {
