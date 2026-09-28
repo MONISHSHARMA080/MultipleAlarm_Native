@@ -6,23 +6,23 @@
     <!-- Clock Outer Rim / Circle -->
     <path
         android:strokeWidth="4.5"
-        android:strokeColor="#FFFFFFFF"
+        android:strokeColor="#FF000000"
         android:fillColor="#00000000"
-        android:pathData="M54,20 A34,34 0 1,0 54,88 A34,34 0 1,0 54,20 Z" />
+        android:pathData="M54,24 A30,30 0 1,0 54,84 A30,30 0 1,0 54,24 Z" />
     <!-- Hour Hand (pointing ~10:10) -->
     <path
         android:strokeWidth="5.4"
-        android:strokeColor="#FFFFFFFF"
+        android:strokeColor="#FF000000"
         android:strokeLineCap="round"
-        android:pathData="M54,54 L34.1,42.1" />
+        android:pathData="M54,54 L36.4,43.5" />
     <!-- Minute Hand (pointing ~1:50) -->
     <path
         android:strokeWidth="5.4"
-        android:strokeColor="#FFFFFFFF"
+        android:strokeColor="#FF000000"
         android:strokeLineCap="round"
-        android:pathData="M54,54 L81.6,35.6" />
+        android:pathData="M54,54 L78.4,37.8" />
     <!-- Center Pivot -->
     <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M54,50.5 A3.5,3.5 0 1,0 54,57.5 A3.5,3.5 0 1,0 54,50.5 Z" />
+        android:fillColor="#FF000000"
+        android:pathData="M54,51 A3,3 0 1,0 54,57 A3,3 0 1,0 54,51 Z" />
 </vector>
