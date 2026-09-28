@@ -11,13 +11,13 @@
         android:pathData="M54,20 A34,34 0 1,0 54,88 A34,34 0 1,0 54,20 Z" />
     <!-- Hour Hand (pointing ~10:10) -->
     <path
-        android:strokeWidth="7.2"
+        android:strokeWidth="5.4"
         android:strokeColor="#FFFFFFFF"
         android:strokeLineCap="round"
-        android:pathData="M54,54 L31,40.2" />
+        android:pathData="M54,54 L34.1,42.1" />
     <!-- Minute Hand (pointing ~1:50) -->
     <path
-        android:strokeWidth="3.6"
+        android:strokeWidth="5.4"
         android:strokeColor="#FFFFFFFF"
         android:strokeLineCap="round"
         android:pathData="M54,54 L81.6,35.6" />

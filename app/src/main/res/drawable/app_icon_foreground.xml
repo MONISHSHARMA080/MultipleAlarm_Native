@@ -61,26 +61,26 @@
 
     <!-- Hands Drop Shadow -->
     <path
-        android:strokeWidth="12.96"
+        android:strokeWidth="9.18"
         android:strokeColor="#60000000"
         android:strokeLineCap="round"
-        android:pathData="M146,146 L103.365,116.82" />
+        android:pathData="M146,146 L109.4,121.0" />
     <path
-        android:strokeWidth="5.4"
+        android:strokeWidth="9.18"
         android:strokeColor="#60000000"
         android:strokeLineCap="round"
         android:pathData="M146,146 L196.515,108.54" />
 
     <!-- Hour Hand -->
     <path
-        android:strokeWidth="12.96"
+        android:strokeWidth="9.18"
         android:strokeColor="#FFFFFFFF"
         android:strokeLineCap="round"
-        android:pathData="M144,144 L101.565,115.02" />
+        android:pathData="M144,144 L107.6,119.2" />
     
     <!-- Minute Hand -->
     <path
-        android:strokeWidth="5.4"
+        android:strokeWidth="9.18"
         android:strokeColor="#FFFFFFFF"
         android:strokeLineCap="round"
         android:pathData="M144,144 L194.715,106.74" />
