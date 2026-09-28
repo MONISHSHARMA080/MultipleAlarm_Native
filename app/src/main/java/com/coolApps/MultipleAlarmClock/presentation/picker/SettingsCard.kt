@@ -2,8 +2,15 @@ package com.coolApps.MultipleAlarmClock.presentation.picker
 
 import android.view.HapticFeedbackConstants
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -57,6 +64,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -69,6 +78,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -623,26 +633,104 @@ private fun RepeatDayButton(
 						}
 					}
 
-					BasicTextField(
-						value = textValue,
-						onValueChange = { newValue ->
-							val digitsOnly = newValue.filter { it.isDigit() }
-							// Only propagate when we actually have a parseable value.
-							// Empty (e.g. user backspaced everything) stays local-only.
-							textValue = digitsOnly
-							digitsOnly.toLongOrNull()?.let { onValueChange(it) }
-						},
-						visualTransformation = minSuffixTransformation,
-						modifier = Modifier.width(55.dp),
-						textStyle =
-							typography.titleMedium.copy(
+					val currentNum = textValue.toLongOrNull() ?: 0L
+					var previousNum by remember { mutableLongStateOf(currentNum) }
+					val isIncreasing = currentNum >= previousNum
+					LaunchedEffect(currentNum) {
+						previousNum = currentNum
+					}
+
+					Box(modifier = Modifier.width(55.dp), contentAlignment = Alignment.Center) {
+						Row(
+							modifier = Modifier.animateContentSize(
+								animationSpec = spring(
+									dampingRatio = Spring.DampingRatioNoBouncy,
+									stiffness = Spring.StiffnessMedium
+								)
+							),
+							horizontalArrangement = Arrangement.Center,
+							verticalAlignment = Alignment.CenterVertically
+						) {
+							textValue.forEachIndexed { index, char ->
+								val digitWeight = textValue.length - index
+								key(digitWeight) {
+									AnimatedContent(
+										targetState = char,
+										transitionSpec = {
+											val slideIn = slideInVertically(
+												animationSpec = spring(
+													dampingRatio = Spring.DampingRatioNoBouncy,
+													stiffness = Spring.StiffnessMedium
+												),
+												initialOffsetY = { if (isIncreasing) (it * 0.75).toInt() else -(it * 0.75).toInt() }
+											)
+											val slideOut = slideOutVertically(
+												animationSpec = spring(
+													dampingRatio = Spring.DampingRatioNoBouncy,
+													stiffness = Spring.StiffnessMedium
+												),
+												targetOffsetY = { if (isIncreasing) -(it * 0.75).toInt() else (it * 0.75).toInt() }
+											)
+											(slideIn + fadeIn(
+												animationSpec = spring(
+													dampingRatio = Spring.DampingRatioNoBouncy,
+													stiffness = Spring.StiffnessMedium
+												)
+											)).togetherWith(
+												slideOut + fadeOut(
+													animationSpec = spring(
+														dampingRatio = Spring.DampingRatioNoBouncy,
+														stiffness = Spring.StiffnessMedium
+													)
+												)
+											).using(SizeTransform(clip = false))
+										},
+										label = "char_anim_$digitWeight"
+									) { targetChar ->
+										Text(
+											text = targetChar.toString(),
+											style = typography.titleMedium.copy(
+												textAlign = TextAlign.Center,
+												color = colorScheme.onSecondaryContainer,
+												fontWeight = FontWeight.Bold
+											)
+										)
+									}
+								}
+							}
+							if (textValue.isNotEmpty()) {
+								Text(
+									text = " min",
+									style = typography.titleMedium.copy(
+										textAlign = TextAlign.Center,
+										color = colorScheme.onSecondaryContainer,
+										fontWeight = FontWeight.Bold
+									)
+								)
+							}
+						}
+
+						BasicTextField(
+							value = textValue,
+							onValueChange = { newValue ->
+								val digitsOnly = newValue.filter { it.isDigit() }
+								// Only propagate when we actually have a parseable value.
+								// Empty (e.g. user backspaced everything) stays local-only.
+								textValue = digitsOnly
+								digitsOnly.toLongOrNull()?.let { onValueChange(it) }
+							},
+							visualTransformation = minSuffixTransformation,
+							modifier = Modifier.fillMaxWidth(),
+							textStyle = typography.titleMedium.copy(
 								textAlign = TextAlign.Center,
-								color = colorScheme.onSecondaryContainer,
+								color = Color.Transparent,
 								fontWeight = FontWeight.Bold
 							),
-						keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-						singleLine = true
-					)
+							keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+							singleLine = true,
+							cursorBrush = SolidColor(colorScheme.onSecondaryContainer)
+						)
+					}
 
 					IconButton(
 						onClick = {
