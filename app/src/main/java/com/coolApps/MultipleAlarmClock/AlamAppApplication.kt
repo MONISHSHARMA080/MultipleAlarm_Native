@@ -23,7 +23,9 @@ class AlarmApp : Application(), Configuration.Provider {
 	override fun onCreate() {
 		super.onCreate()
 		coroutineScope.launch {
-			Purchases.logLevel = LogLevel.DEBUG
+			if (BuildConfig.DEBUG) {
+				Purchases.logLevel = LogLevel.DEBUG
+			}
 			Purchases.configure(
 				PurchasesConfiguration.Builder(this@AlarmApp,BuildConfig.REVENUECAT_API_KEY)
 					.preferredUILocaleOverride(Locale.getDefault().language)
