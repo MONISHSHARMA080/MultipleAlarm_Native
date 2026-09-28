@@ -9,5 +9,6 @@
   4) Coroutines and flows
   5) Dependency injection best practices
 - don't go exploring the files that are not needed, try to stick to files mentioned or implicitly mentioned, exploring other files that you know we don't need wasted token and bloat context
-- Use your native code editing commands and not shell hacks(like cat, sed, etc use your own read and edit/write etc)
+- Use your native editing commands and not shell hacks(like cat, sed,  running python or bash script, etc use your own read and edit/write method); if you are having problem with them then web search to see how to do it
 - don't read gradle cache, read the files in the dir
+- don't run git commands unless it is to read the file from older commit, I do not want you to commit, etc just read if anything else I'll do it

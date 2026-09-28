@@ -1,0 +1,113 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="288"
+    android:viewportHeight="288">
+
+    <!-- Clock Drop Shadow -->
+    <path
+        android:fillColor="#40000000"
+        android:pathData="M144,68.4 A81,81 0 1,0 144,230.4 A81,81 0 1,0 144,68.4 Z" />
+
+    <!-- Clock Outer Rim (Metallic 3D Bevel) -->
+    <path
+        android:pathData="M144,63 A81,81 0 1,0 144,225 A81,81 0 1,0 144,63 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="63"
+                android:startY="63"
+                android:endX="225"
+                android:endY="225">
+                <item android:color="#FFAAAAAA" android:offset="0.0"/>
+                <item android:color="#FF222222" android:offset="0.2"/>
+                <item android:color="#FF000000" android:offset="0.8"/>
+                <item android:color="#FF555555" android:offset="1.0"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Inner Bezel (Recessed Shadow) -->
+    <path
+        android:pathData="M144,66.6 A77.4,77.4 0 1,0 144,221.4 A77.4,77.4 0 1,0 144,66.6 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="66.6"
+                android:startY="66.6"
+                android:endX="221.4"
+                android:endY="221.4">
+                <item android:color="#FF000000" android:offset="0.0"/>
+                <item android:color="#FF333333" android:offset="1.0"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Clock Face -->
+    <path
+        android:pathData="M144,68.85 A75.15,75.15 0 1,0 144,219.15 A75.15,75.15 0 1,0 144,68.85 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="144"
+                android:centerY="144"
+                android:gradientRadius="75.15">
+                <item android:color="#FF1A1A1A" android:offset="0.0"/>
+                <item android:color="#FF0A0A0A" android:offset="1.0"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Hands Drop Shadow -->
+    <path
+        android:strokeWidth="12.96"
+        android:strokeColor="#60000000"
+        android:strokeLineCap="round"
+        android:pathData="M146,146 L103.365,116.82" />
+    <path
+        android:strokeWidth="5.4"
+        android:strokeColor="#60000000"
+        android:strokeLineCap="round"
+        android:pathData="M146,146 L196.515,108.54" />
+
+    <!-- Hour Hand -->
+    <path
+        android:strokeWidth="12.96"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:pathData="M144,144 L101.565,115.02" />
+    
+    <!-- Minute Hand -->
+    <path
+        android:strokeWidth="5.4"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:pathData="M144,144 L194.715,106.74" />
+
+    <!-- Center Pivot Drop Shadow -->
+    <path
+        android:fillColor="#60000000"
+        android:pathData="M145.8,138.87 A6.93,6.93 0 1,0 145.8,152.73 A6.93,6.93 0 1,0 145.8,138.87 Z" />
+
+    <!-- Center Pivot Rim -->
+    <path
+        android:pathData="M144,137.07 A6.93,6.93 0 1,0 144,150.93 A6.93,6.93 0 1,0 144,137.07 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="136.8"
+                android:startY="136.8"
+                android:endX="151.2"
+                android:endY="151.2">
+                <item android:color="#FFFFFFFF" android:offset="0.0"/>
+                <item android:color="#FF666666" android:offset="1.0"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    
+    <!-- Center Pivot Core -->
+    <path
+        android:fillColor="#FF111111"
+        android:pathData="M144,140.535 A3.465,3.465 0 1,0 144,147.465 A3.465,3.465 0 1,0 144,140.535 Z" />
+</vector>
