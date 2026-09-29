@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.AlarmManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
@@ -17,7 +18,6 @@ import com.coolApps.MultipleAlarmClock.data.preferences.Settings
 import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.data.repository.AlarmSoundRepository
 import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
-import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionUtils
 import com.coolApps.MultipleAlarmClock.receiver.PlayAlarm
 import com.coolApps.MultipleAlarmClock.util.Analytics
@@ -63,6 +63,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		AlarmPickerUiState(
 			alarmData = createDefaultAlarm(alarmData),
 			initialAlarm = alarmData,
+			areAllPermissionsGranted = PermissionUtils.allCriticalPermissionsGranted(context),
 			progress = if (alarmData == null) Progress.StartTime else Progress.FullEditor
 		)
 	)
@@ -114,16 +115,17 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		val validationResult = alarmToUse.validate()
 
 		_uiState.update { it.copy(alarmData = alarmToUse, validationResult = validationResult) }
-		logD("validation result after setAlarmCLicked is $validationResult ")
+		logD("validation result after setAlarmCLicked is $validationResult,current.areAllPermissionsGranted:${current.areAllPermissionsGranted}  ")
 
 		if (validationResult !is AlarmDataValidationResult.Success) {
 			captureUiStateAndSendAnalytics(_uiState.value)
 			return
 		}
-
-		if (!current.areAllPermissionsGranted) {
+		val areWeMissingSomePermission =PermissionUtils.allCriticalPermissionsGranted(context)
+		if (!areWeMissingSomePermission) {
 			val missing = PermissionUtils.getRequiredPermissionSteps(context)
 			_uiState.update { it.copy(showPermissionDialog = true, missingSteps = missing) }
+			logD("permissions not grated and result after checking is $missing")
 			captureUiStateAndSendAnalytics(_uiState.value)
 			return
 		}
@@ -539,4 +541,9 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		set(Calendar.DAY_OF_MONTH, other.get(Calendar.DAY_OF_MONTH))
 		truncatedToMinute()
 	}
+	private fun logD(message: String): Unit {
+		Log.d("AAAAA", "[AlarmPickerViewModel] $message")
+	}
+
+
 }

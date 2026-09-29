@@ -210,7 +210,7 @@ class Analytics(
 
 	fun captureEvent(event: String, properties: Map<String, Any>): Unit {
 		if (!isEnabled) {
-			logD("PostHog disabled: skipping captureEvent($event)")
+//			logD("PostHog disabled: skipping captureEvent($event)")
 			return
 		}
 		PostHog.capture(
