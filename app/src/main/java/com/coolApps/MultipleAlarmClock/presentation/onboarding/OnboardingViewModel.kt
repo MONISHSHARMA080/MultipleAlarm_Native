@@ -1,22 +1,21 @@
 package com.coolApps.MultipleAlarmClock.presentation.onboarding
 
+import android.app.AlarmManager
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.preferences.Settings
 import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.domain.repository.AlarmRepository
+import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionUtils
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.DisplaySate
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingUiState
 import com.coolApps.MultipleAlarmClock.util.Analytics
 import com.coolApps.MultipleAlarmClock.util.TrialReminderScheduler
 import com.coolApps.MultipleAlarmClock.util.toAnalyticsString
 import com.revenuecat.purchases.CustomerInfo
-import android.app.AlarmManager
-import com.coolApps.MultipleAlarmClock.data.local.AlarmData
-import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
+import com.revenuecat.purchases.PurchasesError
 import com.revenuecat.purchases.models.StoreTransaction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -129,6 +128,15 @@ import kotlinx.coroutines.launch
 				}
 				DisplaySate.OnboardingPaywall -> value.copy(displaySate = DisplaySate.AlarmResult)
 			}
+		}
+	}
+
+
+	fun onPurchaseError(error: PurchasesError){
+		viewModelScope.launch {
+			analytics.captureEvent("purchase_error_ocurred",mapOf(
+				"purchase_error" to error.toString(),
+			))
 		}
 	}
 

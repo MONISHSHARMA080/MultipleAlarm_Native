@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
 import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.Offering
+import com.revenuecat.purchases.PurchasesError
 import com.revenuecat.purchases.models.StoreTransaction
 import com.revenuecat.purchases.ui.revenuecatui.ExperimentalPreviewRevenueCatUIPurchasesAPI
 import com.revenuecat.purchases.ui.revenuecatui.Paywall
@@ -30,11 +31,12 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
  fun OnboardingPaywallScreen(
 		isHardPaywall: Boolean,
 		onBackPress: () -> Unit,
-		onFinished: () -> Unit, offering: Offering?, loadFailed:Boolean,
-		onPurchaseCompletedEvent:(customerInfo:CustomerInfo,storeTransaction: StoreTransaction)->Unit,
-		onRestoreCompletedEvent:(customerInfo:CustomerInfo)->Unit,
-		onButtonStateChange: (ButtonState) -> Unit = {}
- ) {
+		onFinished: () -> Unit, offering: Offering?, loadFailed: Boolean,
+		onPurchaseCompletedEvent: (customerInfo: CustomerInfo, storeTransaction: StoreTransaction) -> Unit,
+		onRestoreCompletedEvent: (customerInfo: CustomerInfo) -> Unit,
+		onButtonStateChange: (ButtonState) -> Unit ,
+		onPurchaseError: (PurchasesError) -> Unit
+) {
 	onButtonStateChange(ButtonState.Hidden)
 	BackHandler {
 		onBackPress()
@@ -50,6 +52,9 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 					)
 						.setOffering(offering)
 						.setListener(object : PaywallListener {
+							override fun onPurchaseError(error: PurchasesError) {
+								onPurchaseError(error)
+							}
 							override fun onPurchaseCompleted(
 									customerInfo: CustomerInfo,
 									storeTransaction: StoreTransaction
