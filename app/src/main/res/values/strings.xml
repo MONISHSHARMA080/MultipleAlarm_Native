@@ -140,6 +140,7 @@
     <string name="onboarding_struggle_being_on_time">Being on time</string>
     <string name="onboarding_struggle_heavy_sleeper">Heavy sleeper</string>
     <string name="onboarding_struggle_ignoring_alarms">Ignoring alarms</string>
+    <string name="onboarding_struggle_forgetting">Forgetting things</string>
 
     <!-- Onboarding Problem Screen -->
     <string name="onboarding_problem_btn_set">Set my own</string>
