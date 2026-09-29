@@ -1,21 +1,19 @@
 package com.coolApps.MultipleAlarmClock.util
-import com.coolApps.MultipleAlarmClock.presentation.logD
 
 import android.content.Context
 import android.os.Build
 import androidx.core.content.edit
 import com.coolApps.MultipleAlarmClock.BuildConfig
 import com.coolApps.MultipleAlarmClock.presentation.logD
-import com.coolApps.MultipleAlarmClock.util.OfflineNotificationTimeSlot
 import com.google.android.gms.appset.AppSet
 import com.google.android.gms.appset.AppSetIdInfo
-import com.google.android.gms.tasks.Task
 import com.posthog.PersonProfiles
 import com.posthog.PostHog
 import com.posthog.PostHogOnFeatureFlags
 import com.posthog.android.PostHogAndroid
 import com.posthog.android.PostHogAndroidConfig
 import com.posthog.logs.PostHogLogSeverity
+import com.revenuecat.purchases.Purchases
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -252,38 +250,44 @@ class Analytics(
 	}
 
 	 fun identifyAnonymousUser() {
-		 if (!isEnabled) return
-		 logD("called identifyAnonymousUser")
-		 val client = AppSet.getClient(context)
-		 val task: Task<AppSetIdInfo> = client.appSetIdInfo
 
-		 task.addOnSuccessListener {
-			 // Determine current scope of app set ID.
-			 val scope: Int = it.scope // IDK if the id is only for the same app or for  same for distinct apps  just give it to me
-			 // Read app set ID value, which uses version 4 of the
-			 // universally unique identifier (UUID) format.
-			 val id: String = it.id
+		 if (!isEnabled) return
+
+		 val prefs = context.getSharedPreferences("alarm_app_prefs", Context.MODE_PRIVATE)
+
+		 AppSet.getClient(context).appSetIdInfo.addOnCompleteListener { task ->
+			 val info = if (task.isSuccessful) task.result else null
+
+			 // App Set ID if available, otherwise a persisted UUID fallback
+			 val id: String = info?.id
+				 ?: prefs.getString("anonymous_user_id", null)
+				 ?: UUID.randomUUID().toString().also { newId ->
+					 prefs.edit { putString("anonymous_user_id", newId) }
+				 }
+
 			 PostHog.identify(
 				 distinctId = id,
-				 userProperties = mapOf(
-					 "app_set_id_scope" to if (scope == AppSetIdInfo.SCOPE_APP) "app" else "developer",
+				 userProperties = if (info != null) mapOf(
+					 "app_set_id_scope" to if (info.scope == AppSetIdInfo.SCOPE_APP) "app" else "developer",
 					 "id_source" to "app_set_id"
-				 )
+				 ) else mapOf("id_source" to "uuid_fallback")
 			 )
-			 logD("anonymousId from appSet is $id")
-		 }.addOnFailureListener {
-			 // Fallback to classic UUID if Play Services fails
-			 val sharedPrefs = context.getSharedPreferences("alarm_app_prefs", Context.MODE_PRIVATE)
-			 val anonymousId = sharedPrefs.getString("anonymous_user_id", null) ?: run {
-				 val newId = UUID.randomUUID().toString()
-				 sharedPrefs.edit { putString("anonymous_user_id", newId) }
-				 newId
+			 // ---- RevenueCat link ----
+			 if (Purchases.isConfigured) {
+				 val purchases = Purchases.sharedInstance
+
+				 purchases.setPostHogUserId(id)
+
+				 // Past RC events were sent under RC's own ID, so merge that person into this one (once)
+				 val rcId = purchases.appUserID
+				 val aliasKey = "rc_aliased_$rcId"
+				 if (!prefs.getBoolean(aliasKey, false)) {
+					 PostHog.alias(rcId)
+					 prefs.edit { putBoolean(aliasKey, true) }
+				 }
+			 } else {
+				 logD("RevenueCat not configured, skipping link")
 			 }
-			 PostHog.identify(
-				 distinctId = anonymousId,
-				 userProperties = mapOf("id_source" to "uuid_fallback")
-			 )
-			 logD("identified via UUID fallback: $anonymousId")
 		 }
 	}
 }

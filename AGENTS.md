@@ -12,3 +12,4 @@
 - Use your native editing commands and not shell hacks(like cat, sed,  running python or bash script, etc use your own read and edit/write method); if you are having problem with them then web search to see how to do it
 - don't read gradle cache, read the files in the dir
 - don't run git commands unless it is to read the file from older commit, I do not want you to commit, etc just read if anything else I'll do it
+- Always add necessary import statements at the top of the file instead of using fully qualified class names inline.

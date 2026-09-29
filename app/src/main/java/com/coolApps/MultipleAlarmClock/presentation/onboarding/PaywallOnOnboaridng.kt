@@ -1,5 +1,6 @@
 package com.coolApps.MultipleAlarmClock.presentation.onboarding
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -10,7 +11,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -35,6 +35,7 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 		onRestoreCompletedEvent:(customerInfo:CustomerInfo)->Unit,
 		onButtonStateChange: (ButtonState) -> Unit = {}
  ) {
+	onButtonStateChange(ButtonState.Hidden)
 	BackHandler {
 		onBackPress()
 	}
