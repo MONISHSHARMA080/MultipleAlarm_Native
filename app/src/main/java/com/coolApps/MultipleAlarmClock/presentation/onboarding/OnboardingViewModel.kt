@@ -76,13 +76,26 @@ import kotlinx.coroutines.launch
 		
 		// increment the state
 		_displayState.update { value ->
+			val hasAlarm = displayState.value.alarmData != null
 			when(value.displaySate){
 				DisplaySate.Greeting -> value.copy(displaySate = DisplaySate.Problem)
 				DisplaySate.Problem -> value.copy(displaySate = DisplaySate.UserStruggles)
 				DisplaySate.UserStruggles -> value.copy(displaySate = DisplaySate.Permission)
-				DisplaySate.Permission -> value.copy(displaySate = DisplaySate.FirstAlarmIntro)
-				DisplaySate.FirstAlarmIntro -> value.copy(displaySate = DisplaySate.CreateFirstAlarm)
-				DisplaySate.CreateFirstAlarm ->value.copy(displaySate = DisplaySate.AlarmResult)
+				DisplaySate.Permission -> {
+					if (hasAlarm) {
+						value.copy(displaySate = DisplaySate.AlarmResult)
+					} else {
+						value.copy(displaySate = DisplaySate.FirstAlarmIntro)
+					}
+				}
+				DisplaySate.FirstAlarmIntro -> {
+					if (hasAlarm) {
+						value.copy(displaySate = DisplaySate.AlarmResult)
+					} else {
+						value.copy(displaySate = DisplaySate.CreateFirstAlarm)
+					}
+				}
+				DisplaySate.CreateFirstAlarm -> value.copy(displaySate = DisplaySate.AlarmResult)
 				DisplaySate.AlarmResult -> value.copy(displaySate = DisplaySate.OnboardingPaywall)
 				DisplaySate.OnboardingPaywall -> value.copy(displaySate = DisplaySate.OnboardingPaywall)
 			}
@@ -93,14 +106,27 @@ import kotlinx.coroutines.launch
 		analytics.captureEvent("onboarding_previous_clicked", mapOf("step" to currentStep))
 		// increment the state
 		_displayState.update { value ->
+			val hasAlarm = displayState.value.alarmData != null
 			when(value.displaySate){
 				DisplaySate.Greeting -> value.copy(displaySate = DisplaySate.Greeting)
 				DisplaySate.Problem -> value.copy(displaySate = DisplaySate.Greeting)
 				DisplaySate.UserStruggles -> value.copy(displaySate = DisplaySate.Problem)
 				DisplaySate.Permission -> value.copy(displaySate = DisplaySate.UserStruggles)
 				DisplaySate.FirstAlarmIntro -> value.copy(displaySate = DisplaySate.Permission)
-				DisplaySate.CreateFirstAlarm ->value.copy(displaySate = DisplaySate.FirstAlarmIntro)
-				DisplaySate.AlarmResult -> value.copy(displaySate = DisplaySate.CreateFirstAlarm)
+				DisplaySate.CreateFirstAlarm -> {
+					if (hasAlarm) {
+						value.copy(displaySate = DisplaySate.Permission)
+					} else {
+						value.copy(displaySate = DisplaySate.FirstAlarmIntro)
+					}
+				}
+				DisplaySate.AlarmResult -> {
+					if (hasAlarm) {
+						value.copy(displaySate = DisplaySate.Permission)
+					} else {
+						value.copy(displaySate = DisplaySate.CreateFirstAlarm)
+					}
+				}
 				DisplaySate.OnboardingPaywall -> value.copy(displaySate = DisplaySate.AlarmResult)
 			}
 		}

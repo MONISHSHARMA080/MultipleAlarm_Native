@@ -217,11 +217,11 @@ import com.revenuecat.purchases.awaitOfferings
 								}
 								viewModel.onPurchaseCompletedEvent(customerInfo,storeTransaction) 
 							},
-							onRestoreCompletedEvent = { 
+							onRestoreCompletedEvent = {
 								if (isHardPaywall) {
-									uiState.alarmData?.let { viewModel.resetAlarm(it) }
+									uiState.alarmData?.let { alarm-> viewModel.resetAlarm(alarm) }
 								}
-								viewModel.onRestoreCompletedEvent(it) 
+								viewModel.onRestoreCompletedEvent(it)
 							},
 							onButtonStateChange = { buttonState = it }
 						)
