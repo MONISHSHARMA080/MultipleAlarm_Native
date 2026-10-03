@@ -143,7 +143,17 @@ import kotlinx.coroutines.launch
 						)
 					}
 
-					entry<Screen.AlarmContainer> {
+					entry<Screen.AlarmContainer>(
+						metadata = NavDisplay.popTransitionSpec {
+							if (initialState.key is Screen.AlarmEditRoute) {
+								EnterTransition.None togetherWith ExitTransition.None
+							} else null
+						} + NavDisplay.predictivePopTransitionSpec {
+							if (initialState.key is Screen.AlarmEditRoute) {
+								EnterTransition.None togetherWith ExitTransition.None
+							} else null
+						}
+					) {
 						AlarmContainer(
 							onNavigateToEdit = { alarm ->
 								backStack.add(Screen.AlarmEditRoute(alarm))

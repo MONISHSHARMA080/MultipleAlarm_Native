@@ -200,7 +200,7 @@ fun EditAlarmScreen(
 					.navigationBarsPadding()
 					.padding(16.dp)
 					.padding(bottom = 20.dp)
-					.animateContentSize(),
+					,
 				contentAlignment = Alignment.Center
 			) {
 				Row(
@@ -237,7 +237,7 @@ fun EditAlarmScreen(
 				.fillMaxSize()
 				.padding(screenPadding)
 				.consumeWindowInsets(screenPadding)
-				.animateContentSize()
+				
 				.padding(horizontal = horizontalPadding),
 			uiState = uiState,
 			viewModel = viewModel,
@@ -377,7 +377,7 @@ fun NewAlarmScreen(
 					.navigationBarsPadding()
 					.padding(16.dp)
 					.padding(bottom = 20.dp)
-					.animateContentSize(),
+					,
 				contentAlignment = Alignment.Center
 			) {
 				Row(
@@ -483,7 +483,7 @@ fun NewAlarmScreen(
 				.fillMaxSize()
 				.padding(screenPadding)
 				.consumeWindowInsets(screenPadding)
-				.animateContentSize(),
+				,
 		) {
 			// Existing stepper AnimatedContent — leave transition as-is per spec
 			AnimatedContent(
@@ -536,7 +536,7 @@ fun NewAlarmScreen(
 							modifier = Modifier
 								.fillMaxSize()
 								.padding(horizontal = horizontalPadding)
-								.animateContentSize(),
+								,
 							uiState = uiState,
 							viewModel = viewModel,
 							selectedSoundTitle = selectedSound?.title,
