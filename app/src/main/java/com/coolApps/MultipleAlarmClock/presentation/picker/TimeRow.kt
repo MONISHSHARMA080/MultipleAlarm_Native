@@ -222,6 +222,7 @@ fun TimeRow(
 							Modifier.sharedElement(
 								sharedContentState = rememberSharedContentState(key = "start_time_${alarmId}"),
 								animatedVisibilityScope = animatedVisibilityScope,
+								boundsTransform = boundsTransform
 							)
 						}
 					} else Modifier

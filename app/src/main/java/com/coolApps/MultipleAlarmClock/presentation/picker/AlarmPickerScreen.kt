@@ -165,7 +165,8 @@ fun EditAlarmScreen(
 				sharedContentState = rememberSharedContentState(key = "alarm_card_${alarmData.id}"),
 				animatedVisibilityScope = animatedVisibilityScope,
 				clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(0.dp)),
-				boundsTransform = AlarmBoundsTransform
+				boundsTransform = AlarmBoundsTransform,
+				resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds
 			)
 		}
 	} else {

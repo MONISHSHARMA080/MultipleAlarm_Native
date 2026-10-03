@@ -180,7 +180,8 @@ private val AlarmBoundsTransform = BoundsTransform { _initialBounds, _targetBoun
 							sharedContentState = rememberSharedContentState(key = "alarm_card_${alarmData.id}"),
 							animatedVisibilityScope = animatedVisibilityScope,
 							clipInOverlayDuringTransition = OverlayClip(cardShape),
-							boundsTransform = AlarmBoundsTransform
+							boundsTransform = AlarmBoundsTransform,
+							resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds
 						)
 						.clip(cardShape)
 						.combinedClickable(

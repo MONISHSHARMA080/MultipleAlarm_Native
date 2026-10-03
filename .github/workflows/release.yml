@@ -3,9 +3,79 @@ name: Release Build
 on:
   push:
   workflow_dispatch:
+
 jobs:
-  build-release:
+  test:
+    name: Test (${{ matrix.name }})
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - task: unit-test
+            name: Unit Tests
+          - task: startup-profile
+            name: Startup / Baseline Profile
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Enable KVM group perms
+        if: matrix.task == 'startup-profile'
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          sudo usermod -aG kvm $USER
+
+      - name: Decode keystore
+        if: matrix.task == 'startup-profile'
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/release.keystore
+
+      - name: Run Unit Tests
+        if: matrix.task == 'unit-test'
+        run: ./gradlew test --parallel
+
+      - name: Generate Baseline Profile
+        if: matrix.task == 'startup-profile'
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          REVENUECAT_API_KEY: ${{ secrets.REVENUECAT_API_KEY }}
+        run: |
+          ./gradlew :app:generateReleaseBaselineProfile \
+            -Pandroid.testoptions.manageddevices.emulator.gpu="swiftshader_indirect" \
+            -PskipPostHog=true \
+            --stacktrace
+
+      - name: Upload Baseline Profile
+        if: matrix.task == 'startup-profile'
+        uses: actions/upload-artifact@v4
+        with:
+          name: baseline-profile
+          path: app/src/release/generated/baselineProfiles/
+          if-no-files-found: ignore
+
+  build-release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    needs: test
+    if: always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
 
     steps:
       - name: Checkout code
@@ -75,37 +145,23 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
           echo "New version: v$NEW_VERSION (code: $VERSION_CODE)"
+
       - name: Decode keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/release.keystore
-      - name: Enable KVM group perms
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
-            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-          sudo usermod -aG kvm $USER
+
       - name: Install PostHog CLI
         run: |
           npm install -g @posthog/cli
           posthog-cli --version
 
-      - name: Run Unit Tests
+      - name: Download Baseline Profile
         if: github.ref == 'refs/heads/main'
-        run: ./gradlew test --parallel
-
-      - name: Generate Baseline Profile
-        if: github.ref == 'refs/heads/main'
-        env:
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          REVENUECAT_API_KEY: ${{ secrets.REVENUECAT_API_KEY }}
-        run: |
-          ./gradlew :app:generateReleaseBaselineProfile \
-          -Pandroid.testoptions.manageddevices.emulator.gpu="swiftshader_indirect" \
-          -PskipPostHog=true \
-          --stacktrace
+        uses: actions/download-artifact@v4
+        with:
+          name: baseline-profile
+          path: app/src/release/generated/baselineProfiles/
+        continue-on-error: true
 
       - name: Build Release APK
         env:
@@ -126,14 +182,17 @@ jobs:
             "-Pandroid.injected.signing.store.password=$ANDROID_KEYSTORE_PASSWORD" \
             "-Pandroid.injected.signing.key.alias=$ANDROID_KEY_ALIAS" \
             "-Pandroid.injected.signing.key.password=$ANDROID_KEY_PASSWORD"
+
       - name: Rename APK
         run: |
           cp app/build/outputs/apk/release/app-release.apk \
              "Multiple-Alarms-${{ steps.version.outputs.version_name }}.apk"
+
       - name: Rename AAB
         run: |
           cp app/build/outputs/bundle/release/app-release.aab \
              "Multiple-Alarms-${{ steps.version.outputs.version_name }}.aab"
+
       - name: Push Git Tag
         if: github.ref == 'refs/heads/main'
         run: |
@@ -147,6 +206,7 @@ jobs:
             git tag "$TAG"
             git push origin "$TAG"
           fi
+
       - name: Create GitHub Release
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v1
