@@ -28,6 +28,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -45,6 +47,17 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 import com.revenuecat.purchases.ui.revenuecatui.customercenter.CustomerCenter
 import kotlinx.coroutines.launch
 
+/**
+ * Closes the top screen without emptying the root stack (NavDisplay throws on an empty stack).
+ * A repeated close (e.g. double tap) on [Screen.AlarmContainer] does nothing, and closing the
+ * only screen of a deep-link start replaces it with [Screen.AlarmContainer].
+ */
+private fun NavBackStack<NavKey>.popOrReturnHome() {
+	when {
+		size > 1 -> removeAt(lastIndex)
+		size == 1 && first() != Screen.AlarmContainer -> this[0] = Screen.AlarmContainer
+	}
+}
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) {
@@ -131,7 +144,7 @@ import kotlinx.coroutines.launch
 					entry<Screen.SettingsScreen> {
 						SettingsScreen(
 							onNavigateBack = {
-								backStack.removeLastOrNull() ?: backStack.add(Screen.AlarmContainer)
+								backStack.popOrReturnHome()
 							},
 							onNavigateToPaywall = {
 								showPaywall = it
@@ -177,7 +190,7 @@ import kotlinx.coroutines.launch
 					) { key ->
 						EditAlarmFlowScreen(
 							alarmData = key.alarmData,
-							onCloseFlow = { backStack.removeLastOrNull() },
+							onCloseFlow = { backStack.popOrReturnHome() },
 							onNavigateToPaywall = { showPaywall = it },
 							sharedTransitionScope = sharedTransitionScope,
 							animatedVisibilityScope = LocalNavAnimatedContentScope.current
@@ -187,7 +200,7 @@ import kotlinx.coroutines.launch
 					// Create route — default forward-slide transition (no metadata override needed)
 					entry<Screen.AlarmCreateRoute> {
 						NewAlarmFlowScreen(
-							onCloseFlow = { backStack.removeLastOrNull() },
+							onCloseFlow = { backStack.popOrReturnHome() },
 							onNavigateToPaywall = { showPaywall = it }
 						)
 					}
@@ -195,14 +208,14 @@ import kotlinx.coroutines.launch
 					entry<Screen.Paywall> {
 						Paywall(
 							options = PaywallOptions.Builder(
-								dismissRequest = { backStack.removeLastOrNull() }
+								dismissRequest = { backStack.popOrReturnHome() }
 							).build()
 						)
 					}
 
 					entry<Screen.CustomerCenter> {
 						CustomerCenter(
-							onDismiss = { backStack.removeLastOrNull() }
+							onDismiss = { backStack.popOrReturnHome() }
 						)
 					}
 				}
