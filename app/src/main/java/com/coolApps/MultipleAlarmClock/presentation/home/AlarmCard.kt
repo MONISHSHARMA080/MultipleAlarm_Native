@@ -3,12 +3,14 @@ package com.coolApps.MultipleAlarmClock.presentation.home
 import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLocale
@@ -64,10 +67,6 @@ import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
-
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.ui.geometry.Rect
 
 // ─── Spring physics for the alarm card ↔ edit screen hero transition ────────
 private val AlarmMotionSpring = spring<Rect>(
@@ -130,7 +129,7 @@ private val AlarmBoundsTransform = BoundsTransform { _initialBounds, _targetBoun
 			val alignment = if (direction == SwipeToDismissBoxValue.StartToEnd) Alignment.CenterStart else Alignment.CenterEnd
 			val density = LocalDensity.current
 			val rawOffset = runCatching { dismissState.requireOffset() }.getOrDefault(0f)
-			val chipWidth = with(density) { abs(rawOffset).toDp() }.coerceAtMost(600.dp)
+			val chipWidth = with(density) { abs(rawOffset).toDp() }
 
 			Box(
 				modifier = Modifier
