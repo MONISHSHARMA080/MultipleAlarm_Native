@@ -216,7 +216,12 @@ fun TimeRow(
 			verticalAlignment = Alignment.Bottom,
 			modifier = Modifier
 				.weight(1f)
-				.then(
+				.clickable { showStartTimePicker = !showStartTimePicker },
+			horizontalArrangement = Arrangement.Start
+		) {
+			Row(
+				verticalAlignment = Alignment.Bottom,
+				modifier = Modifier.then(
 					if (canAnimate) {
 						with(sharedTransitionScope) {
 							Modifier.sharedElement(
@@ -227,27 +232,26 @@ fun TimeRow(
 						}
 					} else Modifier
 				)
-				.clickable { showStartTimePicker = !showStartTimePicker },
-			horizontalArrangement = Arrangement.Start
-		) {
-			Text(
-				text = SimpleDateFormat("h:mm ", LocalLocale.current.platformLocale).format(startTime.time),
-				style = timeStyle,
-				color = timeColor,
-				maxLines = 1,
-				softWrap = false,
-				modifier = Modifier.alignByBaseline()
-			)
-			Text(
-				text =
-					SimpleDateFormat("a", LocalLocale.current.platformLocale)
-						.format(startTime.time),
-				style = amPmStyle,
-				color = amPmColor,
-				maxLines = 1,
-				softWrap = false,
-				modifier = Modifier.alignByBaseline()
-			)
+			) {
+				Text(
+					text = SimpleDateFormat("h:mm ", LocalLocale.current.platformLocale).format(startTime.time),
+					style = timeStyle,
+					color = timeColor,
+					maxLines = 1,
+					softWrap = false,
+					modifier = Modifier.alignByBaseline()
+				)
+				Text(
+					text =
+						SimpleDateFormat("a", LocalLocale.current.platformLocale)
+							.format(startTime.time),
+					style = amPmStyle,
+					color = amPmColor,
+					maxLines = 1,
+					softWrap = false,
+					modifier = Modifier.alignByBaseline()
+				)
+			}
 		}
 		Icon(
 			imageVector = Icons.AutoMirrored.Filled.ArrowForward,
@@ -271,7 +275,12 @@ fun TimeRow(
 			verticalAlignment = Alignment.Bottom,
 			modifier = Modifier
 				.weight(1f)
-				.then(
+				.clickable { showEndTimePicker = !showEndTimePicker },
+			horizontalArrangement = Arrangement.End
+		) {
+			Row(
+				verticalAlignment = Alignment.Bottom,
+				modifier = Modifier.then(
 					if (canAnimate) {
 						with(sharedTransitionScope) {
 							Modifier.sharedElement(
@@ -282,26 +291,25 @@ fun TimeRow(
 						}
 					} else Modifier
 				)
-				.clickable { showEndTimePicker = !showEndTimePicker },
-			horizontalArrangement = Arrangement.End
-		) {
-			Text(
-				text =
-					SimpleDateFormat("h:mm ", LocalLocale.current.platformLocale).format(endTime.time),
-				style = timeStyle,
-				color = timeColor,
-				maxLines = 1,
-				softWrap = false,
-				modifier = Modifier.alignByBaseline()
-			)
-			Text(
-				text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(endTime.time),
-				style = amPmStyle,
-				color = amPmColor,
-				maxLines = 1,
-				softWrap = false,
-				modifier = Modifier.alignByBaseline()
-			)
+			) {
+				Text(
+					text =
+						SimpleDateFormat("h:mm ", LocalLocale.current.platformLocale).format(endTime.time),
+					style = timeStyle,
+					color = timeColor,
+					maxLines = 1,
+					softWrap = false,
+					modifier = Modifier.alignByBaseline()
+				)
+				Text(
+					text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(endTime.time),
+					style = amPmStyle,
+					color = amPmColor,
+					maxLines = 1,
+					softWrap = false,
+					modifier = Modifier.alignByBaseline()
+				)
+			}
 		}
 	}
 	Column() {
