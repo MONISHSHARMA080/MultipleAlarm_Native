@@ -3,13 +3,13 @@ import com.android.build.api.dsl.ApplicationExtension
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
+
     id("com.google.devtools.ksp") version "2.3.9"
     id ("kotlin-parcelize")
-    id("com.posthog.android") version "1.6.0"
+    id("com.posthog.android") version "1.7.0"
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.baselineprofile)
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.4.10"
+    alias(libs.plugins.jetbrains.kotlin.serialization)
 	id("com.google.protobuf") version "0.10.0"
     id("com.google.dagger.hilt.android")
 	id("androidx.room")
@@ -29,6 +29,37 @@ fun Project.configureAndroid() {
         ?: project.findProperty("POSTHOG_API_KEY")?.toString()
         ?: ""
 
+    val skipPostHog = project.findProperty("skipPostHog")?.toString() == "true"
+    val resolvedPostHogKey = if (skipPostHog) "" else postHogApiKey
+
+    androidComponents {
+        onVariants { variant ->
+            variant.buildConfigFields?.put(
+                "REVENUECAT_API_KEY",
+                com.android.build.api.variant.BuildConfigField("String", "\"$revenueCatApiKey\"", "")
+            )
+            if (variant.name == "release") {
+                variant.buildConfigFields?.put(
+                    "SKIP_POSTHOG",
+                    com.android.build.api.variant.BuildConfigField("boolean", skipPostHog.toString(), "")
+                )
+                variant.buildConfigFields?.put(
+                    "POSTHOG_API_KEY",
+                    com.android.build.api.variant.BuildConfigField("String", "\"$resolvedPostHogKey\"", "")
+                )
+            } else if (variant.name == "debug") {
+                variant.buildConfigFields?.put(
+                    "SKIP_POSTHOG",
+                    com.android.build.api.variant.BuildConfigField("boolean", "true", "")
+                )
+                variant.buildConfigFields?.put(
+                    "POSTHOG_API_KEY",
+                    com.android.build.api.variant.BuildConfigField("String", "\"\"", "")
+                )
+            }
+        }
+    }
+
     extensions.configure<ApplicationExtension> {
 
         namespace = "com.coolApps.MultipleAlarmClock"
@@ -40,7 +71,6 @@ fun Project.configureAndroid() {
             targetSdk = 37
             versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
             versionName = project.findProperty("versionName") as String? ?: "1.0.0"
-			buildConfigField("String", "REVENUECAT_API_KEY", "\"$revenueCatApiKey\"")
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
             vectorDrawables {
                 useSupportLibrary = true
@@ -78,10 +108,6 @@ fun Project.configureAndroid() {
 					myAppName
 //                    "debug-$myAppName"
                 }
-                val skipPostHog = project.findProperty("skipPostHog")?.toString() == "true"
-                val resolvedPostHogKey = if (skipPostHog) "" else postHogApiKey
-                buildConfigField("boolean", "SKIP_POSTHOG", skipPostHog.toString())
-                buildConfigField("String", "POSTHOG_API_KEY", "\"$resolvedPostHogKey\"")
                 resValue("string", "app_name", appName)
                 isShrinkResources = true
                 isMinifyEnabled = true
@@ -90,8 +116,6 @@ fun Project.configureAndroid() {
             }
             debug {
 				resValue("string", "app_name", myAppName)
-                buildConfigField("boolean", "SKIP_POSTHOG", "true")
-                buildConfigField("String", "POSTHOG_API_KEY", "\"\"")
             }
         }
 
@@ -103,6 +127,7 @@ fun Project.configureAndroid() {
         buildFeatures {
             compose = true
             buildConfig = true
+            resValues = true
         }
         packaging {
             resources {
