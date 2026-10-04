@@ -50,7 +50,6 @@ fun UserStrugglesScreen(
     var selectedStruggles by remember { mutableStateOf(emptySet<String>()) }
 
     LaunchedEffect(selectedStruggles) {
-//        onButtonStateChange(if (selectedStruggles.isNotEmpty()) ButtonState.Enabled else ButtonState.Disabled)
         onStrugglesSelected(selectedStruggles)
     }
 
@@ -89,7 +88,7 @@ fun UserStrugglesScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.medium,
                     colors = CardDefaults.cardColors(
-                        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+                        containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
                     ),
                     border = if (isSelected) null else androidx.compose.foundation.BorderStroke(
                         1.dp,
@@ -112,7 +111,7 @@ fun UserStrugglesScreen(
                         Text(
                             text = localizedText,
                             style = MaterialTheme.typography.bodyLarge,
-                            color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                            color = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f)
                         )
                         Checkbox(

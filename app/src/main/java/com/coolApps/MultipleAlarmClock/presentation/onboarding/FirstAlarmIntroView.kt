@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
@@ -40,7 +41,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -131,11 +131,10 @@ fun FirstAlarmIntroView(
 							.fillMaxWidth()
 							.padding(horizontal = 24.dp)
 							.graphicsLayer { alpha = contentAlpha },
-						horizontalAlignment = Alignment.CenterHorizontally
+						horizontalAlignment = Alignment.CenterHorizontally,
 					) {
 						StepsContent()
 						EditNoteContent()
-
 						Spacer(modifier = Modifier.height(120.dp))
 					}
 				}
@@ -149,6 +148,7 @@ private fun StepsContent() {
 	Column(
 		modifier = Modifier
 			.padding(top = 32.dp)
+			.widthIn(max = 400.dp)
 			.fillMaxWidth()
 	) {
 		AlarmIntroStep(
@@ -179,7 +179,9 @@ private fun StepsContent() {
 private fun EditNoteContent() {
 	Text(
 		text = stringResource(R.string.onboarding_create_alarm_edit_note),
-		modifier = Modifier.padding(top = 22.dp),
+		modifier = Modifier
+			.padding(top = 22.dp)
+			.widthIn(max = 400.dp),
 		style = typography.bodyMedium,
 		textAlign = TextAlign.Center,
 		color = colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
@@ -196,7 +198,7 @@ private fun AlarmIntroStep(
 	Row(
 		modifier = modifier
 			.fillMaxWidth(),
-		verticalAlignment = Alignment.Top
+		verticalAlignment = Alignment.Top,
 	) {
 		Box(
 			modifier = Modifier
