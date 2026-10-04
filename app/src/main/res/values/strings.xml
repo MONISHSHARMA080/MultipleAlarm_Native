@@ -58,6 +58,7 @@
 
     <!-- Onboarding Permission Screen -->
     <string name="permission_continue">Continue</string>
+    <string name="onboarding_skip_alarm_creation">Skip for now</string>
     <string name="permission_grant_permissions">Grant permissions</string>
     <string name="permission_all_set">All set</string>
     <string name="permission_title">Permissions</string>

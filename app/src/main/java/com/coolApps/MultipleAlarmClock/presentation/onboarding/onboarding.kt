@@ -8,7 +8,9 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +20,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Button
@@ -30,6 +33,7 @@ import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -246,25 +250,51 @@ import com.revenuecat.purchases.awaitOfferings
 						.padding(bottom = 20.dp),
 					contentAlignment = Alignment.Center,
 				) {
-					Button(
-						onClick = {
-							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-							viewModel.onNextClicked()
-						},
-						enabled = buttonState == ButtonState.Enabled,
+					Column(
 						modifier = Modifier
-							.fillMaxWidth()
-							.height(56.dp),
-						shape = shapes.extraLarge,
-						colors = ButtonDefaults.buttonColors(
-							containerColor = colorScheme.primaryContainer,
-							contentColor = colorScheme.onPrimaryContainer
-						)
+							.widthIn(max = 560.dp)
+							.fillMaxWidth(),
+						horizontalAlignment = Alignment.CenterHorizontally,
+						verticalArrangement = Arrangement.spacedBy(8.dp),
 					) {
-						Text(
-							text = stringResource(R.string.permission_continue),
-							style = typography.titleMedium
-						)
+						Button(
+							onClick = {
+								view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+								viewModel.onNextClicked()
+							},
+							enabled = buttonState == ButtonState.Enabled,
+							modifier = Modifier
+								.fillMaxWidth()
+								.height(56.dp),
+							shape = shapes.extraLarge,
+							colors = ButtonDefaults.buttonColors(
+								containerColor = colorScheme.primaryContainer,
+								contentColor = colorScheme.onPrimaryContainer
+							)
+						) {
+							Text(
+								text = stringResource(R.string.permission_continue),
+								style = typography.titleMedium
+							)
+						}
+
+						if (uiState.displaySate == DisplaySate.FirstAlarmIntro) {
+							TextButton(
+								onClick = {
+									view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+									viewModel.onSkipAlarmCreation()
+								},
+								enabled = buttonState == ButtonState.Enabled,
+								modifier = Modifier
+									.fillMaxWidth()
+									.height(48.dp),
+							) {
+								Text(
+									text = stringResource(R.string.onboarding_skip_alarm_creation),
+									style = typography.bodyLarge.copy(color = colorScheme.onBackground.copy(alpha = 0.5f)),
+								)
+							}
+						}
 					}
 				}
 			}

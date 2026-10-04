@@ -60,6 +60,7 @@ import kotlinx.coroutines.launch
 	}
 
 	private var selectedStruggles = emptySet<String>()
+	private val navigationBackStack = mutableListOf<DisplaySate>()
 
 	fun onStrugglesSelected(struggles: Set<String>) {
 		selectedStruggles = struggles
@@ -73,62 +74,69 @@ import kotlinx.coroutines.launch
 			analytics.captureEvent("onboarding_struggles_submitted", mapOf("struggles" to selectedStruggles.toList()))
 		}
 		
-		// increment the state
-		_displayState.update { value ->
-			val hasAlarm = displayState.value.alarmData != null
-			when(value.displaySate){
-				DisplaySate.Greeting -> value.copy(displaySate = DisplaySate.Problem)
-				DisplaySate.Problem -> value.copy(displaySate = DisplaySate.UserStruggles)
-				DisplaySate.UserStruggles -> value.copy(displaySate = DisplaySate.Permission)
-				DisplaySate.Permission -> {
-					if (hasAlarm) {
-						value.copy(displaySate = DisplaySate.AlarmResult)
-					} else {
-						value.copy(displaySate = DisplaySate.FirstAlarmIntro)
-					}
-				}
-				DisplaySate.FirstAlarmIntro -> {
-					if (hasAlarm) {
-						value.copy(displaySate = DisplaySate.AlarmResult)
-					} else {
-						value.copy(displaySate = DisplaySate.CreateFirstAlarm)
-					}
-				}
-				DisplaySate.CreateFirstAlarm -> value.copy(displaySate = DisplaySate.AlarmResult)
-				DisplaySate.AlarmResult -> value.copy(displaySate = DisplaySate.OnboardingPaywall)
-				DisplaySate.OnboardingPaywall -> value.copy(displaySate = DisplaySate.OnboardingPaywall)
-			}
-		}
+		dispatchNavigationAction(OnboardingNavigationAction.Next)
 	}
+
+	fun onSkipAlarmCreation() {
+		dispatchNavigationAction(OnboardingNavigationAction.SkipAlarmCreation)
+	}
+
 	fun onPreviousClicked()  {
 		val currentStep = _displayState.value.displaySate.name
 		analytics.captureEvent("onboarding_previous_clicked", mapOf("step" to currentStep))
-		// increment the state
-		_displayState.update { value ->
-			val hasAlarm = displayState.value.alarmData != null
-			when(value.displaySate){
-				DisplaySate.Greeting -> value.copy(displaySate = DisplaySate.Greeting)
-				DisplaySate.Problem -> value.copy(displaySate = DisplaySate.Greeting)
-				DisplaySate.UserStruggles -> value.copy(displaySate = DisplaySate.Problem)
-				DisplaySate.Permission -> value.copy(displaySate = DisplaySate.UserStruggles)
-				DisplaySate.FirstAlarmIntro -> value.copy(displaySate = DisplaySate.Permission)
-				DisplaySate.CreateFirstAlarm -> {
-					if (hasAlarm) {
-						value.copy(displaySate = DisplaySate.Permission)
-					} else {
-						value.copy(displaySate = DisplaySate.FirstAlarmIntro)
-					}
+		dispatchNavigationAction(OnboardingNavigationAction.Back)
+	}
+
+	private fun dispatchNavigationAction(action: OnboardingNavigationAction) {
+		when (action) {
+			OnboardingNavigationAction.Back -> navigateBack()
+			OnboardingNavigationAction.Next,
+			OnboardingNavigationAction.SkipAlarmCreation -> {
+				val currentStep = _displayState.value.displaySate
+				val nextStep = reduceNavigation(
+					currentStep = currentStep,
+					action = action,
+					hasAlarm = displayState.value.alarmData != null,
+				)
+				if (nextStep != currentStep) {
+					navigationBackStack += currentStep
+					_displayState.update { it.copy(displaySate = nextStep) }
 				}
-				DisplaySate.AlarmResult -> {
-					if (hasAlarm) {
-						value.copy(displaySate = DisplaySate.Permission)
-					} else {
-						value.copy(displaySate = DisplaySate.CreateFirstAlarm)
-					}
-				}
-				DisplaySate.OnboardingPaywall -> value.copy(displaySate = DisplaySate.AlarmResult)
 			}
 		}
+	}
+
+	private fun navigateBack() {
+		val previousStep = navigationBackStack.removeLastOrNull() ?: return
+		_displayState.update { it.copy(displaySate = previousStep) }
+	}
+
+	private fun reduceNavigation(
+		currentStep: DisplaySate,
+		action: OnboardingNavigationAction,
+		hasAlarm: Boolean,
+	): DisplaySate = when (action) {
+		OnboardingNavigationAction.Next -> when (currentStep) {
+			DisplaySate.Greeting -> DisplaySate.Problem
+			DisplaySate.Problem -> DisplaySate.UserStruggles
+			DisplaySate.UserStruggles -> DisplaySate.Permission
+			DisplaySate.Permission -> if (hasAlarm) DisplaySate.AlarmResult else DisplaySate.FirstAlarmIntro
+			DisplaySate.FirstAlarmIntro -> if (hasAlarm) DisplaySate.AlarmResult else DisplaySate.CreateFirstAlarm
+			DisplaySate.CreateFirstAlarm -> DisplaySate.AlarmResult
+			DisplaySate.AlarmResult -> DisplaySate.OnboardingPaywall
+			DisplaySate.OnboardingPaywall -> DisplaySate.OnboardingPaywall
+		}
+		OnboardingNavigationAction.SkipAlarmCreation -> when (currentStep) {
+			DisplaySate.FirstAlarmIntro -> DisplaySate.OnboardingPaywall
+			else -> currentStep
+		}
+		OnboardingNavigationAction.Back -> currentStep
+	}
+
+	private sealed interface OnboardingNavigationAction {
+		data object Next : OnboardingNavigationAction
+		data object Back : OnboardingNavigationAction
+		data object SkipAlarmCreation : OnboardingNavigationAction
 	}
 
 
