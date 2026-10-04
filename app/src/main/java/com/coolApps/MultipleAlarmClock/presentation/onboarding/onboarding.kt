@@ -236,9 +236,6 @@ import com.revenuecat.purchases.awaitOfferings
 				}
 			}
 
-			// Continue button — floating overlay, doesn't affect layout sizing.
-			// Instant show/hide: no animation, so zero layout shift during
-			// screen transitions.
 			if (buttonState != ButtonState.Hidden) {
 				Box(
 					modifier = Modifier

@@ -444,39 +444,12 @@ fun NewAlarmScreen(
 									}
 								}
 							} else {
-//								when (currentProgress) {
-//									Progress.StartTime -> {
-//										val selectedStartTime = (uiState.alarmData.startTimeCalendar.clone() as Calendar).apply {
-//											set(Calendar.HOUR_OF_DAY, startTimePickerState.hour)
-//											set(Calendar.MINUTE, startTimePickerState.minute)
-//										}
-//										view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-//										viewModel.updateStartTime(selectedStartTime)
-//										viewModel.updateProgress(Progress.EndTime)
-//									}
-//									Progress.EndTime -> {
-//										if (!isCandidateInvalid) {
-//											view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-//											viewModel.updateEndTime(candidateEnd)
-//											viewModel.updateProgress(Progress.FullEditor)
-//										}
-//									}
-//									Progress.FullEditor -> {
-//										val isInactiveEdit = uiState.initialAlarm?.isReadyToUse == false
-//										val canSetAlarm = uiState.validationResult == AlarmDataValidationResult.Success || isInactiveEdit
-//										if (canSetAlarm) {
-//											viewModel.onSetAlarmClicked()
-//											view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-//										}
-//									}
-//								}
 								val isInactiveEdit = uiState.initialAlarm?.isReadyToUse == false
 								val canSetAlarm = uiState.validationResult == AlarmDataValidationResult.Success || isInactiveEdit
 								if (canSetAlarm) {
 									viewModel.onSetAlarmClicked()
 									view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
 								}
-
 							}
 						}
 					)
