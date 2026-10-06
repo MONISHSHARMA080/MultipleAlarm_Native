@@ -27,9 +27,9 @@ android {
 	testOptions {
 		managedDevices {
 			localDevices {
-				create("pixel8") {
-					device = "Pixel 8a"
-					apiLevel = 34
+				create("pixel10") {
+					device = "Pixel 10"
+					apiLevel = 37
 					systemImageSource = "google"
 				}
 			}
@@ -46,7 +46,7 @@ kotlin {
 // Baseline Profile plugin configuration
 baselineProfile {
 	// Use Gradle Managed Device for CI (better than useConnectedDevices)
-	managedDevices += "pixel8"
+	managedDevices += "pixel10"
 
 	// Set to false for CI - we're using Gradle Managed Devices
 	useConnectedDevices = false
