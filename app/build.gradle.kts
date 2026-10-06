@@ -215,7 +215,6 @@ dependencies {
 
     implementation(libs.accompanist.permissions)
 
-    implementation ("com.posthog:posthog-android:3.63.1")
     implementation (libs.posthog.android)
     implementation(libs.androidx.core.splashscreen)
 
