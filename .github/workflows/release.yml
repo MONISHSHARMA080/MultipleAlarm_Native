@@ -5,18 +5,40 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
-    name: Test (${{ matrix.name }})
+  # ---------------------------------------------------------------------------
+  # Unit tests – runs in parallel with the baseline profile and the app build.
+  # Only gates publishing (see the `publish` job).
+  # ---------------------------------------------------------------------------
+  unit-test:
+    name: Unit Tests
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    strategy:
-      fail-fast: true
-      matrix:
-        include:
-          - task: unit-test
-            name: Unit Tests
-          - task: startup-profile
-            name: Startup / Baseline Profile
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run Unit Tests
+        run: ./gradlew test --parallel
+
+  # ---------------------------------------------------------------------------
+  # Baseline profile – needs an emulator, so it is the slow job. The app build
+  # consumes its output.
+  # ---------------------------------------------------------------------------
+  baseline-profile:
+    name: Baseline Profile
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout code
@@ -33,7 +55,6 @@ jobs:
         run: chmod +x gradlew
 
       - name: Enable KVM group perms
-        if: matrix.task == 'startup-profile'
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
             | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -42,16 +63,10 @@ jobs:
           sudo usermod -aG kvm $USER
 
       - name: Decode keystore
-        if: matrix.task == 'startup-profile'
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/release.keystore
 
-      - name: Run Unit Tests
-        if: matrix.task == 'unit-test'
-        run: ./gradlew test --parallel
-
       - name: Generate Baseline Profile
-        if: matrix.task == 'startup-profile'
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -64,18 +79,25 @@ jobs:
             --stacktrace
 
       - name: Upload Baseline Profile
-        if: matrix.task == 'startup-profile'
         uses: actions/upload-artifact@v4
         with:
           name: baseline-profile
           path: app/src/release/generated/baselineProfiles/
           if-no-files-found: ignore
 
-  build-release:
-    name: Build & Release
+  # ---------------------------------------------------------------------------
+  # Build – waits only for the baseline profile (it bakes it in), runs in
+  # parallel with the unit tests. Produces signed APK/AAB as artifacts.
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build
     runs-on: ubuntu-latest
-    needs: test
-    if: always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
+    needs: baseline-profile
+    if: ${{ !cancelled() && (needs.baseline-profile.result == 'success' || needs.baseline-profile.result == 'skipped') }}
+    outputs:
+      version_name: ${{ steps.version.outputs.version_name }}
+      version_code: ${{ steps.version.outputs.version_code }}
+      changelog: ${{ steps.version.outputs.changelog }}
 
     steps:
       - name: Checkout code
@@ -131,14 +153,13 @@ jobs:
           NEW_VERSION="$MAJOR.$MINOR.$PATCH"
           # Version code = unique integer for Play Store
           # Using commit count so it always increases
-          VERSION_CODE=$(git rev-list --count HEAD)
           BASE_OFFSET=3000
           COMMIT_COUNT=$(git rev-list --count HEAD)
           VERSION_CODE=$((BASE_OFFSET + COMMIT_COUNT))
-          
+
           echo "version_name=v$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
-          
+
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           { git log "$LAST_TAG"..HEAD --pretty=format:"- %s" 2>/dev/null || git log --pretty=format:"- %s"; } >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
@@ -193,58 +214,6 @@ jobs:
           cp app/build/outputs/bundle/release/app-release.aab \
              "Multiple-Alarms-${{ steps.version.outputs.version_name }}.aab"
 
-      - name: Push Git Tag
-        if: github.ref == 'refs/heads/main'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          TAG="${{ steps.version.outputs.version_name }}"
-          # Only push if tag doesn't exist yet
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists, skipping"
-          else
-            git tag "$TAG"
-            git push origin "$TAG"
-          fi
-
-      - name: Create GitHub Release
-        if: github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ steps.version.outputs.version_name }}
-          name: Release ${{ steps.version.outputs.version_name }}
-          body: |
-            ## Release ${{ steps.version.outputs.version_name }}
-            ### Info
-            - Version Name: ${{ steps.version.outputs.version_name }}
-            - Version Code: ${{ steps.version.outputs.version_code }}
-            - Commit: ${{ github.sha }}
-            
-            ### Changes
-            ${{ steps.version.outputs.changelog }}
-
-            ### Downloads
-            - **APK**: For direct installation on Android devices
-            - **AAB**: For Google Play Store distribution
-          files: |
-            Multiple-Alarms-${{ steps.version.outputs.version_name }}.apk
-            Multiple-Alarms-${{ steps.version.outputs.version_name }}.aab
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload to Play Store Internal Track
-        if: github.ref == 'refs/heads/main'
-        uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: com.coolApps.MultipleAlarmClock
-          releaseFiles: Multiple-Alarms-${{ steps.version.outputs.version_name }}.aab
-          releaseName: ${{ steps.version.outputs.version_name }}
-          tracks: internal
-          status: completed
-
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
@@ -258,3 +227,74 @@ jobs:
           name: Multiple-Alarms-${{ steps.version.outputs.version_name }}-AAB
           path: Multiple-Alarms-${{ steps.version.outputs.version_name }}.aab
           retention-days: 30
+
+  # ---------------------------------------------------------------------------
+  # Publish – only on main, and only if BOTH the unit tests and the build passed.
+  # ---------------------------------------------------------------------------
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    needs: [unit-test, build]
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && needs.unit-test.result == 'success' && needs.build.result == 'success' }}
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download APK and AAB
+        uses: actions/download-artifact@v4
+        with:
+          pattern: Multiple-Alarms-*
+          path: dist
+          merge-multiple: true
+
+      - name: Push Git Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          TAG="${{ needs.build.outputs.version_name }}"
+          # Only push if tag doesn't exist yet
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, skipping"
+          else
+            git tag "$TAG"
+            git push origin "$TAG"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.build.outputs.version_name }}
+          name: Release ${{ needs.build.outputs.version_name }}
+          body: |
+            ## Release ${{ needs.build.outputs.version_name }}
+            ### Info
+            - Version Name: ${{ needs.build.outputs.version_name }}
+            - Version Code: ${{ needs.build.outputs.version_code }}
+            - Commit: ${{ github.sha }}
+
+            ### Changes
+            ${{ needs.build.outputs.changelog }}
+
+            ### Downloads
+            - **APK**: For direct installation on Android devices
+            - **AAB**: For Google Play Store distribution
+          files: |
+            dist/Multiple-Alarms-${{ needs.build.outputs.version_name }}.apk
+            dist/Multiple-Alarms-${{ needs.build.outputs.version_name }}.aab
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload to Play Store Internal Track
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.coolApps.MultipleAlarmClock
+          releaseFiles: dist/Multiple-Alarms-${{ needs.build.outputs.version_name }}.aab
+          releaseName: ${{ needs.build.outputs.version_name }}
+          tracks: internal
+          status: completed
