@@ -7,7 +7,7 @@ import androidx.activity.compose.ReportDrawnWhen
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -130,7 +130,7 @@ import java.util.Calendar
 		if (inAppReviewState  && (activity != null)) {
 			val manager = ReviewManagerFactory.create(context)
 			val request = manager.requestReviewFlow()
-			logD("asking for  review inAppReviewState:$inAppReviewState ")
+//			logD("asking for  review inAppReviewState:$inAppReviewState ")
 			request.addOnCompleteListener { task ->
 				if (task.isSuccessful) {
 					val reviewInfo = task.result
@@ -281,10 +281,10 @@ import java.util.Calendar
 fun EmptyState(modifier: Modifier = Modifier) {
 	val infiniteTransition = rememberInfiniteTransition(label = "EmptyStateIconTransition")
 	val dy by infiniteTransition.animateFloat(
-		initialValue = 0f,
-		targetValue = 7f,
+		initialValue = -6f,
+		targetValue = 6f,
 		animationSpec = infiniteRepeatable(
-			animation = tween(durationMillis = 1222, easing = LinearEasing),
+			animation = tween(durationMillis = 1500, easing = FastOutSlowInEasing),
 			repeatMode = RepeatMode.Reverse
 		),
 		label = "EmptyStateIconOffset"
@@ -308,6 +308,7 @@ fun EmptyState(modifier: Modifier = Modifier) {
 			text = stringResource(R.string.empty_state_title),
 			style = MaterialTheme.typography.headlineMedium,
 			fontWeight = FontWeight.Bold,
+			textAlign = TextAlign.Center,
 			color = MaterialTheme.colorScheme.onSurface
 		)
 		Spacer(modifier = Modifier.height(8.dp))

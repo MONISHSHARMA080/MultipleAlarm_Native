@@ -198,7 +198,7 @@ import com.revenuecat.purchases.awaitOfferings
 							onShowPaywall = onNavigateToPaywall
 						)
 					}
-					DisplaySate.AlarmResult -> AlarmResultClaude(
+					DisplaySate.AlarmResult -> AlarmResultScreen(
 						alarmData = uiState.alarmData,
 						onButtonStateChange = { buttonState = it }
 					)

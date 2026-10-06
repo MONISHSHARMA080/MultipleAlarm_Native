@@ -75,7 +75,7 @@ private val AlarmMotionSpring = spring<Rect>(
 )
 
 @OptIn(ExperimentalSharedTransitionApi::class)
-private val AlarmBoundsTransform = BoundsTransform { _initialBounds, _targetBounds -> AlarmMotionSpring }
+private val AlarmBoundsTransform = BoundsTransform { _, _ -> AlarmMotionSpring }
 
 
 @OptIn(ExperimentalSharedTransitionApi::class)

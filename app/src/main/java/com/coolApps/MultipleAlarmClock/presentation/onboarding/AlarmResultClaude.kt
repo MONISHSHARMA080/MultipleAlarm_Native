@@ -74,7 +74,6 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -86,7 +85,7 @@ import kotlin.time.Duration.Companion.milliseconds
 private const val MAX_VISIBLE_TIMELINE_ROWS = 8
 private val TIMELINE_ROW_STAGGER_MS = 90.milliseconds
 
-@Composable fun AlarmResultClaude(
+@Composable fun AlarmResultScreen(
 	alarmData: AlarmData?,
 	onButtonStateChange: (ButtonState) -> Unit
 ) {
@@ -98,7 +97,7 @@ private val TIMELINE_ROW_STAGGER_MS = 90.milliseconds
 			CircularProgressIndicator()
 		}
 	} else {
-		AlarmResultContent(
+		AlarmResult(
 			alarmData = alarmData,
 			onButtonStateChange ={onButtonStateChange(it)},
 		)
@@ -106,7 +105,7 @@ private val TIMELINE_ROW_STAGGER_MS = 90.milliseconds
 }
 
 @Composable
-private fun AlarmResultContent(
+private fun AlarmResult(
 	alarmData: AlarmData,
 	onButtonStateChange: (ButtonState) -> Unit,
 ) {
