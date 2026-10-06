@@ -47,7 +47,7 @@ fun Project.configureAndroid() {
                     "POSTHOG_API_KEY",
                     com.android.build.api.variant.BuildConfigField("String", "\"$resolvedPostHogKey\"", "")
                 )
-            } else if (variant.name == "debug") {
+            } else {
                 variant.buildConfigFields?.put(
                     "SKIP_POSTHOG",
                     com.android.build.api.variant.BuildConfigField("boolean", "true", "")
