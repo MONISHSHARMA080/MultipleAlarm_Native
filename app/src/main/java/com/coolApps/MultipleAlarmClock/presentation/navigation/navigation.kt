@@ -2,17 +2,15 @@ package com.coolApps.MultipleAlarmClock.presentation.navigation
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,8 +30,8 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.runtime.result.rememberResultEventBusNavEntryDecorator
-import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
+import androidx.navigation3.ui.NavDisplay
 import com.coolApps.MultipleAlarmClock.presentation.home.AlarmContainer
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingScreen
 import com.coolApps.MultipleAlarmClock.presentation.picker.EditAlarmFlowScreen
@@ -90,37 +88,10 @@ import kotlinx.coroutines.launch
 					rememberResultEventBusNavEntryDecorator()
 				),
 
-				// Default forward transition used for all routes that don't override via metadata
-				transitionSpec = {
-					slideInHorizontally(
-						animationSpec = tween(330, easing = FastOutSlowInEasing),
-						initialOffsetX = { it }
-					) + fadeIn(tween(210, easing = LinearEasing)) togetherWith
-							slideOutHorizontally(
-								animationSpec = tween(330, easing = FastOutSlowInEasing),
-								targetOffsetX = { -it }
-							) + fadeOut(tween(210, easing = LinearEasing))
-				},
-				popTransitionSpec = {
-					slideInHorizontally(
-						animationSpec = tween(240, easing = FastOutSlowInEasing),
-						initialOffsetX = { -it }
-					) + fadeIn(tween(180, easing = LinearEasing)) togetherWith
-							slideOutHorizontally(
-								animationSpec = tween(240, easing = FastOutSlowInEasing),
-								targetOffsetX = { it }
-							) + fadeOut(tween(140, easing = LinearEasing))
-				},
-				predictivePopTransitionSpec = {
-					slideInHorizontally(
-						animationSpec = tween(240, easing = FastOutSlowInEasing),
-						initialOffsetX = { (-it * 0.3f).toInt() }
-					) + fadeIn(tween(150, easing = LinearEasing)) togetherWith
-							slideOutHorizontally(
-								animationSpec = tween(190, easing = FastOutSlowInEasing),
-								targetOffsetX = { it }
-							) + fadeOut(tween(120, easing = LinearEasing))
-				},
+				// Default transitions used for all routes that don't override via metadata
+				transitionSpec = { NavTransitions.forward() },
+				popTransitionSpec = { NavTransitions.pop() },
+				predictivePopTransitionSpec = { NavTransitions.pop() },
 
 				entryProvider = entryProvider {
 
@@ -215,13 +186,13 @@ import kotlinx.coroutines.launch
 			animationSpec = tween(420, easing = FastOutSlowInEasing),
 			initialOffsetY = { it }
 		) + fadeIn(
-			animationSpec = tween(300, delayMillis = 10, easing = LinearEasing)
+			animationSpec = tween(320, delayMillis = 10, easing = LinearEasing)
 		),
 		exit = slideOutVertically(
 			animationSpec = tween(420, easing = FastOutSlowInEasing),
 			targetOffsetY = { it }
 		) + fadeOut(
-			animationSpec = tween(250, easing = LinearEasing)
+			animationSpec = tween(290, easing = LinearEasing)
 		)
 	) {
 		PremiumPaywallDialog(false,
