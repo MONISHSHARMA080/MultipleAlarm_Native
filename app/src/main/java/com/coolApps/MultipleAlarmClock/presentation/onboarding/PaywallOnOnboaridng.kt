@@ -40,7 +40,11 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 ) {
 	onButtonStateChange(ButtonState.Hidden)
 	BackHandler {
-		onBackPress()
+		if (isHardPaywall) {
+			onBackPress()
+		} else {
+			onFinished()
+		}
 	}
 
 	 // buttonState is now pre-set by the parent before this screen composes

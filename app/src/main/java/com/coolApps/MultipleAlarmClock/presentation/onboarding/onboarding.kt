@@ -214,7 +214,8 @@ import com.revenuecat.purchases.awaitOfferings
 								viewModel.onPreviousClicked()
 								uiState.alarmData?.let { viewModel.stopAlarm(it) }
 							},
-							onFinished = { viewModel.finishedOnboarding() }, loadFailed = loadFailed, offering = offering,
+							onFinished = { viewModel.finishedOnboarding() },
+							loadFailed = loadFailed, offering = offering,
 							onPurchaseCompletedEvent = {customerInfo, storeTransaction -> 
 								if (isHardPaywall) {
 									uiState.alarmData?.let { viewModel.resetAlarm(it) }
