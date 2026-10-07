@@ -12,6 +12,6 @@
     <fields>;
 }
 
--keep class com.coolApps.MultipleAlarmClock.Activities.AlarmActivityIntentData { *; }
+
 
 

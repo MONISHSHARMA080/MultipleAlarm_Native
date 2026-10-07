@@ -113,6 +113,10 @@ fun Project.configureAndroid() {
                 isMinifyEnabled = true
                 proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
                 signingConfig = signingConfigs.getByName("release")
+                ndk {
+                    // Packs native debug symbols into the AAB so Play Console can symbolicate native crashes/ANRs
+                    debugSymbolLevel = "FULL"
+                }
             }
             debug {
 				resValue("string", "app_name", myAppName)
