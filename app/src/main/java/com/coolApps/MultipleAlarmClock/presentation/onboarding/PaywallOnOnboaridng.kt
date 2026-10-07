@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.data.billing.EntitlementManager.RevenueCatEntitlements
 import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.Offering
 import com.revenuecat.purchases.PurchasesError
@@ -48,7 +49,7 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 			Box(modifier = Modifier.fillMaxSize()) {
 				Paywall(
 					options = PaywallOptions.Builder(
-						dismissRequest = { onFinished() } // user closes it -> continue onboarding
+						dismissRequest = { if (!isHardPaywall) onFinished() } // hard paywall: not dismissible
 					)
 						.setOffering(offering)
 						.setListener(object : PaywallListener {
@@ -63,8 +64,12 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 								onFinished()
 							}
 							override fun onRestoreCompleted(customerInfo: CustomerInfo) {
-								onRestoreCompletedEvent(customerInfo)
-								onFinished()
+								// Restore "completing" only means the request succeeded, not that the user owns premium.
+								val hasPremium = customerInfo.entitlements[RevenueCatEntitlements.PREMIUM]?.isActive == true
+								if (hasPremium) {
+									onRestoreCompletedEvent(customerInfo)
+									onFinished()
+								}
 							}
 						})
 						.build()
