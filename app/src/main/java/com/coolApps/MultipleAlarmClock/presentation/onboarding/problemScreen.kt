@@ -94,12 +94,8 @@ fun ProblemScreen(
 	val animationHeight = cardHeight + cardSpacing * (alarms.size - 1)
 
 	LaunchedEffect(Unit) {
-		var isFirstRun = true
+		onButtonStateChange(ButtonState.Enabled)
 		while (true) {
-			if (isFirstRun) {
-				onButtonStateChange(ButtonState.Disabled)
-			}
-
 			phase = ProblemPhase.Building
 			visibleAlarms = 0
 
@@ -129,11 +125,6 @@ fun ProblemScreen(
 			view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
 
 			delay(500.milliseconds)
-
-			if (isFirstRun) {
-				onButtonStateChange(ButtonState.Enabled)
-				isFirstRun = false
-			}
 
 			// repat it
 			delay(2.5.seconds)
