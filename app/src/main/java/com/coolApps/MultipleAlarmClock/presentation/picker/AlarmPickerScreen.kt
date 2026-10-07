@@ -71,19 +71,11 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.local.AlarmDataValidationResult
+import com.coolApps.MultipleAlarmClock.presentation.AlarmContainerBoundsTransform
+import com.coolApps.MultipleAlarmClock.presentation.AlarmTimeBoundsTransform
 import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.AlarmPermissionDialog
 import java.util.Calendar
-
-// ─── Spring physics shared across all shared-element transitions ───────────────
-
-private val AlarmMotionSpring = spring<Rect>(
-    dampingRatio = Spring.DampingRatioLowBouncy,
-    stiffness = Spring.StiffnessMediumLow
-)
-
-@OptIn(ExperimentalSharedTransitionApi::class)
-private val AlarmBoundsTransform = BoundsTransform { _initialBounds, _targetBounds -> AlarmMotionSpring }
 
 // ─── Public entry-point screens ───────────────────────────────────────────────
 
@@ -164,7 +156,7 @@ fun EditAlarmScreen(
 				sharedContentState = rememberSharedContentState(key = "alarm_card_${alarmData.id}"),
 				animatedVisibilityScope = animatedVisibilityScope,
 				clipInOverlayDuringTransition = OverlayClip(RoundedCornerShape(0.dp)),
-				boundsTransform = AlarmBoundsTransform,
+				boundsTransform = AlarmContainerBoundsTransform,
 				resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds
 			)
 		}
@@ -570,7 +562,7 @@ private fun AlarmEditorBody(
 			sharedTransitionScope = sharedTransitionScope,
 			animatedVisibilityScope = animatedVisibilityScope,
 			alarmId = alarmId,
-			boundsTransform = AlarmBoundsTransform
+			boundsTransform = AlarmTimeBoundsTransform
 		)
 		Spacer(modifier = Modifier.weight(0.45f))
 		SettingsCard(

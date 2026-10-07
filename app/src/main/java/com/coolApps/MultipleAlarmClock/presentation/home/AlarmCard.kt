@@ -3,14 +3,11 @@ package com.coolApps.MultipleAlarmClock.presentation.home
 import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -47,7 +44,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLocale
@@ -59,6 +55,8 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
+import com.coolApps.MultipleAlarmClock.presentation.AlarmContainerBoundsTransform
+import com.coolApps.MultipleAlarmClock.presentation.AlarmTimeBoundsTransform
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.ZoneId
@@ -67,16 +65,6 @@ import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
-
-// ─── Spring physics for the alarm card ↔ edit screen hero transition ────────
-private val AlarmMotionSpring = spring<Rect>(
-    dampingRatio = Spring.DampingRatioLowBouncy,
-    stiffness = Spring.StiffnessMediumLow
-)
-
-@OptIn(ExperimentalSharedTransitionApi::class)
-private val AlarmBoundsTransform = BoundsTransform { _, _ -> AlarmMotionSpring }
-
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable fun AlarmCard(
@@ -162,8 +150,6 @@ private val AlarmBoundsTransform = BoundsTransform { _, _ -> AlarmMotionSpring }
 		modifier = modifier.fillMaxWidth()
 	) {
 		val secondaryContentColor = contentColor.copy(alpha = 0.7f)
-
-		// 🔑 Lock font scale to ensure the card looks identical on all devices as per AGENTS.md
 		CompositionLocalProvider(
 			LocalDensity provides Density(
 				density = LocalDensity.current.density,
@@ -179,7 +165,7 @@ private val AlarmBoundsTransform = BoundsTransform { _, _ -> AlarmMotionSpring }
 							sharedContentState = rememberSharedContentState(key = "alarm_card_${alarmData.id}"),
 							animatedVisibilityScope = animatedVisibilityScope,
 							clipInOverlayDuringTransition = OverlayClip(cardShape),
-							boundsTransform = AlarmBoundsTransform,
+							boundsTransform = AlarmContainerBoundsTransform,
 							resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds
 						)
 						.clip(cardShape)
@@ -230,7 +216,7 @@ private val AlarmBoundsTransform = BoundsTransform { _, _ -> AlarmMotionSpring }
 								modifier = Modifier.sharedElement(
 									sharedContentState = rememberSharedContentState(key = "start_time_${alarmData.id}"),
 									animatedVisibilityScope = animatedVisibilityScope,
-									boundsTransform = AlarmBoundsTransform
+									boundsTransform = AlarmTimeBoundsTransform
 								)
 							)
 							Icon(
@@ -242,7 +228,7 @@ private val AlarmBoundsTransform = BoundsTransform { _, _ -> AlarmMotionSpring }
 									.sharedElement(
 										sharedContentState = rememberSharedContentState(key = "arrow_${alarmData.id}"),
 										animatedVisibilityScope = animatedVisibilityScope,
-										boundsTransform = AlarmBoundsTransform
+										boundsTransform = AlarmTimeBoundsTransform
 									),
 								tint = secondaryContentColor
 							)
@@ -253,7 +239,7 @@ private val AlarmBoundsTransform = BoundsTransform { _, _ -> AlarmMotionSpring }
 								modifier = Modifier.sharedElement(
 									sharedContentState = rememberSharedContentState(key = "end_time_${alarmData.id}"),
 									animatedVisibilityScope = animatedVisibilityScope,
-									boundsTransform = AlarmBoundsTransform
+									boundsTransform = AlarmTimeBoundsTransform
 								)
 							)
 						}

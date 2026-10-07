@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.presentation.AlarmTimeBoundsTransform
 import com.coolApps.MultipleAlarmClock.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmPickerUiState
 import java.text.SimpleDateFormat
@@ -61,9 +62,7 @@ fun TimeRow(
 	sharedTransitionScope: SharedTransitionScope? = null,
 	animatedVisibilityScope: AnimatedVisibilityScope? = null,
 	alarmId: Int? = null,
-	boundsTransform: BoundsTransform = BoundsTransform { _i, _t ->
-		androidx.compose.animation.core.spring<androidx.compose.ui.geometry.Rect>()
-	}
+	boundsTransform: BoundsTransform = AlarmTimeBoundsTransform
 ) {
 	val startTime = uiState.alarmData.startTimeCalendar
 	val endTime = uiState.alarmData.endTimeCalendar
