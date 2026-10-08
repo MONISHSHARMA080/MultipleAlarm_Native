@@ -36,6 +36,7 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 		onPurchaseCompletedEvent: (customerInfo: CustomerInfo, storeTransaction: StoreTransaction) -> Unit,
 		onRestoreCompletedEvent: (customerInfo: CustomerInfo) -> Unit,
 		onButtonStateChange: (ButtonState) -> Unit ,
+		onPurchaseCancelledEvent: () -> Unit ,
 		onPurchaseError: (PurchasesError) -> Unit
 ) {
 	onButtonStateChange(ButtonState.Hidden)
@@ -59,6 +60,9 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 						.setListener(object : PaywallListener {
 							override fun onPurchaseError(error: PurchasesError) {
 								onPurchaseError(error)
+							}
+							override fun onPurchaseCancelled() {
+								onPurchaseCancelledEvent()
 							}
 							override fun onPurchaseCompleted(
 									customerInfo: CustomerInfo,

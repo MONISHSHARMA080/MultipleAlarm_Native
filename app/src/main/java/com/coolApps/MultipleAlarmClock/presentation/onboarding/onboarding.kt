@@ -231,6 +231,9 @@ import com.revenuecat.purchases.awaitOfferings
 							onPurchaseError = { err ->
 								viewModel.onPurchaseError(err)
 							},
+							onPurchaseCancelledEvent = {
+								viewModel.onPurchaseCancelled()
+							},
 							onButtonStateChange = { buttonState = it }
 						)
 					}

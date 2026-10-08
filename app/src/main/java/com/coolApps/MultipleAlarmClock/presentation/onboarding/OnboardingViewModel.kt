@@ -210,4 +210,10 @@ import kotlinx.coroutines.launch
 			 }
 		 }
 	}
+
+	fun onPurchaseCancelled() {
+		viewModelScope.launch {
+			analytics.captureEvent("purchase_cancelled", mapOf())
+		}
+	}
 }
