@@ -117,7 +117,6 @@ import kotlinx.coroutines.launch
 		hasAlarm: Boolean,
 	): DisplaySate = when (action) {
 		OnboardingNavigationAction.Next -> when (currentStep) {
-			DisplaySate.Greeting -> DisplaySate.Problem
 			DisplaySate.Problem -> DisplaySate.UserStruggles
 			DisplaySate.UserStruggles -> DisplaySate.Permission
 			DisplaySate.Permission -> if (hasAlarm) DisplaySate.AlarmResult else DisplaySate.FirstAlarmIntro

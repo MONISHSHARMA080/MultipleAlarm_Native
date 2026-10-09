@@ -93,16 +93,15 @@ import com.revenuecat.purchases.awaitOfferings
 	}
 
 	val progress = when (uiState.displaySate) {
-		DisplaySate.Greeting -> 1f / 8f
-		DisplaySate.Problem -> 2f / 8f
-		DisplaySate.UserStruggles -> 3f / 8f
-		DisplaySate.Permission -> 4f / 8f
-		DisplaySate.FirstAlarmIntro -> 5f / 8f
+		DisplaySate.Problem -> 1f / 7f
+		DisplaySate.UserStruggles -> 2f / 7f
+		DisplaySate.Permission -> 3f / 7f
+		DisplaySate.FirstAlarmIntro -> 4f / 7f
 		DisplaySate.CreateFirstAlarm -> {
-			6f / 8f
+			5f / 7f
 		}
-		DisplaySate.AlarmResult -> 7f / 8f
-		DisplaySate.OnboardingPaywall -> 8f / 8f
+		DisplaySate.AlarmResult -> 6f / 7f
+		DisplaySate.OnboardingPaywall -> 7f / 7f
 	}
 
 	val animatedProgress by animateFloatAsState(
@@ -163,7 +162,6 @@ import com.revenuecat.purchases.awaitOfferings
 				},
 			) { state ->
 				when (state) {
-					DisplaySate.Greeting -> GreetingScreen()
 					// here make this into one uniform animation and no click etc. and then loop
 					DisplaySate.Problem -> ProblemScreen(
 						onButtonStateChange = { buttonState = it }

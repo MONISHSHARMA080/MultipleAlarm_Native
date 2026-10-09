@@ -10,7 +10,6 @@ enum class ButtonState {
 }
 
 enum class DisplaySate {
-	Greeting,
 	Problem,
 	UserStruggles,
 	Permission,
@@ -21,7 +20,6 @@ enum class DisplaySate {
 
 	override fun toString(): String {
 		return when(this){
-			Greeting -> "Greeting"
 			Problem -> "Problem"
 			UserStruggles -> "UserStruggles"
 			Permission -> "Permission"
@@ -35,7 +33,7 @@ enum class DisplaySate {
 
 
 data class OnboardingUiState(
-	val displaySate: DisplaySate = DisplaySate.Greeting,
+	val displaySate: DisplaySate = DisplaySate.Problem,
 	val askForNotificationPermission: Boolean = false,
 	val missingSteps: List<PermissionStep> = emptyList(),
 	val alarmData: AlarmData? = null,
