@@ -62,9 +62,6 @@ fun OnboardingScreen(onNavigateToPaywall: (Boolean) -> Unit = {}) {
 	val remoteDocument = displayState.remoteDocument
 	val remoteDocumentError = displayState.remoteDocumentError
 
-	LaunchedEffect(Unit) {
-		viewModel.fetchSduiDocument()
-	}
 
 	if (remoteDocumentError != null) {
 		NativeOnboardingFlow(onNavigateToPaywall = onNavigateToPaywall, viewModel = viewModel)

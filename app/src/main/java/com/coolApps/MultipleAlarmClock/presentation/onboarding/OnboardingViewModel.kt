@@ -12,6 +12,7 @@ import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.domain.repository.AlarmRepository
 import com.coolApps.MultipleAlarmClock.domain.repository.RemoteUiRepository
 import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
+import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionUtils
 import com.coolApps.MultipleAlarmClock.util.Analytics
 import com.coolApps.MultipleAlarmClock.util.TrialReminderScheduler
@@ -32,7 +33,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel class OnboardingViewModel @Inject constructor(
 	val analytics: Analytics,
@@ -56,7 +57,12 @@ import kotlin.time.Duration.Companion.milliseconds
 
 	init {
 		viewModelScope.launch {
-			refreshPermissions()
+			launch {
+				fetchSduiDocument()
+			}
+			launch {
+				refreshPermissions()
+			}
 		}
 	}
 
@@ -72,10 +78,12 @@ import kotlin.time.Duration.Companion.milliseconds
 
 		viewModelScope.launch {
 			try {
-				withTimeout(1500.milliseconds) {
+				withTimeout(1.2.seconds) {
+					logD("getting the server driven ui")
 					// 1. & 2. Fetch flag and extract URL
 					val url = analytics.getFeatureFlagUrlPayload("onboarding_sdui_flow")
 						?: throw IllegalStateException("Invalid or missing payload")
+
 					
 					// 3. Fetch Remote Document
 					val docResult = remoteUiRepository.fetchRemoteDocument(url).first()
@@ -86,6 +94,7 @@ import kotlin.time.Duration.Companion.milliseconds
 					}
 				}
 			} catch (e: Exception) {
+				logD("got the exception and error message is ${e.message}, and e:$e")
 				if (e is CancellationException && e !is TimeoutCancellationException) {
 					throw e
 				}
@@ -96,6 +105,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 	private suspend fun handleSduiFallback(e: Exception) {
 		// Log fallback
+		logD("server driven ui fetch failed")
 		_displayState.update { it.copy(remoteDocumentError = e.message ?: "Failed to fetch SDUI", isFetchingSdui = false) }
 		analytics.captureEvent(
 			event = "onboarding_sdui_fallback",
