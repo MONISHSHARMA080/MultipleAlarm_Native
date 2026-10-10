@@ -5,7 +5,8 @@
 
   You then upload this .rc file to a standard CDN (like AWS CloudFront or Cloudflare), which your Android app downloads.
   ──────
-  ## 1. The Server-Side Compose Code
+
+## 1. The Server-Side Compose Code
 
   To build the UI document, you create a standard Kotlin JVM project. This is completely separate from your Android app.
 
@@ -76,7 +77,8 @@
         println("Successfully generated onboarding.rc (${binaryData.size} bytes)")
     }
   ──────
-  ## 2. Deploying via GitHub Actions
+
+## 2. Deploying via GitHub Actions
 
   Since your SDUI file (onboarding.rc) is just a static binary asset, deploying it is incredibly cheap and easy. You don't need a Node.js backend or a Docker container. You
   just build the file and upload it to an S3 bucket attached to a CDN (CloudFront).
@@ -129,10 +131,12 @@
             run: |
               aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DIST_ID }} --paths "/ui/onboarding.rc"
 
-  ### How this architecture works:
+### How this architecture works
 
   1. You make a change to the UI in OnboardingGenerator.kt and push to GitHub.
   2. GitHub Actions compiles the Kotlin script into an onboarding.rc binary.
   3. The action pushes the binary to AWS S3 and clears the CloudFront CDN cache.
-  4. The next time a user opens the app, the Android app makes a request to https://d138545829.cloudfront.net/ui/onboarding.rc, downloads the new binary, and Jetpack
+  4. The next time a user opens the app, the Android app makes a request to <https://d138545829.cloudfront.net/ui/onboarding.rc>, downloads the new binary, and Jetpack
   Compose natively renders the new design without you ever deploying a new APK!
+
+-- now what we can do it, we can use a feature flag in posthog to get the no of onboarding as this is fast

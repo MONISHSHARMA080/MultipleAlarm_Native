@@ -288,4 +288,5 @@ dependencies {
     androidTestImplementation(libs.androidx.uiautomator.v240alpha05)
     implementation(libs.androidx.compose.remote.player.compose)
     implementation(libs.androidx.compose.remote.player.core)
+    implementation("androidx.compose.remote:remote-core:1.0.0-alpha21")
 }

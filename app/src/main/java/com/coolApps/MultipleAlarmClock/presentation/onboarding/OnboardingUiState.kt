@@ -2,6 +2,7 @@ package com.coolApps.MultipleAlarmClock.presentation.onboarding
 
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionStep
+import androidx.compose.remote.core.CoreDocument
 
 enum class ButtonState {
 	Enabled,
@@ -37,9 +38,12 @@ data class OnboardingUiState(
 	val askForNotificationPermission: Boolean = false,
 	val missingSteps: List<PermissionStep> = emptyList(),
 	val alarmData: AlarmData? = null,
-	val	allCriticalGranted: Boolean = false
+	val allCriticalGranted: Boolean = false,
+	val remoteDocument: CoreDocument? = null,
+	val remoteDocumentError: String? = null,
+	val isFetchingSdui: Boolean = false
 ){
 	override fun toString(): String {
-		return "OnboardingUiState: DisplayState: $displaySate , askForNotificationPermission: $askForNotificationPermission, alarmData: $alarmData, missingSteps: $missingSteps, allCriticalGranted: $allCriticalGranted   "
+		return "OnboardingUiState: DisplayState: $displaySate , askForNotificationPermission: $askForNotificationPermission, alarmData: $alarmData, missingSteps: $missingSteps, allCriticalGranted: $allCriticalGranted, remoteDocument: ${remoteDocument != null}, error: $remoteDocumentError"
 	}
 }

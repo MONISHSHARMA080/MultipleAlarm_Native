@@ -17,11 +17,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun OnboardingScreen(onNavigateToPaywall: (Boolean) -> Unit = {}) {
 	val viewModel: OnboardingViewModel = hiltViewModel()
-	val remoteDocument by viewModel.remoteDocument.collectAsStateWithLifecycle()
-	val remoteDocumentError by viewModel.remoteDocumentError.collectAsStateWithLifecycle()
+	val displayState by viewModel.displayState.collectAsStateWithLifecycle()
+	val remoteDocument = displayState.remoteDocument
+	val remoteDocumentError = displayState.remoteDocumentError
 
 	LaunchedEffect(Unit) {
-		viewModel.fetchRemoteDocument("https://d138545829.cloudfront.net/ui/onboarding.rc")
+		viewModel.fetchSduiDocument()
 	}
 
 	Scaffold { innerPadding ->

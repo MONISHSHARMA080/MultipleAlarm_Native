@@ -26,6 +26,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeout
 
 
 import com.coolApps.MultipleAlarmClock.domain.repository.RemoteUiRepository
@@ -67,24 +69,54 @@ import kotlinx.coroutines.flow.launchIn
 		_displayState.update { it.copy(missingSteps = missing, allCriticalGranted = allCriticalGranted ) }
 	}
 
-	private val _remoteDocument = MutableStateFlow<CoreDocument?>(null)
-	val remoteDocument = _remoteDocument.asStateFlow()
+	fun fetchSduiDocument() {
+		if (_displayState.value.isFetchingSdui || _displayState.value.remoteDocument != null) return
+		_displayState.update { it.copy(isFetchingSdui = true) }
 
-	private val _remoteDocumentError = MutableStateFlow<String?>(null)
-	val remoteDocumentError = _remoteDocumentError.asStateFlow()
-
-	fun fetchRemoteDocument(url: String) {
-		if (_remoteDocument.value != null) return // Cached
-		remoteUiRepository.fetchRemoteDocument(url)
-			.onEach { result ->
-				result.onSuccess { doc ->
-					_remoteDocument.value = doc
-					_remoteDocumentError.value = null
-				}.onFailure { err ->
-					_remoteDocumentError.value = err.message
+		viewModelScope.launch {
+			try {
+				kotlinx.coroutines.withTimeout(1500) {
+					// 1. Fetch flag
+					val result = com.posthog.PostHog.getFeatureFlagResult("onboarding_sdui_flow", sendFeatureFlagEvent = true)
+					
+					// 2. Extract URL
+					val url = when (val payload = result?.payload) {
+						is Map<*, *> -> payload["url"] as? String ?: throw IllegalStateException("No URL in payload map")
+						is String -> payload
+						else -> throw IllegalStateException("Invalid or missing payload")
+					}
+					
+					// 3. Fetch Remote Document
+					val docResult = remoteUiRepository.fetchRemoteDocument(url).first()
+					docResult.onSuccess { doc ->
+						_displayState.update { it.copy(remoteDocument = doc, remoteDocumentError = null, isFetchingSdui = false) }
+					}.onFailure { err ->
+						throw err
+					}
 				}
+			} catch (e: Exception) {
+				if (e is kotlinx.coroutines.CancellationException && e !is kotlinx.coroutines.TimeoutCancellationException) {
+					throw e
+				}
+				handleSduiFallback(e)
 			}
-			.launchIn(viewModelScope)
+		}
+	}
+
+	private suspend fun handleSduiFallback(e: Exception) {
+		// Log fallback
+		com.posthog.PostHog.capture(
+			event = "onboarding_sdui_fallback",
+			properties = mapOf("variant" to "fallback")
+		)
+		
+		// Load local fallback
+		val result = remoteUiRepository.fetchLocalDocument(context, com.coolApps.MultipleAlarmClock.R.raw.onboarding_fallback).first()
+		result.onSuccess { doc ->
+			_displayState.update { it.copy(remoteDocument = doc, remoteDocumentError = null, isFetchingSdui = false) }
+		}.onFailure { err ->
+			_displayState.update { it.copy(remoteDocumentError = err.message ?: "Failed to load fallback", isFetchingSdui = false) }
+		}
 	}
 
 	private var selectedStruggles = emptySet<String>()
