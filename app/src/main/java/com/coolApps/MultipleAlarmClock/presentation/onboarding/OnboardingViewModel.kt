@@ -28,9 +28,17 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 
+import com.coolApps.MultipleAlarmClock.domain.repository.RemoteUiRepository
+import androidx.compose.remote.core.CoreDocument
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.launchIn
+
 @HiltViewModel class OnboardingViewModel @Inject constructor(
 	val analytics: Analytics,
 	alarmRepository: AlarmRepository,
+	private val remoteUiRepository: RemoteUiRepository,
 	private val settingsDataStore: DataStore<Settings>,
 	private val alarmsController: AlarmsController,
 	private val alarmManager: AlarmManager,
@@ -57,6 +65,26 @@ import kotlinx.coroutines.launch
 		val missing = PermissionUtils.getRequiredPermissionSteps(context)
 		val allCriticalGranted = PermissionUtils.allCriticalPermissionsGranted(context)
 		_displayState.update { it.copy(missingSteps = missing, allCriticalGranted = allCriticalGranted ) }
+	}
+
+	private val _remoteDocument = MutableStateFlow<CoreDocument?>(null)
+	val remoteDocument = _remoteDocument.asStateFlow()
+
+	private val _remoteDocumentError = MutableStateFlow<String?>(null)
+	val remoteDocumentError = _remoteDocumentError.asStateFlow()
+
+	fun fetchRemoteDocument(url: String) {
+		if (_remoteDocument.value != null) return // Cached
+		remoteUiRepository.fetchRemoteDocument(url)
+			.onEach { result ->
+				result.onSuccess { doc ->
+					_remoteDocument.value = doc
+					_remoteDocumentError.value = null
+				}.onFailure { err ->
+					_remoteDocumentError.value = err.message
+				}
+			}
+			.launchIn(viewModelScope)
 	}
 
 	private var selectedStruggles = emptySet<String>()

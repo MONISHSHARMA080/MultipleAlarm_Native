@@ -1,6 +1,7 @@
 [versions]
 accompanistPermissions = "0.37.3"
 agp = "9.3.3"
+composeRemote = "1.0.0-alpha21"
 coreSplashscreen = "1.2.0"
 datastore = "1.2.1"
 firebaseBom = "34.19.0"
@@ -124,6 +125,8 @@ robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectr
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
 androidx-compose-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
+androidx-compose-remote-player-compose = { group = "androidx.compose.remote", name = "remote-player-compose", version.ref = "composeRemote" }
+androidx-compose-remote-player-core = { group = "androidx.compose.remote", name = "remote-player-core", version.ref = "composeRemote" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

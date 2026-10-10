@@ -286,4 +286,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     androidTestImplementation(libs.androidx.uiautomator.v240alpha05)
+    implementation(libs.androidx.compose.remote.player.compose)
+    implementation(libs.androidx.compose.remote.player.core)
 }
