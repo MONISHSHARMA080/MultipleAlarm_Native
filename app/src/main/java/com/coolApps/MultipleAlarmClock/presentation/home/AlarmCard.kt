@@ -165,8 +165,7 @@ import kotlin.math.abs
 							sharedContentState = rememberSharedContentState(key = "alarm_card_${alarmData.id}"),
 							animatedVisibilityScope = animatedVisibilityScope,
 							clipInOverlayDuringTransition = OverlayClip(cardShape),
-							boundsTransform = AlarmContainerBoundsTransform,
-							resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds
+							boundsTransform = AlarmContainerBoundsTransform
 						)
 						.clip(cardShape)
 						.combinedClickable(
