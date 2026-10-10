@@ -17,6 +17,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.style.TextAlign
+
 @Composable
 fun RemoteContent(
     document: CoreDocument?,
@@ -26,20 +31,20 @@ fun RemoteContent(
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         when {
             errorMessage != null -> {
-                androidx.compose.foundation.layout.Column(
+                Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
                         text = "Welcome to Multiple Alarm Clock",
-                        style = androidx.compose.material3.MaterialTheme.typography.headlineMedium,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        style = MaterialTheme.typography.headlineMedium,
+                        textAlign = TextAlign.Center
                     )
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "Let's set up your first alarm.",
-                        style = androidx.compose.material3.MaterialTheme.typography.bodyLarge,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center
                     )
                 }
             }

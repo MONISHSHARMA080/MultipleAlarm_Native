@@ -127,6 +127,16 @@ class Analytics(
 		}
 	}
 
+	fun getFeatureFlagUrlPayload(flagKey: String): String? {
+		if (!isEnabled) return null
+		val result = PostHog.getFeatureFlagResult(flagKey, sendFeatureFlagEvent = isEnabled)
+		return when (val payload = result?.payload) {
+			is Map<*, *> -> payload["url"] as? String
+			is String -> payload
+			else -> null
+		}
+	}
+
 
 	private fun loadFeatureFlagsFromPostHog() {
 		if (!isEnabled) return

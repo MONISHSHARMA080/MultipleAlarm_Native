@@ -83,6 +83,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -124,7 +125,7 @@ fun SettingsCard(
 		color = colorScheme.surfaceContainer,
 		modifier = modifier.fillMaxWidth()
 	) {
-		val density = androidx.compose.ui.platform.LocalDensity.current
+		val density = LocalDensity.current
 		val initialScroll = remember(animateScroll) { 
 			if (animateScroll) with(density) { 62.dp.toPx().toInt() } else 0 
 		}

@@ -1,6 +1,7 @@
 package com.coolApps.MultipleAlarmClock.presentation.onboarding
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -93,7 +94,7 @@ fun UserStrugglesScreen(
                     colors = CardDefaults.cardColors(
                         containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
                     ),
-                    border = if (isSelected) null else androidx.compose.foundation.BorderStroke(
+                    border = if (isSelected) null else BorderStroke(
                         1.dp,
                         MaterialTheme.colorScheme.outlineVariant
                     ),

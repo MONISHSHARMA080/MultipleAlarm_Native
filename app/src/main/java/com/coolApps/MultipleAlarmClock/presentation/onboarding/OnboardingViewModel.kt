@@ -1,5 +1,6 @@
 package com.coolApps.MultipleAlarmClock.presentation.onboarding
 
+
 import android.app.AlarmManager
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -9,6 +10,7 @@ import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.preferences.Settings
 import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.domain.repository.AlarmRepository
+import com.coolApps.MultipleAlarmClock.domain.repository.RemoteUiRepository
 import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionUtils
 import com.coolApps.MultipleAlarmClock.util.Analytics
@@ -20,22 +22,17 @@ import com.revenuecat.purchases.models.StoreTransaction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeout
-
-
-import com.coolApps.MultipleAlarmClock.domain.repository.RemoteUiRepository
-import androidx.compose.remote.core.CoreDocument
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.launchIn
+import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel class OnboardingViewModel @Inject constructor(
 	val analytics: Analytics,
@@ -75,16 +72,10 @@ import kotlinx.coroutines.flow.launchIn
 
 		viewModelScope.launch {
 			try {
-				kotlinx.coroutines.withTimeout(1500) {
-					// 1. Fetch flag
-					val result = com.posthog.PostHog.getFeatureFlagResult("onboarding_sdui_flow", sendFeatureFlagEvent = true)
-					
-					// 2. Extract URL
-					val url = when (val payload = result?.payload) {
-						is Map<*, *> -> payload["url"] as? String ?: throw IllegalStateException("No URL in payload map")
-						is String -> payload
-						else -> throw IllegalStateException("Invalid or missing payload")
-					}
+				withTimeout(1500.milliseconds) {
+					// 1. & 2. Fetch flag and extract URL
+					val url = analytics.getFeatureFlagUrlPayload("onboarding_sdui_flow")
+						?: throw IllegalStateException("Invalid or missing payload")
 					
 					// 3. Fetch Remote Document
 					val docResult = remoteUiRepository.fetchRemoteDocument(url).first()
@@ -95,7 +86,7 @@ import kotlinx.coroutines.flow.launchIn
 					}
 				}
 			} catch (e: Exception) {
-				if (e is kotlinx.coroutines.CancellationException && e !is kotlinx.coroutines.TimeoutCancellationException) {
+				if (e is CancellationException && e !is TimeoutCancellationException) {
 					throw e
 				}
 				handleSduiFallback(e)
@@ -105,18 +96,12 @@ import kotlinx.coroutines.flow.launchIn
 
 	private suspend fun handleSduiFallback(e: Exception) {
 		// Log fallback
-		com.posthog.PostHog.capture(
+		_displayState.update { it.copy(remoteDocumentError = e.message ?: "Failed to fetch SDUI", isFetchingSdui = false) }
+		analytics.captureEvent(
 			event = "onboarding_sdui_fallback",
 			properties = mapOf("variant" to "fallback")
 		)
 		
-		// Load local fallback
-		val result = remoteUiRepository.fetchLocalDocument(context, com.coolApps.MultipleAlarmClock.R.raw.onboarding_fallback).first()
-		result.onSuccess { doc ->
-			_displayState.update { it.copy(remoteDocument = doc, remoteDocumentError = null, isFetchingSdui = false) }
-		}.onFailure { err ->
-			_displayState.update { it.copy(remoteDocumentError = err.message ?: "Failed to load fallback", isFetchingSdui = false) }
-		}
 	}
 
 	private var selectedStruggles = emptySet<String>()

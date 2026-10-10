@@ -25,7 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -55,48 +54,11 @@ import com.revenuecat.purchases.Purchases
 import com.revenuecat.purchases.PurchasesException
 import com.revenuecat.purchases.awaitOfferings
 
-@Composable
-fun OnboardingScreen(onNavigateToPaywall: (Boolean) -> Unit = {}) {
-	val viewModel: OnboardingViewModel = hiltViewModel()
-	val displayState by viewModel.displayState.collectAsStateWithLifecycle()
-	val remoteDocument = displayState.remoteDocument
-	val remoteDocumentError = displayState.remoteDocumentError
-
-	LaunchedEffect(Unit) {
-		viewModel.fetchSduiDocument()
-	}
-
-	if (remoteDocumentError != null) {
-		NativeOnboardingFlow(onNavigateToPaywall = onNavigateToPaywall, viewModel = viewModel)
-	} else if (remoteDocument != null) {
-		Scaffold { innerPadding ->
-			Box(
-				modifier = Modifier
-					.fillMaxSize()
-					.padding(innerPadding)
-			) {
-				RemoteContent(
-					document = remoteDocument,
-					errorMessage = null
-				)
-			}
-		}
-	} else {
-		Scaffold { innerPadding ->
-			Box(
-				modifier = Modifier
-					.fillMaxSize()
-					.padding(innerPadding),
-				contentAlignment = Alignment.Center
-			) {
-				CircularProgressIndicator()
-			}
-		}
-	}
-}
 
 @OptIn(ExperimentalPermissionsApi::class)
-@Composable fun NativeOnboardingFlow(onNavigateToPaywall: (Boolean) -> Unit = {}, viewModel: OnboardingViewModel) {
+@Composable fun OnboardingScreen(onNavigateToPaywall: (Boolean) -> Unit = {}) {
+	val viewModel : OnboardingViewModel = hiltViewModel()
+
 	val uiState by viewModel.displayState.collectAsStateWithLifecycle()
 	val featureFlags by viewModel.analytics.featureFlagsData.collectAsStateWithLifecycle()
 	val isHardPaywall = featureFlags?.isHardPaywallEnabled ?: false
