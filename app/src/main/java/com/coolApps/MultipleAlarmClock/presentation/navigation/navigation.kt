@@ -196,15 +196,10 @@ import kotlinx.coroutines.launch
 			animationSpec = tween(290, easing = LinearEasing)
 		)
 	) {
-		PremiumPaywallDialog(false,
-			onEvent = { event ->
-				when(event) {
-					is PaywallEvent.PurchaseCompleted -> navViewModel.onPurchaseCompletedEvent(event.customerInfo, event.transaction)
-					is PaywallEvent.RestoreCompleted -> navViewModel.onRestoreCompletedEvent(event.customerInfo)
-					else -> {} // Handle analytics for started, cancelled, error, etc.
-				}
-			}
-			) {
+		PremiumPaywallDialog(
+			isPlus = false,
+			onEvent = navViewModel::onPaywallEvent
+		) {
 			showPaywall = false
 			coroutineScope.launch {
 				navViewModel.captureEvent("paywall_dismissed", mapOf())

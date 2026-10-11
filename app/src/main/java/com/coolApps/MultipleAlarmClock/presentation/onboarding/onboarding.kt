@@ -216,27 +216,10 @@ import com.revenuecat.purchases.awaitOfferings
 							onFinished = { viewModel.finishedOnboarding() },
 							loadFailed = loadFailed, offering = offering,
 							onEvent = { event ->
-								when (event) {
-									is PaywallEvent.PurchaseCompleted -> {
-										if (isHardPaywall) {
-											uiState.alarmData?.let { viewModel.resetAlarm(it) }
-										}
-										viewModel.onPurchaseCompletedEvent(event.customerInfo, event.transaction)
-									}
-									is PaywallEvent.RestoreCompleted -> {
-										if (isHardPaywall) {
-											uiState.alarmData?.let { alarm -> viewModel.resetAlarm(alarm) }
-										}
-										viewModel.onRestoreCompletedEvent(event.customerInfo)
-									}
-									is PaywallEvent.PurchaseError -> {
-										viewModel.onPurchaseError(event.error)
-									}
-									is PaywallEvent.PurchaseCancelled -> {
-										viewModel.onPurchaseCancelled()
-									}
-									else -> {} 
+								if (isHardPaywall && (event is PaywallEvent.PurchaseCompleted || event is PaywallEvent.RestoreCompleted)) {
+									uiState.alarmData?.let { alarm -> viewModel.resetAlarm(alarm) }
 								}
+								viewModel.onPaywallEvent(event)
 							},
 							onButtonStateChange = { buttonState = it }
 						)

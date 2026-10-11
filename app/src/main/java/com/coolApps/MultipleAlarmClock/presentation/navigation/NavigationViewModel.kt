@@ -5,11 +5,9 @@ import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.data.preferences.Settings
+import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallEvent
 import com.coolApps.MultipleAlarmClock.util.Analytics
 import com.coolApps.MultipleAlarmClock.util.TrialReminderScheduler
-import com.coolApps.MultipleAlarmClock.util.toAnalyticsString
-import com.revenuecat.purchases.CustomerInfo
-import com.revenuecat.purchases.models.StoreTransaction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.SharingStarted
@@ -41,20 +39,15 @@ class NavigationViewModel @Inject constructor(
 		}
 	}
 	
-	fun onPurchaseCompletedEvent(customerInfo: CustomerInfo, storeTransaction: StoreTransaction){
+	fun onPaywallEvent(event: PaywallEvent) {
 		viewModelScope.launch {
-			analytics.captureEvent("purchase_completed",mapOf(
-				"customerInfo" to customerInfo.toString(),
-				"storeTransaction" to storeTransaction.toAnalyticsString(),
-			))
-			TrialReminderScheduler.scheduleIfOnTrial(context, customerInfo)
-		}
-	}
-	fun onRestoreCompletedEvent(customerInfo:CustomerInfo){
-		viewModelScope.launch {
-			analytics.captureEvent("restore_completed",mapOf(
-				"customerInfo" to customerInfo.toString()
-			))
+			analytics.captureEvent(event.eventName, event.eventParams)
+			when (event) {
+				is PaywallEvent.PurchaseCompleted -> {
+					TrialReminderScheduler.scheduleIfOnTrial(context, event.customerInfo)
+				}
+				else -> Unit
+			}
 		}
 	}
 

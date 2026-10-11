@@ -10,13 +10,10 @@ import com.coolApps.MultipleAlarmClock.data.preferences.Settings
 import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.domain.repository.AlarmRepository
 import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
+import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallEvent
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionUtils
 import com.coolApps.MultipleAlarmClock.util.Analytics
 import com.coolApps.MultipleAlarmClock.util.TrialReminderScheduler
-import com.coolApps.MultipleAlarmClock.util.toAnalyticsString
-import com.revenuecat.purchases.CustomerInfo
-import com.revenuecat.purchases.PurchasesError
-import com.revenuecat.purchases.models.StoreTransaction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
@@ -139,28 +136,15 @@ import kotlinx.coroutines.launch
 	}
 
 
-	fun onPurchaseError(error: PurchasesError){
+	fun onPaywallEvent(event: PaywallEvent) {
 		viewModelScope.launch {
-			analytics.captureEvent("purchase_error_ocurred",mapOf(
-				"purchase_error" to error.toString(),
-			))
-		}
-	}
-
-	fun onPurchaseCompletedEvent(customerInfo: CustomerInfo, storeTransaction: StoreTransaction){
-		viewModelScope.launch {
-			analytics.captureEvent("purchase_completed",mapOf(
-				"customerInfo" to customerInfo.toString(),
-				"storeTransaction" to storeTransaction.toAnalyticsString(),
-			))
-			TrialReminderScheduler.scheduleIfOnTrial(context, customerInfo)
-		}
-	}
-	fun onRestoreCompletedEvent(customerInfo:CustomerInfo){
-		viewModelScope.launch {
-			analytics.captureEvent("restore_completed",mapOf(
-				"customerInfo" to customerInfo.toString()
-			))
+			analytics.captureEvent(event.eventName, event.eventParams)
+			when (event) {
+				is PaywallEvent.PurchaseCompleted -> {
+					TrialReminderScheduler.scheduleIfOnTrial(context, event.customerInfo)
+				}
+				else -> Unit
+			}
 		}
 	}
 
@@ -208,11 +192,5 @@ import kotlinx.coroutines.launch
 				 }
 			 }
 		 }
-	}
-
-	fun onPurchaseCancelled() {
-		viewModelScope.launch {
-			analytics.captureEvent("purchase_cancelled", mapOf())
-		}
 	}
 }
