@@ -19,25 +19,31 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallListener
 import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 import com.revenuecat.purchases.ui.revenuecatui.customercenter.CustomerCenter
 
+import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallEvent
+import com.revenuecat.purchases.Package
+import com.revenuecat.purchases.PurchasesError
+
 @Composable
 fun PremiumPaywallDialog(
 		isPlus: Boolean,
-		onPurchaseCompletedEvent:(customerInfo:CustomerInfo,storeTransaction: StoreTransaction)->Unit,
-		onRestoreCompletedEvent:(customerInfo:CustomerInfo)->Unit,
+		onEvent: (PaywallEvent) -> Unit,
 		onDismiss: () -> Unit
 ) {
 	val paywallOptions = remember {
 		PaywallOptions.Builder(dismissRequest = onDismiss)
 			.setListener(object : PaywallListener {
-				override fun onPurchaseCompleted(
-						customerInfo: CustomerInfo,
-						storeTransaction: StoreTransaction
-				) {
-					onPurchaseCompletedEvent(customerInfo, storeTransaction)
+				override fun onPurchaseStarted(rcPackage: Package) = onEvent(PaywallEvent.PurchaseStarted(rcPackage))
+				override fun onPurchaseCancelled() = onEvent(PaywallEvent.PurchaseCancelled)
+				override fun onPurchaseError(error: PurchasesError) = onEvent(PaywallEvent.PurchaseError(error))
+				override fun onRestoreStarted() = onEvent(PaywallEvent.RestoreStarted)
+				override fun onRestoreError(error: PurchasesError) = onEvent(PaywallEvent.RestoreError(error))
+				
+				override fun onPurchaseCompleted(customerInfo: CustomerInfo, storeTransaction: StoreTransaction) {
+					onEvent(PaywallEvent.PurchaseCompleted(customerInfo, storeTransaction))
 					onDismiss()
 				}
 				override fun onRestoreCompleted(customerInfo: CustomerInfo) {
-					onRestoreCompletedEvent(customerInfo)
+					onEvent(PaywallEvent.RestoreCompleted(customerInfo))
 					onDismiss()
 				}
 			})

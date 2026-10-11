@@ -43,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
+import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallEvent
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -214,23 +215,28 @@ import com.revenuecat.purchases.awaitOfferings
 							},
 							onFinished = { viewModel.finishedOnboarding() },
 							loadFailed = loadFailed, offering = offering,
-							onPurchaseCompletedEvent = {customerInfo, storeTransaction -> 
-								if (isHardPaywall) {
-									uiState.alarmData?.let { viewModel.resetAlarm(it) }
+							onEvent = { event ->
+								when (event) {
+									is PaywallEvent.PurchaseCompleted -> {
+										if (isHardPaywall) {
+											uiState.alarmData?.let { viewModel.resetAlarm(it) }
+										}
+										viewModel.onPurchaseCompletedEvent(event.customerInfo, event.transaction)
+									}
+									is PaywallEvent.RestoreCompleted -> {
+										if (isHardPaywall) {
+											uiState.alarmData?.let { alarm -> viewModel.resetAlarm(alarm) }
+										}
+										viewModel.onRestoreCompletedEvent(event.customerInfo)
+									}
+									is PaywallEvent.PurchaseError -> {
+										viewModel.onPurchaseError(event.error)
+									}
+									is PaywallEvent.PurchaseCancelled -> {
+										viewModel.onPurchaseCancelled()
+									}
+									else -> {} 
 								}
-								viewModel.onPurchaseCompletedEvent(customerInfo,storeTransaction) 
-							},
-							onRestoreCompletedEvent = {
-								if (isHardPaywall) {
-									uiState.alarmData?.let { alarm-> viewModel.resetAlarm(alarm) }
-								}
-								viewModel.onRestoreCompletedEvent(it)
-							},
-							onPurchaseError = { err ->
-								viewModel.onPurchaseError(err)
-							},
-							onPurchaseCancelledEvent = {
-								viewModel.onPurchaseCancelled()
 							},
 							onButtonStateChange = { buttonState = it }
 						)

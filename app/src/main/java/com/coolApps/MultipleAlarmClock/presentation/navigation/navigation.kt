@@ -38,6 +38,7 @@ import com.coolApps.MultipleAlarmClock.presentation.picker.EditAlarmFlowScreen
 import com.coolApps.MultipleAlarmClock.presentation.picker.NewAlarmFlowScreen
 import com.coolApps.MultipleAlarmClock.presentation.settings.PremiumPaywallDialog
 import com.coolApps.MultipleAlarmClock.presentation.settings.SettingsScreen
+import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallEvent
 import com.revenuecat.purchases.ui.revenuecatui.Paywall
 import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 import com.revenuecat.purchases.ui.revenuecatui.customercenter.CustomerCenter
@@ -196,8 +197,13 @@ import kotlinx.coroutines.launch
 		)
 	) {
 		PremiumPaywallDialog(false,
-			onPurchaseCompletedEvent = {customerInfo, storeTransaction -> navViewModel.onPurchaseCompletedEvent(customerInfo,storeTransaction) },
-			onRestoreCompletedEvent = { navViewModel.onRestoreCompletedEvent(it) }
+			onEvent = { event ->
+				when(event) {
+					is PaywallEvent.PurchaseCompleted -> navViewModel.onPurchaseCompletedEvent(event.customerInfo, event.transaction)
+					is PaywallEvent.RestoreCompleted -> navViewModel.onRestoreCompletedEvent(event.customerInfo)
+					else -> {} // Handle analytics for started, cancelled, error, etc.
+				}
+			}
 			) {
 			showPaywall = false
 			coroutineScope.launch {

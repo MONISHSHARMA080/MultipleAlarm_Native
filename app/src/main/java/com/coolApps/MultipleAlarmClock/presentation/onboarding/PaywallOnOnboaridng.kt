@@ -26,6 +26,9 @@ import com.revenuecat.purchases.ui.revenuecatui.Paywall
 import com.revenuecat.purchases.ui.revenuecatui.PaywallListener
 import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 
+import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallEvent
+import com.revenuecat.purchases.Package
+
 @OptIn(ExperimentalPreviewRevenueCatUIPurchasesAPI::class)
 
 @Composable
@@ -33,11 +36,8 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 		isHardPaywall: Boolean,
 		onBackPress: () -> Unit,
 		onFinished: () -> Unit, offering: Offering?, loadFailed: Boolean,
-		onPurchaseCompletedEvent: (customerInfo: CustomerInfo, storeTransaction: StoreTransaction) -> Unit,
-		onRestoreCompletedEvent: (customerInfo: CustomerInfo) -> Unit,
-		onButtonStateChange: (ButtonState) -> Unit ,
-		onPurchaseCancelledEvent: () -> Unit ,
-		onPurchaseError: (PurchasesError) -> Unit
+		onButtonStateChange: (ButtonState) -> Unit,
+		onEvent: (PaywallEvent) -> Unit
 ) {
 	onButtonStateChange(ButtonState.Hidden)
 	BackHandler {
@@ -58,24 +58,21 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 					)
 						.setOffering(offering)
 						.setListener(object : PaywallListener {
-							override fun onPurchaseError(error: PurchasesError) {
-								onPurchaseError(error)
-							}
-							override fun onPurchaseCancelled() {
-								onPurchaseCancelledEvent()
-							}
-							override fun onPurchaseCompleted(
-									customerInfo: CustomerInfo,
-									storeTransaction: StoreTransaction
-							) {
-								onPurchaseCompletedEvent(customerInfo,storeTransaction)
+							override fun onPurchaseStarted(rcPackage: Package) = onEvent(PaywallEvent.PurchaseStarted(rcPackage))
+							override fun onPurchaseCancelled() = onEvent(PaywallEvent.PurchaseCancelled)
+							override fun onPurchaseError(error: PurchasesError) = onEvent(PaywallEvent.PurchaseError(error))
+							override fun onRestoreStarted() = onEvent(PaywallEvent.RestoreStarted)
+							override fun onRestoreError(error: PurchasesError) = onEvent(PaywallEvent.RestoreError(error))
+							
+							override fun onPurchaseCompleted(customerInfo: CustomerInfo, storeTransaction: StoreTransaction) {
+								onEvent(PaywallEvent.PurchaseCompleted(customerInfo, storeTransaction))
 								onFinished()
 							}
+							
 							override fun onRestoreCompleted(customerInfo: CustomerInfo) {
-								// Restore "completing" only means the request succeeded, not that the user owns premium.
+								onEvent(PaywallEvent.RestoreCompleted(customerInfo))
 								val hasPremium = customerInfo.entitlements[RevenueCatEntitlements.PREMIUM]?.isActive == true
 								if (hasPremium) {
-									onRestoreCompletedEvent(customerInfo)
 									onFinished()
 								}
 							}
