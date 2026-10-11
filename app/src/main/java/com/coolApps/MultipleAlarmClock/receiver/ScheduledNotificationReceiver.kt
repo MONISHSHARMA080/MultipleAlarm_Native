@@ -9,7 +9,6 @@ import com.coolApps.MultipleAlarmClock.presentation.navigation.Screen
 import com.coolApps.MultipleAlarmClock.util.Analytics
 import com.coolApps.MultipleAlarmClock.util.NotificationChannelType
 import com.coolApps.MultipleAlarmClock.util.NotificationHandler
-import com.coolApps.MultipleAlarmClock.util.OfflineNotificationContent
 import com.coolApps.MultipleAlarmClock.util.OfflineNotificationTimeSlot
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
@@ -76,6 +75,7 @@ class ScheduledNotificationReceiver : BroadcastReceiver() {
 			mapOf(
 				"slot" to slot.slotName,
 				"title" to title,
+				"message" to message,
 				"source" to "ScheduledNotificationReceiver"
 			)
 		)
