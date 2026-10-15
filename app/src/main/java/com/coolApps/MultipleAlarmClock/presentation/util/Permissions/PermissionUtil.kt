@@ -3,9 +3,7 @@ package com.coolApps.MultipleAlarmClock.presentation.util.Permissions
 import android.Manifest
 import android.app.AlarmManager
 import android.app.NotificationManager
-import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.ContextCompat
@@ -26,11 +24,8 @@ object PermissionUtils {
 			true
 		}
 
-	fun isXiaomiDevice(): Boolean = Build.MANUFACTURER.equals("xiaomi", ignoreCase = true)
-
 	/**
-	 * All "hard" permissions are granted. Xiaomi autostart is
-	 * advisory and intentionally excluded from this check.
+	 * All "hard" permissions are granted.
 	 */
 	fun allCriticalPermissionsGranted(context: Context): Boolean = isPostNotificationsGranted(context) && isFullScreenIntentGranted(context)
 
@@ -56,24 +51,6 @@ object PermissionUtils {
 
 		}
 
-		// Xiaomi specific check
-		if (isXiaomiDevice()) {
-			// Note: You'll need a custom check here as there's no standard API
-			// for "autostart", usually handled by checking a preference or just showing it once.
-			missingSteps.add(PermissionStep.XiaomiAutostart)
-			logD("isXiaomiDevice")
-
-		}
-
 		return missingSteps
-	}
-	fun launchXiaomiSettings(context: Context) {
-		val intent = Intent().apply {
-			component = ComponentName(
-				"com.miui.securitycenter",
-				"com.miui.permcenter.autostart.AutoStartManagementActivity"
-			)
-		}
-		try { context.startActivity(intent) } catch (e: Exception) { /* Fallback to settings */ }
 	}
 }

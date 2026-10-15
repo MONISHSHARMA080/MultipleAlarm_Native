@@ -17,17 +17,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.billing.EntitlementManager.RevenueCatEntitlements
+import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallEvent
 import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.Offering
+import com.revenuecat.purchases.Package
 import com.revenuecat.purchases.PurchasesError
 import com.revenuecat.purchases.models.StoreTransaction
 import com.revenuecat.purchases.ui.revenuecatui.ExperimentalPreviewRevenueCatUIPurchasesAPI
 import com.revenuecat.purchases.ui.revenuecatui.Paywall
 import com.revenuecat.purchases.ui.revenuecatui.PaywallListener
 import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
-
-import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallEvent
-import com.revenuecat.purchases.Package
 
 @OptIn(ExperimentalPreviewRevenueCatUIPurchasesAPI::class)
 
@@ -63,7 +62,6 @@ import com.revenuecat.purchases.Package
 							override fun onPurchaseError(error: PurchasesError) = onEvent(PaywallEvent.PurchaseError(error))
 							override fun onRestoreStarted() = onEvent(PaywallEvent.RestoreStarted)
 							override fun onRestoreError(error: PurchasesError) = onEvent(PaywallEvent.RestoreError(error))
-							
 							override fun onPurchaseCompleted(customerInfo: CustomerInfo, storeTransaction: StoreTransaction) {
 								onEvent(PaywallEvent.PurchaseCompleted(customerInfo, storeTransaction))
 								onFinished()

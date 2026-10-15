@@ -67,7 +67,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionStep
-import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionUtils
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -274,9 +273,6 @@ fun PermissionScreen(
 											}
 										)
 									}
-								}
-								PermissionStep.XiaomiAutostart -> {
-									PermissionUtils.launchXiaomiSettings(context)
 								}
 							}
 

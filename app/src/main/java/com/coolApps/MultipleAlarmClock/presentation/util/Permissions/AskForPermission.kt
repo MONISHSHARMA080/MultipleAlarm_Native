@@ -35,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -168,20 +167,8 @@ fun AlarmPermissionDialog(
 										)
 									}
 								}
-								PermissionStep.XiaomiAutostart -> {
-									PermissionUtils.launchXiaomiSettings(context)
-								}
 							}
 						}
-					)
-				}
-
-				if (currentMissingSteps.any { it == PermissionStep.XiaomiAutostart } && currentMissingSteps.size == 1) {
-					Text(
-						text = stringResource(R.string.permission_dialog_autostart_advisory),
-						style = MaterialTheme.typography.labelMedium,
-						fontStyle = FontStyle.Italic,
-						color = MaterialTheme.colorScheme.onSurfaceVariant
 					)
 				}
 			}
@@ -246,7 +233,7 @@ private fun PermissionStepRow(
 					text = stringResource(
 						when {
 							isPermanentlyDenied -> R.string.permission_dialog_btn_open_settings
-							step.action != null || step == PermissionStep.XiaomiAutostart -> R.string.permission_dialog_btn_open_settings
+							step.action != null -> R.string.permission_dialog_btn_open_settings
 							else -> R.string.permission_dialog_btn_allow
 						}
 					)
