@@ -4,17 +4,23 @@ import android.app.Activity
 import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.activity.compose.ReportDrawnWhen
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -33,17 +39,20 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AlarmAdd
 import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +61,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -63,6 +73,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -88,7 +99,7 @@ import kotlinx.coroutines.launch
 import java.util.Calendar
 
 
-@OptIn(ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable fun AlarmContainer(
 	onNavigateToEdit: (AlarmData) -> Unit, onNavigateToCreate: () -> Unit, onNavigateToSettings:()->Unit,
 	sharedTransitionScope: SharedTransitionScope, animatedVisibilityScope: AnimatedVisibilityScope
@@ -156,12 +167,13 @@ import java.util.Calendar
 				hostState = snackBarHostState,
 				modifier = Modifier
 					.align(Alignment.BottomCenter)
-					.padding(bottom = 106.dp)
+					.padding(bottom = 112.dp, start = 16.dp, end = 16.dp)
+					.widthIn(max = 560.dp)
 					.zIndex(10f)
 			) { snackBarData ->
 				Snackbar(
 					snackbarData = snackBarData,
-					shape = RoundedCornerShape(45.dp),
+					shape = RoundedCornerShape(20.dp),
 					containerColor = colorScheme.inverseSurface,
 					contentColor = colorScheme.inverseOnSurface,
 					modifier = Modifier.fillMaxWidth()
@@ -180,38 +192,25 @@ import java.util.Calendar
 				}
 			}
 
+			val activeCount = remember(alarmList) { alarmList?.count { it.isReadyToUse } ?: 0 }
+
 			LazyVerticalGrid(
-				columns = GridCells.Adaptive(minSize = 500.dp),
+				columns = GridCells.Adaptive(minSize = 360.dp),
 				modifier = Modifier.fillMaxSize(),
 				contentPadding = PaddingValues(
-					start = edgeToEdgePadding.calculateStartPadding(LocalLayoutDirection.current),
-					top = edgeToEdgePadding.calculateTopPadding(),
-					end = edgeToEdgePadding.calculateEndPadding(LocalLayoutDirection.current),
+					start = edgeToEdgePadding.calculateStartPadding(LocalLayoutDirection.current) + 6.dp,
+					top = edgeToEdgePadding.calculateTopPadding() + 8.dp,
+					end = edgeToEdgePadding.calculateEndPadding(LocalLayoutDirection.current) + 6.dp,
 					bottom = edgeToEdgePadding.calculateBottomPadding() + 155.dp
 				),
-				horizontalArrangement = Arrangement.spacedBy(0.dp),
-				verticalArrangement = Arrangement.spacedBy(0.dp)
+				horizontalArrangement = Arrangement.spacedBy(8.dp),
+				verticalArrangement = Arrangement.spacedBy(4.dp)
 			) {
-				item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
-					Row(
-						modifier = Modifier
-							.fillMaxWidth()
-							.padding(bottom = 23.dp, end = 10.dp),
-						horizontalArrangement = Arrangement.End,
-						verticalAlignment = Alignment.CenterVertically
-					) {
-						FilledTonalIconButton(
-							onClick = onNavigateToSettings,
-							modifier = Modifier.size(45.dp),
-							shape = RoundedCornerShape(18.dp)
-						) {
-							Icon(
-								imageVector = Icons.Outlined.Settings,
-								contentDescription = stringResource(R.string.settings_content_description),
-								modifier = Modifier.size(24.dp)
-							)
-						}
-					}
+				item(span = { GridItemSpan(maxLineSpan) }) {
+					TopBar(
+						activeAlarmCount = activeCount,
+						onNavigateToSettings = onNavigateToSettings
+					)
 				}
 
 				alarmList?.let { list ->
@@ -245,14 +244,16 @@ import java.util.Calendar
 							},
 							sharedTransitionScope = sharedTransitionScope,
 							animatedVisibilityScope = animatedVisibilityScope,
-							modifier = Modifier.animateItem()
+							modifier = Modifier.animateItem(
+								placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+							)
 						)
 					}
 				}
 			}
 
 			if (alarmList?.isEmpty() == true) {
-				EmptyState(
+				EmptyAlarmsView(
 					modifier = Modifier
 						.fillMaxSize()
 						.padding(edgeToEdgePadding)
@@ -265,71 +266,232 @@ import java.util.Calendar
 					.align(Alignment.BottomCenter)
 					.padding(bottom = edgeToEdgePadding.calculateBottomPadding() + 20.dp)
 			) {
-				AddAlarmButton(
-					onClick = {
-						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-						onNavigateToCreate()
-				  },
+				AnimatedVisibility(
+					visible = alarmList != null,
+					enter = scaleIn(
+						initialScale = 0.8f,
+						animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+					) + fadeIn(
+						animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
+					),
+					exit = scaleOut(
+						targetScale = 0.8f,
+						animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
+					) + fadeOut(
+						animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
+					)
+				) {
+					AddAlarmButton(
+						onClick = {
+							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+							onNavigateToCreate()
+						},
+					)
+				}
+			}
+		}
+	}
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun TopBar(
+	activeAlarmCount: Int,
+	onNavigateToSettings: () -> Unit,
+	modifier: Modifier = Modifier
+) {
+	val interactionSource = remember { MutableInteractionSource() }
+	val isPressed by interactionSource.collectIsPressedAsState()
+	val buttonCorner by animateDpAsState(
+		targetValue = if (isPressed) 22.dp else 14.dp,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "settingsCorner"
+	)
+	val buttonScale by animateFloatAsState(
+		targetValue = if (isPressed) 0.92f else 1f,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "settingsScale"
+	)
+
+	Row(
+		modifier = modifier
+			.fillMaxWidth()
+			.padding(start = 14.dp, end = 10.dp, top = 6.dp, bottom = 18.dp),
+		horizontalArrangement = Arrangement.SpaceBetween,
+		verticalAlignment = Alignment.CenterVertically
+	) {
+		Row(
+			verticalAlignment = Alignment.CenterVertically,
+			horizontalArrangement = Arrangement.spacedBy(12.dp)
+		) {
+			Text(
+				text = stringResource(R.string.app_name),
+				style = MaterialTheme.typography.headlineMedium,
+				fontWeight = FontWeight.ExtraBold,
+				color = colorScheme.onSurface
+			)
+			AnimatedVisibility(
+				visible = activeAlarmCount > 0,
+				enter = scaleIn(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()) +
+					fadeIn(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()),
+				exit = scaleOut(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()) +
+					fadeOut(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec())
+			) {
+				Surface(
+					shape = CircleShape,
+					color = colorScheme.secondaryContainer,
+					contentColor = colorScheme.onSecondaryContainer
+				) {
+					Text(
+						text = "$activeAlarmCount active",
+						style = MaterialTheme.typography.labelMedium,
+						fontWeight = FontWeight.Bold,
+						modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+					)
+				}
+			}
+		}
+
+		Surface(
+			shape = RoundedCornerShape(buttonCorner),
+			color = colorScheme.surfaceContainerHigh,
+			contentColor = colorScheme.onSurfaceVariant,
+			modifier = Modifier
+				.size(48.dp)
+				.scale(buttonScale)
+				.clip(RoundedCornerShape(buttonCorner))
+				.clickable(
+					interactionSource = interactionSource,
+					indication = null,
+					onClick = onNavigateToSettings
+				)
+		) {
+			Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+				Icon(
+					imageVector = Icons.Outlined.Settings,
+					contentDescription = stringResource(R.string.settings_content_description),
+					modifier = Modifier.size(24.dp)
 				)
 			}
 		}
 	}
 }
 
-
 @Composable
 fun EmptyState(modifier: Modifier = Modifier) {
+	EmptyAlarmsView(modifier = modifier)
+}
+
+@Composable
+fun EmptyAlarmsView(modifier: Modifier = Modifier) {
 	val infiniteTransition = rememberInfiniteTransition(label = "EmptyStateIconTransition")
 	val dy by infiniteTransition.animateFloat(
 		initialValue = -6f,
 		targetValue = 6f,
 		animationSpec = infiniteRepeatable(
-			animation = tween(durationMillis = 1500, easing = FastOutSlowInEasing),
+			animation = tween(durationMillis = 1600, easing = FastOutSlowInEasing),
 			repeatMode = RepeatMode.Reverse
 		),
 		label = "EmptyStateIconOffset"
 	)
+	val haloScale by infiniteTransition.animateFloat(
+		initialValue = 0.95f,
+		targetValue = 1.05f,
+		animationSpec = infiniteRepeatable(
+			animation = tween(durationMillis = 2000, easing = FastOutSlowInEasing),
+			repeatMode = RepeatMode.Reverse
+		),
+		label = "EmptyStateHaloScale"
+	)
 
-	Column(
+	Box(
 		modifier = modifier,
-		verticalArrangement = Arrangement.Center,
-		horizontalAlignment = Alignment.CenterHorizontally
+		contentAlignment = Alignment.Center
 	) {
-		Icon(
-			imageVector = Icons.Outlined.Alarm,
-			contentDescription = null,
+		Column(
 			modifier = Modifier
-				.size(120.dp)
-				.offset { IntOffset(x = 0, y = dy.dp.roundToPx()) },
-			tint = colorScheme.primary.copy(alpha = 0.6f)
-		)
-		Spacer(modifier = Modifier.height(24.dp))
-		Text(
-			text = stringResource(R.string.empty_state_title),
-			style = MaterialTheme.typography.headlineMedium,
-			fontWeight = FontWeight.Bold,
-			textAlign = TextAlign.Center,
-			color = MaterialTheme.colorScheme.onSurface
-		)
-		Spacer(modifier = Modifier.height(8.dp))
-		Text(
-			text = stringResource(R.string.empty_state_subtitle),
-			style = MaterialTheme.typography.bodyMedium,
-			textAlign = TextAlign.Center,
-			color = MaterialTheme.colorScheme.onSurfaceVariant,
-			modifier = Modifier.padding(horizontal = 48.dp)
-		)
+				.widthIn(max = 420.dp)
+				.padding(horizontal = 24.dp),
+			verticalArrangement = Arrangement.Center,
+			horizontalAlignment = Alignment.CenterHorizontally
+		) {
+			Box(
+				contentAlignment = Alignment.Center,
+				modifier = Modifier.offset { IntOffset(x = 0, y = dy.dp.roundToPx()) }
+			) {
+				Surface(
+					shape = RoundedCornerShape(44.dp),
+					color = colorScheme.secondaryContainer.copy(alpha = 0.45f),
+					modifier = Modifier
+						.size(164.dp)
+						.scale(haloScale)
+				) {}
+
+				Surface(
+					shape = RoundedCornerShape(32.dp),
+					color = colorScheme.primaryContainer,
+					contentColor = colorScheme.onPrimaryContainer,
+					modifier = Modifier.size(124.dp)
+				) {
+					Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+						Icon(
+							imageVector = Icons.Outlined.Alarm,
+							contentDescription = null,
+							modifier = Modifier.size(64.dp),
+							tint = colorScheme.onPrimaryContainer
+						)
+					}
+				}
+			}
+
+			Spacer(modifier = Modifier.height(28.dp))
+
+			Text(
+				text = stringResource(R.string.empty_state_title),
+				style = MaterialTheme.typography.headlineMedium,
+				fontWeight = FontWeight.ExtraBold,
+				textAlign = TextAlign.Center,
+				color = colorScheme.onSurface
+			)
+
+			Spacer(modifier = Modifier.height(10.dp))
+
+			Surface(
+				shape = RoundedCornerShape(20.dp),
+				color = colorScheme.surfaceContainerLow
+			) {
+				Text(
+					text = stringResource(R.string.empty_state_subtitle),
+					style = MaterialTheme.typography.bodyLarge,
+					textAlign = TextAlign.Center,
+					color = colorScheme.onSurfaceVariant,
+					modifier = Modifier.padding(horizontal = 24.dp, vertical = 14.dp)
+				)
+			}
+		}
 	}
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 	val coroutineScope = rememberCoroutineScope()
 	val interactionSource = remember { MutableInteractionSource() }
 	val isPressed by interactionSource.collectIsPressedAsState()
 	val scale by animateFloatAsState(
-		targetValue = if (isPressed) 0.93f else 1f,
-		animationSpec = spring(),
+		targetValue = if (isPressed) 0.94f else 1f,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "fabScale"
+	)
+	val cornerRadius by animateDpAsState(
+		targetValue = if (isPressed) 16.dp else 28.dp,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "fabCornerRadius"
+	)
+	val innerIconRadius by animateDpAsState(
+		targetValue = if (isPressed) 10.dp else 16.dp,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "fabInnerIconRadius"
 	)
 	val colorScheme = colorScheme
 
@@ -342,32 +504,42 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 				coroutineScope.launch { onClick() }
 			},
 			modifier = modifier
-				.padding(bottom = 29.dp, end = 16.dp)
+				.padding(bottom = 24.dp, end = 16.dp, start = 16.dp)
 				.scale(scale)
-				.height(75.dp)
-				.widthIn(min = 178.dp)
+				.height(74.dp)
+				.widthIn(min = 196.dp)
 				.zIndex(5f),
 			interactionSource = interactionSource,
-			shape = RoundedCornerShape(45.dp),
+			shape = RoundedCornerShape(cornerRadius),
 			containerColor = colorScheme.tertiaryContainer,
 			contentColor = colorScheme.onTertiaryContainer,
 			elevation = FloatingActionButtonDefaults.elevation(
 				defaultElevation = 6.dp,
-				pressedElevation = 6.dp
+				pressedElevation = 8.dp
 			),
 			icon = {
-				Icon(
-					imageVector = Icons.Default.AlarmAdd,
-					contentDescription = null,
-					modifier = Modifier.size(28.dp)
-				)
+				Surface(
+					shape = RoundedCornerShape(innerIconRadius),
+					color = colorScheme.onTertiaryContainer.copy(alpha = 0.12f),
+					contentColor = colorScheme.onTertiaryContainer,
+					modifier = Modifier.size(42.dp)
+				) {
+					Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+						Icon(
+							imageVector = Icons.Default.AlarmAdd,
+							contentDescription = null,
+							modifier = Modifier.size(24.dp)
+						)
+					}
+				}
 			},
 			text = {
+				Spacer(modifier = Modifier.width(4.dp))
 				Text(
 					text = stringResource(R.string.add_alarm_button_text),
 					style = MaterialTheme.typography.titleMedium,
-					fontWeight = FontWeight.Bold,
-					letterSpacing = 0.1.sp,
+					fontWeight = FontWeight.ExtraBold,
+					letterSpacing = 0.2.sp,
 					maxLines = 1
 				)
 			}

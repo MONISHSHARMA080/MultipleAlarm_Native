@@ -9,10 +9,25 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,20 +40,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,19 +65,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.IntentCompat
 import androidx.lifecycle.lifecycleScope
-import com.coolApps.MultipleAlarmClock.presentation.trigger.AlarmActivityIntentData
-import com.coolApps.MultipleAlarmClock.util.Analytics
+import com.coolApps.MultipleAlarmClock.presentation.ExpressiveAlarmTheme
 import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.receiver.AlarmService
+import com.coolApps.MultipleAlarmClock.util.Analytics
 import dagger.hilt.android.AndroidEntryPoint
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -91,8 +111,7 @@ class AlarmActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 		this.intentReceived = intent
         setContent {
-			val colorScheme = if (isSystemInDarkTheme()) { dynamicDarkColorScheme(LocalContext.current) } else { dynamicLightColorScheme(LocalContext.current) }
-            MaterialTheme(colorScheme = colorScheme) {
+            ExpressiveAlarmTheme {
                 var messageVarToSet by remember { mutableStateOf("") }
                 var intentData by remember { mutableStateOf<AlarmActivityIntentData?>(null)  }
 
@@ -183,12 +202,78 @@ class AlarmActivity : ComponentActivity() {
     }
 }
 
+@Composable
+fun AlarmScreen(
+    onFinish: () -> Unit,
+    message: String,
+    modifier: Modifier = Modifier
+) {
+    TimeDisplay(onFinish = onFinish, message = message, modifier = modifier)
+}
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable fun TimeDisplay(onFinish: () -> Unit , message: String , modifier: Modifier = Modifier) {
     var currentTime by remember { mutableStateOf(getCurrentTime()) }
     var amPm by remember { mutableStateOf(getAmPm()) }
+    val currentDateText = remember { getCurrentDateFormatted() }
 	val colorScheme = MaterialTheme.colorScheme
 	val view = LocalView.current
+
+    val infiniteTransition = rememberInfiniteTransition(label = "AlarmHeroPulse")
+    val outerHaloScale by infiniteTransition.animateFloat(
+        initialValue = 0.92f,
+        targetValue = 1.12f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "outerHaloScale"
+    )
+    val midHaloScale by infiniteTransition.animateFloat(
+        initialValue = 0.96f,
+        targetValue = 1.06f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 900, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "midHaloScale"
+    )
+    val bellRotation by infiniteTransition.animateFloat(
+        initialValue = -10f,
+        targetValue = 10f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 420, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "bellRotation"
+    )
+    val badgeCornerDp by infiniteTransition.animateFloat(
+        initialValue = 22f,
+        targetValue = 34f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "badgeCornerDp"
+    )
+
+    val stopInteractionSource = remember { MutableInteractionSource() }
+    val isStopPressed by stopInteractionSource.collectIsPressedAsState()
+    val stopButtonScale by animateFloatAsState(
+        targetValue = if (isStopPressed) 0.94f else 1f,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "stopButtonScale"
+    )
+    val stopButtonCorner by animateDpAsState(
+        targetValue = if (isStopPressed) 22.dp else 44.dp,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "stopButtonCorner"
+    )
+    val stopIconInnerCorner by animateDpAsState(
+        targetValue = if (isStopPressed) 12.dp else 24.dp,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "stopIconInnerCorner"
+    )
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -212,7 +297,7 @@ class AlarmActivity : ComponentActivity() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .padding(bottom = 12.dp),
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Button(
@@ -220,98 +305,230 @@ class AlarmActivity : ComponentActivity() {
 						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 						onFinish()
 				  	},
-                    colors = ButtonDefaults.buttonColors(containerColor = colorScheme.primaryContainer, contentColor = colorScheme.onPrimaryContainer),
-                    shape = RoundedCornerShape(45.dp),
-                    modifier = Modifier.height(83.dp).fillMaxWidth(0.92f)
+                    interactionSource = stopInteractionSource,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colorScheme.primary,
+                        contentColor = colorScheme.onPrimary
+                    ),
+                    shape = RoundedCornerShape(stopButtonCorner),
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = 6.dp,
+                        pressedElevation = 2.dp
+                    ),
+                    modifier = Modifier
+                        .scale(stopButtonScale)
+                        .height(84.dp)
+                        .widthIn(max = 520.dp)
+                        .fillMaxWidth(0.94f)
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Cancel,
-                        modifier = Modifier.size(31.dp),
-                        contentDescription = "Cancel"
+                    Surface(
+                        shape = RoundedCornerShape(stopIconInnerCorner),
+                        color = colorScheme.onPrimary.copy(alpha = 0.18f),
+                        contentColor = colorScheme.onPrimary,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Icon(
+                                imageVector = Icons.Filled.Cancel,
+                                modifier = Modifier.size(28.dp),
+                                contentDescription = "Cancel"
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Text(
+                        text = "Stop",
+                        style = typography.headlineLarge,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 0.5.sp
                     )
-                    Spacer(modifier = Modifier.width(10.dp)) // Space between icon and text
-                    Text(text = "Stop", style = typography.headlineLarge, fontWeight = FontWeight.Bold)
                 }
             }
         }
     ) { innerPadding ->
-        Column(
+        BoxWithConstraints(
             modifier = modifier
                 .fillMaxSize()
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            colorScheme.primaryContainer.copy(alpha = 0.28f),
+                            colorScheme.surface
+                        )
+                    )
+                )
                 .padding(innerPadding)
-                .padding(top = innerPadding.calculateTopPadding() + 21.dp)
                 .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = if (message.isEmpty()) Arrangement.Center else Arrangement.Top
+            contentAlignment = Alignment.Center
         ) {
-            // ------
-            // animate the state change so it won't be jarring
-            // ------
-			AnimatedContent(targetState = message.isEmpty()) { messageIsEmpty ->
-				if (!messageIsEmpty) Spacer(modifier = Modifier.height(60.dp))
-				Column(
-					modifier = modifier.fillMaxSize(),
-					horizontalAlignment = Alignment.CenterHorizontally,
-					verticalArrangement = Arrangement.Center
-				) {
-					Row(
-						verticalAlignment = Alignment.Bottom // Aligns bottom of text
-					) {
-						Text(
-							text = currentTime,
-							color = colorScheme.primary,
-							fontWeight = FontWeight.Medium,
-							style = typography.displayLarge
-						)
+            val isCompactHeight = maxHeight < 460.dp
 
-						Spacer(modifier = Modifier.width(8.dp))
+            AnimatedContent(
+                targetState = message.isEmpty(),
+                transitionSpec = {
+                    (scaleIn(
+                        initialScale = 0.95f,
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                    ) + fadeIn(
+                        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
+                    )) togetherWith (scaleOut(
+                        targetScale = 0.95f,
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                    ) + fadeOut(
+                        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
+                    ))
+                },
+                label = "AlarmHeroContent"
+            ) { messageIsEmpty ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .widthIn(max = 640.dp)
+                        .padding(top = if (isCompactHeight) 8.dp else 20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = if (messageIsEmpty) Arrangement.Center else Arrangement.Top
+                ) {
+                    if (!isCompactHeight) {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.padding(bottom = 20.dp)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(38.dp),
+                                color = colorScheme.primaryContainer.copy(alpha = 0.32f),
+                                modifier = Modifier
+                                    .size(116.dp)
+                                    .scale(outerHaloScale)
+                            ) {}
+                            Surface(
+                                shape = RoundedCornerShape(32.dp),
+                                color = colorScheme.secondaryContainer.copy(alpha = 0.55f),
+                                modifier = Modifier
+                                    .size(92.dp)
+                                    .scale(midHaloScale)
+                            ) {}
+                            Surface(
+                                shape = RoundedCornerShape(badgeCornerDp.dp),
+                                color = colorScheme.tertiaryContainer,
+                                contentColor = colorScheme.onTertiaryContainer,
+                                modifier = Modifier.size(68.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Alarm,
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .rotate(bellRotation)
+                                    )
+                                }
+                            }
+                        }
+                    }
 
-						Text(
-							text = amPm,
-							color = colorScheme.secondary,
-							fontWeight = FontWeight.SemiBold,
-							modifier = Modifier.padding(bottom = 12.dp),
-							style = typography.titleLarge,
-						)
-					}
+                    // Tonal date pill badge
+                    Surface(
+                        shape = CircleShape,
+                        color = colorScheme.secondaryContainer,
+                        contentColor = colorScheme.onSecondaryContainer
+                    ) {
+                        Text(
+                            text = currentDateText,
+                            style = typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                        )
+                    }
 
-					if (!messageIsEmpty) {
-						Spacer(modifier = Modifier.height(40.dp))
-						// Scrollable Message Area
-						Box(
-							modifier = Modifier.weight(1f).fillMaxWidth()
-						) {
-							Column(
-								modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-								horizontalAlignment = Alignment.CenterHorizontally
-							) {
-								Text(
-									text = message,
-									color = colorScheme.onSurface,
-									style = typography.titleLarge,
-									fontWeight = FontWeight.Normal,
-									lineHeight = 35.sp
-								)
-								Spacer(modifier = Modifier.height(20.dp))
-							}
-							Box(
-								modifier = Modifier
-									.align(Alignment.BottomCenter)
-									.fillMaxWidth()
-									.height(40.dp)
-									.background(
-										brush = Brush.verticalGradient(
-											colors = listOf(
-												Color.Transparent,
-												colorScheme.surface
-											)
-										)
-									)
-							)
-						}
-					}
-				}
-			}
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Hero clock time container
+                    Surface(
+                        shape = RoundedCornerShape(32.dp),
+                        color = colorScheme.surfaceContainerHigh,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp, vertical = if (isCompactHeight) 16.dp else 28.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            Text(
+                                text = currentTime,
+                                color = colorScheme.primary,
+                                fontWeight = FontWeight.Black,
+                                style = typography.displayLarge
+                            )
+
+                            Spacer(modifier = Modifier.width(10.dp))
+
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = colorScheme.primaryContainer,
+                                contentColor = colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            ) {
+                                Text(
+                                    text = amPm,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    style = typography.titleMedium,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    if (!messageIsEmpty) {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        // Expressive Tonal Message Card
+                        Surface(
+                            shape = RoundedCornerShape(28.dp),
+                            color = colorScheme.surfaceContainerLow,
+                            contentColor = colorScheme.onSurface,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp)
+                        ) {
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .verticalScroll(rememberScrollState())
+                                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = message,
+                                        color = colorScheme.onSurface,
+                                        style = typography.titleLarge,
+                                        fontWeight = FontWeight.SemiBold,
+                                        textAlign = TextAlign.Center,
+                                        lineHeight = 32.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(24.dp))
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .fillMaxWidth()
+                                        .height(36.dp)
+                                        .background(
+                                            brush = Brush.verticalGradient(
+                                                colors = listOf(
+                                                    Color.Transparent,
+                                                    colorScheme.surfaceContainerLow
+                                                )
+                                            )
+                                        )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -322,4 +539,8 @@ fun getCurrentTime(): String {
 
 fun getAmPm(): String {
 	return SimpleDateFormat("a", Locale.getDefault()).format(Date())
+}
+
+private fun getCurrentDateFormatted(): String {
+    return SimpleDateFormat("EEEE, MMM d", Locale.getDefault()).format(Date())
 }

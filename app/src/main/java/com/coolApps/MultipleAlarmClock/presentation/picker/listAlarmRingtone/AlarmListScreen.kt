@@ -5,10 +5,11 @@ import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -16,7 +17,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,8 +34,9 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -41,11 +46,11 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -63,10 +68,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.R
@@ -74,7 +82,7 @@ import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmPickerViewModel
 import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmSound
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable fun ListAlarmSoundScreen(
 	vm: AlarmPickerViewModel,
 	selectedUri: Uri?,
@@ -111,37 +119,75 @@ import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmSound
 	val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
 	Scaffold(
+		containerColor = MaterialTheme.colorScheme.surface,
 		modifier = Modifier
-			.padding(2.dp)
 			.let { if (!fromOnboarding) it.nestedScroll(scrollBehavior.nestedScrollConnection) else it },
 		topBar = {
 			if (!fromOnboarding) {
+				val backInteractionSource = remember { MutableInteractionSource() }
+				val isBackPressed by backInteractionSource.collectIsPressedAsState()
+				val backCorner by animateDpAsState(
+					targetValue = if (isBackPressed) 8.dp else 14.dp,
+					animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+					label = "backCorner"
+				)
+
 				LargeTopAppBar(
 					title = {
-						Text(stringResource(R.string.alarm_sound_title))
+						Text(
+							text = stringResource(R.string.alarm_sound_title),
+							fontWeight = FontWeight.ExtraBold
+						)
 					},
 					navigationIcon = {
-						IconButton(onClick = {
-							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-							onBack()
-						}) {
+						FilledTonalIconButton(
+							onClick = {
+								view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+								onBack()
+							},
+							interactionSource = backInteractionSource,
+							shape = RoundedCornerShape(backCorner),
+							colors = IconButtonDefaults.filledTonalIconButtonColors(
+								containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+								contentColor = MaterialTheme.colorScheme.onSurface
+							),
+							modifier = Modifier
+								.padding(start = 8.dp)
+								.size(44.dp)
+						) {
 							Icon(
 								imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
 								contentDescription = "Back"
 							)
 						}
 					},
+					colors = TopAppBarDefaults.topAppBarColors(
+						containerColor = MaterialTheme.colorScheme.surface,
+						scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer
+					),
 					scrollBehavior = scrollBehavior
 				)
 			}
 		},
 		bottomBar = {
+			val selectInteractionSource = remember { MutableInteractionSource() }
+			val isSelectPressed by selectInteractionSource.collectIsPressedAsState()
+			val selectCorner by animateDpAsState(
+				targetValue = if (isSelectPressed) 16.dp else 28.dp,
+				animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+				label = "selectCorner"
+			)
+			val selectScale by animateFloatAsState(
+				targetValue = if (isSelectPressed) 0.97f else 1f,
+				animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+				label = "selectScale"
+			)
+
 			Box(
 				modifier = Modifier
 					.fillMaxWidth()
 					.navigationBarsPadding()
-					.padding(16.dp)
-					.padding(bottom = 20.dp),
+					.padding(horizontal = 20.dp, vertical = 16.dp),
 				contentAlignment = Alignment.Center
 			) {
 				Button(
@@ -149,114 +195,237 @@ import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmSound
 						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 						onProceed(if (isSoundToSelectRandom) null else soundToSelect)
 					},
+					interactionSource = selectInteractionSource,
 					colors = ButtonDefaults.buttonColors(
-						containerColor = MaterialTheme.colorScheme.primaryContainer,
-						contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+						containerColor = MaterialTheme.colorScheme.primary,
+						contentColor = MaterialTheme.colorScheme.onPrimary
 					),
-					shape = MaterialTheme.shapes.extraLarge,
+					shape = RoundedCornerShape(selectCorner),
 					modifier = Modifier
+						.widthIn(max = 600.dp)
 						.fillMaxWidth()
-						.height(56.dp)
+						.height(58.dp)
+						.graphicsLayer {
+							scaleX = selectScale
+							scaleY = selectScale
+						}
 				) {
 					Text(
 						text = "Select",
-						style = MaterialTheme.typography.titleMedium
+						style = MaterialTheme.typography.titleMedium,
+						fontWeight = FontWeight.ExtraBold
 					)
 				}
 			}
 		}
 	) { padding ->
-		LazyColumn(
-			modifier = Modifier.fillMaxSize().padding(padding),
-			contentPadding = PaddingValues(start = 15.dp, end = 15.dp, top = 16.dp, bottom = 80.dp),
-			verticalArrangement = Arrangement.spacedBy(8.dp)
+		Box(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(padding),
+			contentAlignment = Alignment.TopCenter
 		) {
-			item {
-				SoundCard(
-					sound = null,
-					selected = selectedUri == null,
-					isPlaying = randomPreviewing,
-					onClick = {
-						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-						isSoundToSelectRandom = true
-						soundToSelect = null
-						vm.previewSound(null)
-					},
-					imageVector = Icons.Rounded.Shuffle
-				)
-				Spacer(Modifier.padding(bottom = 25.dp))
-			}
+			LazyColumn(
+				modifier = Modifier
+					.widthIn(max = 640.dp)
+					.fillMaxSize(),
+				contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 96.dp),
+				verticalArrangement = Arrangement.spacedBy(3.dp)
+			) {
+				item(key = "random_hero_sound") {
+					SoundCard(
+						sound = null,
+						selected = selectedUri == null,
+						isPlaying = randomPreviewing,
+						isHero = true,
+						topCorner = 24.dp,
+						bottomCorner = 24.dp,
+						onClick = {
+							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+							isSoundToSelectRandom = true
+							soundToSelect = null
+							vm.previewSound(null)
+						},
+						imageVector = Icons.Rounded.Shuffle
+					)
+					Spacer(Modifier.height(20.dp))
+				}
 
-			items(
-				items = listOfAlarms,
-				key = { it.soundUri }
-			) { sound ->
-				SoundCard(
-					sound = sound,
-					selected = selectedUri == sound.soundUri,
-					isPlaying = previewingUri == sound.soundUri && !randomPreviewing,
-					onClick = {
-						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-						isSoundToSelectRandom = false
-						soundToSelect = sound
-						vm.previewSound(sound)
-					}
-				)
+				itemsIndexed(
+					items = listOfAlarms,
+					key = { _, it -> it.soundUri }
+				) { index, sound ->
+					val isFirst = index == 0
+					val isLast = index == listOfAlarms.lastIndex
+					val baseTopCorner = if (isFirst) 24.dp else 6.dp
+					val baseBottomCorner = if (isLast) 24.dp else 6.dp
+
+					SoundCard(
+						sound = sound,
+						selected = selectedUri == sound.soundUri,
+						isPlaying = previewingUri == sound.soundUri && !randomPreviewing,
+						isHero = false,
+						topCorner = baseTopCorner,
+						bottomCorner = baseBottomCorner,
+						onClick = {
+							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+							isSoundToSelectRandom = false
+							soundToSelect = sound
+							vm.previewSound(sound)
+						}
+					)
+				}
 			}
 		}
 	}
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SoundCard(
 	sound: AlarmSound?,
 	selected: Boolean,
 	isPlaying: Boolean,
+	isHero: Boolean = false,
+	topCorner: Dp = 20.dp,
+	bottomCorner: Dp = 20.dp,
 	onClick: () -> Unit,
 	imageVector: ImageVector = Icons.Rounded.Audiotrack
 ) {
+	val interactionSource = remember { MutableInteractionSource() }
+	val isPressed by interactionSource.collectIsPressedAsState()
+
+	val spatialSpec = MaterialTheme.motionScheme.fastSpatialSpec<Dp>()
+	val floatSpatialSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+	val colorEffectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Color>()
+
+	val targetTopCorner = when {
+		isPressed -> 16.dp
+		isHero -> 26.dp
+		selected || isPlaying -> 22.dp
+		else -> topCorner
+	}
+	val targetBottomCorner = when {
+		isPressed -> 16.dp
+		isHero -> 26.dp
+		selected || isPlaying -> 22.dp
+		else -> bottomCorner
+	}
+
+	val animatedTopCorner by animateDpAsState(
+		targetValue = targetTopCorner,
+		animationSpec = spatialSpec,
+		label = "topCorner"
+	)
+	val animatedBottomCorner by animateDpAsState(
+		targetValue = targetBottomCorner,
+		animationSpec = spatialSpec,
+		label = "bottomCorner"
+	)
+
+	val scale by animateFloatAsState(
+		targetValue = if (isPressed) 0.98f else 1f,
+		animationSpec = floatSpatialSpec,
+		label = "cardScale"
+	)
+
 	val containerColor by animateColorAsState(
-		targetValue = if (isPlaying) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer,
-		animationSpec = tween(500, easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)),
+		targetValue = when {
+			isPlaying -> MaterialTheme.colorScheme.secondaryContainer
+			selected -> MaterialTheme.colorScheme.primaryContainer
+			isHero -> MaterialTheme.colorScheme.surfaceContainerHigh
+			else -> MaterialTheme.colorScheme.surfaceContainerLow
+		},
+		animationSpec = colorEffectsSpec,
 		label = "containerColor"
 	)
 	val contentColor by animateColorAsState(
-		targetValue = if (isPlaying) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface,
-		animationSpec = tween(500, easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)),
+		targetValue = when {
+			isPlaying -> MaterialTheme.colorScheme.onSecondaryContainer
+			selected -> MaterialTheme.colorScheme.onPrimaryContainer
+			else -> MaterialTheme.colorScheme.onSurface
+		},
+		animationSpec = colorEffectsSpec,
 		label = "contentColor"
 	)
 
-	ElevatedCard(
+	val badgeCorner by animateDpAsState(
+		targetValue = if (isPlaying || selected) 24.dp else 14.dp,
+		animationSpec = spatialSpec,
+		label = "badgeCorner"
+	)
+
+	val badgeColor by animateColorAsState(
+		targetValue = when {
+			isPlaying -> MaterialTheme.colorScheme.secondary
+			selected -> MaterialTheme.colorScheme.primary
+			isHero -> MaterialTheme.colorScheme.tertiaryContainer
+			else -> MaterialTheme.colorScheme.surfaceContainerHighest
+		},
+		animationSpec = colorEffectsSpec,
+		label = "badgeColor"
+	)
+
+	val badgeContentColor by animateColorAsState(
+		targetValue = when {
+			isPlaying -> MaterialTheme.colorScheme.onSecondary
+			selected -> MaterialTheme.colorScheme.onPrimary
+			isHero -> MaterialTheme.colorScheme.onTertiaryContainer
+			else -> MaterialTheme.colorScheme.onSurfaceVariant
+		},
+		animationSpec = colorEffectsSpec,
+		label = "badgeContentColor"
+	)
+
+	val verticalMargin by animateDpAsState(
+		targetValue = if ((selected || isPlaying) && !isHero) 4.dp else 0.dp,
+		animationSpec = spatialSpec,
+		label = "verticalMargin"
+	)
+
+	Surface(
 		onClick = onClick,
-		shape = MaterialTheme.shapes.extraLarge,
-		colors = CardDefaults.elevatedCardColors(
-			containerColor = containerColor,
-			contentColor = contentColor
-		)
+		interactionSource = interactionSource,
+		shape = RoundedCornerShape(
+			topStart = animatedTopCorner,
+			topEnd = animatedTopCorner,
+			bottomStart = animatedBottomCorner,
+			bottomEnd = animatedBottomCorner
+		),
+		color = containerColor,
+		contentColor = contentColor,
+		border = if (selected && !isPlaying) {
+			BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+		} else {
+			null
+		},
+		modifier = Modifier
+			.fillMaxWidth()
+			.padding(vertical = verticalMargin)
+			.graphicsLayer {
+				scaleX = scale
+				scaleY = scale
+			}
 	) {
 		Row(
 			modifier = Modifier
 				.fillMaxWidth()
-				.padding(horizontal = 20.dp, vertical = 18.dp),
+				.padding(horizontal = 18.dp, vertical = if (isHero) 20.dp else 16.dp),
 			verticalAlignment = Alignment.CenterVertically
 		) {
-			val circleColor by animateColorAsState(
-				targetValue = if (isPlaying) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surfaceContainerHighest,
-				animationSpec = tween(500, easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)),
-				label = "circleColor"
-			)
 			Surface(
-				color = circleColor,
-				shape = CircleShape
+				color = badgeColor,
+				contentColor = badgeContentColor,
+				shape = RoundedCornerShape(badgeCorner)
 			) {
 				Box(
-					modifier = Modifier.size(46.dp),
+					modifier = Modifier.size(48.dp),
 					contentAlignment = Alignment.Center
 				) {
 					Crossfade(
 						targetState = isPlaying,
 						modifier = Modifier.fillMaxSize(),
-						animationSpec = tween(500, easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)),
+						animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
 						label = "icon_swap"
 					) { isPlayingState ->
 						Box(
@@ -283,29 +452,44 @@ private fun SoundCard(
 			Column(modifier = Modifier.weight(1f)) {
 				Text(
 					text = sound?.title ?: stringResource(R.string.Sound_screen_Random),
-					style = MaterialTheme.typography.titleMedium
+					style = if (isHero) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium,
+					fontWeight = if (selected || isPlaying || isHero) FontWeight.ExtraBold else FontWeight.SemiBold,
+					color = contentColor
 				)
+				Spacer(Modifier.height(2.dp))
 				Text(
 					text = when {
-						sound == null && selected ->stringResource(R.string.Sound_screen_Random_sound_choosen)
-						sound == null ->stringResource(R.string.alarm_picker_sound_random)
-						selected ->stringResource(R.string.Sound_screen_selected)
-						else ->stringResource(R.string.Sound_screen_preview)
+						sound == null && selected -> stringResource(R.string.Sound_screen_Random_sound_choosen)
+						sound == null -> stringResource(R.string.alarm_picker_sound_random)
+						selected -> stringResource(R.string.Sound_screen_selected)
+						else -> stringResource(R.string.Sound_screen_preview)
 					},
 					style = MaterialTheme.typography.bodyMedium,
-					color = MaterialTheme.colorScheme.onSurfaceVariant
+					color = contentColor.copy(alpha = 0.78f)
 				)
 			}
 
 			AnimatedVisibility(
 				visible = selected,
-				enter = scaleIn(animationSpec = tween(400, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f))) + fadeIn(animationSpec = tween(400, easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f))),
-				exit = scaleOut(animationSpec = tween(200, easing = CubicBezierEasing(0.3f, 0f, 0.8f, 0.15f))) + fadeOut(animationSpec = tween(200, easing = CubicBezierEasing(0.3f, 0f, 0.8f, 0.15f)))
+				enter = scaleIn(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()) +
+						fadeIn(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()),
+				exit = scaleOut(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()) +
+						fadeOut(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec())
 			) {
-				Icon(
-					imageVector = Icons.Rounded.Check,
-					contentDescription = null
-				)
+				Surface(
+					color = MaterialTheme.colorScheme.primary,
+					contentColor = MaterialTheme.colorScheme.onPrimary,
+					shape = CircleShape,
+					modifier = Modifier.size(32.dp)
+				) {
+					Box(contentAlignment = Alignment.Center) {
+						Icon(
+							imageVector = Icons.Rounded.Check,
+							contentDescription = null,
+							modifier = Modifier.size(18.dp)
+						)
+					}
+				}
 			}
 		}
 	}
@@ -345,3 +529,4 @@ private fun EqualizerBars(modifier: Modifier = Modifier, color: Color) {
 		}
 	}
 }
+

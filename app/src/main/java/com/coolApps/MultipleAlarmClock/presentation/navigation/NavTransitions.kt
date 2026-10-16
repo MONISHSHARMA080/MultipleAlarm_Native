@@ -1,53 +1,51 @@
 package com.coolApps.MultipleAlarmClock.presentation.navigation
 
 import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.ui.unit.IntOffset
 
 /**
- * Shared-axis (X) style transitions. The slide covers only a fraction of the width so it scales
- * with any window size, and the fades are staggered so the two screens never overlap at ~50% alpha.
+ * M3 Expressive shared-axis (X) transitions using physics-based spatial springs for slide/scale
+ * and critically-damped effects springs for fade.
  */
 object NavTransitions {
-	private const val SLIDE_DURATION_MS = 300
-	private const val POP_SLIDE_DURATION_MS = 250
-	private const val FADE_IN_DURATION_MS = 210
-	private const val FADE_IN_DELAY_MS = 90
-	private const val FADE_OUT_DURATION_MS = 90
 	private const val SLIDE_FRACTION = 4 // slide distance = width / SLIDE_FRACTION
 
 	/** Forward: new screen enters from the end, old screen leaves toward the start. */
-	fun forward(): ContentTransform = sharedAxis(
-		enterFromEnd = true,
-		slideDurationMs = SLIDE_DURATION_MS
-	)
+	fun forward(): ContentTransform = sharedAxis(enterFromEnd = true)
 
 	/** Back / predictive-back release: previous screen enters from the start, current leaves toward the end. */
-	fun pop(): ContentTransform = sharedAxis(
-		enterFromEnd = false,
-		slideDurationMs = POP_SLIDE_DURATION_MS
-	)
+	fun pop(): ContentTransform = sharedAxis(enterFromEnd = false)
 
-	private fun sharedAxis(enterFromEnd: Boolean, slideDurationMs: Int): ContentTransform {
+	private fun sharedAxis(enterFromEnd: Boolean): ContentTransform {
 		val direction = if (enterFromEnd) 1 else -1
-		val slideSpec = tween<IntOffset>(slideDurationMs, easing = FastOutSlowInEasing)
-		return slideInHorizontally(
-			animationSpec = slideSpec,
+		val spatialIntOffsetSpring = spring<IntOffset>(dampingRatio = 0.85f, stiffness = 400f)
+		val spatialFloatSpring = spring<Float>(dampingRatio = 0.85f, stiffness = 400f)
+		val effectsSpring = spring<Float>(dampingRatio = 1.0f, stiffness = 1200f)
+
+		return (slideInHorizontally(
+			animationSpec = spatialIntOffsetSpring,
 			initialOffsetX = { direction * it / SLIDE_FRACTION }
+		) + scaleIn(
+			initialScale = 0.96f,
+			animationSpec = spatialFloatSpring
 		) + fadeIn(
-			tween(FADE_IN_DURATION_MS, delayMillis = FADE_IN_DELAY_MS, easing = LinearEasing)
-		) togetherWith slideOutHorizontally(
-			animationSpec = slideSpec,
+			animationSpec = effectsSpring
+		)) togetherWith (slideOutHorizontally(
+			animationSpec = spatialIntOffsetSpring,
 			targetOffsetX = { -direction * it / SLIDE_FRACTION }
+		) + scaleOut(
+			targetScale = 0.96f,
+			animationSpec = spatialFloatSpring
 		) + fadeOut(
-			tween(FADE_OUT_DURATION_MS, easing = LinearEasing)
-		)
+			animationSpec = effectsSpring
+		))
 	}
 }

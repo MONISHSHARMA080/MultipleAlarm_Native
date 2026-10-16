@@ -2,7 +2,6 @@ package com.coolApps.MultipleAlarmClock.presentation
 
 import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.ui.geometry.Rect
 
@@ -11,20 +10,23 @@ import androidx.compose.ui.geometry.Rect
  * Used by AlarmCard, EditAlarmScreen and TimeRow so both ends of the transition always agree.
  */
 
-/** Container (card ⇄ screen) — gentle, slightly softened from before with a hint of bounce. */
+/** Container (card ⇄ screen) — M3 Expressive spatial spring with natural fluid bounce. */
 private val AlarmContainerSpring = spring<Rect>(
-	dampingRatio = Spring.DampingRatioLowBouncy,
-	stiffness = 330f
+	dampingRatio = 0.8f,
+	stiffness = 380f
 )
 
 /**
- * Start time, arrow and end time. Softer and critically damped-ish so the digits glide
- * (readable throughout) instead of snapping across the screen, and never overshoot.
+ * Start time, arrow and end time — expressive spatial spring so digits glide smoothly
+ * across the screen with subtle settle.
  */
 private val AlarmTimeSpring = spring<Rect>(
-	dampingRatio = 0.9f,
-	stiffness = 190f
+	dampingRatio = 0.88f,
+	stiffness = 340f
 )
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+val AlarmBoundsTransform = BoundsTransform { _, _ -> AlarmContainerSpring }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 val AlarmContainerBoundsTransform = BoundsTransform { _, _ -> AlarmContainerSpring }

@@ -5,24 +5,37 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -33,9 +46,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -46,7 +62,7 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 
-@OptIn(ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AlarmPermissionDialog(
 	missingSteps: List<PermissionStep>,
@@ -102,38 +118,75 @@ fun AlarmPermissionDialog(
 		)
 	}
 
+	val confirmInteraction = remember { MutableInteractionSource() }
+	val isConfirmPressed by confirmInteraction.collectIsPressedAsState()
+	val confirmCorner by animateDpAsState(
+		targetValue = if (isConfirmPressed) 12.dp else 20.dp,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "confirmCorner"
+	)
+	val confirmScale by animateFloatAsState(
+		targetValue = if (isConfirmPressed) 0.96f else 1f,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "confirmScale"
+	)
+
 	AlertDialog(
 		onDismissRequest = onDismiss,
+		modifier = Modifier.widthIn(max = 480.dp),
+		shape = RoundedCornerShape(32.dp),
+		containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+		tonalElevation = 6.dp,
 		icon = {
-			Icon(
-				imageVector = Icons.Default.Security,
-				contentDescription = null,
-				tint = MaterialTheme.colorScheme.primary
-			)
+			Surface(
+				shape = RoundedCornerShape(22.dp),
+				color = MaterialTheme.colorScheme.primaryContainer,
+				modifier = Modifier.size(60.dp)
+			) {
+				Box(contentAlignment = Alignment.Center) {
+					Icon(
+						imageVector = Icons.Default.Security,
+						contentDescription = null,
+						tint = MaterialTheme.colorScheme.onPrimaryContainer,
+						modifier = Modifier.size(30.dp)
+					)
+				}
+			}
 		},
 		title = {
-			Column(horizontalAlignment = Alignment.CenterHorizontally) {
+			Column(
+				modifier = Modifier.fillMaxWidth(),
+				horizontalAlignment = Alignment.CenterHorizontally
+			) {
 				Text(
 					text = stringResource(R.string.permission_dialog_title),
 					style = MaterialTheme.typography.headlineSmall,
+					fontWeight = FontWeight.ExtraBold,
+					textAlign = TextAlign.Center,
 					color = MaterialTheme.colorScheme.onSurface
 				)
 			}
 		},
 		text = {
 			Column(
-				verticalArrangement = Arrangement.spacedBy(12.dp)
+				verticalArrangement = Arrangement.spacedBy(4.dp)
 			) {
-				currentMissingSteps.forEach { step ->
+				currentMissingSteps.forEachIndexed { index, step ->
 					val isGranted = when (step) {
 						PermissionStep.PostNotification -> notificationPermState.status.isGranted
 						else -> !currentMissingSteps.contains(step)
 					}
+					val isFirst = index == 0
+					val isLast = index == currentMissingSteps.lastIndex
+					val topCorner = if (isFirst) 20.dp else 8.dp
+					val bottomCorner = if (isLast) 20.dp else 8.dp
 
 					PermissionStepRow(
 						step = step,
 						isGranted = isGranted,
 						isPermanentlyDenied = step == PermissionStep.PostNotification && notificationPermanentlyDenied,
+						topCorner = topCorner,
+						bottomCorner = bottomCorner,
 						onAction = {
 							when (step) {
 								PermissionStep.PostNotification -> {
@@ -174,70 +227,144 @@ fun AlarmPermissionDialog(
 			}
 		},
 		confirmButton = {
-			TextButton(
+			FilledTonalButton(
 				onClick = { if (allCriticalNowGranted) onAllCriticalGranted() else onDismiss() },
+				interactionSource = confirmInteraction,
+				shape = RoundedCornerShape(confirmCorner),
+				colors = ButtonDefaults.filledTonalButtonColors(
+					containerColor = if (allCriticalNowGranted) {
+						MaterialTheme.colorScheme.primary
+					} else {
+						MaterialTheme.colorScheme.surfaceContainerHighest
+					},
+					contentColor = if (allCriticalNowGranted) {
+						MaterialTheme.colorScheme.onPrimary
+					} else {
+						MaterialTheme.colorScheme.onSurface
+					}
+				),
+				modifier = Modifier.graphicsLayer {
+					scaleX = confirmScale
+					scaleY = confirmScale
+				}
 			) {
 				Text(
 					text = if (allCriticalNowGranted) stringResource(R.string.permission_dialog_btn_done) else stringResource(R.string.permission_dialog_btn_cancel),
-					color = if (allCriticalNowGranted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+					fontWeight = FontWeight.Bold
 				)
 			}
 		},
 	)
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun PermissionStepRow(
 	step: PermissionStep,
 	isGranted: Boolean,
 	isPermanentlyDenied: Boolean,
+	topCorner: Dp = 20.dp,
+	bottomCorner: Dp = 20.dp,
 	onAction: () -> Unit
 ) {
-	Row(
-		modifier = Modifier.fillMaxWidth(),
-		verticalAlignment = Alignment.CenterVertically,
-		horizontalArrangement = Arrangement.SpaceBetween
-	) {
-		Column(modifier = Modifier.weight(1f)) {
-			Text(
-				text = stringResource(step.titleRes),
-				style = MaterialTheme.typography.titleMedium,
-				color = MaterialTheme.colorScheme.onSurface,
-				fontWeight = FontWeight.SemiBold
-			)
-			Spacer(modifier = Modifier.height(2.dp))
-			Text(
-				text = stringResource(step.rationaleRes),
-				style = MaterialTheme.typography.bodySmall,
-				color = MaterialTheme.colorScheme.onSurfaceVariant
-			)
-		}
-		Spacer(Modifier.width(16.dp))
-
-		if (isGranted) {
-			Icon(
-				imageVector = Icons.Default.CheckCircle,
-				contentDescription = stringResource(R.string.permission_dialog_done_desc),
-				tint = MaterialTheme.colorScheme.primary,
-				modifier = Modifier.size(24.dp)
-			)
+	val containerColor by animateColorAsState(
+		targetValue = if (isGranted) {
+			MaterialTheme.colorScheme.secondaryContainer
 		} else {
-			Button(
-				onClick = onAction,
-				colors = ButtonDefaults.buttonColors(
-					containerColor = MaterialTheme.colorScheme.primaryContainer,
-					contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-				)
-			) {
+			MaterialTheme.colorScheme.surfaceContainerLowest
+		},
+		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+		label = "permContainerColor"
+	)
+
+	val actionInteraction = remember { MutableInteractionSource() }
+	val isActionPressed by actionInteraction.collectIsPressedAsState()
+	val actionCorner by animateDpAsState(
+		targetValue = if (isActionPressed) 10.dp else 16.dp,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "actionCorner"
+	)
+	val actionScale by animateFloatAsState(
+		targetValue = if (isActionPressed) 0.96f else 1f,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "actionScale"
+	)
+
+	Surface(
+		modifier = Modifier.fillMaxWidth(),
+		shape = RoundedCornerShape(
+			topStart = topCorner,
+			topEnd = topCorner,
+			bottomStart = bottomCorner,
+			bottomEnd = bottomCorner
+		),
+		color = containerColor
+	) {
+		Row(
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(horizontal = 16.dp, vertical = 14.dp),
+			verticalAlignment = Alignment.CenterVertically,
+			horizontalArrangement = Arrangement.SpaceBetween
+		) {
+			Column(modifier = Modifier.weight(1f)) {
 				Text(
-					text = stringResource(
-						when {
-							isPermanentlyDenied -> R.string.permission_dialog_btn_open_settings
-							step.action != null -> R.string.permission_dialog_btn_open_settings
-							else -> R.string.permission_dialog_btn_allow
-						}
-					)
+					text = stringResource(step.titleRes),
+					style = MaterialTheme.typography.titleMedium,
+					color = MaterialTheme.colorScheme.onSurface,
+					fontWeight = FontWeight.Bold
 				)
+				Spacer(modifier = Modifier.height(3.dp))
+				Text(
+					text = stringResource(step.rationaleRes),
+					style = MaterialTheme.typography.bodySmall,
+					color = MaterialTheme.colorScheme.onSurfaceVariant
+				)
+			}
+			Spacer(Modifier.width(12.dp))
+
+			if (isGranted) {
+				Surface(
+					shape = CircleShape,
+					color = MaterialTheme.colorScheme.primaryContainer,
+					modifier = Modifier.size(36.dp)
+				) {
+					Box(contentAlignment = Alignment.Center) {
+						Icon(
+							imageVector = Icons.Default.CheckCircle,
+							contentDescription = stringResource(R.string.permission_dialog_done_desc),
+							tint = MaterialTheme.colorScheme.primary,
+							modifier = Modifier.size(22.dp)
+						)
+					}
+				}
+			} else {
+				Button(
+					onClick = onAction,
+					interactionSource = actionInteraction,
+					shape = RoundedCornerShape(actionCorner),
+					contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+					colors = ButtonDefaults.buttonColors(
+						containerColor = MaterialTheme.colorScheme.primary,
+						contentColor = MaterialTheme.colorScheme.onPrimary
+					),
+					modifier = Modifier.graphicsLayer {
+						scaleX = actionScale
+						scaleY = actionScale
+					}
+				) {
+					Text(
+						text = stringResource(
+							when {
+								isPermanentlyDenied -> R.string.permission_dialog_btn_open_settings
+								step.action != null -> R.string.permission_dialog_btn_open_settings
+								else -> R.string.permission_dialog_btn_allow
+							}
+						),
+						style = MaterialTheme.typography.labelLarge,
+						fontWeight = FontWeight.Bold
+					)
+				}
 			}
 		}
 	}

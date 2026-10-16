@@ -1,14 +1,15 @@
 package com.coolApps.MultipleAlarmClock.presentation.settings
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,8 +19,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -28,12 +29,14 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,7 +50,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -58,6 +63,7 @@ import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FeedbackCardContent(
         feedbackText: String,
@@ -79,8 +85,10 @@ fun FeedbackCardContent(
                 }
         }
         Card(
-                modifier = modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(28.dp),
+                modifier = modifier
+                        .widthIn(max = 480.dp)
+                        .fillMaxWidth(),
+                shape = RoundedCornerShape(32.dp),
                 colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ),
@@ -96,11 +104,11 @@ fun FeedbackCardContent(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                                // ── Icon badge ──
+                                // ── Hero Squircle Icon Badge (Optical Roundness: 32dp - 14dp = 18dp) ──
                                 Box(
                                         modifier = Modifier
                                                 .size(56.dp)
-                                                .clip(CircleShape)
+                                                .clip(RoundedCornerShape(18.dp))
                                                 .background(
                                                         brush = Brush.radialGradient(
                                                                 colors = listOf(
@@ -123,12 +131,13 @@ fun FeedbackCardContent(
                                 Text(
                                         text = stringResource(R.string.feedback_card),
                                         style = MaterialTheme.typography.headlineSmall,
+                                        fontWeight = FontWeight.ExtraBold,
                                         color = MaterialTheme.colorScheme.onSurface,
                                 )
                         }
 
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         // ── Description ──
                         Text(
@@ -137,15 +146,15 @@ fun FeedbackCardContent(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
-                        // ── Text field ──
+                        // ── Text field (Optical Roundness: 18.dp inside 32.dp card) ──
                         OutlinedTextField(
                                 value = feedbackText,
                                 onValueChange = { if (it.length <= maxChars) onFeedbackChange(it) },
                                 modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(140.dp)
+                                        .height(144.dp)
                                         .focusRequester(focusRequester),
                                 placeholder = {
                                         Text(
@@ -157,10 +166,10 @@ fun FeedbackCardContent(
                                 textStyle = MaterialTheme.typography.bodyMedium.copy(
                                         color = MaterialTheme.colorScheme.onSurface,
                                 ),
-                                shape = RoundedCornerShape(16.dp),
+                                shape = RoundedCornerShape(18.dp),
                                 colors = OutlinedTextFieldDefaults.colors(
                                         focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
                                         focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                                         unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                                 ),
@@ -175,19 +184,29 @@ fun FeedbackCardContent(
                                                 modifier = Modifier.fillMaxWidth(),
                                                 horizontalArrangement = Arrangement.End,
                                         ) {
-                                                Text(
-                                                        text = stringResource(R.string.feedback_char_count, feedbackText.length, maxChars),
-                                                        style = MaterialTheme.typography.bodySmall,
+                                                Surface(
+                                                        shape = RoundedCornerShape(50),
                                                         color = if (feedbackText.length >= maxChars)
-                                                                MaterialTheme.colorScheme.error
+                                                                MaterialTheme.colorScheme.errorContainer
                                                         else
-                                                                MaterialTheme.colorScheme.onSurfaceVariant,
-                                                )
+                                                                MaterialTheme.colorScheme.surfaceContainerHighest,
+                                                ) {
+                                                        Text(
+                                                                text = stringResource(R.string.feedback_char_count, feedbackText.length, maxChars),
+                                                                style = MaterialTheme.typography.labelSmall,
+                                                                fontWeight = FontWeight.SemiBold,
+                                                                color = if (feedbackText.length >= maxChars)
+                                                                        MaterialTheme.colorScheme.onErrorContainer
+                                                                else
+                                                                        MaterialTheme.colorScheme.onSurfaceVariant,
+                                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                                        )
+                                                }
                                         }
                                 },
                         )
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(22.dp))
 
                         // ── Actions ──
                         Row(
@@ -195,31 +214,75 @@ fun FeedbackCardContent(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End),
                                 verticalAlignment = Alignment.CenterVertically,
                         ) {
-                                if (showMaybeLaterButton){
-                                        TextButton(
+                                if (showMaybeLaterButton) {
+                                        val dismissInteraction = remember { MutableInteractionSource() }
+                                        val isDismissPressed by dismissInteraction.collectIsPressedAsState()
+                                        val dismissCorner by animateDpAsState(
+                                                targetValue = if (isDismissPressed) 12.dp else 20.dp,
+                                                animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+                                                label = "dismissCorner"
+                                        )
+                                        val dismissScale by animateFloatAsState(
+                                                targetValue = if (isDismissPressed) 0.96f else 1f,
+                                                animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+                                                label = "dismissScale"
+                                        )
+
+                                        FilledTonalButton(
                                                 onClick = onDismiss,
-                                                shape = RoundedCornerShape(50),
+                                                interactionSource = dismissInteraction,
+                                                shape = RoundedCornerShape(dismissCorner),
+                                                colors = ButtonDefaults.filledTonalButtonColors(
+                                                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                                        contentColor = MaterialTheme.colorScheme.onSurface
+                                                ),
+                                                modifier = Modifier.graphicsLayer {
+                                                        scaleX = dismissScale
+                                                        scaleY = dismissScale
+                                                }
                                         ) {
                                                 Text(
                                                         text = stringResource(R.string.feedback_btn_maybe_later),
                                                         style = MaterialTheme.typography.labelLarge,
-                                                        color = MaterialTheme.colorScheme.onSurface,
+                                                        fontWeight = FontWeight.Bold,
                                                 )
                                         }
                                 }
 
+                                val submitInteraction = remember { MutableInteractionSource() }
+                                val isSubmitPressed by submitInteraction.collectIsPressedAsState()
+                                val submitCorner by animateDpAsState(
+                                        targetValue = if (isSubmitPressed) 12.dp else 24.dp,
+                                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+                                        label = "submitCorner"
+                                )
+                                val submitScale by animateFloatAsState(
+                                        targetValue = if (isSubmitPressed) 0.96f else 1f,
+                                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+                                        label = "submitScale"
+                                )
+
                                 Button(
                                         onClick = onSubmit,
                                         enabled = isSubmitEnabled,
-                                        shape = RoundedCornerShape(50),
+                                        interactionSource = submitInteraction,
+                                        shape = RoundedCornerShape(submitCorner),
                                         colors = ButtonDefaults.buttonColors(
                                                 containerColor = MaterialTheme.colorScheme.primary,
                                                 contentColor = MaterialTheme.colorScheme.onPrimary,
-                                                disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.18f),
-                                                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.66f),
+                                                disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.14f),
+                                                disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                                         ),
+                                        modifier = Modifier.graphicsLayer {
+                                                scaleX = submitScale
+                                                scaleY = submitScale
+                                        }
                                 ) {
-                                        Text(text = stringResource(R.string.feedback_btn_submit), style = MaterialTheme.typography.labelLarge)
+                                        Text(
+                                                text = stringResource(R.string.feedback_btn_submit),
+                                                style = MaterialTheme.typography.labelLarge,
+                                                fontWeight = FontWeight.ExtraBold
+                                        )
                                 }
                         }
                 }
@@ -228,6 +291,7 @@ fun FeedbackCardContent(
 
 
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FeedbackPopUpCard(
         onReviewGiven: (String) -> Unit,
@@ -246,27 +310,32 @@ fun FeedbackPopUpCard(
                         usePlatformDefaultWidth = false,
                 ),
         ) {
-                AnimatedVisibility(
-                        visible = showDialog,
-                        enter = scaleIn(
-                                animationSpec = spring(
-                                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                                        stiffness = Spring.StiffnessMediumLow,
-                                ),
-                                initialScale = 0.85f,
-                        ) + fadeIn(animationSpec = tween(durationMillis = 200)),
-                        exit = scaleOut(targetScale = 0.92f) + fadeOut(animationSpec = tween(150)),
+                Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
                 ) {
-                        // Call our extracted UI here
-                        FeedbackCardContent(
-                                feedbackText = feedbackText,
-                                onFeedbackChange = { feedbackText = it },
-                                onSubmit = { onReviewGiven(feedbackText.trim()) },
-                                onDismiss = onDismiss,
-                                modifier = Modifier.padding(horizontal = 24.dp).wrapContentHeight(),
-                                autoFocus = true, // Enable auto-focus for the dialog
-                                showMaybeLaterButton = true
-                        )
+                        AnimatedVisibility(
+                                visible = showDialog,
+                                enter = scaleIn(
+                                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+                                        initialScale = 0.85f,
+                                ) + fadeIn(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()),
+                                exit = scaleOut(
+                                        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+                                        targetScale = 0.92f
+                                ) + fadeOut(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()),
+                        ) {
+                                // Call our extracted UI here
+                                FeedbackCardContent(
+                                        feedbackText = feedbackText,
+                                        onFeedbackChange = { feedbackText = it },
+                                        onSubmit = { onReviewGiven(feedbackText.trim()) },
+                                        onDismiss = onDismiss,
+                                        modifier = Modifier.padding(horizontal = 24.dp).wrapContentHeight(),
+                                        autoFocus = true, // Enable auto-focus for the dialog
+                                        showMaybeLaterButton = true
+                                )
+                        }
                 }
         }
 }
