@@ -10,7 +10,6 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -40,7 +39,6 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -428,23 +426,13 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 				pressedElevation = 8.dp
 			),
 			icon = {
-				Surface(
-					shape = MaterialTheme.shapes.medium,
-					color = colorScheme.onTertiaryContainer.copy(alpha = 0.12f),
-					contentColor = colorScheme.onTertiaryContainer,
-					modifier = Modifier.size(42.dp)
-				) {
-					Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-						Icon(
-							imageVector = Icons.Default.AlarmAdd,
-							contentDescription = null,
-							modifier = Modifier.size(24.dp)
-						)
-					}
-				}
+				Icon(
+					imageVector = Icons.Default.AlarmAdd,
+					contentDescription = null,
+					modifier = Modifier.size(28.dp)
+				)
 			},
 			text = {
-				Spacer(modifier = Modifier.width(4.dp))
 				Text(
 					text = stringResource(R.string.add_alarm_button_text),
 					style = MaterialTheme.typography.titleMedium,
