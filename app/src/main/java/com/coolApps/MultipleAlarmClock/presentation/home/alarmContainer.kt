@@ -10,6 +10,7 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -28,19 +29,21 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
@@ -156,7 +159,32 @@ import java.util.Calendar
 
 	Scaffold(
 		containerColor = colorScheme.surface,
-		contentWindowInsets = WindowInsets.safeDrawing
+		contentWindowInsets = WindowInsets.safeDrawing,
+		topBar = {
+			Row(
+				modifier = Modifier
+					.fillMaxWidth()
+					.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top))
+					.padding(end = 10.dp, top = 8.dp, bottom = 8.dp),
+				horizontalArrangement = Arrangement.End,
+				verticalAlignment = Alignment.CenterVertically
+			) {
+				FilledTonalIconButton(
+					onClick = {
+						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+						onNavigateToSettings()
+					},
+					modifier = Modifier.size(48.dp),
+					shape = MaterialTheme.shapes.large
+				) {
+					Icon(
+						imageVector = Icons.Outlined.Settings,
+						contentDescription = stringResource(R.string.settings_content_description),
+						modifier = Modifier.size(24.dp)
+					)
+				}
+			}
+		}
 	) { edgeToEdgePadding ->
 		Box(modifier = Modifier.fillMaxSize()) {
 			SnackbarHost(
@@ -200,28 +228,6 @@ import java.util.Calendar
 				horizontalArrangement = Arrangement.spacedBy(8.dp),
 				verticalArrangement = Arrangement.spacedBy(4.dp)
 			) {
-				item(span = { GridItemSpan(maxLineSpan) }) {
-					Row(
-						modifier = Modifier
-							.fillMaxWidth()
-							.padding(bottom = 23.dp, end = 10.dp),
-						horizontalArrangement = Arrangement.End,
-						verticalAlignment = Alignment.CenterVertically
-					) {
-						FilledTonalIconButton(
-							onClick = onNavigateToSettings,
-							modifier = Modifier.size(45.dp),
-							shape = MaterialTheme.shapes.large
-						) {
-							Icon(
-								imageVector = Icons.Outlined.Settings,
-								contentDescription = stringResource(R.string.settings_content_description),
-								modifier = Modifier.size(24.dp)
-							)
-						}
-					}
-				}
-
 				alarmList?.let { list ->
 					items(
 						items = list,
