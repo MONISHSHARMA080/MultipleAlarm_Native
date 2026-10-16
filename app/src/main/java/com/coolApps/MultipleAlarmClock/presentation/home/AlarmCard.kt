@@ -119,7 +119,7 @@ import kotlin.math.abs
 
 	val view = LocalView.current
 	val dismissState = rememberSwipeToDismissBoxState()
-	val cardShape = shapes.extraLarge
+	val cardShape = shapes.extraExtraLarge
 	val horizontalPadding = 10.dp
 
 	SwipeToDismissBox(
