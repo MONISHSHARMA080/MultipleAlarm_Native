@@ -253,7 +253,7 @@ fun AlarmScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Button(
@@ -273,7 +273,7 @@ fun AlarmScreen(
                     ),
                     modifier = Modifier
                         .scale(stopButtonScale)
-                        .height(84.dp)
+                        .height(74.dp)
                         .widthIn(max = 520.dp)
                         .fillMaxWidth(0.94f)
                 ) {
