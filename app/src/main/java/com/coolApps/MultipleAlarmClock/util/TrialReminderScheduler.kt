@@ -30,7 +30,11 @@ object TrialReminderScheduler {
 	 * If the user is not on a trial, or the reminder time has already passed,
 	 * this is a no-op.
 	 */
-	fun scheduleIfOnTrial(context: Context, customerInfo: CustomerInfo, purchaseCompleted: PaywallEvent.PurchaseCompleted) {
+	fun scheduleIfOnTrial(
+		context: Context,
+		customerInfo: CustomerInfo,
+		purchaseCompleted: PaywallEvent.PurchaseCompleted? = null,
+	) {
 		TODO("take the purchasse completed and check how long is the free trial if there is one")
 		logD("in scheduleIfOnTrial:$context, ${customerInfo.toString()}")
 		val entitlement = customerInfo.entitlements[PREMIUM_ENTITLEMENT] ?: return
