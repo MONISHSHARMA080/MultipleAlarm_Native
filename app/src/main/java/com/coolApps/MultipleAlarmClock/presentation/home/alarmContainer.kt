@@ -10,6 +10,7 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -44,6 +45,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AlarmAdd
 import androidx.compose.material.icons.outlined.Alarm
@@ -400,6 +402,11 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
 		label = "fabScale"
 	)
+	val cornerRadius by animateDpAsState(
+		targetValue = if (isPressed) 16.dp else 37.dp,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "fabCornerRadius"
+	)
 	val colorScheme = colorScheme
 
 	// 🔑 Lock font scale so button looks identical on every device
@@ -417,8 +424,7 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 				.widthIn(min = 196.dp)
 				.zIndex(5f),
 			interactionSource = interactionSource,
-			shape = MaterialTheme.shapes.extraExtraLarge,
-//			shape = CircleShape,
+			shape = RoundedCornerShape(cornerRadius),
 			containerColor = colorScheme.tertiaryContainer,
 			contentColor = colorScheme.onTertiaryContainer,
 			elevation = FloatingActionButtonDefaults.elevation(

@@ -19,6 +19,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -49,6 +50,8 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,15 +63,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.IntentCompat
 import androidx.lifecycle.lifecycleScope
 import com.coolApps.MultipleAlarmClock.presentation.logD
@@ -294,7 +294,7 @@ fun AlarmScreen(
                     Spacer(modifier = Modifier.width(14.dp))
                     Text(
                         text = "Stop",
-                        style = typography.headlineLarge,
+                        style = typography.headlineMedium,
                         fontWeight = FontWeight.Black,
                         letterSpacing = 0.5.sp
                     )
@@ -362,49 +362,39 @@ fun AlarmScreen(
                     if (!messageIsEmpty) {
                         Spacer(modifier = Modifier.height(20.dp))
                         // Expressive Tonal Message Card
-                        Surface(
-                            shape = RoundedCornerShape(28.dp),
-                            color = colorScheme.surfaceContainerLow,
-                            contentColor = colorScheme.onSurface,
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                                .padding(bottom = 12.dp)
-                        ) {
-                            Box(modifier = Modifier.fillMaxSize()) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .verticalScroll(rememberScrollState())
-                                        .padding(horizontal = 24.dp, vertical = 20.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = message,
-                                        color = colorScheme.onSurface,
-                                        style = typography.titleLarge,
-                                        fontWeight = FontWeight.SemiBold,
-                                        textAlign = TextAlign.Center,
-                                        lineHeight = 32.sp
-                                    )
-                                    Spacer(modifier = Modifier.height(24.dp))
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.BottomCenter)
-                                        .fillMaxWidth()
-                                        .height(36.dp)
-                                        .background(
-                                            brush = Brush.verticalGradient(
-                                                colors = listOf(
-                                                    Color.Transparent,
-                                                    colorScheme.surfaceContainerLow
-                                                )
-                                            )
-                                        )
-                                )
-                            }
-                        }
+						Box(modifier = Modifier.fillMaxSize()) {
+							Column(
+								modifier = Modifier
+									.fillMaxSize()
+									.verticalScroll(rememberScrollState())
+									.padding(horizontal = 24.dp, vertical = 20.dp),
+								horizontalAlignment = Alignment.CenterHorizontally
+							) {
+								Text(
+									text = message,
+									color = colorScheme.onSurface,
+									style = typography.titleMedium,
+									fontWeight = FontWeight.SemiBold,
+									textAlign = TextAlign.Center,
+									lineHeight = 32.sp
+								)
+								Spacer(modifier = Modifier.height(24.dp))
+							}
+							Box(
+								modifier = Modifier
+									.align(Alignment.BottomCenter)
+									.fillMaxWidth()
+									.height(36.dp)
+									.background(
+										brush = Brush.verticalGradient(
+											colors = listOf(
+												Color.Transparent,
+												colorScheme.surfaceContainerLow
+											)
+										)
+									)
+							)
+						}
                     }
                 }
             }
