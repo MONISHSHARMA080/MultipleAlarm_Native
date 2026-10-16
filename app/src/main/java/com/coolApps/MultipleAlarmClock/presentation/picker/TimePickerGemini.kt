@@ -8,7 +8,6 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.SnapSpec
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.MutatorMutex
@@ -41,6 +40,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -923,7 +923,7 @@ private fun HorizontalPeriodToggle(
         }
     }
 
-    val shape = RoundedCornerShape(8.dp)
+    val shape = RoundedCornerShape(14.dp)
 
     PeriodToggleImpl(
         modifier = modifier,
@@ -976,7 +976,7 @@ private fun VerticalPeriodToggle(
         }
     }
 
-    val shape = RoundedCornerShape(8.dp)
+    val shape = RoundedCornerShape(14.dp)
 
     PeriodToggleImpl(
         modifier = modifier,
@@ -1006,7 +1006,7 @@ private fun PeriodToggleImpl(
 ) {
     val borderStroke =
         BorderStroke(PeriodSelectorOutlineWidth, colors.periodSelectorBorderColor)
-    val shape = RoundedCornerShape(8.dp)
+    val shape = RoundedCornerShape(14.dp)
 //    val amDisabled = isPeriodAmDisabled(minHour)
 //    val pmDisabled = isPeriodPmDisabled(minHour)
 	val amDisabled = false
@@ -1143,7 +1143,7 @@ private fun TimeSelector(
             }
         },
         selected = selected,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(16.dp),
         color = containerColor,
     ) {
         val valueContentDescription =
@@ -1346,6 +1346,7 @@ internal class ClockDialNode(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 @ExperimentalMaterial3Api
 internal fun ClockFace(
@@ -1357,6 +1358,9 @@ internal fun ClockFace(
     minMinute: Int?,
     onDisabledTimeSelected: (() -> Unit)?,
 ) {
+    val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+    val effectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+
     Crossfade(
         modifier =
             modifier
@@ -1367,7 +1371,7 @@ internal fun ClockFace(
                         state = state,
                         autoSwitchToMinute = autoSwitchToMinute,
                         selection = state.selection,
-                        animationSpec = tween(300),
+                        animationSpec = spatialSpec,
                         minHour = minHour,
                         minMinute = minMinute,
                         onDisabledTimeSelected = onDisabledTimeSelected,
@@ -1375,7 +1379,7 @@ internal fun ClockFace(
                 )
                 .drawSelector(state, colors),
         targetState = state.clockFaceValues,
-        animationSpec = tween(300),
+        animationSpec = effectsSpec,
     ) { screen ->
         CircularLayout(
             modifier = Modifier.fillMaxSize().semantics { selectableGroup() },
@@ -1765,7 +1769,7 @@ private fun TimePickerTextField(
                             enabled = true,
                             isError = false,
                             interactionSource = interactionSource,
-                            shape = RoundedCornerShape(8.dp),
+                            shape = RoundedCornerShape(16.dp),
                             colors = textFieldColors,
                         )
                     },

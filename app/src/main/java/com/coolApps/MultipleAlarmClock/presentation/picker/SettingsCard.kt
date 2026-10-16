@@ -7,11 +7,7 @@ import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -35,7 +31,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -52,9 +47,10 @@ import androidx.compose.material.icons.rounded.EventRepeat
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Timer
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Surface
@@ -81,6 +77,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalView
@@ -96,6 +93,8 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.local.AlarmDataValidationResult
@@ -106,6 +105,23 @@ import java.time.DayOfWeek
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields
 
+private val SegmentedTopShape = RoundedCornerShape(
+	topStart = 24.dp,
+	topEnd = 24.dp,
+	bottomStart = 6.dp,
+	bottomEnd = 6.dp
+)
+
+private val SegmentedMiddleShape = RoundedCornerShape(6.dp)
+
+private val SegmentedBottomShape = RoundedCornerShape(
+	topStart = 6.dp,
+	topEnd = 6.dp,
+	bottomStart = 24.dp,
+	bottomEnd = 24.dp
+)
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SettingsCard(
 		uiState: AlarmPickerUiState,
@@ -120,21 +136,22 @@ fun SettingsCard(
 		animateScroll: Boolean = true
 ) {
 	Surface(
-		shape = RoundedCornerShape(29.dp),
-		color = colorScheme.surfaceContainer,
+		shape = RoundedCornerShape(28.dp),
+		color = colorScheme.surfaceContainerLow,
 		modifier = modifier.fillMaxWidth()
 	) {
-		val density = androidx.compose.ui.platform.LocalDensity.current
-		val initialScroll = remember(animateScroll) { 
-			if (animateScroll) with(density) { 62.dp.toPx().toInt() } else 0 
+		val density = LocalDensity.current
+		val initialScroll = remember(animateScroll) {
+			if (animateScroll) with(density) { 62.dp.toPx().toInt() } else 0
 		}
 		val scrollState = rememberScrollState(initial = initialScroll)
+		val scrollSpec = MaterialTheme.motionScheme.slowSpatialSpec<Float>()
 
 		LaunchedEffect(animateScroll) {
 			if (animateScroll && scrollState.value > 0) {
 				scrollState.animateScrollTo(
 					value = 0,
-					animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
+					animationSpec = scrollSpec
 				)
 			}
 		}
@@ -143,105 +160,138 @@ fun SettingsCard(
 			modifier = Modifier
 				.fillMaxWidth()
 				.imePadding()
-				.verticalScroll(
-					scrollState
-				)
+				.verticalScroll(scrollState)
+				.padding(4.dp),
+			verticalArrangement = Arrangement.spacedBy(4.dp)
 		) {
+			Surface(
+				shape = SegmentedTopShape,
+				color = colorScheme.surfaceContainer,
+				modifier = Modifier.fillMaxWidth()
+			) {
+				RepeatDaysRow(
+					icon = Icons.Rounded.EventRepeat,
+					title = stringResource(
+						R.string.alarm_picker_repeat_days
+					),
+					selectedDays =
+						uiState.alarmData.repeatDays?.toSet()
+							?: emptySet(),
+					onDayToggled = repeatDayToggled
+				)
+			}
 
-			RepeatDaysRow(
-				icon = Icons.Rounded.EventRepeat,
-				title = stringResource(
-					R.string.alarm_picker_repeat_days
-				),
-				selectedDays =
-					uiState.alarmData.repeatDays?.toSet()
-						?: emptySet(),
-				onDayToggled = repeatDayToggled
-			)
+			Surface(
+				shape = SegmentedMiddleShape,
+				color = colorScheme.surfaceContainer,
+				modifier = Modifier.fillMaxWidth()
+			) {
+				FrequencyRow(
+					icon = Icons.Rounded.Timer,
+					title = stringResource(
+						R.string.alarm_picker_repeat_every
+					),
+					value = uiState.alarmData.frequencyInMin,
+					onValueChange = { newValue ->
+						if (newValue in 0..<720) {
+							updateFrequency(newValue)
+						}
+					},
+					uiState = uiState
+				)
+			}
 
-			HorizontalDivider(
-				modifier = Modifier.padding(horizontal = 16.dp),
-				color = colorScheme.outlineVariant
-			)
+			Surface(
+				shape = SegmentedMiddleShape,
+				color = colorScheme.surfaceContainer,
+				modifier = Modifier.fillMaxWidth()
+			) {
+				SettingRow(
+					icon = Icons.Rounded.CalendarMonth,
+					title = stringResource(
+						R.string.alarm_picker_date
+					),
+					value = SimpleDateFormat(
+						"EEE, MMM d, yyyy",
+						LocalLocale.current.platformLocale
+					).format(uiState.alarmData.startTime),
+					onClick = calenderButtonClicked
+				)
+			}
 
-			FrequencyRow(
-				icon = Icons.Rounded.Timer,
-				title = stringResource(
-					R.string.alarm_picker_repeat_every
-				),
-				value = uiState.alarmData.frequencyInMin,
-				onValueChange = { newValue ->
-					if (newValue in 0..<720) {
-						updateFrequency(newValue)
+			Surface(
+				shape = SegmentedMiddleShape,
+				color = colorScheme.surfaceContainer,
+				modifier = Modifier.fillMaxWidth()
+			) {
+				SettingRow(
+					icon = Icons.Rounded.Notifications,
+					title = stringResource(
+						R.string.alarm_picker_sound
+					),
+					value = selectedSoundName,
+					onClick = selectSoundButtonClicked
+				)
+			}
+
+			Surface(
+				shape = SegmentedMiddleShape,
+				color = colorScheme.surfaceContainer,
+				modifier = Modifier.fillMaxWidth()
+			) {
+				MessageRow(
+					icon = Icons.AutoMirrored.Rounded.Message,
+					title = stringResource(
+						R.string.alarm_picker_message
+					),
+					value = uiState.alarmData.message,
+					onValueChange = messageValueChanged
+				)
+			}
+
+			Surface(
+				shape = SegmentedBottomShape,
+				color = colorScheme.surfaceContainer,
+				modifier = Modifier.fillMaxWidth()
+			) {
+				SwitchRow(
+					icon = Icons.AutoMirrored.Rounded.VolumeUp,
+					title = stringResource(
+						R.string.alarm_picker_force_loud_volume
+					),
+					checked = uiState.alarmData.isForceLoudVolume,
+					onCheckedChange = { isChecked ->
+						updateIsForceLoudVolume(isChecked)
 					}
-				},
-				uiState = uiState
-			)
+				)
+			}
+		}
+	}
+}
 
-			HorizontalDivider(
-				modifier = Modifier.padding(horizontal = 16.dp),
-				color = colorScheme.outlineVariant
-			)
-
-			SettingRow(
-				icon = Icons.Rounded.CalendarMonth,
-				title = stringResource(
-					R.string.alarm_picker_date
-				),
-				value = SimpleDateFormat(
-					"EEE, MMM d, yyyy",
-					LocalLocale.current.platformLocale
-				).format(uiState.alarmData.startTime),
-				onClick = calenderButtonClicked
-			)
-
-			HorizontalDivider(
-				modifier = Modifier.padding(horizontal = 16.dp),
-				color = colorScheme.outlineVariant
-			)
-
-			SettingRow(
-				icon = Icons.Rounded.Notifications,
-				title = stringResource(
-					R.string.alarm_picker_sound
-				),
-				value = selectedSoundName,
-				onClick = selectSoundButtonClicked
-			)
-
-			HorizontalDivider(
-				modifier = Modifier.padding(horizontal = 16.dp),
-				color = colorScheme.outlineVariant
-			)
-
-			MessageRow(
-				icon = Icons.AutoMirrored.Rounded.Message,
-				title = stringResource(
-					R.string.alarm_picker_message
-				),
-				value = uiState.alarmData.message,
-				onValueChange = messageValueChanged
-			)
-
-			HorizontalDivider(
-				modifier = Modifier.padding(horizontal = 16.dp),
-				color = colorScheme.outlineVariant
-			)
-
-			SwitchRow(
-				icon = Icons.AutoMirrored.Rounded.VolumeUp,
-				title = stringResource(
-					R.string.alarm_picker_force_loud_volume
-				),
-				checked = uiState.alarmData.isForceLoudVolume,
-				onCheckedChange = { isChecked ->
-					updateIsForceLoudVolume(isChecked)
-				}
+@Composable
+private fun ExpressiveSettingIconBadge(
+	icon: ImageVector,
+	modifier: Modifier = Modifier
+) {
+	Surface(
+		shape = RoundedCornerShape(12.dp),
+		color = colorScheme.secondaryContainer.copy(alpha = 0.65f),
+		contentColor = colorScheme.onSecondaryContainer,
+		modifier = modifier.size(36.dp)
+	) {
+		Box(contentAlignment = Alignment.Center) {
+			Icon(
+				imageVector = icon,
+				contentDescription = null,
+				tint = colorScheme.onSecondaryContainer,
+				modifier = Modifier.size(20.dp)
 			)
 		}
 	}
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SwitchRow(
 	icon: ImageVector,
@@ -253,20 +303,18 @@ fun SwitchRow(
 		modifier = Modifier
 			.fillMaxWidth()
 			.clickable(onClick = { onCheckedChange(!checked) })
-			.padding(horizontal = 16.dp, vertical = 20.dp)
-			.animateContentSize(),
+			.padding(horizontal = 16.dp, vertical = 14.dp)
+			.animateContentSize(
+				animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+			),
 		verticalAlignment = Alignment.CenterVertically
 	) {
-		Icon(
-			imageVector = icon,
-			contentDescription = null,
-			tint = colorScheme.onSurfaceVariant
-		)
-		Spacer(modifier = Modifier.width(16.dp))
+		ExpressiveSettingIconBadge(icon = icon)
+		Spacer(modifier = Modifier.width(14.dp))
 		Text(
 			text = title,
-			color = colorScheme.onBackground,
-			style = typography.titleSmall,
+			color = colorScheme.onSurface,
+			style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
 		)
 		Spacer(modifier = Modifier.weight(1f))
 		Switch(
@@ -278,7 +326,7 @@ fun SwitchRow(
 
 
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MessageRow(
 	icon: ImageVector,
@@ -312,7 +360,7 @@ fun MessageRow(
 	val focusRequester = remember { FocusRequester() }
 	val bringIntoViewRequester = remember { BringIntoViewRequester() }
 
-	val titleStyle = typography.titleSmall
+	val titleStyle = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
 	val messageStyle = typography.bodyMedium
 
 	if (isEditing) {
@@ -329,25 +377,15 @@ fun MessageRow(
 				enabled = !isEditing,
 				onClick = { isEditing = true }
 			)
-			.padding(horizontal = 16.dp, vertical = 16.dp)
+			.padding(horizontal = 16.dp, vertical = 14.dp)
 			.animateContentSize(
-				animationSpec = spring(
-					dampingRatio = Spring.DampingRatioNoBouncy,
-					stiffness = Spring.StiffnessMediumLow
-				)
+				animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
 			),
-		verticalAlignment = Alignment.Top
+		verticalAlignment = Alignment.CenterVertically
 	) {
-		Icon(
-			imageVector = icon,
-			contentDescription = null,
-			tint = colorScheme.onSurfaceVariant,
-			modifier = Modifier
-				.size(22.dp)
-				.padding(top = 2.dp)
-		)
+		ExpressiveSettingIconBadge(icon = icon)
 
-		Spacer(modifier = Modifier.width(16.dp))
+		Spacer(modifier = Modifier.width(14.dp))
 
 		FlowRow(
 			modifier = Modifier
@@ -358,7 +396,7 @@ fun MessageRow(
 		) {
 			Text(
 				text = title,
-				color = colorScheme.onBackground,
+				color = colorScheme.onSurface,
 				style = titleStyle,
 				modifier = Modifier.padding(top = 1.dp),
 				maxLines = 1,
@@ -457,6 +495,7 @@ fun RepeatDaysRow(
 	}
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun RepeatDayButton(
 	day: DayOfWeek,
@@ -470,17 +509,22 @@ private fun RepeatDayButton(
 	val view = LocalView.current
 	val coroutineScope = rememberCoroutineScope()
 	val scale = remember { Animatable(1f) }
-	val tweenDuration = 12
+	val bounceSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
 
+	val cornerRadius by animateDpAsState(
+		targetValue = if (isSelected) 12.dp else 20.dp,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "day_corner_radius"
+	)
 
 	val containerColor by animateColorAsState(
-		targetValue = if (isSelected) colorScheme.primaryContainer else colorScheme.surfaceContainerHighest,
-		animationSpec = tween(durationMillis = tweenDuration, easing = FastOutLinearInEasing),
+		targetValue = if (isSelected) colorScheme.primary else colorScheme.surfaceContainerHighest,
+		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
 		label = "day_container_color"
 	)
 	val contentColor by animateColorAsState(
-		targetValue = if (isSelected) colorScheme.onPrimaryContainer else colorScheme.onSurfaceVariant,
-		animationSpec = tween(durationMillis = tweenDuration, easing = FastOutSlowInEasing),
+		targetValue = if (isSelected) colorScheme.onPrimary else colorScheme.onSurfaceVariant,
+		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
 		label = "day_content_color"
 	)
 
@@ -491,23 +535,17 @@ private fun RepeatDayButton(
 				scale.snapTo(1f)
 				scale.animateTo(
 					targetValue = 1.18f,
-					animationSpec = spring(
-						dampingRatio = Spring.DampingRatioMediumBouncy,
-						stiffness = Spring.StiffnessMedium
-					)
+					animationSpec = bounceSpec
 				)
 				scale.animateTo(
 					targetValue = 1f,
-					animationSpec = spring(
-						dampingRatio = Spring.DampingRatioMediumBouncy,
-						stiffness = Spring.StiffnessMediumLow
-					)
+					animationSpec = bounceSpec
 				)
 			}
 			onToggle(day)
 		},
-		shape = CircleShape,
-		color = containerColor.copy(alpha = 0.7f),
+		shape = RoundedCornerShape(cornerRadius),
+		color = if (isSelected) containerColor else containerColor.copy(alpha = 0.75f),
 		modifier = modifier
 			.size(40.dp)
 			.graphicsLayer {
@@ -519,7 +557,9 @@ private fun RepeatDayButton(
 		Box(contentAlignment = Alignment.Center) {
 			Text(
 				text = narrowLabel,
-				style = typography.labelLarge,
+				style = typography.labelLarge.copy(
+					fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold
+				),
 				color = contentColor
 			)
 		}
@@ -527,61 +567,72 @@ private fun RepeatDayButton(
 }
 
 
-@Composable fun SettingRow(icon: ImageVector, title: String, value: String, onClick: () -> Unit) {
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun SettingRow(icon: ImageVector, title: String, value: String, onClick: () -> Unit) {
 	Row(
 		modifier =
 			Modifier.fillMaxWidth()
 				.clickable(onClick = onClick)
-				.padding(horizontal = 16.dp, vertical = 20.dp)
-				.animateContentSize(),
+				.padding(horizontal = 16.dp, vertical = 14.dp)
+				.animateContentSize(
+					animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+				),
 		verticalAlignment = Alignment.CenterVertically
 	) {
-		Icon(imageVector = icon, contentDescription = null, tint = colorScheme.onSurfaceVariant)
-		Spacer(modifier = Modifier.width(16.dp))
+		ExpressiveSettingIconBadge(icon = icon)
+		Spacer(modifier = Modifier.width(14.dp))
 		Text(
 			text = title,
-			color = colorScheme.onBackground,
-			style = typography.titleSmall,
+			color = colorScheme.onSurface,
+			style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
 		)
 		Spacer(modifier = Modifier.weight(1f))
-		Text(
-			text = value,
-			color = colorScheme.onSurfaceVariant,
-			style = typography.labelLarge,
-		)
+		Surface(
+			shape = RoundedCornerShape(12.dp),
+			color = colorScheme.surfaceContainerHighest
+		) {
+			Text(
+				text = value,
+				color = colorScheme.onSurfaceVariant,
+				style = typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+				modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+			)
+		}
 	}
 }
 
 
-@Composable fun FrequencyRow(
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun FrequencyRow(
 			icon: ImageVector,
 			title: String,
 			value: Long,
 			onValueChange: (Long) -> Unit,
 			uiState: AlarmPickerUiState,
 		) {
-		val doWeHaveFrequencyError =  uiState.validationResult is AlarmDataValidationResult.Frequency
+		val doWeHaveFrequencyError = uiState.validationResult is AlarmDataValidationResult.Frequency
 
 		val view = LocalView.current
 		var textValue by remember(value) { mutableStateOf(if (value == 0L) "" else value.toString()) }
+		val spatialIntSizeSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntSize>()
+		val spatialIntOffsetSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+		val effectsFloatSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
 
 		Column(
 			modifier =
 				Modifier.fillMaxWidth()
 					.padding(horizontal = 16.dp, vertical = 12.dp)
-					.animateContentSize()
+					.animateContentSize(animationSpec = spatialIntSizeSpec)
 		) {
 			Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-				Icon(
-					imageVector = icon,
-					contentDescription = null,
-					tint = colorScheme.onSurfaceVariant
-				)
-				Spacer(modifier = Modifier.width(16.dp))
+				ExpressiveSettingIconBadge(icon = icon)
+				Spacer(modifier = Modifier.width(14.dp))
 				Text(
 					text = title,
-					color = colorScheme.onBackground,
-					style = typography.titleSmall,
+					color = colorScheme.onSurface,
+					style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
 					modifier = Modifier.weight(1f)
 				)
 				Row(
@@ -591,7 +642,7 @@ private fun RepeatDayButton(
 							color =
 								if (doWeHaveFrequencyError) colorScheme.errorContainer
 								else colorScheme.secondaryContainer,
-							shape = RoundedCornerShape(12.dp)
+							shape = RoundedCornerShape(16.dp)
 						)
 							.padding(4.dp)
 				) {
@@ -633,13 +684,10 @@ private fun RepeatDayButton(
 						previousNum = currentNum
 					}
 
-					Box(modifier = Modifier.width(55.dp), contentAlignment = Alignment.Center) {
+					Box(modifier = Modifier.width(58.dp), contentAlignment = Alignment.Center) {
 						Row(
 							modifier = Modifier.animateContentSize(
-								animationSpec = spring(
-									dampingRatio = Spring.DampingRatioNoBouncy,
-									stiffness = Spring.StiffnessMedium
-								)
+								animationSpec = spatialIntSizeSpec
 							),
 							horizontalArrangement = Arrangement.Center,
 							verticalAlignment = Alignment.CenterVertically
@@ -651,30 +699,18 @@ private fun RepeatDayButton(
 										targetState = char,
 										transitionSpec = {
 											val slideIn = slideInVertically(
-												animationSpec = spring(
-													dampingRatio = Spring.DampingRatioNoBouncy,
-													stiffness = Spring.StiffnessMedium
-												),
+												animationSpec = spatialIntOffsetSpec,
 												initialOffsetY = { if (isIncreasing) (it * 0.75).toInt() else -(it * 0.75).toInt() }
 											)
 											val slideOut = slideOutVertically(
-												animationSpec = spring(
-													dampingRatio = Spring.DampingRatioNoBouncy,
-													stiffness = Spring.StiffnessMedium
-												),
+												animationSpec = spatialIntOffsetSpec,
 												targetOffsetY = { if (isIncreasing) -(it * 0.75).toInt() else (it * 0.75).toInt() }
 											)
 											(slideIn + fadeIn(
-												animationSpec = spring(
-													dampingRatio = Spring.DampingRatioNoBouncy,
-													stiffness = Spring.StiffnessMedium
-												)
+												animationSpec = effectsFloatSpec
 											)).togetherWith(
 												slideOut + fadeOut(
-													animationSpec = spring(
-														dampingRatio = Spring.DampingRatioNoBouncy,
-														stiffness = Spring.StiffnessMedium
-													)
+													animationSpec = effectsFloatSpec
 												)
 											).using(SizeTransform(clip = false))
 										},
@@ -685,7 +721,7 @@ private fun RepeatDayButton(
 											style = typography.titleMedium.copy(
 												textAlign = TextAlign.Center,
 												color = colorScheme.onSecondaryContainer,
-												fontWeight = FontWeight.Bold
+												fontWeight = FontWeight.ExtraBold
 											)
 										)
 									}
@@ -697,7 +733,7 @@ private fun RepeatDayButton(
 									style = typography.titleMedium.copy(
 										textAlign = TextAlign.Center,
 										color = colorScheme.onSecondaryContainer,
-										fontWeight = FontWeight.Bold
+										fontWeight = FontWeight.ExtraBold
 									)
 								)
 							}
@@ -717,7 +753,7 @@ private fun RepeatDayButton(
 							textStyle = typography.titleMedium.copy(
 								textAlign = TextAlign.Center,
 								color = Color.Transparent,
-								fontWeight = FontWeight.Bold
+								fontWeight = FontWeight.ExtraBold
 							),
 							keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
 							singleLine = true,

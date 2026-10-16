@@ -1,6 +1,11 @@
 package com.coolApps.MultipleAlarmClock.presentation.picker
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,14 +22,16 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.EditCalendar
+import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.presentation.logD
@@ -133,17 +141,37 @@ data class DayInWeek(
 	}
 
 }
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AddMoreDatesCard(onClick: () -> Unit) {
 	val colorScheme = MaterialTheme.colorScheme
+	val interactionSource = remember { MutableInteractionSource() }
+	val isPressed by interactionSource.collectIsPressedAsState()
+	val cornerRadius by animateDpAsState(
+		targetValue = if (isPressed) 16.dp else 24.dp,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "add_more_dates_corner"
+	)
+	val scale by animateFloatAsState(
+		targetValue = if (isPressed) 0.94f else 1f,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "add_more_dates_scale"
+	)
+
 	Surface(
 		onClick = onClick,
-		shape = RoundedCornerShape(25.dp),
-		color = colorScheme.surface,
-		border = BorderStroke(2.dp, colorScheme.secondary),
+		interactionSource = interactionSource,
+		shape = RoundedCornerShape(cornerRadius),
+		color = colorScheme.surfaceContainerHigh,
+		border = BorderStroke(1.5.dp, colorScheme.secondary),
 		modifier = Modifier
 			.width(64.dp)
 			.height(80.dp)
+			.graphicsLayer {
+				scaleX = scale
+				scaleY = scale
+			}
 	) {
 		Column(
 			horizontalAlignment = Alignment.CenterHorizontally,
@@ -153,12 +181,13 @@ fun AddMoreDatesCard(onClick: () -> Unit) {
 				imageVector = Icons.Outlined.EditCalendar,
 				contentDescription = "Load more dates",
 				tint = colorScheme.secondary,
-				modifier = Modifier.size(32.dp)
+				modifier = Modifier.size(30.dp)
 			)
 		}
 	}
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun DateCard(
 	date: LocalDate,
@@ -168,37 +197,76 @@ fun DateCard(
 	onClick: () -> Unit
 ) {
 	val colorScheme = MaterialTheme.colorScheme
+	val interactionSource = remember { MutableInteractionSource() }
+	val isPressed by interactionSource.collectIsPressedAsState()
 
-	val containerColor = when {
-		!isEnabled -> colorScheme.surfaceVariant.copy(alpha = 0.95f)
-		!weGood && isSelected -> colorScheme.errorContainer
-		isSelected -> colorScheme.secondaryContainer
-		else -> colorScheme.surfaceVariant
-	}
+	val cornerRadius by animateDpAsState(
+		targetValue = when {
+			isPressed -> 12.dp
+			isSelected -> 16.dp
+			else -> 24.dp
+		},
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "date_card_corner"
+	)
 
-	val contentColor = when {
-		!isEnabled -> colorScheme.onSurfaceVariant.copy(alpha = 0.28f)
-		!weGood && isSelected -> colorScheme.onErrorContainer
-		isSelected -> colorScheme.onSecondaryContainer
-		else -> colorScheme.onSurfaceVariant
-	}
+	val scale by animateFloatAsState(
+		targetValue = when {
+			isPressed -> 0.94f
+			isSelected -> 1.03f
+			else -> 1f
+		},
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "date_card_scale"
+	)
 
-	val borderColor = when {
-		isSelected -> Color.Transparent
-		!isEnabled -> colorScheme.outlineVariant.copy(alpha = 0.45f)
-		else -> colorScheme.outlineVariant
-	}
+	val containerColor by animateColorAsState(
+		targetValue = when {
+			!isEnabled -> colorScheme.surfaceContainerLow.copy(alpha = 0.65f)
+			!weGood && isSelected -> colorScheme.errorContainer
+			isSelected -> colorScheme.primary
+			else -> colorScheme.surfaceContainerHigh
+		},
+		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+		label = "date_card_container"
+	)
+
+	val contentColor by animateColorAsState(
+		targetValue = when {
+			!isEnabled -> colorScheme.onSurfaceVariant.copy(alpha = 0.28f)
+			!weGood && isSelected -> colorScheme.onErrorContainer
+			isSelected -> colorScheme.onPrimary
+			else -> colorScheme.onSurfaceVariant
+		},
+		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+		label = "date_card_content"
+	)
+
+	val borderColor by animateColorAsState(
+		targetValue = when {
+			isSelected -> Color.Transparent
+			!isEnabled -> colorScheme.outlineVariant.copy(alpha = 0.35f)
+			else -> colorScheme.outlineVariant.copy(alpha = 0.7f)
+		},
+		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+		label = "date_card_border"
+	)
 
 	Surface(
 		onClick = onClick,
 		enabled = isEnabled,
-		shape = RoundedCornerShape(15.dp),
+		interactionSource = interactionSource,
+		shape = RoundedCornerShape(cornerRadius),
 		color = containerColor,
 		contentColor = contentColor,
 		border = BorderStroke(1.dp, borderColor),
 		modifier = Modifier
 			.width(64.dp)
 			.height(80.dp)
+			.graphicsLayer {
+				scaleX = scale
+				scaleY = scale
+			}
 	) {
 		Column(
 			modifier = Modifier
@@ -222,7 +290,7 @@ fun DateCard(
 			Text(
 				text = date.dayOfMonth.toString(),
 				style = MaterialTheme.typography.titleMedium.copy(
-					fontWeight = FontWeight.Bold,
+					fontWeight = FontWeight.ExtraBold,
 					color = contentColor
 				),
 				maxLines = 1,
@@ -232,7 +300,7 @@ fun DateCard(
 			Text(
 				text = date.month.name.take(3),
 				style = MaterialTheme.typography.labelSmall.copy(
-					fontWeight = FontWeight.Medium,
+					fontWeight = FontWeight.SemiBold,
 					color = contentColor
 				),
 				maxLines = 1,
@@ -267,6 +335,7 @@ fun getListOfDatesInThisWeek(startDate: LocalDate = LocalDate.now()): List<DayIn
 	return list
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable fun DatePickerModal(onDateSelected: (Long?) -> Unit, onDismiss: () -> Unit) {
 	val datePickerState = rememberDatePickerState(
 		selectableDates = object : SelectableDates {
@@ -280,20 +349,51 @@ fun getListOfDatesInThisWeek(startDate: LocalDate = LocalDate.now()): List<DayIn
 				return utcTimeMillis >= today
 			}
 		}
-)
+	)
+	val confirmInteraction = remember { MutableInteractionSource() }
+	val isConfirmPressed by confirmInteraction.collectIsPressedAsState()
+	val confirmCorner by animateDpAsState(
+		targetValue = if (isConfirmPressed) 12.dp else 20.dp,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "date_confirm_corner"
+	)
+
+	val dismissInteraction = remember { MutableInteractionSource() }
+	val isDismissPressed by dismissInteraction.collectIsPressedAsState()
+	val dismissCorner by animateDpAsState(
+		targetValue = if (isDismissPressed) 12.dp else 20.dp,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "date_dismiss_corner"
+	)
+
 	DatePickerDialog(
 		onDismissRequest = onDismiss,
+		shape = RoundedCornerShape(32.dp),
 		confirmButton = {
-			TextButton(onClick = {
-				onDateSelected(datePickerState.selectedDateMillis)
-				onDismiss()
-			}) {
-				Text("OK")
+			Button(
+				onClick = {
+					onDateSelected(datePickerState.selectedDateMillis)
+					onDismiss()
+				},
+				interactionSource = confirmInteraction,
+				shape = RoundedCornerShape(confirmCorner)
+			) {
+				Text(
+					text = "OK",
+					style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.ExtraBold)
+				)
 			}
 		},
 		dismissButton = {
-			TextButton(onClick = onDismiss) {
-				Text("Cancel")
+			FilledTonalButton(
+				onClick = onDismiss,
+				interactionSource = dismissInteraction,
+				shape = RoundedCornerShape(dismissCorner)
+			) {
+				Text(
+					text = "Cancel",
+					style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
+				)
 			}
 		}
 	) {
