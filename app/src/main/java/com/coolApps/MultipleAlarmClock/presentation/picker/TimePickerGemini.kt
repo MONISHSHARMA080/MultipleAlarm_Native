@@ -205,25 +205,35 @@ internal fun Float.toMinute(): Int {
     return if (minute < 0) (minute % 60 + 60) % 60 else minute % 60
 }
 
+@Composable
+@ReadOnlyComposable
 @OptIn(ExperimentalMaterial3Api::class)
 internal fun TimePickerColors.timeSelectorContainerColor(selected: Boolean): Color =
-    if (selected) timeSelectorSelectedContainerColor else timeSelectorUnselectedContainerColor
+    if (selected) timeSelectorSelectedContainerColor else MaterialTheme.colorScheme.surfaceContainerHighest
 
+@Composable
+@ReadOnlyComposable
 @OptIn(ExperimentalMaterial3Api::class)
 internal fun TimePickerColors.timeSelectorContentColor(selected: Boolean): Color =
-    if (selected) timeSelectorSelectedContentColor else timeSelectorUnselectedContentColor
+    if (selected) timeSelectorSelectedContentColor else MaterialTheme.colorScheme.onSurface
 
+@Composable
+@ReadOnlyComposable
 @OptIn(ExperimentalMaterial3Api::class)
 internal fun TimePickerColors.periodSelectorContainerColor(selected: Boolean): Color =
-    if (selected) periodSelectorSelectedContainerColor else periodSelectorUnselectedContainerColor
+    if (selected) periodSelectorSelectedContainerColor else Color.Transparent
 
+@Composable
+@ReadOnlyComposable
 @OptIn(ExperimentalMaterial3Api::class)
 internal fun TimePickerColors.periodSelectorContentColor(selected: Boolean): Color =
-    if (selected) periodSelectorSelectedContentColor else periodSelectorUnselectedContentColor
+    if (selected) periodSelectorSelectedContentColor else MaterialTheme.colorScheme.onSurfaceVariant
 
+@Composable
+@ReadOnlyComposable
 @OptIn(ExperimentalMaterial3Api::class)
 internal fun TimePickerColors.clockDialContentColor(selected: Boolean): Color =
-    if (selected) clockDialSelectedContentColor else clockDialUnselectedContentColor
+    if (selected) clockDialSelectedContentColor else MaterialTheme.colorScheme.onSurface
 
 @OptIn(ExperimentalMaterial3Api::class)
 internal val TimePickerState.hourForDisplay: Int
@@ -1507,7 +1517,7 @@ private fun Modifier.drawSelector(
         drawCircle(
             radius = selectorRadius,
             center = selectorOffsetPx,
-            color = colors.clockDialContentColor(selected = true),
+            color = colors.clockDialSelectedContentColor,
             blendMode = BlendMode.DstOver,
         )
     }

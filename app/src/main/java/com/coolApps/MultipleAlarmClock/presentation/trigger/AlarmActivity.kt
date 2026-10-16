@@ -362,20 +362,22 @@ fun AlarmScreen(
             contentAlignment = Alignment.Center
         ) {
             val isCompactHeight = maxHeight < 460.dp
+            val defaultSpatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
+            val defaultEffectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
 
             AnimatedContent(
                 targetState = message.isEmpty(),
                 transitionSpec = {
                     (scaleIn(
                         initialScale = 0.95f,
-                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                        animationSpec = defaultSpatialSpec
                     ) + fadeIn(
-                        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
+                        animationSpec = defaultEffectsSpec
                     )) togetherWith (scaleOut(
                         targetScale = 0.95f,
-                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                        animationSpec = defaultSpatialSpec
                     ) + fadeOut(
-                        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
+                        animationSpec = defaultEffectsSpec
                     ))
                 },
                 label = "AlarmHeroContent"
