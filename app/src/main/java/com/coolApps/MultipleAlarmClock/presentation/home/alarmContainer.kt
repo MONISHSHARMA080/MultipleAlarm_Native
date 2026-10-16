@@ -339,13 +339,6 @@ fun EmptyAlarmsView(modifier: Modifier = Modifier) {
 				contentAlignment = Alignment.Center,
 				modifier = Modifier.offset { IntOffset(x = 0, y = dy.dp.roundToPx()) }
 			) {
-				Surface(
-					shape = MaterialTheme.shapes.extraLarge,
-					color = colorScheme.secondaryContainer.copy(alpha = 0.45f),
-					modifier = Modifier
-						.size(164.dp)
-						.scale(haloScale)
-				) {}
 
 				Surface(
 					shape = MaterialTheme.shapes.extraLarge,
@@ -353,14 +346,14 @@ fun EmptyAlarmsView(modifier: Modifier = Modifier) {
 					contentColor = colorScheme.onPrimaryContainer,
 					modifier = Modifier.size(124.dp)
 				) {
-					Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-						Icon(
-							imageVector = Icons.Outlined.Alarm,
-							contentDescription = null,
-							modifier = Modifier.size(64.dp),
-							tint = colorScheme.onPrimaryContainer
-						)
-					}
+				Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+					Icon(
+						imageVector = Icons.Outlined.Alarm,
+						contentDescription = null,
+						modifier = Modifier.size(64.dp),
+						tint = colorScheme.onPrimaryContainer
+					)
+				}
 				}
 			}
 
@@ -420,7 +413,8 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 				.widthIn(min = 196.dp)
 				.zIndex(5f),
 			interactionSource = interactionSource,
-			shape = MaterialTheme.shapes.extraLarge,
+			shape = MaterialTheme.shapes.extraExtraLarge,
+//			shape = CircleShape,
 			containerColor = colorScheme.tertiaryContainer,
 			contentColor = colorScheme.onTertiaryContainer,
 			elevation = FloatingActionButtonDefaults.elevation(
