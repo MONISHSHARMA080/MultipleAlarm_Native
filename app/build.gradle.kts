@@ -63,7 +63,11 @@ fun Project.configureAndroid() {
     extensions.configure<ApplicationExtension> {
 
         namespace = "com.coolApps.MultipleAlarmClock"
-        compileSdk = 37
+        compileSdk {
+            version = release(37) {
+                minorApiLevel = 1
+            }
+        }
 
         defaultConfig {
             applicationId = "com.coolApps.MultipleAlarmClock"
