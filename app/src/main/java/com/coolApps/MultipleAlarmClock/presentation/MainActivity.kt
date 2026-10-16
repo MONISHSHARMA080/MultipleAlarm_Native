@@ -8,6 +8,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.coolApps.MultipleAlarmClock.presentation.navigation.NavigationStack
 import com.coolApps.MultipleAlarmClock.presentation.navigation.NavigationViewModel
@@ -43,7 +48,8 @@ class MainActivity : ComponentActivity() {
 			enableEdgeToEdge()
 
 			setContent {
-				ExpressiveAlarmTheme {
+				val colorScheme = if (isSystemInDarkTheme()) { dynamicDarkColorScheme(LocalContext.current) } else { dynamicLightColorScheme(LocalContext.current) }
+				MaterialTheme(colorScheme = colorScheme) {
 					NavigationStack(
 						navViewModel = navViewModel,
 						deepLinkScreen = deepLinkScreen

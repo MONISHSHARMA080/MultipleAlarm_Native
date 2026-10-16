@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
@@ -35,6 +34,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
@@ -111,16 +111,6 @@ import kotlin.math.abs
 		label = "verticalPadding"
 	)
 
-	val targetCornerRadius = when {
-		isPressed -> 16.dp
-		isActive -> 28.dp
-		else -> 20.dp
-	}
-	val cardCornerRadius by animateDpAsState(
-		targetValue = targetCornerRadius,
-		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-		label = "cardCornerRadius"
-	)
 	val cardScale by animateFloatAsState(
 		targetValue = if (isPressed) 0.98f else 1f,
 		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
@@ -129,7 +119,7 @@ import kotlin.math.abs
 
 	val view = LocalView.current
 	val dismissState = rememberSwipeToDismissBoxState()
-	val cardShape = RoundedCornerShape(cardCornerRadius)
+	val cardShape = MaterialTheme.shapes.extraLarge
 	val horizontalPadding = 10.dp
 
 	SwipeToDismissBox(
@@ -177,7 +167,7 @@ import kotlin.math.abs
 							label = "iconScale"
 						)
 						Surface(
-							shape = RoundedCornerShape(14.dp),
+							shape = shapes.extraLarge,
 							color = colorScheme.error.copy(alpha = 0.14f),
 							modifier = Modifier
 								.size(40.dp)
@@ -272,83 +262,23 @@ fun AlarmCardContent(
 	val typography = typography
 	val secondaryContentColor = contentColor.copy(alpha = 0.75f)
 
-	// Optical roundness rule: outer card is 28dp (active) / 20dp (inactive) with 20dp padding -> inner badge ~12dp
-	val badgeCornerRadius by animateDpAsState(
-		targetValue = if (isActive) 12.dp else 10.dp,
-		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-		label = "badgeCornerRadius"
-	)
-	val badgeContainerColor by animateColorAsState(
-		targetValue = if (isActive) {
-			colorScheme.secondaryContainer
-		} else {
-			colorScheme.surfaceContainerHighest
-		},
-		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-		label = "badgeContainerColor"
-	)
-	val badgeContentColor by animateColorAsState(
-		targetValue = if (isActive) {
-			colorScheme.onSecondaryContainer
-		} else {
-			colorScheme.onSurfaceVariant
-		},
-		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-		label = "badgeContentColor"
-	)
-
-	// Day/status indicator morphs between small circle (50% = 5.dp) when inactive and squircle (3.dp) when active
-	val indicatorCorner by animateDpAsState(
-		targetValue = if (isActive) 3.dp else 5.dp,
-		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-		label = "indicatorCorner"
-	)
-	val indicatorColor by animateColorAsState(
-		targetValue = if (isActive) colorScheme.primary else colorScheme.outline,
-		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-		label = "indicatorColor"
-	)
-
 	with(sharedTransitionScope) {
 		Column(
 			modifier = Modifier
 				.padding(horizontal = 22.dp, vertical = 20.dp)
 				.fillMaxWidth()
 		) {
-			Row(
-				verticalAlignment = Alignment.CenterVertically,
-				horizontalArrangement = Arrangement.spacedBy(8.dp)
-			) {
-				Surface(
-					shape = RoundedCornerShape(badgeCornerRadius),
-					color = badgeContainerColor,
-					contentColor = badgeContentColor
-				) {
-					Row(
-						modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-						verticalAlignment = Alignment.CenterVertically,
-						horizontalArrangement = Arrangement.spacedBy(6.dp)
-					) {
-						Box(
-							modifier = Modifier
-								.size(8.dp)
-								.clip(RoundedCornerShape(indicatorCorner))
-								.background(indicatorColor)
-						)
-						Text(
-							text = formatRelativeDate(
-								alarmStartMs = alarmData.startTime,
-								todayStartMs = todayStartMs,
-							),
-							style = typography.labelMedium,
-							color = badgeContentColor,
-							fontWeight = if (isActive) FontWeight.Bold else FontWeight.SemiBold
-						)
-					}
-				}
-			}
+			Text(
+				text = formatRelativeDate(
+					alarmStartMs = alarmData.startTime,
+					todayStartMs = todayStartMs,
+				),
+				style = typography.labelMedium,
+				color = secondaryContentColor,
+				fontWeight = FontWeight.Medium
+			)
 
-			Spacer(modifier = Modifier.height(14.dp))
+			Spacer(modifier = Modifier.height(10.dp))
 
 			// Time and Toggle Row
 			Row(
@@ -371,26 +301,20 @@ fun AlarmCardContent(
 							boundsTransform = AlarmTimeBoundsTransform
 						)
 					)
-
-					Surface(
-						shape = RoundedCornerShape(10.dp),
-						color = contentColor.copy(alpha = if (isActive) 0.12f else 0.06f),
-						modifier = Modifier.padding(horizontal = 8.dp)
-					) {
-						Icon(
-							imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-							contentDescription = null,
-							modifier = Modifier
-								.padding(6.dp)
-								.size(18.dp)
-								.sharedElement(
-									sharedContentState = rememberSharedContentState(key = "arrow_${alarmData.id}"),
-									animatedVisibilityScope = animatedVisibilityScope,
-									boundsTransform = AlarmTimeBoundsTransform
-								),
-							tint = secondaryContentColor
-						)
-					}
+					Icon(
+						imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+						contentDescription = null,
+						modifier = Modifier
+							.padding(6.dp)
+							.padding(horizontal = 8.dp)
+							.size(18.dp)
+							.sharedElement(
+								sharedContentState = rememberSharedContentState(key = "arrow_${alarmData.id}"),
+								animatedVisibilityScope = animatedVisibilityScope,
+								boundsTransform = AlarmTimeBoundsTransform
+							),
+						tint = secondaryContentColor
+					)
 
 					TimeDisplay(
 						millis = alarmData.endTime,
@@ -460,7 +384,7 @@ private fun TimeDisplay(
 		Text(
 			text = timeText,
 			style = textStyle,
-			fontWeight = if (isActive) FontWeight.ExtraBold else FontWeight.SemiBold,
+			fontWeight = if (isActive) FontWeight.ExtraBold else FontWeight.Normal,
 			color = contentColor,
 			modifier = Modifier
 				.alignByBaseline()

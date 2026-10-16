@@ -10,7 +10,6 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -45,8 +44,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AlarmAdd
 import androidx.compose.material.icons.outlined.Alarm
@@ -173,7 +170,7 @@ import java.util.Calendar
 			) { snackBarData ->
 				Snackbar(
 					snackbarData = snackBarData,
-					shape = RoundedCornerShape(20.dp),
+					shape = MaterialTheme.shapes.large,
 					containerColor = colorScheme.inverseSurface,
 					contentColor = colorScheme.inverseOnSurface,
 					modifier = Modifier.fillMaxWidth()
@@ -208,7 +205,6 @@ import java.util.Calendar
 			) {
 				item(span = { GridItemSpan(maxLineSpan) }) {
 					TopBar(
-						activeAlarmCount = activeCount,
 						onNavigateToSettings = onNavigateToSettings
 					)
 				}
@@ -296,17 +292,11 @@ import java.util.Calendar
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TopBar(
-	activeAlarmCount: Int,
 	onNavigateToSettings: () -> Unit,
 	modifier: Modifier = Modifier
 ) {
 	val interactionSource = remember { MutableInteractionSource() }
 	val isPressed by interactionSource.collectIsPressedAsState()
-	val buttonCorner by animateDpAsState(
-		targetValue = if (isPressed) 22.dp else 14.dp,
-		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-		label = "settingsCorner"
-	)
 	val buttonScale by animateFloatAsState(
 		targetValue = if (isPressed) 0.92f else 1f,
 		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
@@ -330,36 +320,16 @@ fun TopBar(
 				fontWeight = FontWeight.ExtraBold,
 				color = colorScheme.onSurface
 			)
-			AnimatedVisibility(
-				visible = activeAlarmCount > 0,
-				enter = scaleIn(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()) +
-					fadeIn(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()),
-				exit = scaleOut(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()) +
-					fadeOut(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec())
-			) {
-				Surface(
-					shape = CircleShape,
-					color = colorScheme.secondaryContainer,
-					contentColor = colorScheme.onSecondaryContainer
-				) {
-					Text(
-						text = "$activeAlarmCount active",
-						style = MaterialTheme.typography.labelMedium,
-						fontWeight = FontWeight.Bold,
-						modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-					)
-				}
-			}
 		}
 
 		Surface(
-			shape = RoundedCornerShape(buttonCorner),
+			shape = MaterialTheme.shapes.large,
 			color = colorScheme.surfaceContainerHigh,
 			contentColor = colorScheme.onSurfaceVariant,
 			modifier = Modifier
 				.size(48.dp)
 				.scale(buttonScale)
-				.clip(RoundedCornerShape(buttonCorner))
+				.clip(MaterialTheme.shapes.large)
 				.clickable(
 					interactionSource = interactionSource,
 					indication = null,
@@ -420,7 +390,7 @@ fun EmptyAlarmsView(modifier: Modifier = Modifier) {
 				modifier = Modifier.offset { IntOffset(x = 0, y = dy.dp.roundToPx()) }
 			) {
 				Surface(
-					shape = RoundedCornerShape(44.dp),
+					shape = MaterialTheme.shapes.extraLarge,
 					color = colorScheme.secondaryContainer.copy(alpha = 0.45f),
 					modifier = Modifier
 						.size(164.dp)
@@ -428,7 +398,7 @@ fun EmptyAlarmsView(modifier: Modifier = Modifier) {
 				) {}
 
 				Surface(
-					shape = RoundedCornerShape(32.dp),
+					shape = MaterialTheme.shapes.extraLarge,
 					color = colorScheme.primaryContainer,
 					contentColor = colorScheme.onPrimaryContainer,
 					modifier = Modifier.size(124.dp)
@@ -457,7 +427,7 @@ fun EmptyAlarmsView(modifier: Modifier = Modifier) {
 			Spacer(modifier = Modifier.height(10.dp))
 
 			Surface(
-				shape = RoundedCornerShape(20.dp),
+				shape = MaterialTheme.shapes.large,
 				color = colorScheme.surfaceContainerLow
 			) {
 				Text(
@@ -483,16 +453,6 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
 		label = "fabScale"
 	)
-	val cornerRadius by animateDpAsState(
-		targetValue = if (isPressed) 16.dp else 28.dp,
-		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-		label = "fabCornerRadius"
-	)
-	val innerIconRadius by animateDpAsState(
-		targetValue = if (isPressed) 10.dp else 16.dp,
-		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-		label = "fabInnerIconRadius"
-	)
 	val colorScheme = colorScheme
 
 	// 🔑 Lock font scale so button looks identical on every device
@@ -510,7 +470,7 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 				.widthIn(min = 196.dp)
 				.zIndex(5f),
 			interactionSource = interactionSource,
-			shape = RoundedCornerShape(cornerRadius),
+			shape = MaterialTheme.shapes.extraLarge,
 			containerColor = colorScheme.tertiaryContainer,
 			contentColor = colorScheme.onTertiaryContainer,
 			elevation = FloatingActionButtonDefaults.elevation(
@@ -519,7 +479,7 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 			),
 			icon = {
 				Surface(
-					shape = RoundedCornerShape(innerIconRadius),
+					shape = MaterialTheme.shapes.medium,
 					color = colorScheme.onTertiaryContainer.copy(alpha = 0.12f),
 					contentColor = colorScheme.onTertiaryContainer,
 					modifier = Modifier.size(42.dp)

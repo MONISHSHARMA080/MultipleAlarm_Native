@@ -74,9 +74,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.IntentCompat
 import androidx.lifecycle.lifecycleScope
-import com.coolApps.MultipleAlarmClock.presentation.ExpressiveAlarmTheme
 import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.receiver.AlarmService
 import com.coolApps.MultipleAlarmClock.util.Analytics
@@ -111,7 +114,8 @@ class AlarmActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 		this.intentReceived = intent
         setContent {
-            ExpressiveAlarmTheme {
+			val colorScheme = if (isSystemInDarkTheme()) { dynamicDarkColorScheme(LocalContext.current) } else { dynamicLightColorScheme(LocalContext.current) }
+            MaterialTheme(colorScheme = colorScheme) {
                 var messageVarToSet by remember { mutableStateOf("") }
                 var intentData by remember { mutableStateOf<AlarmActivityIntentData?>(null)  }
 
