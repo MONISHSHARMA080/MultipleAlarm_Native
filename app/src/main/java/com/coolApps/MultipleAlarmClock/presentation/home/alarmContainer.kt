@@ -19,7 +19,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -50,6 +49,7 @@ import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -70,7 +70,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -189,8 +188,6 @@ import java.util.Calendar
 				}
 			}
 
-			val activeCount = remember(alarmList) { alarmList?.count { it.isReadyToUse } ?: 0 }
-
 			LazyVerticalGrid(
 				columns = GridCells.Adaptive(minSize = 360.dp),
 				modifier = Modifier.fillMaxSize(),
@@ -204,9 +201,25 @@ import java.util.Calendar
 				verticalArrangement = Arrangement.spacedBy(4.dp)
 			) {
 				item(span = { GridItemSpan(maxLineSpan) }) {
-					TopBar(
-						onNavigateToSettings = onNavigateToSettings
-					)
+					Row(
+						modifier = Modifier
+							.fillMaxWidth()
+							.padding(bottom = 23.dp, end = 10.dp),
+						horizontalArrangement = Arrangement.End,
+						verticalAlignment = Alignment.CenterVertically
+					) {
+						FilledTonalIconButton(
+							onClick = onNavigateToSettings,
+							modifier = Modifier.size(45.dp),
+							shape = MaterialTheme.shapes.large
+						) {
+							Icon(
+								imageVector = Icons.Outlined.Settings,
+								contentDescription = stringResource(R.string.settings_content_description),
+								modifier = Modifier.size(24.dp)
+							)
+						}
+					}
 				}
 
 				alarmList?.let { list ->
@@ -228,7 +241,6 @@ import java.util.Calendar
 								}
 								else {
 									alarmContainerViewModel.stopAlarm(alarmData)
-//									alarmContainerViewModel.onPositiveUserAction()
 									if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
 										view.performHapticFeedback(HapticFeedbackConstants.TOGGLE_OFF)
 									}
@@ -289,68 +301,6 @@ import java.util.Calendar
 	}
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-fun TopBar(
-	onNavigateToSettings: () -> Unit,
-	modifier: Modifier = Modifier
-) {
-	val interactionSource = remember { MutableInteractionSource() }
-	val isPressed by interactionSource.collectIsPressedAsState()
-	val buttonScale by animateFloatAsState(
-		targetValue = if (isPressed) 0.92f else 1f,
-		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-		label = "settingsScale"
-	)
-
-	Row(
-		modifier = modifier
-			.fillMaxWidth()
-			.padding(start = 14.dp, end = 10.dp, top = 6.dp, bottom = 18.dp),
-		horizontalArrangement = Arrangement.SpaceBetween,
-		verticalAlignment = Alignment.CenterVertically
-	) {
-		Row(
-			verticalAlignment = Alignment.CenterVertically,
-			horizontalArrangement = Arrangement.spacedBy(12.dp)
-		) {
-			Text(
-				text = stringResource(R.string.app_name),
-				style = MaterialTheme.typography.headlineMedium,
-				fontWeight = FontWeight.ExtraBold,
-				color = colorScheme.onSurface
-			)
-		}
-
-		Surface(
-			shape = MaterialTheme.shapes.large,
-			color = colorScheme.surfaceContainerHigh,
-			contentColor = colorScheme.onSurfaceVariant,
-			modifier = Modifier
-				.size(48.dp)
-				.scale(buttonScale)
-				.clip(MaterialTheme.shapes.large)
-				.clickable(
-					interactionSource = interactionSource,
-					indication = null,
-					onClick = onNavigateToSettings
-				)
-		) {
-			Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-				Icon(
-					imageVector = Icons.Outlined.Settings,
-					contentDescription = stringResource(R.string.settings_content_description),
-					modifier = Modifier.size(24.dp)
-				)
-			}
-		}
-	}
-}
-
-@Composable
-fun EmptyState(modifier: Modifier = Modifier) {
-	EmptyAlarmsView(modifier = modifier)
-}
 
 @Composable
 fun EmptyAlarmsView(modifier: Modifier = Modifier) {

@@ -6,19 +6,15 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -38,7 +34,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.rememberTimePickerState
@@ -50,9 +45,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalView
@@ -180,19 +172,13 @@ fun TimeRow(
 			},
 			title = {
 				Column {
-					Surface(
-						shape = RoundedCornerShape(12.dp),
-						color = colorScheme.secondaryContainer,
-						contentColor = colorScheme.onSecondaryContainer
-					) {
-						Text(
-							text = stringResource(R.string.alarm_picker_select_start_time),
-							style = typography.labelLarge.copy(fontWeight = FontWeight.ExtraBold),
-							maxLines = 1,
-							softWrap = false,
-							modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-						)
-					}
+					Text(
+						text = stringResource(R.string.alarm_picker_select_start_time),
+						style = typography.titleMedium,
+						color = colorScheme.onSurfaceVariant,
+						maxLines = 1,
+						softWrap = false,
+					)
 					Spacer(modifier = Modifier.height(titleSpacing))
 				}
 			}
@@ -270,17 +256,11 @@ fun TimeRow(
 			},
 			title = {
 				Column {
-					Surface(
-						shape = RoundedCornerShape(12.dp),
-						color = colorScheme.secondaryContainer,
-						contentColor = colorScheme.onSecondaryContainer
-					) {
-						Text(
-							text = stringResource(R.string.alarm_picker_select_end_time),
-							style = typography.labelLarge.copy(fontWeight = FontWeight.ExtraBold),
-							modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-						)
-					}
+					Text(
+						text = stringResource(R.string.alarm_picker_select_end_time),
+						style = typography.titleMedium,
+						color = colorScheme.onSurfaceVariant,
+					)
 					AnimatedVisibility(
 						visible = isCandidateInvalid,
 						enter = expandVertically(spatialIntSizeSpec) + fadeIn(effectsFloatSpec),
@@ -322,251 +302,107 @@ fun TimeRow(
 	// Helper to conditionally apply sharedElement modifier
 	val canAnimate = sharedTransitionScope != null && animatedVisibilityScope != null && alarmId != null
 
-	val startInteraction = remember { MutableInteractionSource() }
-	val isStartPressed by startInteraction.collectIsPressedAsState()
-	val startCorner by animateDpAsState(
-		targetValue = if (isStartPressed || showStartTimePicker) 14.dp else 20.dp,
-		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-		label = "start_block_corner"
-	)
-	val startScale by animateFloatAsState(
-		targetValue = if (isStartPressed) 0.96f else 1f,
-		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-		label = "start_block_scale"
-	)
-	val startContainerColor by animateColorAsState(
-		targetValue = when {
-			doWeHaveError -> colorScheme.errorContainer.copy(alpha = 0.55f)
-			showStartTimePicker -> colorScheme.primaryContainer
-			else -> colorScheme.surfaceContainerHigh
-		},
-		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-		label = "start_block_container"
-	)
-	val startBorderColor by animateColorAsState(
-		targetValue = when {
-			doWeHaveError -> colorScheme.error.copy(alpha = 0.6f)
-			showStartTimePicker -> colorScheme.primary
-			else -> Color.Transparent
-		},
-		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-		label = "start_block_border"
-	)
+	val timeColor = if (doWeHaveError) colorScheme.error else colorScheme.onBackground
+	val amPmColor = if (doWeHaveError) colorScheme.error else colorScheme.onBackground
 
-	val endInteraction = remember { MutableInteractionSource() }
-	val isEndPressed by endInteraction.collectIsPressedAsState()
-	val endCorner by animateDpAsState(
-		targetValue = if (isEndPressed || showEndTimePicker) 14.dp else 20.dp,
-		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-		label = "end_block_corner"
-	)
-	val endScale by animateFloatAsState(
-		targetValue = if (isEndPressed) 0.96f else 1f,
-		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-		label = "end_block_scale"
-	)
-	val endContainerColor by animateColorAsState(
-		targetValue = when {
-			doWeHaveError -> colorScheme.errorContainer.copy(alpha = 0.55f)
-			showEndTimePicker -> colorScheme.primaryContainer
-			else -> colorScheme.surfaceContainerHigh
-		},
-		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-		label = "end_block_container"
-	)
-	val endBorderColor by animateColorAsState(
-		targetValue = when {
-			doWeHaveError -> colorScheme.error.copy(alpha = 0.6f)
-			showEndTimePicker -> colorScheme.primary
-			else -> Color.Transparent
-		},
-		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-		label = "end_block_border"
-	)
-
-	val timeColor by animateColorAsState(
-		targetValue = if (doWeHaveError) colorScheme.error else colorScheme.onSurface,
-		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-		label = "time_text_color"
-	)
-	val amPmColor by animateColorAsState(
-		targetValue = if (doWeHaveError) colorScheme.error else colorScheme.onSurfaceVariant,
-		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-		label = "ampm_text_color"
-	)
-	val connectorContainerColor by animateColorAsState(
-		targetValue = if (doWeHaveError) colorScheme.errorContainer else colorScheme.tertiaryContainer,
-		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-		label = "connector_container_color"
-	)
-	val connectorContentColor by animateColorAsState(
-		targetValue = if (doWeHaveError) colorScheme.onErrorContainer else colorScheme.onTertiaryContainer,
-		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-		label = "connector_content_color"
-	)
-	val connectorScale by animateFloatAsState(
-		targetValue = if (showStartTimePicker || showEndTimePicker) 1.12f else 1f,
-		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-		label = "connector_scale"
-	)
-
-	Surface(
-		shape = RoundedCornerShape(28.dp),
-		color = colorScheme.surfaceContainerLow,
-		modifier = Modifier.fillMaxWidth()
+	Row(
+		modifier = Modifier.fillMaxWidth(),
+		verticalAlignment = Alignment.CenterVertically,
 	) {
 		Row(
+			verticalAlignment = Alignment.Bottom,
 			modifier = Modifier
-				.fillMaxWidth()
-				.padding(8.dp),
-			verticalAlignment = Alignment.CenterVertically,
-			horizontalArrangement = Arrangement.spacedBy(8.dp)
+				.weight(1f)
+				.clickable { showStartTimePicker = !showStartTimePicker },
+			horizontalArrangement = Arrangement.Start
 		) {
-			Surface(
-				shape = RoundedCornerShape(startCorner),
-				color = startContainerColor,
-				border = BorderStroke(1.dp, startBorderColor),
-				modifier = Modifier
-					.weight(1f)
-					.graphicsLayer {
-						scaleX = startScale
-						scaleY = startScale
-					}
-					.clip(RoundedCornerShape(startCorner))
-					.clickable(
-						interactionSource = startInteraction,
-						indication = null
-					) { showStartTimePicker = !showStartTimePicker }
-			) {
-				Row(
-					verticalAlignment = Alignment.Bottom,
-					horizontalArrangement = Arrangement.Center,
-					modifier = Modifier
-						.fillMaxWidth()
-						.padding(horizontal = 8.dp, vertical = 14.dp)
-				) {
-					Row(
-						verticalAlignment = Alignment.Bottom,
-						modifier = Modifier.then(
-							if (canAnimate) {
-								with(sharedTransitionScope) {
-									Modifier.sharedElement(
-										sharedContentState = rememberSharedContentState(key = "start_time_${alarmId}"),
-										animatedVisibilityScope = animatedVisibilityScope,
-										boundsTransform = boundsTransform
-									)
-								}
-							} else Modifier
-						)
-					) {
-						Text(
-							text = SimpleDateFormat("h:mm ", LocalLocale.current.platformLocale).format(startTime.time),
-							style = timeStyle,
-							color = timeColor,
-							maxLines = 1,
-							softWrap = false,
-							modifier = Modifier.alignByBaseline()
-						)
-						Text(
-							text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(startTime.time),
-							style = amPmStyle,
-							color = amPmColor,
-							maxLines = 1,
-							softWrap = false,
-							modifier = Modifier.alignByBaseline()
-						)
-					}
-				}
-			}
-
-			Surface(
-				shape = RoundedCornerShape(14.dp),
-				color = connectorContainerColor,
-				contentColor = connectorContentColor,
-				modifier = Modifier
-					.size(38.dp)
-					.graphicsLayer {
-						scaleX = connectorScale
-						scaleY = connectorScale
-					}
-			) {
-				Box(contentAlignment = Alignment.Center) {
-					Icon(
-						imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-						contentDescription = null,
-						tint = connectorContentColor,
-						modifier = Modifier
-							.size(22.dp)
-							.then(
-								if (canAnimate) {
-									with(sharedTransitionScope) {
-										Modifier.sharedElement(
-											sharedContentState = rememberSharedContentState(key = "arrow_${alarmId}"),
-											animatedVisibilityScope = animatedVisibilityScope,
-											boundsTransform = boundsTransform
-										)
-									}
-								} else Modifier
+			Row(
+				verticalAlignment = Alignment.Bottom,
+				modifier = Modifier.then(
+					if (canAnimate) {
+						with(sharedTransitionScope) {
+							Modifier.sharedElement(
+								sharedContentState = rememberSharedContentState(key = "start_time_${alarmId}"),
+								animatedVisibilityScope = animatedVisibilityScope,
+								boundsTransform = boundsTransform
 							)
-					)
-				}
-			}
-
-			Surface(
-				shape = RoundedCornerShape(endCorner),
-				color = endContainerColor,
-				border = BorderStroke(1.dp, endBorderColor),
-				modifier = Modifier
-					.weight(1f)
-					.graphicsLayer {
-						scaleX = endScale
-						scaleY = endScale
-					}
-					.clip(RoundedCornerShape(endCorner))
-					.clickable(
-						interactionSource = endInteraction,
-						indication = null
-					) { showEndTimePicker = !showEndTimePicker }
+						}
+					} else Modifier
+				)
 			) {
-				Row(
-					verticalAlignment = Alignment.Bottom,
-					horizontalArrangement = Arrangement.Center,
-					modifier = Modifier
-						.fillMaxWidth()
-						.padding(horizontal = 8.dp, vertical = 14.dp)
-				) {
-					Row(
-						verticalAlignment = Alignment.Bottom,
-						modifier = Modifier.then(
-							if (canAnimate) {
-								with(sharedTransitionScope) {
-									Modifier.sharedElement(
-										sharedContentState = rememberSharedContentState(key = "end_time_${alarmId}"),
-										animatedVisibilityScope = animatedVisibilityScope,
-										boundsTransform = boundsTransform
-									)
-								}
-							} else Modifier
-						)
-					) {
-						Text(
-							text = SimpleDateFormat("h:mm ", LocalLocale.current.platformLocale).format(endTime.time),
-							style = timeStyle,
-							color = timeColor,
-							maxLines = 1,
-							softWrap = false,
-							modifier = Modifier.alignByBaseline()
-						)
-						Text(
-							text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(endTime.time),
-							style = amPmStyle,
-							color = amPmColor,
-							maxLines = 1,
-							softWrap = false,
-							modifier = Modifier.alignByBaseline()
-						)
-					}
-				}
+				Text(
+					text = SimpleDateFormat("h:mm ", LocalLocale.current.platformLocale).format(startTime.time),
+					style = timeStyle,
+					color = timeColor,
+					maxLines = 1,
+					softWrap = false,
+					modifier = Modifier.alignByBaseline()
+				)
+				Text(
+					text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(startTime.time),
+					style = amPmStyle,
+					color = amPmColor,
+					maxLines = 1,
+					softWrap = false,
+					modifier = Modifier.alignByBaseline()
+				)
+			}
+		}
+		Icon(
+			imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+			contentDescription = null,
+			tint = colorScheme.onBackground,
+			modifier = Modifier
+				.size(32.dp)
+				.then(
+					if (canAnimate) {
+						with(sharedTransitionScope) {
+							Modifier.sharedElement(
+								sharedContentState = rememberSharedContentState(key = "arrow_${alarmId}"),
+								animatedVisibilityScope = animatedVisibilityScope,
+								boundsTransform = boundsTransform
+							)
+						}
+					} else Modifier
+				)
+		)
+		Row(
+			verticalAlignment = Alignment.Bottom,
+			modifier = Modifier
+				.weight(1f)
+				.clickable { showEndTimePicker = !showEndTimePicker },
+			horizontalArrangement = Arrangement.End
+		) {
+			Row(
+				verticalAlignment = Alignment.Bottom,
+				modifier = Modifier.then(
+					if (canAnimate) {
+						with(sharedTransitionScope) {
+							Modifier.sharedElement(
+								sharedContentState = rememberSharedContentState(key = "end_time_${alarmId}"),
+								animatedVisibilityScope = animatedVisibilityScope,
+								boundsTransform = boundsTransform
+							)
+						}
+					} else Modifier
+				)
+			) {
+				Text(
+					text = SimpleDateFormat("h:mm ", LocalLocale.current.platformLocale).format(endTime.time),
+					style = timeStyle,
+					color = timeColor,
+					maxLines = 1,
+					softWrap = false,
+					modifier = Modifier.alignByBaseline()
+				)
+				Text(
+					text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(endTime.time),
+					style = amPmStyle,
+					color = amPmColor,
+					maxLines = 1,
+					softWrap = false,
+					modifier = Modifier.alignByBaseline()
+				)
 			}
 		}
 	}
@@ -579,21 +415,13 @@ fun TimeRow(
 			enter = expandVertically(spatialIntSizeSpec) + fadeIn(effectsFloatSpec),
 			exit = shrinkVertically(spatialIntSizeSpec) + fadeOut(effectsFloatSpec)
 		) {
-			Surface(
-				shape = RoundedCornerShape(14.dp),
-				color = colorScheme.errorContainer,
-				modifier = Modifier
-					.fillMaxWidth()
-					.padding(top = 4.dp)
-			) {
-				Text(
-					text = errorMessage.orEmpty(),
-					style = typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-					textAlign = TextAlign.Start,
-					modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-					color = colorScheme.onErrorContainer
-				)
-			}
+			Text(
+				text = errorMessage.orEmpty(),
+				style = typography.labelMedium,
+				textAlign = TextAlign.Start,
+				modifier = Modifier.padding(top = 5.dp),
+				color = colorScheme.onErrorContainer
+			)
 		}
 	}
 }
