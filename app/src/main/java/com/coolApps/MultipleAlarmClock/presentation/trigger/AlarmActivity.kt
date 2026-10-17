@@ -227,7 +227,7 @@ class AlarmActivity : ComponentActivity() {
 	LaunchedEffect(Unit) {
 		while (true) {
 			amPm = getAmPm()
-			delay(10.seconds)
+			delay(30.seconds)
 		}
 	}
 
@@ -293,7 +293,7 @@ class AlarmActivity : ComponentActivity() {
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 12.dp),
             contentAlignment = Alignment.Center
         ) {
             val isCompactHeight = maxHeight < 460.dp
@@ -320,6 +320,7 @@ class AlarmActivity : ComponentActivity() {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+//						.fillMaxWidth()
                         .widthIn(max = 640.dp)
                         .padding(top = if (isCompactHeight) 12.dp else 28.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -376,17 +377,17 @@ class AlarmActivity : ComponentActivity() {
 										brush = Brush.verticalGradient(
 											colors = listOf(
 												Color.Transparent,
-												colorScheme.surfaceContainerLow
-											)
+												colorScheme.surface
 										)
 									)
+								)
 							)
 						}
-                    }
-                }
-            }
-        }
-    }
+					}
+				}
+			}
+		}
+	}
 }
 
 fun getCurrentTime(): String {

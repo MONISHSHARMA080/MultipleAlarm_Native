@@ -1,13 +1,4 @@
 package com.coolApps.MultipleAlarmClock.domain.usecase
-import com.coolApps.MultipleAlarmClock.domain.model.DeleteAlarmHandlerError
-import com.coolApps.MultipleAlarmClock.domain.model.CancelAlarmError
-import com.coolApps.MultipleAlarmClock.domain.model.CancelAlarmHandlerError
-import com.coolApps.MultipleAlarmClock.domain.model.StartAlarmSeriesHandlerError
-import com.coolApps.MultipleAlarmClock.domain.model.GetPendingIntentForAlarmError
-import com.coolApps.MultipleAlarmClock.domain.model.UpdateAlarmInDbError
-import com.coolApps.MultipleAlarmClock.domain.model.ResetAlarmError
-import com.coolApps.MultipleAlarmClock.domain.model.ScheduleAlarmError
-import com.coolApps.MultipleAlarmClock.domain.model.AlarmControllerErrorSet
 
 import android.app.AlarmManager
 import android.app.PendingIntent
@@ -15,11 +6,20 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import com.coolApps.MultipleAlarmClock.presentation.trigger.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.local.AlarmDataValidationResult
+import com.coolApps.MultipleAlarmClock.domain.model.AlarmControllerErrorSet
+import com.coolApps.MultipleAlarmClock.domain.model.CancelAlarmError
+import com.coolApps.MultipleAlarmClock.domain.model.CancelAlarmHandlerError
+import com.coolApps.MultipleAlarmClock.domain.model.DeleteAlarmHandlerError
+import com.coolApps.MultipleAlarmClock.domain.model.GetPendingIntentForAlarmError
+import com.coolApps.MultipleAlarmClock.domain.model.ResetAlarmError
+import com.coolApps.MultipleAlarmClock.domain.model.ScheduleAlarmError
+import com.coolApps.MultipleAlarmClock.domain.model.StartAlarmSeriesHandlerError
+import com.coolApps.MultipleAlarmClock.domain.model.UpdateAlarmInDbError
 import com.coolApps.MultipleAlarmClock.domain.repository.AlarmRepository
+import com.coolApps.MultipleAlarmClock.presentation.trigger.AlarmActivityIntentData
 import com.coolApps.MultipleAlarmClock.receiver.AlarmInfoNotification
 import com.coolApps.MultipleAlarmClock.receiver.AlarmReceiver
 import com.coolApps.MultipleAlarmClock.util.Analytics
@@ -284,41 +284,58 @@ class AlarmsController @Inject constructor(
 		} else {
 			logD("Alarm series finished today. Advancing to next valid day for repeatDays: ${alarmData.repeatDays}")
 
-			// force the rollover to treat "today" as done, regardless of real-world clock jitter
-			val pastToday = Calendar.getInstance().apply { timeInMillis = alarmData.endTime + 1 }
-			val newAlarm = alarmData.rollOverIfTimeIntervalPassed(pastToday).copy(isReadyToUse = true)
+			when{
+				alarmData.repeatDays != null ->{
+					val pastToday = Calendar.getInstance().apply { timeInMillis = alarmData.endTime + 1 }
+					val newAlarm = alarmData.rollOverIfTimeIntervalPassed(pastToday).copy(isReadyToUse = true)
 
-			val validationRes = newAlarm.validate()
-			if (validationRes != AlarmDataValidationResult.Success) {
-				logD("New alarm for next repeat day failed validation: $validationRes")
-				errorHandler.handleError(ResultCustom.Failure(AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = validationRes.errorMessage())))
-				this.updateAlarmStateInDb(alarmData.copy(isReadyToUse = false))
-				return
+					val validationRes = newAlarm.validate()
+					if (validationRes != AlarmDataValidationResult.Success) {
+						logD("New alarm for next repeat day failed validation: $validationRes")
+						errorHandler.handleError(ResultCustom.Failure(AlarmControllerErrorSet.ValidationFailed(internalErrorMessage = validationRes.errorMessage())))
+						this.updateAlarmStateInDb(alarmData.copy(isReadyToUse = false))
+						return
+					}
+
+					this.updateAlarmStateInDb(newAlarm).fold(
+						onSuccess = {},
+						onError = { failureRes ->
+							logD("DB update failed for next repeat day alarm: $failureRes")
+							errorHandler.handleError(ResultCustom.Failure(failureRes))
+							return
+						}
+					)
+					scheduleAlarm(
+						alarmManager = alarmManager,
+						componentActivity = context,
+						receiverClass = alarmReceiverClass,
+						alarmData = newAlarm,
+						alarmTriggerTime = newAlarm.startTime // fresh window: first trigger is always startTime
+					).fold(
+						onSuccess = { logD("Scheduled next repeat-day alarm successfully") },
+						onError = { failureRes ->
+							logD("Error scheduling next repeat-day alarm: ${failureRes.internalErrorMessage}")
+							errorHandler.handleError(ResultCustom.Failure(failureRes))
+							this.updateAlarmStateInDb(newAlarm.copy(isReadyToUse = false))
+							cancelAlarm(newAlarm, context, alarmManager)
+						}
+					)
+
+				} else ->{
+					// alarm over
+					this.updateAlarmStateInDb(alarmData.copy(isReadyToUse = false)).fold(
+					onSuccess = {},
+					onError = { failureRes ->
+						logD("DB update failed for next repeat day alarm: $failureRes")
+						errorHandler.handleError(ResultCustom.Failure(failureRes))
+						return
+					}
+				)
+
+				}
 			}
 
-			this.updateAlarmStateInDb(newAlarm).fold(
-				onSuccess = {},
-				onError = { failureRes ->
-					logD("DB update failed for next repeat day alarm: $failureRes")
-					errorHandler.handleError(ResultCustom.Failure(failureRes))
-					return
-				}
-			)
-			scheduleAlarm(
-				alarmManager = alarmManager,
-				componentActivity = context,
-				receiverClass = alarmReceiverClass,
-				alarmData = newAlarm,
-				alarmTriggerTime = newAlarm.startTime // fresh window: first trigger is always startTime
-			).fold(
-				onSuccess = { logD("Scheduled next repeat-day alarm successfully") },
-				onError = { failureRes ->
-					logD("Error scheduling next repeat-day alarm: ${failureRes.internalErrorMessage}")
-					errorHandler.handleError(ResultCustom.Failure(failureRes))
-					this.updateAlarmStateInDb(newAlarm.copy(isReadyToUse = false))
-					cancelAlarm(newAlarm, context, alarmManager)
-				}
-			)
+			// force the rollover to treat "today" as done, regardless of real-world clock jitter
 		}
 	}
 
