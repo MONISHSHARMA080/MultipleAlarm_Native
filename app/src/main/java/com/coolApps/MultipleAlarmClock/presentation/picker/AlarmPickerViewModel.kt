@@ -93,6 +93,9 @@ class AlarmPickerViewModel @AssistedInject constructor(
 
 	private val playAlarm = PlayAlarm(context, analytics)
 
+	// set once a save/delete starts, so taps that land while the screen closes don't repeat it
+	@Volatile private var isAlarmOperationStarted = false
+
 	init {
 		// if we have an initial alarm then get it's start alarm sound name
 		_uiState.value.alarmData.sound?.let { initialSoundUri ->
@@ -108,6 +111,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	}
 
 	fun onSetAlarmClicked() {
+		if (isAlarmOperationStarted) return
 		analytics.captureEvent("set alarm clicked", mapOf("Ui state" to _uiState.value.toString()))
 
 		val current = _uiState.value
@@ -130,6 +134,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 			return
 		}
 
+		isAlarmOperationStarted = true
 		viewModelScope.launch {
 			setNewOrUpdateAlarm(alarmToUse, current.initialAlarm)
 			_uiState.update { it.copy(alarmOperationCompletedGoBack = true) }
@@ -322,7 +327,9 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	}
 
 	fun onDeleteClicked() {
+		if (isAlarmOperationStarted) return
 		val alarmData: AlarmData  = uiState.value.initialAlarm ?: return
+		isAlarmOperationStarted = true
 		nonCancellableScope.launch {
 			alarmsController.deleteAlarmHandler(alarmData, context, alarmManager).fold(
 				onSuccess = {
@@ -331,6 +338,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 					captureUiStateAndSendAnalytics(_uiState.value)
 				},
 				onError = { error ->
+					isAlarmOperationStarted = false
 					logD("error while deleting alarm: ${error.internalErrorMessage}")
 					errorHandler.handleError(Result.Failure(error))
 				}
