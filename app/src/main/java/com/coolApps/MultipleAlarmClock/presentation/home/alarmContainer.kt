@@ -61,7 +61,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -141,7 +140,6 @@ import java.util.Calendar
 		if (inAppReviewState  && (activity != null)) {
 			val manager = ReviewManagerFactory.create(context)
 			val request = manager.requestReviewFlow()
-//			logD("asking for  review inAppReviewState:$inAppReviewState ")
 			request.addOnCompleteListener { task ->
 				if (task.isSuccessful) {
 					val reviewInfo = task.result
@@ -337,19 +335,10 @@ fun EmptyAlarmsView(modifier: Modifier = Modifier) {
 		initialValue = -6f,
 		targetValue = 6f,
 		animationSpec = infiniteRepeatable(
-			animation = tween(durationMillis = 1600, easing = FastOutSlowInEasing),
+			animation = tween(durationMillis = 1500, easing = FastOutSlowInEasing),
 			repeatMode = RepeatMode.Reverse
 		),
 		label = "EmptyStateIconOffset"
-	)
-	val haloScale by infiniteTransition.animateFloat(
-		initialValue = 0.95f,
-		targetValue = 1.05f,
-		animationSpec = infiniteRepeatable(
-			animation = tween(durationMillis = 2000, easing = FastOutSlowInEasing),
-			repeatMode = RepeatMode.Reverse
-		),
-		label = "EmptyStateHaloScale"
 	)
 
 	Box(
@@ -359,35 +348,20 @@ fun EmptyAlarmsView(modifier: Modifier = Modifier) {
 		Column(
 			modifier = Modifier
 				.widthIn(max = 420.dp)
-				.padding(horizontal = 24.dp),
+				.padding(horizontal = 32.dp),
 			verticalArrangement = Arrangement.Center,
 			horizontalAlignment = Alignment.CenterHorizontally
 		) {
-			Box(
-				contentAlignment = Alignment.Center,
-				modifier = Modifier.offset { IntOffset(x = 0, y = dy.dp.roundToPx()) }
-			) {
+			Icon(
+				imageVector = Icons.Outlined.Alarm,
+				contentDescription = null,
+				modifier = Modifier
+					.size(120.dp)
+					.offset { IntOffset(x = 0, y = dy.dp.roundToPx()) },
+				tint = colorScheme.primary.copy(alpha = 0.6f)
+			)
 
-				Surface(
-					shape = MaterialTheme.shapes.extraLarge,
-					color = colorScheme.primaryContainer,
-					contentColor = colorScheme.onPrimaryContainer,
-					modifier = Modifier
-						.size(124.dp)
-						.scale(haloScale)
-				) {
-				Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-					Icon(
-						imageVector = Icons.Outlined.Alarm,
-						contentDescription = null,
-						modifier = Modifier.size(64.dp),
-						tint = colorScheme.onPrimaryContainer
-					)
-				}
-				}
-			}
-
-			Spacer(modifier = Modifier.height(28.dp))
+			Spacer(modifier = Modifier.height(24.dp))
 
 			Text(
 				text = stringResource(R.string.empty_state_title),
@@ -397,20 +371,15 @@ fun EmptyAlarmsView(modifier: Modifier = Modifier) {
 				color = colorScheme.onSurface
 			)
 
-			Spacer(modifier = Modifier.height(10.dp))
+			Spacer(modifier = Modifier.height(8.dp))
 
-			Surface(
-				shape = MaterialTheme.shapes.large,
-				color = colorScheme.surfaceContainerLow
-			) {
-				Text(
-					text = stringResource(R.string.empty_state_subtitle),
-					style = MaterialTheme.typography.bodyLarge,
-					textAlign = TextAlign.Center,
-					color = colorScheme.onSurfaceVariant,
-					modifier = Modifier.padding(horizontal = 24.dp, vertical = 14.dp)
-				)
-			}
+			Text(
+				text = stringResource(R.string.empty_state_subtitle),
+				style = MaterialTheme.typography.bodyLarge,
+				textAlign = TextAlign.Center,
+				color = colorScheme.onSurfaceVariant,
+				modifier = Modifier.padding(horizontal = 16.dp)
+			)
 		}
 	}
 }

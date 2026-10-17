@@ -193,15 +193,6 @@ class AlarmActivity : ComponentActivity() {
     }
 }
 
-@Composable
-fun AlarmScreen(
-    onFinish: () -> Unit,
-    message: String,
-    modifier: Modifier = Modifier
-) {
-    TimeDisplay(onFinish = onFinish, message = message, modifier = modifier)
-}
-
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable fun TimeDisplay(onFinish: () -> Unit , message: String , modifier: Modifier = Modifier) {
     var currentTime by remember { mutableStateOf(getCurrentTime()) }
