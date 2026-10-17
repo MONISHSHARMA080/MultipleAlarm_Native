@@ -105,6 +105,11 @@ fun SettingsScreen(
 				animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
 				label = "backCorner"
 			)
+			val backScale by animateFloatAsState(
+				targetValue = if (isBackPressed) 0.92f else 1f,
+				animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+				label = "backScale"
+			)
 
 			TopAppBar(
 				title = {
@@ -126,6 +131,10 @@ fun SettingsScreen(
 						modifier = Modifier
 							.padding(start = 8.dp)
 							.size(42.dp)
+							.graphicsLayer {
+								scaleX = backScale
+								scaleY = backScale
+							}
 					) {
 						Icon(
 							imageVector = Icons.AutoMirrored.Filled.ArrowBack,

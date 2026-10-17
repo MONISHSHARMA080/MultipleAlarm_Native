@@ -5,15 +5,13 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -45,7 +43,7 @@ import com.revenuecat.purchases.ui.revenuecatui.customercenter.CustomerCenter
 import kotlinx.coroutines.launch
 
 
-@OptIn(ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) {
 	val isFirstLaunch by navViewModel.isFirstLaunch.collectAsStateWithLifecycle()
 	if (isFirstLaunch == null) return
@@ -184,16 +182,16 @@ import kotlinx.coroutines.launch
 	AnimatedVisibility(
 		showPaywall,
 		enter = slideInVertically(
-			animationSpec = tween(420, easing = FastOutSlowInEasing),
+			animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
 			initialOffsetY = { it }
 		) + fadeIn(
-			animationSpec = tween(320, delayMillis = 10, easing = LinearEasing)
+			animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
 		),
 		exit = slideOutVertically(
-			animationSpec = tween(420, easing = FastOutSlowInEasing),
+			animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
 			targetOffsetY = { it }
 		) + fadeOut(
-			animationSpec = tween(290, easing = LinearEasing)
+			animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()
 		)
 	) {
 		PremiumPaywallDialog(

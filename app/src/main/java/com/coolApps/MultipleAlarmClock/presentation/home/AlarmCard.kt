@@ -117,6 +117,12 @@ import kotlin.math.abs
 		label = "cardScale"
 	)
 
+	val cardElevation by animateDpAsState(
+		targetValue = if (isActive) 2.dp else 0.dp,
+		animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+		label = "cardElevation"
+	)
+
 	val view = LocalView.current
 	val dismissState = rememberSwipeToDismissBoxState()
 	val cardShape = shapes.extraExtraLarge
@@ -220,7 +226,7 @@ import kotlin.math.abs
 					),
 					shape = cardShape,
 					elevation = CardDefaults.cardElevation(
-						defaultElevation = if (isActive) 2.dp else 0.dp
+						defaultElevation = cardElevation
 					)
 				) {
 					AlarmCardContent(

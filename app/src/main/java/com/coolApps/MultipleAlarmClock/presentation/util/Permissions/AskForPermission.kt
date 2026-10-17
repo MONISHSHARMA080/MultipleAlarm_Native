@@ -5,9 +5,15 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -130,6 +136,24 @@ fun AlarmPermissionDialog(
 		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
 		label = "confirmScale"
 	)
+	val confirmContainerColor by animateColorAsState(
+		targetValue = if (allCriticalNowGranted) {
+			MaterialTheme.colorScheme.primary
+		} else {
+			MaterialTheme.colorScheme.surfaceContainerHighest
+		},
+		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+		label = "confirmContainerColor"
+	)
+	val confirmContentColor by animateColorAsState(
+		targetValue = if (allCriticalNowGranted) {
+			MaterialTheme.colorScheme.onPrimary
+		} else {
+			MaterialTheme.colorScheme.onSurface
+		},
+		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+		label = "confirmContentColor"
+	)
 
 	AlertDialog(
 		onDismissRequest = onDismiss,
@@ -232,16 +256,8 @@ fun AlarmPermissionDialog(
 				interactionSource = confirmInteraction,
 				shape = RoundedCornerShape(confirmCorner),
 				colors = ButtonDefaults.filledTonalButtonColors(
-					containerColor = if (allCriticalNowGranted) {
-						MaterialTheme.colorScheme.primary
-					} else {
-						MaterialTheme.colorScheme.surfaceContainerHighest
-					},
-					contentColor = if (allCriticalNowGranted) {
-						MaterialTheme.colorScheme.onPrimary
-					} else {
-						MaterialTheme.colorScheme.onSurface
-					}
+					containerColor = confirmContainerColor,
+					contentColor = confirmContentColor
 				),
 				modifier = Modifier.graphicsLayer {
 					scaleX = confirmScale
@@ -290,6 +306,9 @@ private fun PermissionStepRow(
 		label = "actionScale"
 	)
 
+	val statusEffectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+	val statusSpatialSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+
 	Surface(
 		modifier = Modifier.fillMaxWidth(),
 		shape = RoundedCornerShape(
@@ -323,47 +342,60 @@ private fun PermissionStepRow(
 			}
 			Spacer(Modifier.width(12.dp))
 
-			if (isGranted) {
-				Surface(
-					shape = CircleShape,
-					color = MaterialTheme.colorScheme.primaryContainer,
-					modifier = Modifier.size(36.dp)
-				) {
-					Box(contentAlignment = Alignment.Center) {
-						Icon(
-							imageVector = Icons.Default.CheckCircle,
-							contentDescription = stringResource(R.string.permission_dialog_done_desc),
-							tint = MaterialTheme.colorScheme.primary,
-							modifier = Modifier.size(22.dp)
+			AnimatedContent(
+				targetState = isGranted,
+				transitionSpec = {
+					(fadeIn(animationSpec = statusEffectsSpec) +
+						scaleIn(animationSpec = statusSpatialSpec, initialScale = 0.8f))
+						.togetherWith(
+							fadeOut(animationSpec = statusEffectsSpec) +
+								scaleOut(animationSpec = statusSpatialSpec, targetScale = 0.8f)
+						)
+				},
+				label = "permissionStepStatusTransition"
+			) { granted ->
+				if (granted) {
+					Surface(
+						shape = CircleShape,
+						color = MaterialTheme.colorScheme.primaryContainer,
+						modifier = Modifier.size(36.dp)
+					) {
+						Box(contentAlignment = Alignment.Center) {
+							Icon(
+								imageVector = Icons.Default.CheckCircle,
+								contentDescription = stringResource(R.string.permission_dialog_done_desc),
+								tint = MaterialTheme.colorScheme.primary,
+								modifier = Modifier.size(22.dp)
+							)
+						}
+					}
+				} else {
+					Button(
+						onClick = onAction,
+						interactionSource = actionInteraction,
+						shape = RoundedCornerShape(actionCorner),
+						contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+						colors = ButtonDefaults.buttonColors(
+							containerColor = MaterialTheme.colorScheme.primary,
+							contentColor = MaterialTheme.colorScheme.onPrimary
+						),
+						modifier = Modifier.graphicsLayer {
+							scaleX = actionScale
+							scaleY = actionScale
+						}
+					) {
+						Text(
+							text = stringResource(
+								when {
+									isPermanentlyDenied -> R.string.permission_dialog_btn_open_settings
+									step.action != null -> R.string.permission_dialog_btn_open_settings
+									else -> R.string.permission_dialog_btn_allow
+								}
+							),
+							style = MaterialTheme.typography.labelLarge,
+							fontWeight = FontWeight.Bold
 						)
 					}
-				}
-			} else {
-				Button(
-					onClick = onAction,
-					interactionSource = actionInteraction,
-					shape = RoundedCornerShape(actionCorner),
-					contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
-					colors = ButtonDefaults.buttonColors(
-						containerColor = MaterialTheme.colorScheme.primary,
-						contentColor = MaterialTheme.colorScheme.onPrimary
-					),
-					modifier = Modifier.graphicsLayer {
-						scaleX = actionScale
-						scaleY = actionScale
-					}
-				) {
-					Text(
-						text = stringResource(
-							when {
-								isPermanentlyDenied -> R.string.permission_dialog_btn_open_settings
-								step.action != null -> R.string.permission_dialog_btn_open_settings
-								else -> R.string.permission_dialog_btn_allow
-							}
-						),
-						style = MaterialTheme.typography.labelLarge,
-						fontWeight = FontWeight.Bold
-					)
 				}
 			}
 		}

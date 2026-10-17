@@ -1,6 +1,7 @@
 package com.coolApps.MultipleAlarmClock.presentation.settings
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
@@ -184,21 +185,27 @@ fun FeedbackCardContent(
                                                 modifier = Modifier.fillMaxWidth(),
                                                 horizontalArrangement = Arrangement.End,
                                         ) {
+                                                val isOverLimit = feedbackText.length >= maxChars
+                                                val charCountContainerColor by animateColorAsState(
+                                                        targetValue = if (isOverLimit) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                                        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                                                        label = "charCountContainerColor"
+                                                )
+                                                val charCountContentColor by animateColorAsState(
+                                                        targetValue = if (isOverLimit) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                                                        label = "charCountContentColor"
+                                                )
+
                                                 Surface(
                                                         shape = RoundedCornerShape(50),
-                                                        color = if (feedbackText.length >= maxChars)
-                                                                MaterialTheme.colorScheme.errorContainer
-                                                        else
-                                                                MaterialTheme.colorScheme.surfaceContainerHighest,
+                                                        color = charCountContainerColor,
                                                 ) {
                                                         Text(
                                                                 text = stringResource(R.string.feedback_char_count, feedbackText.length, maxChars),
                                                                 style = MaterialTheme.typography.labelSmall,
                                                                 fontWeight = FontWeight.SemiBold,
-                                                                color = if (feedbackText.length >= maxChars)
-                                                                        MaterialTheme.colorScheme.onErrorContainer
-                                                                else
-                                                                        MaterialTheme.colorScheme.onSurfaceVariant,
+                                                                color = charCountContentColor,
                                                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                                         )
                                                 }

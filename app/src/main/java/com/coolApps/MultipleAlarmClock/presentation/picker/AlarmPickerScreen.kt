@@ -10,10 +10,8 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -75,6 +73,7 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -448,7 +447,8 @@ fun NewAlarmScreen(
 				.padding(screenPadding)
 				.consumeWindowInsets(screenPadding),
 		) {
-			// Existing stepper AnimatedContent — leave transition as-is per spec
+			val stepperSpatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+			val stepperEffectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
 			AnimatedContent(
 				targetState = currentProgress,
 				modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -460,15 +460,15 @@ fun NewAlarmScreen(
 					}
 					slideIntoContainer(
 						towards = direction,
-						animationSpec = tween(270, easing = FastOutSlowInEasing)
+						animationSpec = stepperSpatialSpec
 					) + fadeIn(
-						animationSpec = tween(250)
+						animationSpec = stepperEffectsSpec
 					) togetherWith
 							slideOutOfContainer(
 								towards = direction,
-								animationSpec = tween(110, easing = FastOutSlowInEasing)
+								animationSpec = stepperSpatialSpec
 							) + fadeOut(
-						animationSpec = tween(190)
+						animationSpec = stepperEffectsSpec
 					)
 				},
 				contentAlignment = Alignment.Center,

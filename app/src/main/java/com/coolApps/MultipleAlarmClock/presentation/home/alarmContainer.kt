@@ -74,6 +74,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -169,13 +170,32 @@ import java.util.Calendar
 				horizontalArrangement = Arrangement.End,
 				verticalAlignment = Alignment.CenterVertically
 			) {
+				val settingsInteractionSource = remember { MutableInteractionSource() }
+				val isSettingsPressed by settingsInteractionSource.collectIsPressedAsState()
+				val settingsCorner by animateDpAsState(
+					targetValue = if (isSettingsPressed) 10.dp else 16.dp,
+					animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+					label = "settingsCorner"
+				)
+				val settingsScale by animateFloatAsState(
+					targetValue = if (isSettingsPressed) 0.92f else 1f,
+					animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+					label = "settingsScale"
+				)
+
 				FilledTonalIconButton(
 					onClick = {
 						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 						onNavigateToSettings()
 					},
-					modifier = Modifier.size(48.dp),
-					shape = MaterialTheme.shapes.large
+					interactionSource = settingsInteractionSource,
+					modifier = Modifier
+						.size(48.dp)
+						.graphicsLayer {
+							scaleX = settingsScale
+							scaleY = settingsScale
+						},
+					shape = RoundedCornerShape(settingsCorner)
 				) {
 					Icon(
 						imageVector = Icons.Outlined.Settings,
@@ -259,6 +279,8 @@ import java.util.Calendar
 							sharedTransitionScope = sharedTransitionScope,
 							animatedVisibilityScope = animatedVisibilityScope,
 							modifier = Modifier.animateItem(
+								fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+								fadeOutSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
 								placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
 							)
 						)
@@ -350,7 +372,9 @@ fun EmptyAlarmsView(modifier: Modifier = Modifier) {
 					shape = MaterialTheme.shapes.extraLarge,
 					color = colorScheme.primaryContainer,
 					contentColor = colorScheme.onPrimaryContainer,
-					modifier = Modifier.size(124.dp)
+					modifier = Modifier
+						.size(124.dp)
+						.scale(haloScale)
 				) {
 				Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
 					Icon(

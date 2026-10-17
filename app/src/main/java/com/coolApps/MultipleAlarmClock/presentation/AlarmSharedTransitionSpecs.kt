@@ -2,7 +2,8 @@ package com.coolApps.MultipleAlarmClock.presentation
 
 import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.core.spring
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MotionScheme
 import androidx.compose.ui.geometry.Rect
 
 /**
@@ -11,25 +12,21 @@ import androidx.compose.ui.geometry.Rect
  */
 
 /** Container (card ⇄ screen) — M3 Expressive spatial spring with natural fluid bounce. */
-private val AlarmContainerSpring = spring<Rect>(
-	dampingRatio = 0.8f,
-	stiffness = 380f
-)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private val AlarmContainerSpatialSpec = MotionScheme.expressive().defaultSpatialSpec<Rect>()
 
 /**
  * Start time, arrow and end time — expressive spatial spring so digits glide smoothly
  * across the screen with subtle settle.
  */
-private val AlarmTimeSpring = spring<Rect>(
-	dampingRatio = 0.88f,
-	stiffness = 340f
-)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private val AlarmTimeSpatialSpec = MotionScheme.expressive().defaultSpatialSpec<Rect>()
 
 @OptIn(ExperimentalSharedTransitionApi::class)
-val AlarmBoundsTransform = BoundsTransform { _, _ -> AlarmContainerSpring }
+val AlarmBoundsTransform = BoundsTransform { _, _ -> AlarmContainerSpatialSpec }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
-val AlarmContainerBoundsTransform = BoundsTransform { _, _ -> AlarmContainerSpring }
+val AlarmContainerBoundsTransform = BoundsTransform { _, _ -> AlarmContainerSpatialSpec }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
-val AlarmTimeBoundsTransform = BoundsTransform { _, _ -> AlarmTimeSpring }
+val AlarmTimeBoundsTransform = BoundsTransform { _, _ -> AlarmTimeSpatialSpec }

@@ -3,16 +3,16 @@ package com.coolApps.MultipleAlarmClock.presentation.picker
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.togetherWith
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -32,7 +32,7 @@ import com.coolApps.MultipleAlarmClock.presentation.picker.listAlarmRingtone.Lis
  * Host for the edit-alarm sub-navigation (AlarmPicker → SoundList).
  * alarmData is non-null — this screen is only reached via Screen.AlarmEditRoute.
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun EditAlarmFlowScreen(
 	alarmData: AlarmData,
@@ -50,7 +50,12 @@ fun EditAlarmFlowScreen(
 		currentScreen?.let { viewModel.screen(it.screenName) }
 	}
 
-	// Inner NavDisplay — the sound-list sub-screen nav; leave transitions as-is.
+	val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+	val fastSpatialSpec = MaterialTheme.motionScheme.fastSpatialSpec<IntOffset>()
+	val effectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+	val fastEffectsSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+
+	// Inner NavDisplay — the sound-list sub-screen nav; uses expressive motion scheme.
 	NavDisplay(
 		backStack = flowBackStack,
 		onBack = {
@@ -65,34 +70,34 @@ fun EditAlarmFlowScreen(
 				EnterTransition.None togetherWith ExitTransition.None
 			} else {
 				slideInHorizontally(
-					animationSpec = tween(330, easing = FastOutSlowInEasing),
+					animationSpec = spatialSpec,
 					initialOffsetX = { it }
-				) + fadeIn(tween(210, easing = LinearEasing)) togetherWith
+				) + fadeIn(effectsSpec) togetherWith
 						slideOutHorizontally(
-							animationSpec = tween(330, easing = FastOutSlowInEasing),
+							animationSpec = spatialSpec,
 							targetOffsetX = { -it }
-						) + fadeOut(tween(210, easing = LinearEasing))
+						) + fadeOut(effectsSpec)
 			}
 		},
 		popTransitionSpec = {
 			slideInHorizontally(
-				animationSpec = tween(240, easing = FastOutSlowInEasing),
+				animationSpec = fastSpatialSpec,
 				initialOffsetX = { -it }
-			) + fadeIn(tween(180, easing = LinearEasing)) togetherWith
+			) + fadeIn(fastEffectsSpec) togetherWith
 					slideOutHorizontally(
-						animationSpec = tween(240, easing = FastOutSlowInEasing),
+						animationSpec = fastSpatialSpec,
 						targetOffsetX = { it }
-					) + fadeOut(tween(140, easing = LinearEasing))
+					) + fadeOut(fastEffectsSpec)
 		},
 		predictivePopTransitionSpec = {
 			slideInHorizontally(
-				animationSpec = tween(240, easing = FastOutSlowInEasing),
+				animationSpec = fastSpatialSpec,
 				initialOffsetX = { (-it * 0.3f).toInt() }
-			) + fadeIn(tween(150, easing = LinearEasing)) togetherWith
+			) + fadeIn(fastEffectsSpec) togetherWith
 					slideOutHorizontally(
-						animationSpec = tween(190, easing = FastOutSlowInEasing),
+						animationSpec = fastSpatialSpec,
 						targetOffsetX = { it }
-					) + fadeOut(tween(120, easing = LinearEasing))
+					) + fadeOut(fastEffectsSpec)
 		},
 		entryProvider = entryProvider {
 			entry<AlarmFlowRoute.AlarmPicker> {
@@ -137,7 +142,7 @@ fun EditAlarmFlowScreen(
  * Host for the new-alarm sub-navigation (AlarmPicker → SoundList).
  * No alarmData — reached via Screen.AlarmCreateRoute.
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun NewAlarmFlowScreen(
 	onCloseFlow: () -> Unit,
@@ -152,6 +157,11 @@ fun NewAlarmFlowScreen(
 		currentScreen?.let { viewModel.screen(it.screenName) }
 	}
 
+	val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+	val fastSpatialSpec = MaterialTheme.motionScheme.fastSpatialSpec<IntOffset>()
+	val effectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+	val fastEffectsSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+
 	NavDisplay(
 		backStack = flowBackStack,
 		onBack = {
@@ -162,34 +172,38 @@ fun NewAlarmFlowScreen(
 			}
 		},
 		transitionSpec = {
-			slideInHorizontally(
-				animationSpec = tween(330, easing = FastOutSlowInEasing),
-				initialOffsetX = { it }
-			) + fadeIn(tween(210, easing = LinearEasing)) togetherWith
-					slideOutHorizontally(
-						animationSpec = tween(330, easing = FastOutSlowInEasing),
-						targetOffsetX = { -it }
-					) + fadeOut(tween(210, easing = LinearEasing))
+			if (initialState == targetState) {
+				EnterTransition.None togetherWith ExitTransition.None
+			} else {
+				slideInHorizontally(
+					animationSpec = spatialSpec,
+					initialOffsetX = { it }
+				) + fadeIn(effectsSpec) togetherWith
+						slideOutHorizontally(
+							animationSpec = spatialSpec,
+							targetOffsetX = { -it }
+						) + fadeOut(effectsSpec)
+			}
 		},
 		popTransitionSpec = {
 			slideInHorizontally(
-				animationSpec = tween(240, easing = FastOutSlowInEasing),
+				animationSpec = fastSpatialSpec,
 				initialOffsetX = { -it }
-			) + fadeIn(tween(180, easing = LinearEasing)) togetherWith
+			) + fadeIn(fastEffectsSpec) togetherWith
 					slideOutHorizontally(
-						animationSpec = tween(240, easing = FastOutSlowInEasing),
+						animationSpec = fastSpatialSpec,
 						targetOffsetX = { it }
-					) + fadeOut(tween(140, easing = LinearEasing))
+					) + fadeOut(fastEffectsSpec)
 		},
 		predictivePopTransitionSpec = {
 			slideInHorizontally(
-				animationSpec = tween(240, easing = FastOutSlowInEasing),
+				animationSpec = fastSpatialSpec,
 				initialOffsetX = { (-it * 0.3f).toInt() }
-			) + fadeIn(tween(150, easing = LinearEasing)) togetherWith
+			) + fadeIn(fastEffectsSpec) togetherWith
 					slideOutHorizontally(
-						animationSpec = tween(190, easing = FastOutSlowInEasing),
+						animationSpec = fastSpatialSpec,
 						targetOffsetX = { it }
-					) + fadeOut(tween(120, easing = LinearEasing))
+					) + fadeOut(fastEffectsSpec)
 		},
 		entryProvider = entryProvider {
 			entry<AlarmFlowRoute.AlarmPicker> {
