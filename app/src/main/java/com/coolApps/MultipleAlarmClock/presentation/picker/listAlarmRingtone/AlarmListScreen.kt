@@ -75,6 +75,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.R
@@ -387,10 +388,10 @@ private fun SoundCard(
 		onClick = onClick,
 		interactionSource = interactionSource,
 		shape = RoundedCornerShape(
-			topStart = animatedTopCorner,
-			topEnd = animatedTopCorner,
-			bottomStart = animatedBottomCorner,
-			bottomEnd = animatedBottomCorner
+			topStart = animatedTopCorner.coerceAtLeast(0.dp),
+			topEnd = animatedTopCorner.coerceAtLeast(0.dp),
+			bottomStart = animatedBottomCorner.coerceAtLeast(0.dp),
+			bottomEnd = animatedBottomCorner.coerceAtLeast(0.dp)
 		),
 		color = containerColor,
 		contentColor = contentColor,
@@ -401,7 +402,7 @@ private fun SoundCard(
 		},
 		modifier = Modifier
 			.fillMaxWidth()
-			.padding(vertical = verticalMargin)
+			.padding(vertical = verticalMargin.coerceAtLeast(0.dp))
 			.graphicsLayer {
 				scaleX = scale
 				scaleY = scale

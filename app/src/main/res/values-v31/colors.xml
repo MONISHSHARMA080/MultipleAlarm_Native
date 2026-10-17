@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Material 3 Dynamic Surface Role for Splash Background -->
-    <color name="splash_background">@android:color/system_neutral1_10</color>
-    <!-- Material 3 Dynamic Accent Roles for Clock -->
-    <color name="splash_clock_rim">@android:color/system_accent1_600</color>
-    <color name="splash_clock_face">@android:color/system_accent1_100</color>
-    <color name="splash_clock_hands">@android:color/system_accent1_900</color>
-    <color name="splash_clock_pivot_rim">@android:color/system_accent1_200</color>
-    <color name="splash_clock_pivot_core">@android:color/system_accent1_900</color>
+    <color name="splash_background">#FFFFFFFF</color>
+    <color name="splash_icon_background">#00000000</color>
+    <color name="splash_clock_rim">#FF212121</color>
+    <color name="splash_clock_face">#FF141414</color>
+    <color name="splash_clock_hands">#FFFFFFFF</color>
+    <color name="splash_clock_pivot_rim">#FF8E8E93</color>
+    <color name="splash_clock_pivot_core">#FF1C1C1E</color>
 </resources>

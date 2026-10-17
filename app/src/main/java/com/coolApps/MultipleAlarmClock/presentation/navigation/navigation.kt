@@ -36,7 +36,6 @@ import com.coolApps.MultipleAlarmClock.presentation.picker.EditAlarmFlowScreen
 import com.coolApps.MultipleAlarmClock.presentation.picker.NewAlarmFlowScreen
 import com.coolApps.MultipleAlarmClock.presentation.settings.PremiumPaywallDialog
 import com.coolApps.MultipleAlarmClock.presentation.settings.SettingsScreen
-import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallEvent
 import com.revenuecat.purchases.ui.revenuecatui.Paywall
 import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 import com.revenuecat.purchases.ui.revenuecatui.customercenter.CustomerCenter
@@ -79,7 +78,16 @@ import kotlinx.coroutines.launch
 
 			NavDisplay(
 				backStack = backStack,
-				onBack = { backStack.removeLastOrNull() },
+				onBack = {
+					when {
+						backStack.size > 1 -> backStack.removeLastOrNull()
+						else ->{
+							backStack.add(Screen.AlarmContainer)
+							backStack.removeAt(0)
+						}
+					}
+
+			    },
 
 				entryDecorators = listOf(
 					rememberSaveableStateHolderNavEntryDecorator(),

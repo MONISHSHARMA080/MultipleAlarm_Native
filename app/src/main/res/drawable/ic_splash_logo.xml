@@ -3,6 +3,10 @@
     android:height="288dp"
     android:viewportWidth="288"
     android:viewportHeight="288">
+    <!-- Match the launcher icon's white adaptive-icon background in dark mode. -->
+    <path
+        android:fillColor="@color/splash_icon_background"
+        android:pathData="M144,48 A96,96 0 1,0 144,240 A96,96 0 1,0 144,48 Z" />
     <!-- Clock Outer Rim & Bezel (Diameter 180dp within official 192dp / 2-thirds safe zone circle) -->
     <path
         android:fillColor="@color/splash_clock_rim"
