@@ -403,7 +403,7 @@ fun MessageRow(
 				BasicTextField(
 					state = textFieldState,
 					textStyle = messageStyle.copy(
-						color = colorScheme.onSurface,
+						color = colorScheme.onSurface.copy(alpha = 0.85f),
 						textAlign = TextAlign.Start
 					),
 					cursorBrush = SolidColor(colorScheme.secondary),
@@ -437,7 +437,7 @@ fun MessageRow(
 					text = value.ifBlank {
 						stringResource(R.string.alarm_picker_message_placeholder)
 					},
-					color = if (value.isBlank()) colorScheme.onSurfaceVariant else colorScheme.onSurface,
+					color = if (value.isBlank()) colorScheme.onSurfaceVariant else colorScheme.onSurface.copy(alpha = 0.85f),
 					style = messageStyle,
 					modifier = Modifier.padding(top = 1.dp),
 					maxLines = 1,
