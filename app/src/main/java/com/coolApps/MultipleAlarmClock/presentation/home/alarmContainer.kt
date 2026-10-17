@@ -328,6 +328,7 @@ import java.util.Calendar
 }
 
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun EmptyAlarmsView(modifier: Modifier = Modifier) {
 	val infiniteTransition = rememberInfiniteTransition(label = "EmptyStateIconTransition")
@@ -365,8 +366,7 @@ fun EmptyAlarmsView(modifier: Modifier = Modifier) {
 
 			Text(
 				text = stringResource(R.string.empty_state_title),
-				style = MaterialTheme.typography.headlineMedium,
-				fontWeight = FontWeight.ExtraBold,
+				style = MaterialTheme.typography.headlineLarge,
 				textAlign = TextAlign.Center,
 				color = colorScheme.onSurface
 			)
