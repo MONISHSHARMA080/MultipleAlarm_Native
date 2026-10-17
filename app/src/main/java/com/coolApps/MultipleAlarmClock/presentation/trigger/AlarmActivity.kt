@@ -355,7 +355,7 @@ class AlarmActivity : ComponentActivity() {
 								modifier = Modifier
 									.fillMaxSize()
 									.verticalScroll(rememberScrollState())
-									.padding(horizontal = 24.dp, vertical = 20.dp),
+									.padding(vertical = 20.dp),
 								horizontalAlignment = Alignment.CenterHorizontally
 							) {
 								Text(
