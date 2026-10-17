@@ -81,6 +81,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -374,7 +375,7 @@ fun EmptyAlarmsView(modifier: Modifier = Modifier) {
 			Spacer(modifier = Modifier.height(8.dp))
 
 			Text(
-				text = stringResource(R.string.empty_state_subtitle),
+				text = stringResource(R.string.empty_state_description),
 				style = MaterialTheme.typography.bodyLarge,
 				textAlign = TextAlign.Center,
 				color = colorScheme.onSurfaceVariant,
@@ -443,3 +444,16 @@ fun AddAlarmButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 		)
 	}
 }
+
+@PreviewFontScale
+@Composable
+private fun AddAlarmButtonFontScalePreview() {
+	MaterialTheme { AddAlarmButton(onClick = {}) }
+}
+
+//@PreviewFontScale
+//@Composable
+//private fun EmptyAlarmsViewFontScalePreview() {
+//	MaterialTheme { EmptyAlarmsView(modifier = Modifier.fillMaxSize()) }
+//}
+//

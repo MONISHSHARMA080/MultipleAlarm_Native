@@ -2,8 +2,10 @@ package com.coolApps.MultipleAlarmClock.presentation.home
 
 import android.os.Build
 import android.view.HapticFeedbackConstants
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -61,6 +63,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.PreviewFontScale
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
@@ -72,6 +75,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
@@ -198,7 +202,7 @@ import kotlin.math.abs
 		CompositionLocalProvider(
 			LocalDensity provides Density(
 				density = LocalDensity.current.density,
-				fontScale = 1f
+//				fontScale = 1f
 			)
 		) {
 			with(sharedTransitionScope) {
@@ -448,5 +452,39 @@ fun formatRelativeDate(
 		else -> alarmDate.format(
 			DateTimeFormatter.ofPattern("EEEE, MMM d", LocalLocale.current.platformLocale)
 		)
+	}
+}
+
+
+@PreviewFontScale
+@Composable
+private fun AddAlarmButtonFontScalePreview() {
+	val todayCalendar = Calendar.getInstance().apply {  set(Calendar.HOUR_OF_DAY, 19) }.timeInMillis
+	val tomorrowCalendar = Calendar.getInstance().apply {  set(Calendar.HOUR_OF_DAY, 21) }.timeInMillis
+	MaterialTheme {
+		SharedTransitionLayout {
+			AnimatedVisibility(visible = true) {
+				AlarmCard(
+					alarmData = AlarmData(
+						startTime = todayCalendar,
+						endTime = tomorrowCalendar,
+						frequencyInMin = 2L,
+						message = "",
+						id = 0,
+						sound = null,
+						isReadyToUse = true,
+						repeatDays = null,
+						isForceLoudVolume = false,
+					),
+					todayStartMs = todayCalendar,
+					onEdit = {},
+					onToggle = { _, _ -> },
+					onDelete = {},
+					onLongPress = {},
+					sharedTransitionScope = this@SharedTransitionLayout,
+					animatedVisibilityScope = this@AnimatedVisibility
+				)
+			}
+		}
 	}
 }
