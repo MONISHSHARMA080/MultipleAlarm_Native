@@ -41,10 +41,10 @@
     <string name="alarm_picker_btn_fix">Fix the error</string>
     <string name="alarm_picker_repeat_every">Ring every</string>
     <string name="alarm_picker_repeat_days">Repeat</string>
-    <string name="alarm_picker_sound">sound</string>
+    <string name="alarm_picker_sound">Sound</string>
     <string name="alarm_picker_sound_random">Random</string>
-    <string name="alarm_picker_force_loud_volume">Max Volume Override</string>
-    <string name="alarm_picker_message">message</string>
+    <string name="alarm_picker_force_loud_volume">Max volume</string>
+    <string name="alarm_picker_message">Message</string>
     <string name="alarm_picker_message_placeholder">Add message…</string>
     <string name="alarm_picker_ok">Select</string>
     <string name="alarm_picker_cancel">Cancel</string>
@@ -54,7 +54,7 @@
     <string name="alarm_picker_select_end_time">Select end time</string>
     <string name="alarm_picker_decrease_desc">Decrease</string>
     <string name="alarm_picker_increase_desc">Increase</string>
-    <string name="alarm_picker_date">date</string>
+    <string name="alarm_picker_date">Date</string>
 
     <!-- Onboarding Permission Screen -->
     <string name="permission_continue">Continue</string>

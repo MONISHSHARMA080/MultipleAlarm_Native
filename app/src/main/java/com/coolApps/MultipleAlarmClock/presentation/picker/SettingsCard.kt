@@ -170,10 +170,6 @@ fun SettingsCard(
 				modifier = Modifier.fillMaxWidth()
 			) {
 				RepeatDaysRow(
-					icon = Icons.Rounded.EventRepeat,
-					title = stringResource(
-						R.string.alarm_picker_repeat_days
-					),
 					selectedDays =
 						uiState.alarmData.repeatDays?.toSet()
 							?: emptySet(),
@@ -464,8 +460,6 @@ fun MessageRow(
 
 @Composable
 fun RepeatDaysRow(
-		icon: ImageVector,
-		title: String,
 		selectedDays: Set<DayOfWeek>,
 		onDayToggled: (DayOfWeek) -> Unit,
 ) {
