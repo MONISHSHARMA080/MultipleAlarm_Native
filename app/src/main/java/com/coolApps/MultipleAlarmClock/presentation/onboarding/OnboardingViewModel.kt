@@ -10,6 +10,7 @@ import com.coolApps.MultipleAlarmClock.data.preferences.Settings
 import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.domain.repository.AlarmRepository
 import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
+import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallEvent
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionUtils
 import com.coolApps.MultipleAlarmClock.util.Analytics
@@ -89,11 +90,13 @@ import kotlinx.coroutines.launch
 			OnboardingNavigationAction.Back -> navigateBack()
 			OnboardingNavigationAction.Next,
 			OnboardingNavigationAction.SkipAlarmCreation -> {
+				logD("hard paywall enabled ${analytics.featureFlagsData.value?.isHardPaywallEnabled}")
 				val currentStep = _displayState.value.displaySate
 				val nextStep = reduceNavigation(
 					currentStep = currentStep,
 					action = action,
 					hasAlarm = displayState.value.alarmData != null,
+					isHardPaywallEnabled = analytics.featureFlagsData.value?.isHardPaywallEnabled == true,
 				)
 				if (nextStep != currentStep) {
 					navigationBackStack += currentStep
@@ -112,6 +115,7 @@ import kotlinx.coroutines.launch
 		currentStep: DisplaySate,
 		action: OnboardingNavigationAction,
 		hasAlarm: Boolean,
+		isHardPaywallEnabled: Boolean,
 	): DisplaySate = when (action) {
 		OnboardingNavigationAction.Next -> when (currentStep) {
 			DisplaySate.Problem -> DisplaySate.UserStruggles
@@ -119,11 +123,13 @@ import kotlinx.coroutines.launch
 			DisplaySate.Permission -> if (hasAlarm) DisplaySate.AlarmResult else DisplaySate.FirstAlarmIntro
 			DisplaySate.FirstAlarmIntro -> if (hasAlarm) DisplaySate.AlarmResult else DisplaySate.CreateFirstAlarm
 			DisplaySate.CreateFirstAlarm -> DisplaySate.AlarmResult
-			DisplaySate.AlarmResult -> DisplaySate.OnboardingPaywall
+			DisplaySate.AlarmResult -> if (isHardPaywallEnabled) DisplaySate.PrePaywall else DisplaySate.OnboardingPaywall
+			DisplaySate.PrePaywall -> DisplaySate.OnboardingPaywall
 			DisplaySate.OnboardingPaywall -> DisplaySate.OnboardingPaywall
 		}
 		OnboardingNavigationAction.SkipAlarmCreation -> when (currentStep) {
-			DisplaySate.FirstAlarmIntro -> DisplaySate.OnboardingPaywall
+			DisplaySate.FirstAlarmIntro ->
+				if (isHardPaywallEnabled) DisplaySate.PrePaywall else DisplaySate.OnboardingPaywall
 			else -> currentStep
 		}
 		OnboardingNavigationAction.Back -> currentStep

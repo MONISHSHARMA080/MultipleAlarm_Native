@@ -6,7 +6,7 @@ data class FeatureFlagsData(
 		val cooldownDays: Int = 8,
 		val inAppReviewEnabled: Boolean = true,
 		val feedbackPromptConfig: FeedbackPromptConfig = FeedbackPromptConfig(),
-		val isHardPaywallEnabled: Boolean = false,
+		val isHardPaywallEnabled: Boolean = true,
 )
 
 data class FeedbackPromptConfig(
@@ -18,7 +18,6 @@ data class FeedbackPromptConfig(
 data class EngagementConfig(
 		val enabled: Boolean,
 		val inactiveDays: Long,
-//		val cooldownDays: Long,
 		val checkIntervalHours: Long,
 		val notificationTimeSlot: OfflineNotificationTimeSlot
 ) {

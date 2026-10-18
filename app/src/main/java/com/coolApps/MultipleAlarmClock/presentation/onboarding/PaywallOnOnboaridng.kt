@@ -5,13 +5,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -34,7 +32,7 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
  fun OnboardingPaywallScreen(
 		isHardPaywall: Boolean,
 		onBackPress: () -> Unit,
-		onFinished: () -> Unit, offering: Offering?, loadFailed: Boolean,
+		onFinished: () -> Unit, offering: Offering?,
 		onButtonStateChange: (ButtonState) -> Unit,
 		onEvent: (PaywallEvent) -> Unit
 ) {
@@ -95,14 +93,14 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 			}
 
 		}
-		loadFailed -> {
+		else-> {
 			// offerings failed to load (e.g. offline) — don't block onboarding
 			LaunchedEffect(Unit) { onFinished() }
 		}
-		else -> {
-			Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-				CircularProgressIndicator()
-			}
-		}
+//		else -> {
+//			Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+//				CircularProgressIndicator()
+//			}
+//		}
 	}
 }

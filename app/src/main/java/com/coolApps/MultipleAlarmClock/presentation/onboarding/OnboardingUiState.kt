@@ -16,6 +16,7 @@ enum class DisplaySate {
 	FirstAlarmIntro,
 	CreateFirstAlarm,
 	AlarmResult,
+	PrePaywall,
 	OnboardingPaywall;
 
 	override fun toString(): String {
@@ -26,6 +27,7 @@ enum class DisplaySate {
 			FirstAlarmIntro -> "FirstAlarmIntro"
 			CreateFirstAlarm -> "CreateFirstAlarm"
 			AlarmResult -> "AlarmResult"
+			PrePaywall -> "PrePaywall"
 			OnboardingPaywall ->"OnboardingPaywall"
 		}
 	}
