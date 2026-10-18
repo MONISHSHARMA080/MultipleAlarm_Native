@@ -278,10 +278,10 @@ class AlarmActivity : ComponentActivity() {
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.width(14.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "Stop",
-                        style = typography.headlineMedium,
+                        style = typography.headlineLarge,
                         fontWeight = FontWeight.Black,
                         letterSpacing = 0.5.sp
                     )
@@ -320,7 +320,6 @@ class AlarmActivity : ComponentActivity() {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-//						.fillMaxWidth()
                         .widthIn(max = 640.dp)
                         .padding(top = if (isCompactHeight) 12.dp else 28.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -362,7 +361,7 @@ class AlarmActivity : ComponentActivity() {
 									text = message,
 									color = colorScheme.onSurface,
 									style = typography.titleMedium,
-									fontWeight = FontWeight.SemiBold,
+									fontWeight = FontWeight.Normal,
 									textAlign = TextAlign.Center,
 									lineHeight = 32.sp
 								)
