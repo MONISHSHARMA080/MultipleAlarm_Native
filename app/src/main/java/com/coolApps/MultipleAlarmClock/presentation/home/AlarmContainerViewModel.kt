@@ -94,6 +94,7 @@ class AlarmContainerViewModel @Inject constructor(
 					lastPromptAttemptEpochTimeMs = settingsData.lastFeedbackPromptAttemptedAt,
 					config = featureFlags.feedbackPromptConfig,
 				)) {
+					logD("feedback is eligible")
 					_feedbackPrompt.value = InAppFeedbackPromptUiState(isVisible = true)
 					analytics.captureEvent("in_app_feedback_prompt_shown", mapOf())
 				}
