@@ -148,7 +148,7 @@ class AlarmContainerViewModel @Inject constructor(
 	}
 
 	fun submitFeedback(feedback: String) {
-		val rating = _feedbackPrompt.value.rating ?: return
+		val rating = _feedbackPrompt.value.rating ?: "not there"
 		analytics.captureEvent(
 			"in_app_feedback_submitted",
 			mapOf("rating" to rating, "feedback" to feedback),
