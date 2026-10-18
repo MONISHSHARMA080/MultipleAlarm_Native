@@ -11,9 +11,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -57,8 +58,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -68,6 +71,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -136,33 +140,37 @@ fun InAppFeedbackPrompt(
 							.verticalScroll(rememberScrollState()),
 						horizontalAlignment = Alignment.CenterHorizontally,
 					) {
-						val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+//						PromptHeroIcon(isCompactWidth = isCompactWidth)
+
+//						Spacer(Modifier.height(16.dp))
+
+						val spatialOffsetSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+						val spatialSizeSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntSize>()
+						val spatialFloatSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
 						val effectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
 
 						AnimatedContent(
 							targetState = state.step,
 							transitionSpec = {
 								if (targetState == InAppFeedbackPromptStep.Review) {
-									(slideInHorizontally(
-										animationSpec = spatialSpec,
-										initialOffsetX = { it / 3 },
-									) + fadeIn(animationSpec = effectsSpec)).togetherWith(
-										slideOutHorizontally(
-											animationSpec = spatialSpec,
-											targetOffsetX = { -it / 3 },
-										) + fadeOut(animationSpec = effectsSpec),
-									)
+									(fadeIn(animationSpec = effectsSpec) +
+										scaleIn(animationSpec = spatialFloatSpec, initialScale = 0.94f) +
+										slideInVertically(animationSpec = spatialOffsetSpec, initialOffsetY = { it / 6 })
+									).togetherWith(
+										fadeOut(animationSpec = effectsSpec) +
+											scaleOut(animationSpec = spatialFloatSpec, targetScale = 0.96f) +
+											slideOutVertically(animationSpec = spatialOffsetSpec, targetOffsetY = { -it / 6 })
+									).using(SizeTransform(clip = false) { _, _ -> spatialSizeSpec })
 								} else {
-									(slideInHorizontally(
-										animationSpec = spatialSpec,
-										initialOffsetX = { -it / 3 },
-									) + fadeIn(animationSpec = effectsSpec)).togetherWith(
-										slideOutHorizontally(
-											animationSpec = spatialSpec,
-											targetOffsetX = { it / 3 },
-										) + fadeOut(animationSpec = effectsSpec),
-									)
-								}.using(SizeTransform(clip = false))
+									(fadeIn(animationSpec = effectsSpec) +
+										scaleIn(animationSpec = spatialFloatSpec, initialScale = 0.96f) +
+										slideInVertically(animationSpec = spatialOffsetSpec, initialOffsetY = { -it / 6 })
+									).togetherWith(
+										fadeOut(animationSpec = effectsSpec) +
+											scaleOut(animationSpec = spatialFloatSpec, targetScale = 0.94f) +
+											slideOutVertically(animationSpec = spatialOffsetSpec, targetOffsetY = { it / 6 })
+									).using(SizeTransform(clip = false) { _, _ -> spatialSizeSpec })
+								}
 							},
 							label = "feedbackPromptStep",
 							modifier = Modifier.fillMaxWidth(),
@@ -191,6 +199,38 @@ fun InAppFeedbackPrompt(
 }
 
 @Composable
+private fun PromptHeroIcon(
+	isCompactWidth: Boolean,
+	modifier: Modifier = Modifier,
+) {
+	val badgeSize = if (isCompactWidth) 52.dp else 60.dp
+	val badgeCorner = if (isCompactWidth) 16.dp else 20.dp
+	val iconSize = if (isCompactWidth) 26.dp else 30.dp
+
+	Box(
+		modifier = modifier
+			.size(badgeSize)
+			.clip(RoundedCornerShape(badgeCorner))
+			.background(
+				Brush.radialGradient(
+					listOf(
+						MaterialTheme.colorScheme.primaryContainer,
+						MaterialTheme.colorScheme.tertiaryContainer,
+					),
+				),
+			),
+		contentAlignment = Alignment.Center,
+	) {
+		Icon(
+			imageVector = Icons.Filled.Star,
+			contentDescription = null,
+			tint = MaterialTheme.colorScheme.onPrimaryContainer,
+			modifier = Modifier.size(iconSize),
+		)
+	}
+}
+
+@Composable
 private fun RatingStep(
 	isCompactWidth: Boolean,
 	onRatingSelected: (Int) -> Unit,
@@ -204,10 +244,21 @@ private fun RatingStep(
 		modifier = modifier.fillMaxWidth(),
 		horizontalAlignment = Alignment.CenterHorizontally,
 	) {
-		ReviewPromptHeader(
-			title = stringResource(R.string.in_app_review_rating_title),
-			description = stringResource(R.string.in_app_review_rating_description),
-			isCompactWidth = isCompactWidth,
+		Text(
+			text = stringResource(R.string.in_app_review_rating_title),
+			style = if (isCompactWidth) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineSmall,
+			fontWeight = FontWeight.ExtraBold,
+			color = MaterialTheme.colorScheme.onSurface,
+			textAlign = TextAlign.Center,
+		)
+
+		Spacer(Modifier.height(8.dp))
+
+		Text(
+			text = stringResource(R.string.in_app_review_rating_description),
+			style = MaterialTheme.typography.bodyMedium,
+			color = MaterialTheme.colorScheme.onSurfaceVariant,
+			textAlign = TextAlign.Center,
 		)
 
 		Spacer(Modifier.height(24.dp))
@@ -323,14 +374,25 @@ private fun ReviewStep(
 		modifier = modifier.fillMaxWidth(),
 		horizontalAlignment = Alignment.CenterHorizontally,
 	) {
-		ReviewPromptHeader(
-			title = stringResource(R.string.in_app_review_feedback_title),
-			description = stringResource(R.string.in_app_review_feedback_description),
-			isCompactWidth = isCompactWidth,
+		Text(
+			text = stringResource(R.string.in_app_review_feedback_title),
+			style = if (isCompactWidth) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineSmall,
+			fontWeight = FontWeight.ExtraBold,
+			color = MaterialTheme.colorScheme.onSurface,
+			textAlign = TextAlign.Center,
+		)
+
+		Spacer(Modifier.height(8.dp))
+
+		Text(
+			text = stringResource(R.string.in_app_review_feedback_description),
+			style = MaterialTheme.typography.bodyMedium,
+			color = MaterialTheme.colorScheme.onSurfaceVariant,
+			textAlign = TextAlign.Center,
 		)
 
 		if (rating != null && rating > 0) {
-			Spacer(Modifier.height(12.dp))
+			Spacer(Modifier.height(14.dp))
 			Surface(
 				shape = RoundedCornerShape(16.dp),
 				color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f),
@@ -473,64 +535,6 @@ private fun ReviewStep(
 				)
 			}
 		}
-	}
-}
-
-@Composable
-private fun ReviewPromptHeader(
-	title: String,
-	description: String,
-	isCompactWidth: Boolean,
-	modifier: Modifier = Modifier,
-) {
-	val badgeSize = if (isCompactWidth) 52.dp else 60.dp
-	val badgeCorner = if (isCompactWidth) 16.dp else 20.dp
-	val iconSize = if (isCompactWidth) 26.dp else 30.dp
-
-	Column(
-		modifier = modifier.fillMaxWidth(),
-		horizontalAlignment = Alignment.CenterHorizontally,
-	) {
-//		Box(
-//			modifier = Modifier
-//				.size(badgeSize)
-//				.clip(RoundedCornerShape(badgeCorner))
-//				.background(
-//					Brush.radialGradient(
-//						listOf(
-//							MaterialTheme.colorScheme.primaryContainer,
-//							MaterialTheme.colorScheme.tertiaryContainer,
-//						),
-//					),
-//				),
-//			contentAlignment = Alignment.Center,
-//		) {
-//			Icon(
-//				imageVector = Icons.Filled.Star,
-//				contentDescription = null,
-//				tint = MaterialTheme.colorScheme.onPrimaryContainer,
-//				modifier = Modifier.size(iconSize),
-//			)
-//		}
-
-//		Spacer(Modifier.height(16.dp))
-
-		Text(
-			text = title,
-			style = if (isCompactWidth) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineSmall,
-			fontWeight = FontWeight.ExtraBold,
-			color = MaterialTheme.colorScheme.onSurface,
-			textAlign = TextAlign.Center,
-		)
-
-		Spacer(Modifier.height(8.dp))
-
-		Text(
-			text = description,
-			style = MaterialTheme.typography.bodyMedium,
-			color = MaterialTheme.colorScheme.onSurfaceVariant,
-			textAlign = TextAlign.Center,
-		)
 	}
 }
 

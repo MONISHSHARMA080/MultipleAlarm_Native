@@ -11,8 +11,8 @@ data class FeatureFlagsData(
 
 data class FeedbackPromptConfig(
 		val enabled: Boolean = true,
-		val startDay: Int = 0,
-		val cooldownDays: Int = 0,
+		val startDay: Int = 2,
+		val cooldownDays: Int = 14,
 )
 
 data class EngagementConfig(
