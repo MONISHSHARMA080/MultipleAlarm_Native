@@ -28,6 +28,9 @@ object FeatureFlagKeys {
 	const val MIN_ALARMS_CREATED = "min_alarms_created"
 	const val COOLDOWN_DAYS = "cooldown_days"
 	const val MIN_DAYS_SINCE_INSTALL = "min_days_since_install"
+	const val IN_APP_FEEDBACK_ENABLED = "feedback_enabled"
+	const val IN_APP_FEEDBACK_START_DAY = "feedback_start_day"
+	const val IN_APP_FEEDBACK_COOLDOWN_DAYS = "feedback_cooldown_days"
 
 	const val PUSH_NOTIFICATION_ENABLED = "push_notification_enabled"
 	const val PUSH_NOTIFICATION_INACTIVE_DAYS = "push_notification_inactive_days"
@@ -135,8 +138,13 @@ class Analytics(
 		val minAlarms = getIntFeatureFlag(FeatureFlagKeys.MIN_ALARMS_CREATED)
 		val cooldownDays = getIntFeatureFlag(FeatureFlagKeys.COOLDOWN_DAYS)
 		val minDaysSinceInstall = getIntFeatureFlag(FeatureFlagKeys.MIN_DAYS_SINCE_INSTALL)
+		val feedbackEnabled = PostHog.isFeatureEnabled(FeatureFlagKeys.IN_APP_FEEDBACK_ENABLED, defaultValue = false)
+		val feedbackStartDay = getIntFeatureFlag(FeatureFlagKeys.IN_APP_FEEDBACK_START_DAY)
+			?.takeIf { it >= 0 } ?: 7
+		val feedbackCooldownDays = getIntFeatureFlag(FeatureFlagKeys.IN_APP_FEEDBACK_COOLDOWN_DAYS)
+			?.takeIf { it > 0 } ?: 14
 
-		logD("loading feature flag for posthog, got enabled:$enabled, minAlarm:$minAlarms, coolDownDays:$cooldownDays, minDaysSinceInstall:$minDaysSinceInstall, hardPaywall:$isHardPaywall")
+		logD("loading feature flags from PostHog: reviewEnabled=$enabled, minAlarms=$minAlarms, reviewCooldownDays=$cooldownDays, minDaysSinceInstall=$minDaysSinceInstall, feedbackEnabled=$feedbackEnabled, feedbackStartDay=$feedbackStartDay, feedbackCooldownDays=$feedbackCooldownDays, hardPaywall=$isHardPaywall")
 		if (minAlarms == null || cooldownDays == null || minDaysSinceInstall == null) {
 			this.captureEvent( "loading_featureFlags_failed",
 				mapOf(
@@ -145,13 +153,17 @@ class Analytics(
 					"minDaysSinceInstall" to minDaysSinceInstall.toString()
 				)
 			)
-			return
 		}
 		_featureFlagsData.value = FeatureFlagsData(
-					inAppReviewEnabled = enabled,
-					minAlarmsCreated = minAlarms,
-					cooldownDays = cooldownDays,
-					minDaysSinceInstall = minDaysSinceInstall,
+					inAppReviewEnabled = enabled && minAlarms != null && cooldownDays != null && minDaysSinceInstall != null,
+					minAlarmsCreated = minAlarms ?: 3,
+					cooldownDays = cooldownDays ?: 8,
+					minDaysSinceInstall = minDaysSinceInstall ?: 7,
+			feedbackPromptConfig = FeedbackPromptConfig(
+				enabled = feedbackEnabled,
+				startDay = feedbackStartDay,
+				cooldownDays = feedbackCooldownDays,
+			),
 					isHardPaywallEnabled = isHardPaywall
 		)
 	}

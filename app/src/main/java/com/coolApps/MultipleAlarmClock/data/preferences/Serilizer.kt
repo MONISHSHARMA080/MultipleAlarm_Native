@@ -19,6 +19,7 @@ object SettingsSerializer : Serializer<Settings> {
 		shouldWeShowInAppReview = false
 		installEpochTimeMs= 0L
 		lastReviewAttemptedAt = 0L
+		lastFeedbackPromptAttemptedAt = 0L
 	}
 	override suspend fun readFrom(input: InputStream): Settings {
 		try {

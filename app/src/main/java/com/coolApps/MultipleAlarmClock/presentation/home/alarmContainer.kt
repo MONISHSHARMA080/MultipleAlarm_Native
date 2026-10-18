@@ -93,7 +93,6 @@ import androidx.navigation3.runtime.result.ResultEffect
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.presentation.logD
-import com.coolApps.MultipleAlarmClock.presentation.settings.FeedbackPopUpCard
 import com.google.android.play.core.review.ReviewManagerFactory
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -119,8 +118,8 @@ import java.util.Calendar
 	var selectedAlarmId by remember { mutableStateOf<Int?>(null) }
 	ReportDrawnWhen { alarmList != null }
 	val colorScheme = colorScheme
-	val showFeedbackCard by alarmContainerViewModel.showFeedbackUIState.collectAsStateWithLifecycle()
 	val inAppReviewState = uiState.showReviewUi
+	val feedbackPrompt = uiState.feedbackPrompt
 	val context = LocalContext.current
 
 	// Computed once per composition — the start of today at midnight (local timezone).
@@ -222,13 +221,12 @@ import java.util.Calendar
 					modifier = Modifier.fillMaxWidth()
 				)
 			}
-			if (showFeedbackCard) {
-				FeedbackPopUpCard(
-					onReviewGiven = { review ->
-						logD("Feedback given is $review")
-						alarmContainerViewModel.captureFeedback(review)
-					},
-					onDismiss = { alarmContainerViewModel.dismissFeedback() }
+			if (feedbackPrompt.isVisible) {
+				InAppFeedbackPrompt(
+					state = feedbackPrompt,
+					onRatingSelected = alarmContainerViewModel::selectFeedbackRating,
+					onFeedbackSubmitted = alarmContainerViewModel::submitFeedback,
+					onDismiss = alarmContainerViewModel::dismissFeedbackPrompt,
 				)
 				LaunchedEffect(Unit) {
 					alarmContainerViewModel.captureEvent("FeedBackPopUp card shown", mapOf())

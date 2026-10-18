@@ -5,8 +5,19 @@ import com.coolApps.MultipleAlarmClock.domain.usecase.InAppReviewEligibilityChec
 
 
 data class AlarmContainerUiState(
-	val alarmList: List<AlarmData>? = null,
-	val showFeedbackUI: Boolean = false,
+		val alarmList: List<AlarmData>? = null,
 	val showReviewUi: Boolean = false,
+	val feedbackPrompt: InAppFeedbackPromptUiState = InAppFeedbackPromptUiState(),
 	val reviewInelligiblityReason: InAppReviewEligibilityChecker.Reason? = null
 )
+
+data class InAppFeedbackPromptUiState(
+	val isVisible: Boolean = false,
+	val rating: Int? = null,
+	val step: InAppFeedbackPromptStep = InAppFeedbackPromptStep.Rating,
+)
+
+enum class InAppFeedbackPromptStep {
+	Rating,
+	Review,
+}

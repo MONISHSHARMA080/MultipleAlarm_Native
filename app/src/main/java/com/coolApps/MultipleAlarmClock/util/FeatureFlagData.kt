@@ -7,7 +7,14 @@ data class FeatureFlagsData(
 		val minAlarmsCreated: Int = 3,
 		val cooldownDays: Int = 8,
 		val inAppReviewEnabled: Boolean = true,
+		val feedbackPromptConfig: FeedbackPromptConfig = FeedbackPromptConfig(),
 		val isHardPaywallEnabled: Boolean = false,
+)
+
+data class FeedbackPromptConfig(
+		val enabled: Boolean = false,
+		val startDay: Int = 7,
+		val cooldownDays: Int = 14,
 )
 
 data class EngagementConfig(

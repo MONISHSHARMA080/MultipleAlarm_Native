@@ -102,6 +102,16 @@
     <string name="feedback_btn_maybe_later">Maybe later</string>
     <string name="feedback_btn_submit">Submit</string>
 
+    <!-- In-app review prompt -->
+    <string name="in_app_review_rating_title">Feedback</string>
+    <string name="in_app_review_rating_description">Tap a star to share your rating.</string>
+    <string name="in_app_review_feedback_title">Tell us more</string>
+    <string name="in_app_review_feedback_description">What would you like use to improve. Your feedback helps us make the app better.</string>
+    <string name="in_app_review_feedback_placeholder">What could we improve?</string>
+    <string name="in_app_review_not_now">Not now</string>
+    <string name="in_app_review_submit">Send feedback</string>
+    <string name="in_app_review_star_description">%1$d out of 5 stars</string>
+
 <!-- Alarm Sound card   -->
     <string name="alarm_sound_title">Alarm sound</string>
     <string name="Sound_screen_Random">Random</string>

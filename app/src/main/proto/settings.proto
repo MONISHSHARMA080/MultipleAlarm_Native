@@ -13,6 +13,7 @@ message Settings {
   bool should_we_show_in_app_review = 6;
   int64 install_epoch_time_ms = 7; // set once, at onboarding completion
   int64 last_review_attempted_at = 8;
+  int64 last_feedback_prompt_attempted_at = 9;
 
 }
 

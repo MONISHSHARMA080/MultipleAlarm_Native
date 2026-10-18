@@ -11,6 +11,7 @@ import com.coolApps.MultipleAlarmClock.data.preferences.Settings
 import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.domain.repository.AlarmRepository
 import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
+import com.coolApps.MultipleAlarmClock.domain.usecase.FeedbackPromptEligibilityChecker
 import com.coolApps.MultipleAlarmClock.domain.usecase.InAppReviewEligibilityChecker
 import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.util.Analytics
@@ -25,13 +26,10 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.seconds
 
 
 @HiltViewModel
@@ -46,13 +44,21 @@ class AlarmContainerViewModel @Inject constructor(
 ) : ViewModel(){
 
 	private val eligibilityChecker: InAppReviewEligibilityChecker = InAppReviewEligibilityChecker()
+	private val feedbackEligibilityChecker = FeedbackPromptEligibilityChecker()
 	private val _showReviewUi = MutableStateFlow(false)
+	private val _feedbackPrompt = MutableStateFlow(InAppFeedbackPromptUiState())
 
-	val alarmControllerUi: StateFlow<AlarmContainerUiState> = combine(dataStore.data, alarmRepository.getAlarmsStream(), _showReviewUi){ settingsData , alarmList, showReviewUi->
+	val alarmControllerUi: StateFlow<AlarmContainerUiState> = combine(
+		dataStore.data,
+		alarmRepository.getAlarmsStream(),
+		_showReviewUi,
+		_feedbackPrompt,
+	) { settings, alarmList, showReviewUi, feedbackPrompt ->
 		AlarmContainerUiState(
 			alarmList = alarmList,
+			showReviewUi = showReviewUi,
 			reviewInelligiblityReason = null,
-			showReviewUi = showReviewUi
+			feedbackPrompt = feedbackPrompt,
 		)
 	}.stateIn(
 		scope = viewModelScope,
@@ -63,31 +69,37 @@ class AlarmContainerViewModel @Inject constructor(
 
 	fun onPositiveUserAction() {
 		viewModelScope.launch {
+			if (_showReviewUi.value || _feedbackPrompt.value.isVisible) return@launch
+
 			val settingsData = dataStore.data.first()
-			val featureFlag = analytics.featureFlagsData.value
+			val featureFlags = analytics.featureFlagsData.value
 			val alarmList = alarmRepository.getAlarmsStream().first()
 
-			if (featureFlag != null && alarmList.isNotEmpty()) {
+			if (featureFlags != null && alarmList.isNotEmpty()) {
 				val highestIdAlarm = alarmList.maxByOrNull { it.id } ?: return@launch
 				val res = eligibilityChecker.evaluate(
 					installEpochTimeMs = settingsData.installEpochTimeMs,
 					alarmCount = highestIdAlarm.id,
 					lastReviewAttemptEpochTimeMs = settingsData.lastReviewAttemptedAt,
-					config = featureFlag
+					config = featureFlags,
 				)
-				logD("checked for review and it was $res, ")
+				logD("checked review prompt eligibility: $res")
 				if (res is InAppReviewEligibilityChecker.Result.Eligible) {
 					_showReviewUi.value = true
+					return@launch
+				}
+				logD("checking if feature flag is eligible")
+				if (feedbackEligibilityChecker.isEligible(
+					installEpochTimeMs = settingsData.installEpochTimeMs,
+					lastPromptAttemptEpochTimeMs = settingsData.lastFeedbackPromptAttemptedAt,
+					config = featureFlags.feedbackPromptConfig,
+				)) {
+					_feedbackPrompt.value = InAppFeedbackPromptUiState(isVisible = true)
+					analytics.captureEvent("in_app_feedback_prompt_shown", mapOf())
 				}
 			}
 		}
 	}
-
-	val showFeedbackUIState: StateFlow<Boolean> = dataStore.data
-		.map { settings ->
-			settings.shouldWeShowFeedbackCard
-		}
-		.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), false)
 
 	fun setInAppReviewConsumed(task: Task<ReviewInfo>) {
 		viewModelScope.launch {
@@ -126,17 +138,41 @@ class AlarmContainerViewModel @Inject constructor(
 		}
 	}
 
-	fun dismissFeedback() {
-		viewModelScope.launch {
-			dataStore.updateData { it.copy { shouldWeShowFeedbackCard = false } }
-			analytics.captureEvent("feedback board dismissed", mapOf())
-		}
+	fun selectFeedbackRating(rating: Int) {
+//		require(rating in 1..5) { "A rating must be between 1 and 5" }
+		_feedbackPrompt.value = _feedbackPrompt.value.copy(
+			rating = rating,
+			step = InAppFeedbackPromptStep.Review,
+		)
 	}
 
-	fun captureFeedback(feedback: String) {
+	fun submitFeedback(feedback: String) {
+		val rating = _feedbackPrompt.value.rating ?: return
+		analytics.captureEvent(
+			"in_app_feedback_submitted",
+			mapOf("rating" to rating, "feedback" to feedback),
+		)
+		consumeFeedbackPrompt()
+	}
+
+	fun dismissFeedbackPrompt() {
+		val prompt = _feedbackPrompt.value
+		analytics.captureEvent(
+			"in_app_feedback_prompt_dismissed",
+			mapOf(
+				"step" to prompt.step.name.lowercase(),
+				"rating" to (prompt.rating ?: 0),
+			),
+		)
+		consumeFeedbackPrompt()
+	}
+
+	private fun consumeFeedbackPrompt() {
+		_feedbackPrompt.value = InAppFeedbackPromptUiState()
 		viewModelScope.launch {
-			dataStore.updateData { it.copy { shouldWeShowFeedbackCard = false } }
-			analytics.captureEvent("feedback given", mapOf("feedback" to feedback))
+			dataStore.updateData {
+				it.copy { lastFeedbackPromptAttemptedAt = System.currentTimeMillis() }
+			}
 		}
 	}
 
