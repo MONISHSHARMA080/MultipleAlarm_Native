@@ -150,7 +150,7 @@ class AlarmContainerViewModel @Inject constructor(
 	fun submitFeedback(feedback: String) {
 		val rating = _feedbackPrompt.value.rating ?: "not there"
 		analytics.captureEvent(
-			"in_app_feedback_submitted",
+			"feedback_submitted",
 			mapOf("rating" to rating, "feedback" to feedback),
 		)
 		consumeFeedbackPrompt()
@@ -159,7 +159,7 @@ class AlarmContainerViewModel @Inject constructor(
 	fun dismissFeedbackPrompt() {
 		val prompt = _feedbackPrompt.value
 		analytics.captureEvent(
-			"in_app_feedback_prompt_dismissed",
+			"feedback_prompt_dismissed",
 			mapOf(
 				"step" to prompt.step.name.lowercase(),
 				"rating" to (prompt.rating ?: 0),
