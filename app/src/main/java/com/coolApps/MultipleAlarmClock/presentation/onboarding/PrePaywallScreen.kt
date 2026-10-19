@@ -50,17 +50,6 @@ import com.revenuecat.purchases.models.Period
 import com.revenuecat.purchases.models.PricingPhase
 import com.revenuecat.purchases.models.StoreProduct
 
-/**
- * Gate screen shown only when the hard paywall feature flag is enabled,
- * before the actual [DisplaySate.OnboardingPaywall] step.
- *
- * Its job is to communicate (Cal AI style) that this is a Premium app,
- * while making the free trial the hero: "your trial is ready – start it now".
- * The only path forward is the trial CTA.
- *
- * [offering] is non-null on purpose: the caller only composes this screen once
- * a real `[Offering]` exists, so trial/price details are always derivable from it.
- */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HardPaywallEnabledScreen(
@@ -371,36 +360,3 @@ private fun TrialOfferCard(
 		}
 	}
 }
-
-/**
- * What the trial unlocks, contained in a single tonal surface so the benefit
- * reads as one cohesive group, with a check-circle for instant scannability.
- */
-//@Composable
-//private fun TrialBenefitCard(modifier: Modifier = Modifier) {
-//	Row(
-//		modifier = modifier
-//			.background(color = colorScheme.surfaceContainerLow, shape = shapes.extraLarge)
-//			.padding(20.dp),
-//		verticalAlignment = Alignment.CenterVertically,
-//		horizontalArrangement = Arrangement.spacedBy(16.dp),
-//	) {
-//		Icon(
-//			imageVector = Icons.Rounded.CheckCircle,
-//			contentDescription = null,
-//			tint = colorScheme.primary,
-//		)
-//		Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-//			Text(
-//				text = "Unlimited alarms & wake-up ramps", // TODO: extract to string resource
-//				style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-//				color = colorScheme.onSurface,
-//			)
-//			Text(
-//				text = "Gently pulled out of sleep with rising volume, every alarm protected.", // TODO: extract to string resource
-//				style = typography.bodyMedium,
-//				color = colorScheme.onSurface.copy(alpha = 0.6f),
-//			)
-//		}
-//	}
-//}

@@ -1,27 +1,49 @@
 package com.coolApps.MultipleAlarmClock.util
 
-//import android.content.Context
-//import com.coolApps.MultipleAlarmClock.util.Analytics
-//import com.google.android.play.core.appupdate.AppUpdateManagerFactory
-//import com.google.android.play.core.install.model.AppUpdateType
-//import com.google.android.play.core.install.model.UpdateAvailability
-//
-//
-//suspend fun checkForAppUpdateAndAskForIt(context: Context, analytics: Analytics){
-//	val appUpdateManager = AppUpdateManagerFactory.create(context)
-//
-//// Returns an intent object that you use to check for an update.
-//	val appUpdateInfoTask = appUpdateManager.appUpdateInfo
-//
-//// Checks that the platform will allow the specified type of update.
-//	appUpdateInfoTask.addOnSuccessListener { appUpdateInfo ->
-//		if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
-//			// This example applies an immediate update. To apply a flexible update
-//			// instead, pass in AppUpdateType.FLEXIBLE
-//			&& appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
-//		) {
-//			analytics.captureEvent("app update is available", mapOf())
-//
-//		}
-//	}
-//}
+import android.content.Context
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
+import com.google.android.play.core.appupdate.AppUpdateInfo
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.appupdate.AppUpdateOptions
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.ktx.AppUpdateResult
+import com.google.android.play.core.ktx.requestCompleteUpdate
+import com.google.android.play.core.ktx.requestUpdateFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+
+class AppUpdateChecker(context: Context) {
+
+	private val appUpdateManager by lazy { AppUpdateManagerFactory.create(context) }
+
+	val updateState: Flow<AppUpdateResult>
+		get() = appUpdateManager.requestUpdateFlow().catch { emit(AppUpdateResult.NotAvailable) }
+
+	fun startFlexibleUpdate(info: AppUpdateInfo, launcher: ActivityResultLauncher<IntentSenderRequest>): Boolean =
+		startUpdate(info, launcher, AppUpdateType.FLEXIBLE)
+
+	fun startImmediateUpdate(info: AppUpdateInfo, launcher: ActivityResultLauncher<IntentSenderRequest>): Boolean =
+		startUpdate(info, launcher, AppUpdateType.IMMEDIATE)
+
+	suspend fun completeUpdate(): Boolean = runCatching { appUpdateManager.requestCompleteUpdate() }.isSuccess
+
+	private fun startUpdate(
+		info: AppUpdateInfo,
+		launcher: ActivityResultLauncher<IntentSenderRequest>,
+		updateType: Int
+	): Boolean = try {
+		appUpdateManager.startUpdateFlowForResult(
+			info,
+			launcher,
+			AppUpdateOptions.newBuilder(updateType).build()
+		)
+	} catch (e: Exception) {
+		false
+	}
+
+	companion object {
+		const val MIN_STALENESS_DAYS_FOR_FLEXIBLE_PROMPT = 3
+		const val IMMEDIATE_PRIORITY_THRESHOLD = 4
+	}
+}

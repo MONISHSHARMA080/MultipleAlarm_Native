@@ -2,6 +2,8 @@
     <string name="app_name">Multiple_Alarms</string>
     <string name="msg_copied_clipboard">Message copied to clipboard</string>
     <string name="msg_not_present">Alarm message not present</string>
+    <string name="update_downloaded_restart">Update downloaded. Restart to install it</string>
+    <string name="update_restart_action">Restart</string>
     <string name="settings_content_description">Settings</string>
     <string name="empty_state_title">Add an alarm</string>
     <string name="empty_state_description">Tap \'Add alarm\' to set an alarm</string>

@@ -140,7 +140,6 @@ class AlarmContainerViewModel @Inject constructor(
 	}
 
 	fun selectFeedbackRating(rating: Int) {
-//		require(rating in 1..5) { "A rating must be between 1 and 5" }
 		_feedbackPrompt.value = _feedbackPrompt.value.copy(
 			rating = rating,
 			step = InAppFeedbackPromptStep.Review,

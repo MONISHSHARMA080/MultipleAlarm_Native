@@ -22,6 +22,8 @@ media3Common = "1.11.1"
 navigationCompose = "2.10.2"
 purchases = "10.24.1"
 purchasesUi = "10.24.1"
+appUpdate = "2.1.0"
+appUpdateKtx = "2.1.0"
 review = "2.0.2"
 reviewKtx = "2.0.2"
 uiautomatorVersion = "2.4.0"
@@ -118,6 +120,8 @@ firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging
 androidx-compose-runtime-saveable = { group = "androidx.compose.runtime", name = "runtime-saveable", version.ref = "runtimeSaveable" }
 purchases = { module = "com.revenuecat.purchases:purchases", version.ref = "purchases" }
 purchases-ui = { module = "com.revenuecat.purchases:purchases-ui", version.ref = "purchasesUi" }
+app-update = { module = "com.google.android.play:app-update", version.ref = "appUpdate" }
+app-update-ktx = { module = "com.google.android.play:app-update-ktx", version.ref = "appUpdateKtx" }
 review = { module = "com.google.android.play:review", version.ref = "review" }
 review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "reviewKtx" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }

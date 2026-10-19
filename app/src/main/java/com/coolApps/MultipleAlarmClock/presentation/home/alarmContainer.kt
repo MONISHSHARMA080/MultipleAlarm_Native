@@ -4,6 +4,8 @@ import android.app.Activity
 import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.activity.compose.ReportDrawnWhen
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -59,8 +61,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -93,7 +97,18 @@ import androidx.navigation3.runtime.result.ResultEffect
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.presentation.logD
+import com.coolApps.MultipleAlarmClock.util.AppUpdateChecker
+import com.google.android.play.core.install.model.ActivityResult
+import com.google.android.play.core.install.model.InstallStatus
+import com.google.android.play.core.ktx.AppUpdateResult
+import com.google.android.play.core.ktx.clientVersionStalenessDays
+import com.google.android.play.core.ktx.installStatus
+import com.google.android.play.core.ktx.isFlexibleUpdateAllowed
+import com.google.android.play.core.ktx.isImmediateUpdateAllowed
+import com.google.android.play.core.ktx.updatePriority
 import com.google.android.play.core.review.ReviewManagerFactory
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -153,6 +168,68 @@ import java.util.Calendar
 					alarmContainerViewModel.setInAppReviewConsumed(task)
 				}
 			}
+		}
+	}
+
+	val appUpdateChecker = remember { AppUpdateChecker(context) }
+	val updateState by remember {
+		appUpdateChecker.updateState
+			.map { it.toAppUpdateState() }
+			.onEach { state ->
+				if (state is AppUpdateState.Available) {
+					alarmContainerViewModel.captureEvent("app_update_available", mapOf(
+						"staleness_days" to (state.stalenessDays ?: -1),
+						"update_priority" to state.updatePriority,
+					))
+				}
+			}
+	}.collectAsStateWithLifecycle(initialValue = AppUpdateState.Idle)
+	val updateLauncher = rememberLauncherForActivityResult(
+		ActivityResultContracts.StartIntentSenderForResult()
+	) { result ->
+		val outcome = when (result.resultCode) {
+			Activity.RESULT_OK -> "accepted"
+			Activity.RESULT_CANCELED -> "dismissed"
+			ActivityResult.RESULT_IN_APP_UPDATE_FAILED -> "failed"
+			else -> "unknown_${result.resultCode}"
+		}
+		alarmContainerViewModel.captureEvent("app_update_flow_result", mapOf("outcome" to outcome))
+	}
+	var updateFlowStarted by remember { mutableStateOf(false) }
+
+	LaunchedEffect(updateState) {
+		val available = updateState as? AppUpdateState.Available ?: return@LaunchedEffect
+		if (!updateFlowStarted && (available.shouldPromptFlexible || available.shouldPromptImmediate)) {
+			updateFlowStarted = true
+			val isImmediate = available.shouldPromptImmediate
+			val started = if (isImmediate) {
+				appUpdateChecker.startImmediateUpdate(available.info, updateLauncher)
+			} else {
+				appUpdateChecker.startFlexibleUpdate(available.info, updateLauncher)
+			}
+			alarmContainerViewModel.captureEvent("app_update_prompt_started", mapOf(
+				"type" to if (isImmediate) "immediate" else "flexible",
+				"started" to started,
+				"staleness_days" to (available.stalenessDays ?: -1),
+				"update_priority" to available.updatePriority,
+			))
+		}
+	}
+
+	val updateReadyToInstall = updateState is AppUpdateState.ReadyToInstall
+	val updateDownloadedMessage = stringResource(R.string.update_downloaded_restart)
+	val updateRestartActionLabel = stringResource(R.string.update_restart_action)
+
+	LaunchedEffect(updateReadyToInstall, updateDownloadedMessage, updateRestartActionLabel) {
+		if (!updateReadyToInstall) return@LaunchedEffect
+		val snackBarResult = snackBarHostState.showSnackbar(
+			message = updateDownloadedMessage,
+			actionLabel = updateRestartActionLabel,
+			duration = SnackbarDuration.Indefinite,
+		)
+		if (snackBarResult == SnackbarResult.ActionPerformed) {
+			val isCompleted = appUpdateChecker.completeUpdate()
+			alarmContainerViewModel.captureEvent("app_update_completed", mapOf("success" to isCompleted))
 		}
 	}
 
@@ -326,6 +403,38 @@ import java.util.Calendar
 	}
 }
 
+
+private fun AppUpdateResult.toAppUpdateState(): AppUpdateState {
+	return when (this) {
+		is AppUpdateResult.Available -> {
+			val info = updateInfo
+			val stalenessDays = info.clientVersionStalenessDays
+			val priority = info.updatePriority
+			when (info.installStatus) {
+				InstallStatus.DOWNLOADED -> AppUpdateState.ReadyToInstall
+				InstallStatus.DOWNLOADING -> AppUpdateState.Downloading()
+				else -> AppUpdateState.Available(
+					info = info,
+					stalenessDays = stalenessDays,
+					updatePriority = priority,
+					shouldPromptFlexible = info.isFlexibleUpdateAllowed &&
+						(stalenessDays ?: -1) >= AppUpdateChecker.MIN_STALENESS_DAYS_FOR_FLEXIBLE_PROMPT,
+					shouldPromptImmediate = info.isImmediateUpdateAllowed &&
+						priority >= AppUpdateChecker.IMMEDIATE_PRIORITY_THRESHOLD,
+				)
+			}
+		}
+		is AppUpdateResult.InProgress -> AppUpdateState.Downloading(
+			progress = if (installState.totalBytesToDownload() > 0) {
+				installState.bytesDownloaded().toFloat() / installState.totalBytesToDownload()
+			} else {
+				0f
+			}
+		)
+		is AppUpdateResult.Downloaded -> AppUpdateState.ReadyToInstall
+		AppUpdateResult.NotAvailable -> AppUpdateState.Idle
+	}
+}
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
