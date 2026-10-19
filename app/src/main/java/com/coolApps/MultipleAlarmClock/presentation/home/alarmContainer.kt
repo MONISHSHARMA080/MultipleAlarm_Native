@@ -100,6 +100,7 @@ import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.util.AppUpdateChecker
 import com.google.android.play.core.install.model.ActivityResult
 import com.google.android.play.core.install.model.InstallStatus
+import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.android.play.core.ktx.AppUpdateResult
 import com.google.android.play.core.ktx.clientVersionStalenessDays
 import com.google.android.play.core.ktx.installStatus
@@ -200,13 +201,13 @@ import java.util.Calendar
 	LaunchedEffect(updateState) {
 		val available = updateState as? AppUpdateState.Available ?: return@LaunchedEffect
 		if (!updateFlowStarted && (available.shouldPromptFlexible || available.shouldPromptImmediate)) {
-			updateFlowStarted = true
 			val isImmediate = available.shouldPromptImmediate
 			val started = if (isImmediate) {
 				appUpdateChecker.startImmediateUpdate(available.info, updateLauncher)
 			} else {
 				appUpdateChecker.startFlexibleUpdate(available.info, updateLauncher)
 			}
+			updateFlowStarted = started
 			alarmContainerViewModel.captureEvent("app_update_prompt_started", mapOf(
 				"type" to if (isImmediate) "immediate" else "flexible",
 				"started" to started,
@@ -410,18 +411,28 @@ private fun AppUpdateResult.toAppUpdateState(): AppUpdateState {
 			val info = updateInfo
 			val stalenessDays = info.clientVersionStalenessDays
 			val priority = info.updatePriority
-			when (info.installStatus) {
-				InstallStatus.DOWNLOADED -> AppUpdateState.ReadyToInstall
-				InstallStatus.DOWNLOADING -> AppUpdateState.Downloading()
-				else -> AppUpdateState.Available(
-					info = info,
-					stalenessDays = stalenessDays,
-					updatePriority = priority,
-					shouldPromptFlexible = info.isFlexibleUpdateAllowed &&
-						(stalenessDays ?: -1) >= AppUpdateChecker.MIN_STALENESS_DAYS_FOR_FLEXIBLE_PROMPT,
-					shouldPromptImmediate = info.isImmediateUpdateAllowed &&
-						priority >= AppUpdateChecker.IMMEDIATE_PRIORITY_THRESHOLD,
-				)
+			when {
+				info.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS ->
+					AppUpdateState.Available(
+						info = info,
+						stalenessDays = stalenessDays,
+						updatePriority = priority,
+						shouldPromptFlexible = false,
+						shouldPromptImmediate = true,
+					)
+				else -> when (info.installStatus) {
+					InstallStatus.DOWNLOADED -> AppUpdateState.ReadyToInstall
+					InstallStatus.DOWNLOADING -> AppUpdateState.Downloading()
+					else -> AppUpdateState.Available(
+						info = info,
+						stalenessDays = stalenessDays,
+						updatePriority = priority,
+						shouldPromptFlexible = info.isFlexibleUpdateAllowed &&
+							(stalenessDays ?: -1) >= AppUpdateChecker.MIN_STALENESS_DAYS_FOR_FLEXIBLE_PROMPT,
+						shouldPromptImmediate = info.isImmediateUpdateAllowed &&
+							priority >= AppUpdateChecker.IMMEDIATE_PRIORITY_THRESHOLD,
+					)
+				}
 			}
 		}
 		is AppUpdateResult.InProgress -> AppUpdateState.Downloading(
