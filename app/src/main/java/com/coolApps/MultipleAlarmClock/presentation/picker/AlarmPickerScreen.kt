@@ -83,6 +83,7 @@ import com.coolApps.MultipleAlarmClock.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.presentation.AlarmContainerBoundsTransform
 import com.coolApps.MultipleAlarmClock.presentation.AlarmTimeBoundsTransform
 import com.coolApps.MultipleAlarmClock.presentation.logD
+import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.AlarmPermissionDialog
 import java.util.Calendar
 
@@ -103,7 +104,7 @@ fun EditAlarmScreen(
 		alarmSetProceed: () -> Unit,
 		settingAlarmCancelled: () -> Unit,
 		onNavigateToSoundList: () -> Unit,
-		onNavigateToPaywall: (Boolean) -> Unit,
+		onShowPaywall: (PaywallTriggerType) -> Unit,
 		alarmData: AlarmData,
 		viewModel: AlarmPickerViewModel,
 		sharedTransitionScope: SharedTransitionScope? = null,
@@ -125,10 +126,10 @@ fun EditAlarmScreen(
 			alarmSetProceed()
 		}
 	}
-	LaunchedEffect(uiState.showPaywall) {
-		if (uiState.showPaywall) {
-			onNavigateToPaywall(true)
-			viewModel.navigationToPaywallComplete()
+	LaunchedEffect(uiState.paywallTriggerType) {
+		uiState.paywallTriggerType?.let { trigger ->
+			onShowPaywall(trigger)
+			viewModel.consumePaywallTrigger()
 		}
 	}
 
@@ -258,7 +259,7 @@ fun NewAlarmScreen(
 		alarmSetProceed: () -> Unit,
 		settingAlarmCancelled: () -> Unit,
 		onNavigateToSoundList: () -> Unit,
-		onNavigateToPaywall: (Boolean) -> Unit,
+		onShowPaywall: (PaywallTriggerType) -> Unit,
 		linearProgressBar: (@Composable () -> Unit)? = null,
 		viewModel: AlarmPickerViewModel,
 		// kept for API compatibility but unused in this route (no shared-element)
@@ -284,10 +285,10 @@ fun NewAlarmScreen(
 			alarmSetProceed()
 		}
 	}
-	LaunchedEffect(uiState.showPaywall) {
-		if (uiState.showPaywall) {
-			onNavigateToPaywall(true)
-			viewModel.navigationToPaywallComplete()
+	LaunchedEffect(uiState.paywallTriggerType) {
+		uiState.paywallTriggerType?.let { trigger ->
+			onShowPaywall(trigger)
+			viewModel.consumePaywallTrigger()
 		}
 	}
 

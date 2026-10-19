@@ -78,12 +78,13 @@ import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.presentation.logD
+import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallTriggerType
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SettingsScreen(
 		onNavigateBack: () -> Unit,
-		onNavigateToPaywall: (Boolean) -> Unit,
+		onShowPaywall: (PaywallTriggerType) -> Unit,
 		onNavigateToCustomerCenter: () -> Unit,
 ) {
 	var feedbackText by rememberSaveable { mutableStateOf("") }
@@ -193,7 +194,7 @@ fun SettingsScreen(
 								if (isPro) {
 									onNavigateToCustomerCenter()
 								} else {
-									onNavigateToPaywall(true)
+									onShowPaywall(PaywallTriggerType.PremiumFeature)
 								}
 							},
 							trailing = {

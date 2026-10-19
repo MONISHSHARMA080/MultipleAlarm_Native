@@ -11,15 +11,23 @@ import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.domain.repository.AlarmRepository
 import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
 import com.coolApps.MultipleAlarmClock.presentation.logD
+import com.coolApps.MultipleAlarmClock.presentation.paywall.OfferingState
 import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallEvent
+import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionUtils
 import com.coolApps.MultipleAlarmClock.util.Analytics
 import com.coolApps.MultipleAlarmClock.util.TrialReminderScheduler
+import com.revenuecat.purchases.Purchases
+import com.revenuecat.purchases.PurchasesException
+import com.revenuecat.purchases.awaitOfferings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -48,6 +56,29 @@ import kotlinx.coroutines.launch
 	init {
 		viewModelScope.launch {
 			refreshPermissions()
+		}
+		viewModelScope.launch(Dispatchers.IO) {
+			fetchOnboardingEndOffering()
+		}
+	}
+
+	private val _onboardingOffering = MutableStateFlow<OfferingState>(OfferingState.Loading)
+
+	val onboardingOffering: StateFlow<OfferingState> = _onboardingOffering.asStateFlow()
+
+	private suspend fun fetchOnboardingEndOffering() {
+		try {
+			val offerings = Purchases.sharedInstance.awaitOfferings()
+			// Placement offering first; `current` as fallback (covers the
+			// case before the placement has any "for all other cases" rule).
+			val serving = offerings
+				.getCurrentOfferingForPlacement(PaywallTriggerType.OnboardingEnd.placementId)
+				?: offerings.current
+			logD("Paywall: offering(${PaywallTriggerType.OnboardingEnd.placementId}) = ${serving?.identifier ?: "none"}")
+			_onboardingOffering.value = OfferingState.Loaded(serving)
+		} catch (e: PurchasesException) {
+			logD("Paywall: failed to fetch offerings for ${PaywallTriggerType.OnboardingEnd.placementId}: $e")
+			_onboardingOffering.value = OfferingState.Failed
 		}
 	}
 

@@ -26,6 +26,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.presentation.navigation.AlarmFlowRoute
 import com.coolApps.MultipleAlarmClock.presentation.navigation.Screen
+import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.picker.listAlarmRingtone.ListAlarmSoundScreen
 
 /**
@@ -35,11 +36,11 @@ import com.coolApps.MultipleAlarmClock.presentation.picker.listAlarmRingtone.Lis
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun EditAlarmFlowScreen(
-	alarmData: AlarmData,
-	onCloseFlow: () -> Unit,
-	onNavigateToPaywall: (Boolean) -> Unit,
-	sharedTransitionScope: SharedTransitionScope,
-	animatedVisibilityScope: AnimatedVisibilityScope
+		alarmData: AlarmData,
+		onCloseFlow: () -> Unit,
+		onShowPaywall: (PaywallTriggerType) -> Unit,
+		sharedTransitionScope: SharedTransitionScope,
+		animatedVisibilityScope: AnimatedVisibilityScope
 ) {
 	val viewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory ->
 		factory.create(alarmData)
@@ -107,7 +108,7 @@ fun EditAlarmFlowScreen(
 					alarmSetProceed = { onCloseFlow() },
 					settingAlarmCancelled = onCloseFlow,
 					onNavigateToSoundList = { flowBackStack.add(AlarmFlowRoute.AlarmSoundListScreen) },
-					onNavigateToPaywall = onNavigateToPaywall,
+					onShowPaywall = onShowPaywall,
 					sharedTransitionScope = sharedTransitionScope,
 					animatedVisibilityScope = animatedVisibilityScope
 				)
@@ -131,7 +132,7 @@ fun EditAlarmFlowScreen(
 					onProceed = { sound ->
 						viewModel.onAlarmSoundSelected(sound)
 					},
-					onNavigateToPaywall = onNavigateToPaywall
+					onShowPaywall = onShowPaywall
 				)
 			}
 		}
@@ -146,7 +147,7 @@ fun EditAlarmFlowScreen(
 @Composable
 fun NewAlarmFlowScreen(
 	onCloseFlow: () -> Unit,
-	onNavigateToPaywall: (Boolean) -> Unit
+	onShowPaywall: (PaywallTriggerType) -> Unit
 ) {
 	val viewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory ->
 		factory.create(null)
@@ -216,7 +217,7 @@ fun NewAlarmFlowScreen(
 					},
 					settingAlarmCancelled = onCloseFlow,
 					onNavigateToSoundList = { flowBackStack.add(AlarmFlowRoute.AlarmSoundListScreen) },
-					onNavigateToPaywall = onNavigateToPaywall
+					onShowPaywall = onShowPaywall
 				)
 			}
 
@@ -238,7 +239,7 @@ fun NewAlarmFlowScreen(
 					onProceed = { sound ->
 						viewModel.onAlarmSoundSelected(sound)
 					},
-					onNavigateToPaywall = onNavigateToPaywall
+					onShowPaywall = onShowPaywall
 				)
 			}
 		}

@@ -81,6 +81,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmPickerViewModel
 import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmSound
+import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallTriggerType
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -91,7 +92,7 @@ import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmSound
 	onBack: () -> Unit,
 	onProceed: (AlarmSound?) -> Unit,
 	linearProgressBar: (@Composable () -> Unit)? = null,
-	onNavigateToPaywall: (Boolean) -> Unit = {}
+	onShowPaywall: (PaywallTriggerType) -> Unit = {}
 ) {
 	val fromOnboarding = linearProgressBar != null
 	val view = LocalView.current
@@ -100,10 +101,10 @@ import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmSound
 	val selectedAlarmSound by vm.selectedAlarmSound.collectAsStateWithLifecycle()
 	val uiState by vm.uiState.collectAsStateWithLifecycle()
 
-	LaunchedEffect(uiState.showPaywall) {
-		if (uiState.showPaywall) {
-			onNavigateToPaywall(true)
-			vm.navigationToPaywallComplete()
+	LaunchedEffect(uiState.paywallTriggerType) {
+		uiState.paywallTriggerType?.let { trigger ->
+			onShowPaywall(trigger)
+			vm.consumePaywallTrigger()
 		}
 	}
 	

@@ -16,7 +16,7 @@ enum class DisplaySate {
 	FirstAlarmIntro,
 	CreateFirstAlarm,
 	AlarmResult,
-	PrePaywall,
+	PrePaywall, // prepare screen for hard paywall
 	OnboardingPaywall;
 
 	override fun toString(): String {

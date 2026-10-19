@@ -18,6 +18,7 @@ import com.coolApps.MultipleAlarmClock.data.preferences.Settings
 import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.data.repository.AlarmSoundRepository
 import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
+import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionUtils
 import com.coolApps.MultipleAlarmClock.receiver.PlayAlarm
 import com.coolApps.MultipleAlarmClock.util.Analytics
@@ -103,8 +104,8 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		observePremiumAccess()
 	}
 
-	fun navigationToPaywallComplete(){
-		_uiState.update { it.copy(showPaywall = false) }
+	fun consumePaywallTrigger() {
+		_uiState.update { it.copy(paywallTriggerType = null) }
 	}
 
 	fun onSetAlarmClicked() {
@@ -225,7 +226,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		if (!isPremium.value && sound != null) {
 			_uiState.update {
 				it.copy(
-					showPaywall = true,
+					paywallTriggerType = PaywallTriggerType.PremiumFeature,
 					pendingSound = sound
 				)
 			}
@@ -380,10 +381,13 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	}
 
 	fun updateIsForceLoudVolume(isForceLoudVolume: Boolean) {
-		if (isPremium.value) {
-			_uiState.update { it.copy(alarmData = it.alarmData.copy(isForceLoudVolume = isForceLoudVolume)) }
-		} else {
-			_uiState.update { it.copy(showPaywall = true) }
+		when {
+			isPremium.value -> {
+				_uiState.update { it.copy(alarmData = it.alarmData.copy(isForceLoudVolume = isForceLoudVolume)) }
+			}
+			else -> {
+				_uiState.update { it.copy(paywallTriggerType = PaywallTriggerType.PremiumFeature) }
+			}
 		}
 	}
 
@@ -438,7 +442,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 				else ->{
 					_uiState.update {
 						it.copy(
-							showPaywall = true,
+							paywallTriggerType = PaywallTriggerType.PremiumFeature,
 							pendingRepeatDay = day
 						)
 					}
@@ -514,7 +518,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 					if (pendingDay != null || pendingSound != null) {
 						_uiState.update {
 							it.copy(
-								showPaywall = false,
+								paywallTriggerType = null,
 								pendingRepeatDay = null,
 								pendingSound = null
 							)

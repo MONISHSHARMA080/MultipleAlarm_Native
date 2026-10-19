@@ -156,7 +156,6 @@ fun HardPaywallEnabledScreen(
 					color = colorScheme.onBackground.copy(alpha = 0.7f),
 				)
 
-				// Hero moment #1: the trial offer card
 				TrialOfferCard(
 					trialHeadlineText = offerDetails.trialHeadline,
 					priceNoteText = offerDetails.priceNote,
@@ -165,10 +164,6 @@ fun HardPaywallEnabledScreen(
 						.padding(top = 8.dp)
 				)
 
-				// Hero moment #2: what the trial unlocks
-//				TrialBenefitCard(
-//					modifier = Modifier.fillMaxWidth()
-//				)
 			}
 		}
 

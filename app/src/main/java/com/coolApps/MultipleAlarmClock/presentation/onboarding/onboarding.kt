@@ -49,28 +49,25 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.R
-import com.coolApps.MultipleAlarmClock.presentation.logD
+import com.coolApps.MultipleAlarmClock.presentation.paywall.OfferingState
 import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallEvent
+import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallTriggerType
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.revenuecat.purchases.Offering
-import com.revenuecat.purchases.Purchases
-import com.revenuecat.purchases.PurchasesException
-import com.revenuecat.purchases.awaitOfferings
 
 
 @OptIn(ExperimentalPermissionsApi::class)
-@Composable fun OnboardingScreen(onNavigateToPaywall: (Boolean) -> Unit = {}) {
+@Composable fun OnboardingScreen(onShowPaywall: (PaywallTriggerType) -> Unit = {}) {
 	val viewModel : OnboardingViewModel = hiltViewModel()
 
 	val uiState by viewModel.displayState.collectAsStateWithLifecycle()
 	val featureFlags by viewModel.analytics.featureFlagsData.collectAsStateWithLifecycle()
 	val isHardPaywall = featureFlags?.isHardPaywallEnabled ?: false
 
+	val onboardingOffering by viewModel.onboardingOffering.collectAsStateWithLifecycle()
+
 	LaunchedEffect(uiState.displaySate) {
 		viewModel.analytics.screen("Onboarding_${uiState.displaySate.name.lowercase()}")
 	}
-	var offering by remember { mutableStateOf<Offering?>(null) }
-//	var loadFailed by remember { mutableStateOf(false) }
 	// Pre-compute the initial button state from the display state so it's set
 	// *before* AnimatedContent composes the new screen – prevents layout jitter
 	// from child screens changing it during their first composition frame.
@@ -85,16 +82,6 @@ import com.revenuecat.purchases.awaitOfferings
 		}
 	}
 	val view = LocalView.current
-
-	LaunchedEffect(Unit) {
-		try {
-			// move it to the view model, and fetch it there and combine with
-			val offerings = Purchases.sharedInstance.awaitOfferings()
-			offering = offerings.getCurrentOfferingForPlacement("onboarding_end") ?: offerings.current
-		} catch (e: PurchasesException) {
-//			loadFailed = true
-		}
-	}
 
 	val progress = when (uiState.displaySate) {
 		DisplaySate.Problem -> 1f / 7f
@@ -200,7 +187,7 @@ import com.revenuecat.purchases.awaitOfferings
 								)
 							},
 							onButtonStateChange = { buttonState = it },
-							onShowPaywall = onNavigateToPaywall
+							onShowPaywall = onShowPaywall
 						)
 					}
 					DisplaySate.AlarmResult -> AlarmResultScreen(
@@ -208,30 +195,31 @@ import com.revenuecat.purchases.awaitOfferings
 						onButtonStateChange = { buttonState = it }
 					)
 					DisplaySate.PrePaywall -> {
-						// Local snapshot so smart-casting works (can't smart-cast a
-						// delegated MutableState var). Inside the success branch the
-						// compiler sees Offering (non-null) — no !! anywhere.
-						val currentOffering = offering
-						logD("hard paywall enabled $currentOffering")
-						when {
-							currentOffering != null -> HardPaywallEnabledScreen(
-								offering = currentOffering,
-								onContinue = {
-									view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-									viewModel.onNextClicked()
-								},
-								onButtonStateChange = { buttonState = it },
+						when (val billingOffering = onboardingOffering) {
+							OfferingState.Loading -> OfferingsPlaceholderScreen(
+								onButtonStateChange = { buttonState = it }
 							)
-
-							else -> {
-								// No offering and the fetch failed – skip ahead to the
-								// paywall step, which has its own loadFailed fallback UI.
+							is OfferingState.Loaded -> {
+								val currentOffering = billingOffering.offering
+								if (currentOffering != null) {
+									HardPaywallEnabledScreen(
+										offering = currentOffering,
+										onContinue = {
+											view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+											viewModel.onNextClicked()
+										},
+										onButtonStateChange = { buttonState = it },
+									)
+								} else {
+									// RevenueCat serves no offering for the placement — skip
+									// ahead to the paywall step, which has its own fallback UI.
+									LaunchedEffect(Unit) { viewModel.onNextClicked() }
+								}
+							}
+							OfferingState.Failed -> {
+								// offerings failed to load (e.g. offline) — skip this step
 								LaunchedEffect(Unit) { viewModel.onNextClicked() }
 							}
-
-//							else -> OfferingsPlaceholderScreen(
-//								onButtonStateChange = { buttonState = it }
-//							)
 						}
 					}
 					DisplaySate.OnboardingPaywall -> {
@@ -240,22 +228,35 @@ import com.revenuecat.purchases.awaitOfferings
 								uiState.alarmData?.let { viewModel.stopAlarm(it) }
 							}
 						}
-						OnboardingPaywallScreen(
-							isHardPaywall = isHardPaywall,
-							onBackPress = {
-								viewModel.onPreviousClicked()
-								uiState.alarmData?.let { viewModel.stopAlarm(it) }
-							},
-							onFinished = { viewModel.finishedOnboarding() },
-							 offering = offering,
-							onEvent = { event ->
-								if (isHardPaywall && (event is PaywallEvent.PurchaseCompleted || event is PaywallEvent.RestoreCompleted)) {
-									uiState.alarmData?.let { alarm -> viewModel.resetAlarm(alarm) }
-								}
-								viewModel.onPaywallEvent(event)
-							},
-							onButtonStateChange = { buttonState = it }
-						)
+						when (val billingOffering = onboardingOffering) {
+							is OfferingState.Loaded -> OnboardingPaywallScreen(
+								isHardPaywall = isHardPaywall,
+								onBackPress = {
+									viewModel.onPreviousClicked()
+									uiState.alarmData?.let { viewModel.stopAlarm(it) }
+								},
+								onFinished = { viewModel.finishedOnboarding() },
+								offering = billingOffering.offering,
+								onEvent = { event ->
+									if (isHardPaywall && (event is PaywallEvent.PurchaseCompleted || event is PaywallEvent.RestoreCompleted)) {
+										uiState.alarmData?.let { alarm -> viewModel.resetAlarm(alarm) }
+									}
+									viewModel.onPaywallEvent(event)
+								},
+								onButtonStateChange = { buttonState = it }
+							)
+							OfferingState.Loading -> {
+								// offerings still loading — hold on the placeholder, the
+								// paywall step will render (or fall back) once resolved.
+								OfferingsPlaceholderScreen(
+									onButtonStateChange = { buttonState = it }
+								)
+							}
+							OfferingState.Failed -> {
+								// same fallback the paywall screen used for a null offering
+								LaunchedEffect(Unit) { viewModel.finishedOnboarding() }
+							}
+						}
 					}
 				}
 			}

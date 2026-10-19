@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.picker.NewAlarmScreen
 import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmPickerViewModel
 import com.coolApps.MultipleAlarmClock.presentation.picker.listAlarmRingtone.ListAlarmSoundScreen
@@ -31,7 +32,7 @@ fun CreateFirstAlarmScreen(
 		modifier: Modifier = Modifier,
 		linearProgressBar: (@Composable () -> Unit)? = null,
 		onButtonStateChange: (ButtonState) -> Unit = {},
-		onShowPaywall: (Boolean) -> Unit = {}
+		onShowPaywall: (PaywallTriggerType) -> Unit = {}
 ) {
 	// buttonState is now pre-set by the parent before this screen composes
 	val alarmPickerViewModel : AlarmPickerViewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory -> factory.create(null) }
@@ -75,7 +76,7 @@ fun CreateFirstAlarmScreen(
 					settingAlarmCancelled = {
 						// Optionally handle cancellation, maybe go back to previous Onboarding screen
 					},
-					onNavigateToPaywall = onShowPaywall,
+					onShowPaywall = onShowPaywall,
 					linearProgressBar = linearProgressBar
 				)
 			}
@@ -92,7 +93,7 @@ fun CreateFirstAlarmScreen(
 						alarmPickerViewModel.onAlarmSoundSelected(sound)
 					},
 					linearProgressBar = linearProgressBar,
-					onNavigateToPaywall = onShowPaywall
+					onShowPaywall = onShowPaywall
 				)
 			}
 		}

@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallEvent
 import com.revenuecat.purchases.CustomerInfo
+import com.revenuecat.purchases.Offering
 import com.revenuecat.purchases.Package
 import com.revenuecat.purchases.PurchasesError
 import com.revenuecat.purchases.models.StoreTransaction
@@ -39,10 +40,12 @@ import com.revenuecat.purchases.ui.revenuecatui.customercenter.CustomerCenter
 @Composable
 fun PremiumPaywallDialog(
 		isPlus: Boolean,
+		/** Offering resolved for the trigger's Placement. */
+		offering: Offering,
 		onEvent: (PaywallEvent) -> Unit,
 		onDismiss: () -> Unit
 ) {
-	val paywallOptions = remember {
+	val paywallOptions = remember(offering, onEvent, onDismiss) {
 		PaywallOptions.Builder(dismissRequest = onDismiss)
 			.setListener(object : PaywallListener {
 				override fun onPurchaseStarted(rcPackage: Package) = onEvent(PaywallEvent.PurchaseStarted(rcPackage))
@@ -50,7 +53,7 @@ fun PremiumPaywallDialog(
 				override fun onPurchaseError(error: PurchasesError) = onEvent(PaywallEvent.PurchaseError(error))
 				override fun onRestoreStarted() = onEvent(PaywallEvent.RestoreStarted)
 				override fun onRestoreError(error: PurchasesError) = onEvent(PaywallEvent.RestoreError(error))
-				
+
 				override fun onPurchaseCompleted(customerInfo: CustomerInfo, storeTransaction: StoreTransaction) {
 					onEvent(PaywallEvent.PurchaseCompleted(customerInfo, storeTransaction))
 					onDismiss()
@@ -60,6 +63,7 @@ fun PremiumPaywallDialog(
 					onDismiss()
 				}
 			})
+			.setOffering(offering)
 			.build()
 	}
 
