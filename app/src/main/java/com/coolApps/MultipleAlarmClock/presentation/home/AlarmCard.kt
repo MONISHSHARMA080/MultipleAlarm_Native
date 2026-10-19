@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
@@ -110,7 +111,8 @@ import kotlin.math.abs
 	)
 
 	val animatedVerticalPadding by animateDpAsState(
-		targetValue = if (isActive) 6.dp else 4.dp,
+		targetValue = 3.dp,
+//		targetValue = if (isActive) 6.dp else 2.dp,
 		animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
 		label = "verticalPadding"
 	)
@@ -121,15 +123,14 @@ import kotlin.math.abs
 		label = "cardScale"
 	)
 
-	val cardElevation by animateDpAsState(
-		targetValue = if (isActive) 2.dp else 0.dp,
+	val cardCorner by animateDpAsState(
+		targetValue = if (isActive) 48.dp else 28.dp,
 		animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
-		label = "cardElevation"
+		label = "cardCorner"
 	)
-
+	val cardShape = RoundedCornerShape(cardCorner)
 	val view = LocalView.current
 	val dismissState = rememberSwipeToDismissBoxState()
-	val cardShape = shapes.extraExtraLarge
 	val horizontalPadding = 10.dp
 
 	SwipeToDismissBox(
@@ -202,7 +203,6 @@ import kotlin.math.abs
 		CompositionLocalProvider(
 			LocalDensity provides Density(
 				density = LocalDensity.current.density,
-//				fontScale = 1f
 			)
 		) {
 			with(sharedTransitionScope) {
@@ -230,7 +230,7 @@ import kotlin.math.abs
 					),
 					shape = cardShape,
 					elevation = CardDefaults.cardElevation(
-						defaultElevation = cardElevation
+//						defaultElevation = cardElevation
 					)
 				) {
 					AlarmCardContent(
@@ -270,7 +270,7 @@ fun AlarmCardContent(
 ) {
 	val colorScheme = colorScheme
 	val typography = typography
-	val secondaryContentColor = contentColor.copy(alpha = 0.75f)
+	val secondaryContentColor = contentColor.copy(alpha = 0.65f)
 
 	with(sharedTransitionScope) {
 		Column(

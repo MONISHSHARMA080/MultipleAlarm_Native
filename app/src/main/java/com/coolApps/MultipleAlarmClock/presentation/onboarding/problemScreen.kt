@@ -30,13 +30,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Alarm
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.MaterialTheme.typography
@@ -71,6 +74,7 @@ private enum class ProblemPhase {
 	Crushing
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ProblemScreen(
 	onButtonStateChange: (ButtonState) -> Unit = {}
@@ -139,19 +143,13 @@ fun ProblemScreen(
 	}
 
 	val enterReveal = fadeIn(
-		animationSpec = tween(700, easing = FastOutSlowInEasing)
+		animationSpec = MaterialTheme.motionScheme.slowEffectsSpec()
 	) + slideInVertically(
-		animationSpec = spring(
-			dampingRatio = 0.8f,
-			stiffness = Spring.StiffnessLow
-		),
+		animationSpec = MaterialTheme.motionScheme.slowSpatialSpec(),
 		initialOffsetY = { 40 }
 	) + scaleIn(
 		initialScale = 0.95f,
-		animationSpec = spring(
-			dampingRatio = 0.8f,
-			stiffness = Spring.StiffnessLow
-		)
+		animationSpec = MaterialTheme.motionScheme.slowSpatialSpec()
 	)
 
 	val textChangeTransition: AnimatedContentTransitionScope<Boolean>.() -> ContentTransform = {
@@ -173,7 +171,10 @@ fun ProblemScreen(
 	}
 	
 	Column(
-		modifier = Modifier.fillMaxSize(),
+		modifier = Modifier
+			.fillMaxSize()
+			.navigationBarsPadding()
+			.padding(bottom = 20.dp),
 		horizontalAlignment = Alignment.CenterHorizontally
 	) {
 		Box(

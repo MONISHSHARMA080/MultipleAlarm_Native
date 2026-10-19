@@ -115,7 +115,6 @@ class Analytics(
 				minAlarmsCreated = 3,
 				cooldownDays = 7,
 				minDaysSinceInstall = 3,
-				isHardPaywallEnabled = true
 			)
 		}
 	}

@@ -20,6 +20,7 @@ val ExpressiveAlarmShapes = Shapes(
     medium = RoundedCornerShape(14.dp),
     large = RoundedCornerShape(20.dp),
     extraLarge = RoundedCornerShape(28.dp),
+    extraExtraLarge = RoundedCornerShape(48.dp),
 )
 
 private val DefaultTypography = Typography()

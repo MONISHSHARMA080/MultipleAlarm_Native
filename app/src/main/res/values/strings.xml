@@ -156,7 +156,7 @@
     <string name="onboarding_problem_btn_set">Set my own</string>
     <string name="onboarding_problem_btn_fix">Fix this</string>
     <string name="onboarding_problem_wake_up">Wake up</string>
-    <string name="onboarding_problem_title">One task. So many alarms.</string>
+    <string name="onboarding_problem_title">Tired of so many alarms.</string>
     <string name="onboarding_problem_subtitle">Managing multiple alarms for a task takes time and effort.</string>
     <string name="onboarding_problem_better_way_title">Better way</string>
     <string name="onboarding_problem_better_way_subtitle">Select the time interval and how frequent you want the alarm and app handles the rest</string>

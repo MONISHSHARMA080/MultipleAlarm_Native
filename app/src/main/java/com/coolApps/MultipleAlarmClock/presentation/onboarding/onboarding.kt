@@ -43,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -54,6 +55,9 @@ import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallEvent
 import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallTriggerType
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
+
+/** Height of the band the floating CTA occupies (button + paddings + nav-bar inset max) so content stays above it. */
+//val OnboardingCtaReservedHeight = 100.dp
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable fun OnboardingScreen(onShowPaywall: (PaywallTriggerType) -> Unit = {}) {
@@ -266,7 +270,13 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 					modifier = Modifier
 						.fillMaxWidth()
 						.align(Alignment.BottomCenter)
-						.background(colorScheme.background)
+						.background(
+						brush = Brush.verticalGradient(
+							0f to colorScheme.background,
+							0.35f to colorScheme.background,
+							1f to colorScheme.background.copy(alpha = 0f),
+						)
+					)
 						.navigationBarsPadding()
 						.padding(26.dp)
 						.padding(bottom = 20.dp),
