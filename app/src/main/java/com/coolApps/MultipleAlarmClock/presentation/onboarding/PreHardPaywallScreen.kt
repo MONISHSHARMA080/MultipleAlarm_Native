@@ -65,12 +65,14 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.coolApps.MultipleAlarmClock.R
 import com.revenuecat.purchases.Offering
 import com.revenuecat.purchases.models.OfferPaymentMode
 import com.revenuecat.purchases.models.Period
@@ -94,7 +96,21 @@ fun HardPaywallScreen(
 		onButtonStateChange(ButtonState.Hidden)
 	}
 
-	val offerDetails = remember(offering) { extractTrialOfferDetails(offering) }
+	val offerDetails = extractTrialOfferDetails(offering)
+
+	val trialHeadline = offerDetails.trialPeriod
+		?.let { stringResource(R.string.paywall_trial_headline, formatPeriod(it)) }
+		?: stringResource(R.string.paywall_free_trial_default)
+
+	val priceNote = if (offerDetails.fullPrice != null && offerDetails.fullPriceUnit != null) {
+		stringResource(
+			R.string.paywall_price_note,
+			offerDetails.fullPrice,
+			periodShortUnit(offerDetails.fullPriceUnit),
+		)
+	} else {
+		""
+	}
 
 	var showHeadline by remember { mutableStateOf(false) }
 	var showSubtitle by remember { mutableStateOf(false) }
@@ -129,11 +145,10 @@ fun HardPaywallScreen(
 		label = "ctaCorner",
 	)
 
-	val primary = colorScheme.primary
-	val headline = remember(primary) {
-		buildAnnotatedString {
-			append("We want you to\ntry the app ")
-			withStyle(SpanStyle(color = primary)) { append("for free") }
+	val headline = buildAnnotatedString {
+		append(stringResource(R.string.paywall_headline_plain))
+		withStyle(SpanStyle(color = colorScheme.primary)) {
+			append(stringResource(R.string.paywall_headline_highlight))
 		}
 	}
 
@@ -160,7 +175,7 @@ fun HardPaywallScreen(
 
 		AnimatedVisibility(visible = showSubtitle, enter = enterReveal) {
 			Text(
-				text = "${offerDetails.trialHeadline} .  everything unlocked",
+				text = stringResource(R.string.paywall_subtitle, trialHeadline),
 				textAlign = TextAlign.Center,
 				style = typography.titleMedium,
 				color = colorScheme.onBackground.copy(alpha = 0.6f),
@@ -181,7 +196,7 @@ fun HardPaywallScreen(
 
 		AnimatedVisibility(visible = showHero, enter = enterReveal) {
 			Text(
-				text = "One setup. It keeps ringing every minute until you're actually up.",
+				text = stringResource(R.string.paywall_demo_caption),
 				textAlign = TextAlign.Center,
 				style = typography.bodyMedium,
 				color = colorScheme.onBackground.copy(alpha = 0.65f),
@@ -210,7 +225,7 @@ fun HardPaywallScreen(
 						modifier = Modifier.size(20.dp),
 					)
 					Text(
-						text = "No Payment Due Now",
+						text = stringResource(R.string.paywall_no_payment_due),
 						style = typography.titleSmall.copy(fontWeight = FontWeight.Bold),
 						color = colorScheme.onBackground,
 					)
@@ -229,19 +244,16 @@ fun HardPaywallScreen(
 						.height(72.dp),
 				) {
 					Text(
-						text = "Try the app for free",
+						text = stringResource(R.string.paywall_cta_try_free),
 						style = typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
 					)
 				}
 
 				Text(
-					text = buildString {
-						append(offerDetails.trialHeadline)
-						if (offerDetails.priceNote.isNotBlank()) {
-							append(", then ")
-							append(offerDetails.priceNote)
-						}
-						append(" Cancel anytime.")
+					text = if (priceNote.isNotBlank()) {
+						stringResource(R.string.paywall_fine_print_with_price, trialHeadline, priceNote)
+					} else {
+						stringResource(R.string.paywall_fine_print_no_price, trialHeadline)
 					},
 					textAlign = TextAlign.Center,
 					style = typography.bodySmall,
@@ -257,9 +269,9 @@ private val NOTIFICATION_HEIGHT = 88.dp
 private val STACK_GAP = 16.dp
 private val STACK_HEIGHT = 124.dp // NOTIFICATION_HEIGHT + 2 * STACK_GAP + breathing room
 
-private fun demoTime(index: Int): String {
+private fun demoTime(index: Int, endTime: String): String {
 	val m = index % DEMO_TOTAL_ALARMS
-	return if (m >= 60) "6:00" else "5:%02d".format(m)
+	return if (m >= 60) endTime else "5:%02d".format(m)
 }
 /* The alarm as it appears in the app: ONE alarm, 5:00 -> 6:00, every 1 min */
 @Composable
@@ -292,7 +304,7 @@ private fun RepeatAlarmCard() {
 					modifier = Modifier.size(14.dp),
 				)
 				Text(
-					text = "Repeat alarm",
+					text = stringResource(R.string.paywall_demo_repeat_badge),
 					style = typography.labelMedium.copy(fontWeight = FontWeight.Bold),
 					color = colorScheme.onSecondaryContainer,
 				)
@@ -300,10 +312,9 @@ private fun RepeatAlarmCard() {
 
 			Row(verticalAlignment = Alignment.CenterVertically) {
 				Text(
-					text = "5:00 ",
+					text = stringResource(R.string.paywall_demo_start_time) + " ",
 					style = typography.displaySmall.copy(
 						fontWeight = FontWeight.ExtraBold,
-//					fontFeatureSettings = "tnum",
 					),
 					color = colorScheme.onSurface,
 				)
@@ -314,7 +325,7 @@ private fun RepeatAlarmCard() {
 				)
 
 				Text(
-					text = " 6:00 ",
+					text = " " + stringResource(R.string.paywall_demo_end_time) + " ",
 					style = typography.displaySmall.copy(
 						fontWeight = FontWeight.ExtraBold,
 						fontFeatureSettings = "tnum",
@@ -324,7 +335,7 @@ private fun RepeatAlarmCard() {
 			}
 
 			Text(
-				text = "Every 1 min \u00B7 $DEMO_TOTAL_ALARMS alarms",
+				text = stringResource(R.string.paywall_demo_every_min, DEMO_TOTAL_ALARMS),
 				style = typography.bodyMedium,
 				color = colorScheme.onSurface.copy(alpha = 0.65f),
 			)
@@ -536,6 +547,7 @@ private fun RingingContent(
 
 	val cookie = MaterialShapes.Cookie9Sided.toShape()
 	val ringColor = colorScheme.onPrimaryContainer
+	val endTime = stringResource(R.string.paywall_demo_end_time)
 
 	Row(
 		modifier = Modifier
@@ -580,12 +592,12 @@ private fun RingingContent(
 			verticalArrangement = Arrangement.spacedBy(1.dp),
 		) {
 			Text(
-				text = "Alarm \u00B7 wake up",
+				text = stringResource(R.string.paywall_demo_notification_app),
 				style = typography.labelMedium,
 				color = colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
 			)
 			Text(
-				text = demoTime(index),
+				text = demoTime(index, endTime),
 				style = typography.headlineSmall.copy(
 					fontWeight = FontWeight.ExtraBold,
 					fontFeatureSettings = "tnum",
@@ -593,7 +605,11 @@ private fun RingingContent(
 				color = colorScheme.onPrimaryContainer,
 			)
 			Text(
-				text = "Repeat ${index % DEMO_TOTAL_ALARMS + 1} of $DEMO_TOTAL_ALARMS",
+				text = stringResource(
+					R.string.paywall_demo_repeat_count,
+					index % DEMO_TOTAL_ALARMS + 1,
+					DEMO_TOTAL_ALARMS,
+				),
 				style = typography.bodySmall,
 				color = colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
 			)
@@ -606,7 +622,7 @@ private fun RingingContent(
 @Composable
 private fun StopPill(press: Float) {
 	Text(
-		text = "Stop",
+		text = stringResource(R.string.paywall_demo_stop),
 		style = typography.labelLarge.copy(fontWeight = FontWeight.Bold),
 		color = lerp(colorScheme.onSecondaryContainer, colorScheme.onPrimary, press),
 		modifier = Modifier
@@ -626,8 +642,9 @@ private fun StopPill(press: Float) {
 /* ------------------------------------------------------------------ */
 
 private data class TrialOfferDetails(
-		val trialHeadline: String,
-		val priceNote: String,
+		val trialPeriod: Period?,
+		val fullPrice: String?,
+		val fullPriceUnit: Period?,
 )
 
 private fun extractTrialOfferDetails(offering: Offering): TrialOfferDetails {
@@ -642,11 +659,9 @@ private fun extractTrialOfferDetails(offering: Offering): TrialOfferDetails {
 	val pricePhase = product?.defaultOption?.fullPricePhase
 
 	return TrialOfferDetails(
-		trialHeadline = freePhase?.let { formatPeriod(it.billingPeriod) + " free" }
-			?: "Free trial",
-		priceNote = pricePhase?.let { phase ->
-			"${phase.price.formatted}/${periodShortUnit(phase.billingPeriod)}."
-		} ?: "",
+		trialPeriod = freePhase?.billingPeriod,
+		fullPrice = pricePhase?.price?.formatted,
+		fullPriceUnit = pricePhase?.billingPeriod,
 	)
 }
 
@@ -655,21 +670,23 @@ private fun StoreProduct.freeTrialPhase(): PricingPhase? {
 	return default.freePhase?.takeIf { it.offerPaymentMode == OfferPaymentMode.FREE_TRIAL }
 }
 
+@Composable
 private fun formatPeriod(period: Period): String {
 	val unitName = when (period.unit) {
-		Period.Unit.DAY -> if (period.value == 1) "day" else "days"
-		Period.Unit.WEEK -> if (period.value == 1) "week" else "weeks"
-		Period.Unit.MONTH -> if (period.value == 1) "month" else "months"
-		Period.Unit.YEAR -> if (period.value == 1) "year" else "years"
-		Period.Unit.UNKNOWN -> "period"
+		Period.Unit.DAY -> if (period.value == 1) stringResource(R.string.paywall_period_day) else stringResource(R.string.paywall_period_days)
+		Period.Unit.WEEK -> if (period.value == 1) stringResource(R.string.paywall_period_week) else stringResource(R.string.paywall_period_weeks)
+		Period.Unit.MONTH -> if (period.value == 1) stringResource(R.string.paywall_period_month) else stringResource(R.string.paywall_period_months)
+		Period.Unit.YEAR -> if (period.value == 1) stringResource(R.string.paywall_period_year) else stringResource(R.string.paywall_period_years)
+		Period.Unit.UNKNOWN -> stringResource(R.string.paywall_period_unknown)
 	}
-	return "${period.value} $unitName"
+	return stringResource(R.string.paywall_period_value_format, period.value, unitName)
 }
 
+@Composable
 private fun periodShortUnit(period: Period): String = when (period.unit) {
-	Period.Unit.DAY -> "day"
-	Period.Unit.WEEK -> "week"
-	Period.Unit.MONTH -> "month"
-	Period.Unit.YEAR -> "year"
-	Period.Unit.UNKNOWN -> "period"
+	Period.Unit.DAY -> stringResource(R.string.paywall_period_day)
+	Period.Unit.WEEK -> stringResource(R.string.paywall_period_week)
+	Period.Unit.MONTH -> stringResource(R.string.paywall_period_month)
+	Period.Unit.YEAR -> stringResource(R.string.paywall_period_year)
+	Period.Unit.UNKNOWN -> stringResource(R.string.paywall_period_unknown)
 }

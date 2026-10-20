@@ -194,6 +194,40 @@
     <string name="onboarding_result_time_range_arrow">%1$s → %2$s</string>
 <!--    <string name="onboarding_create_alarm_edit_note">You can change this anytime</string>-->
 
+    <!-- Pre-hard Paywall -->
+    <string name="paywall_headline_plain">"We want you to\ntry the app "</string>
+    <string name="paywall_headline_highlight">for free</string>
+    <string name="paywall_subtitle">%1$s . everything unlocked</string>
+    <string name="paywall_demo_caption">One setup. It keeps ringing every minute until you\'re actually up.</string>
+    <string name="paywall_no_payment_due">No Payment Due Now</string>
+    <string name="paywall_cta_try_free">Try the app for free</string>
+    <string name="paywall_fine_print_with_price">%1$s, then %2$s. Cancel anytime.</string>
+    <string name="paywall_fine_print_no_price">%1$s. Cancel anytime.</string>
+
+    <!-- Paywall demo card -->
+    <string name="paywall_demo_repeat_badge">Repeat alarm</string>
+    <string name="paywall_demo_every_min">Every 1 min · %1$d alarms</string>
+    <string name="paywall_demo_notification_app">Alarm · wake up</string>
+    <string name="paywall_demo_repeat_count">Repeat %1$d of %2$d</string>
+    <string name="paywall_demo_stop">Stop</string>
+    <string name="paywall_demo_start_time">5:00</string>
+    <string name="paywall_demo_end_time">6:00</string>
+
+    <!-- Paywall trial offer details -->
+    <string name="paywall_free_trial_default">Free trial</string>
+    <string name="paywall_trial_headline">%1$s free</string>
+    <string name="paywall_price_note">%1$s/%2$s</string>
+    <string name="paywall_period_value_format">%1$d %2$s</string>
+    <string name="paywall_period_day">day</string>
+    <string name="paywall_period_days">days</string>
+    <string name="paywall_period_week">week</string>
+    <string name="paywall_period_weeks">weeks</string>
+    <string name="paywall_period_month">month</string>
+    <string name="paywall_period_months">months</string>
+    <string name="paywall_period_year">year</string>
+    <string name="paywall_period_years">years</string>
+    <string name="paywall_period_unknown">period</string>
+
     <!-- Offline Engagement / Push Notifications -->
     <!-- Morning -->
     <string name="offline_notification_morning_title_1">Good Morning</string>

@@ -3,9 +3,16 @@ package com.coolApps.MultipleAlarmClock.presentation.onboarding
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -26,9 +33,11 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.MaterialTheme.typography
@@ -46,6 +55,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,7 +68,7 @@ import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 
-@OptIn(ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalPermissionsApi::class)
 @Composable fun OnboardingScreen(onShowPaywall: (PaywallTriggerType) -> Unit = {}) {
 	val viewModel : OnboardingViewModel = hiltViewModel()
 
@@ -84,6 +95,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 		}
 	}
 	val view = LocalView.current
+	val motionScheme = MaterialTheme.motionScheme
 
 	val progress = when (uiState.displaySate) {
 		DisplaySate.Problem -> 1f / 7f
@@ -265,11 +277,17 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 				}
 			}
 
-			if (buttonState != ButtonState.Hidden) {
+			AnimatedVisibility(
+				visible = buttonState != ButtonState.Hidden,
+				modifier = Modifier.align(Alignment.BottomCenter),
+				enter = fadeIn(motionScheme.defaultEffectsSpec()) +
+					slideInVertically(motionScheme.fastSpatialSpec()) { it },
+				exit = fadeOut(motionScheme.defaultEffectsSpec<Float>()) +
+					slideOutVertically(motionScheme.fastSpatialSpec<IntOffset>()) { it },
+			) {
 				Box(
 					modifier = Modifier
 						.fillMaxWidth()
-						.align(Alignment.BottomCenter)
 						.background(
 						brush = Brush.verticalGradient(
 							0f to colorScheme.background,
@@ -310,7 +328,13 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 							)
 						}
 
-						if (uiState.displaySate == DisplaySate.FirstAlarmIntro) {
+						AnimatedVisibility(
+							visible = uiState.displaySate == DisplaySate.FirstAlarmIntro,
+							enter = fadeIn(motionScheme.defaultEffectsSpec<Float>()) +
+								expandVertically(motionScheme.defaultSpatialSpec<IntSize>()),
+							exit = fadeOut(motionScheme.defaultEffectsSpec<Float>()) +
+								shrinkVertically(motionScheme.defaultSpatialSpec<IntSize>()),
+						) {
 							TextButton(
 								onClick = {
 									view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
