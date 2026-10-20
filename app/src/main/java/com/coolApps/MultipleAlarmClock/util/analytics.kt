@@ -118,7 +118,6 @@ class Analytics(
 				cooldownDays = 7,
 				minDaysSinceInstall = 3,
 				isHardPaywallEnabled = true,
-				isWeeklyRepeatPremium = true
 			)
 		}
 	}
