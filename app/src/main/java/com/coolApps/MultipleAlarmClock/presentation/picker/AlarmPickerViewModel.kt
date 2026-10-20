@@ -435,8 +435,9 @@ class AlarmPickerViewModel @AssistedInject constructor(
 
 	fun onRepeatDayClicked(day: DayOfWeek) {
 		viewModelScope.launch {
+			val isWeeklyRepeatPremium = analytics.featureFlagsData.value?.isWeeklyRepeatPremium ?: true
 			when{
-				isPremium.value ->{
+				!isWeeklyRepeatPremium || isPremium.value ->{
 					toggleRepeatDay(day)
 				}
 				else ->{

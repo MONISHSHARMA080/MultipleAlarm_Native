@@ -32,6 +32,8 @@ object FeatureFlagKeys {
 	const val IN_APP_FEEDBACK_START_DAY = "feedback_start_day"
 	const val IN_APP_FEEDBACK_COOLDOWN_DAYS = "feedback_cooldown_days"
 
+	const val WEEKLY_REPEAT_PREMIUM_ENABLED = "weekly_repeat_premium_enabled"
+
 	const val PUSH_NOTIFICATION_ENABLED = "push_notification_enabled"
 	const val PUSH_NOTIFICATION_INACTIVE_DAYS = "push_notification_inactive_days"
 	const val PUSH_NOTIFICATION_COOLDOWN_DAYS = "push_notification_cooldown_days"
@@ -115,7 +117,8 @@ class Analytics(
 				minAlarmsCreated = 3,
 				cooldownDays = 7,
 				minDaysSinceInstall = 3,
-				isHardPaywallEnabled = true
+				isHardPaywallEnabled = true,
+				isWeeklyRepeatPremium = true
 			)
 		}
 	}
@@ -143,8 +146,9 @@ class Analytics(
 			?.takeIf { it >= 0 } ?: 7
 		val feedbackCooldownDays = getIntFeatureFlag(FeatureFlagKeys.IN_APP_FEEDBACK_COOLDOWN_DAYS)
 			?.takeIf { it > 0 } ?: 14
+		val isWeeklyRepeatPremium = PostHog.isFeatureEnabled(FeatureFlagKeys.WEEKLY_REPEAT_PREMIUM_ENABLED, defaultValue = true)
 
-		logD("loading feature flags from PostHog: reviewEnabled=$enabled, minAlarms=$minAlarms, reviewCooldownDays=$cooldownDays, minDaysSinceInstall=$minDaysSinceInstall, feedbackEnabled=$feedbackEnabled, feedbackStartDay=$feedbackStartDay, feedbackCooldownDays=$feedbackCooldownDays, hardPaywall=$isHardPaywall")
+		logD("loading feature flags from PostHog: reviewEnabled=$enabled, minAlarms=$minAlarms, reviewCooldownDays=$cooldownDays, minDaysSinceInstall=$minDaysSinceInstall, feedbackEnabled=$feedbackEnabled, feedbackStartDay=$feedbackStartDay, feedbackCooldownDays=$feedbackCooldownDays, hardPaywall=$isHardPaywall, weeklyRepeatPremium=$isWeeklyRepeatPremium")
 		if (minAlarms == null || cooldownDays == null || minDaysSinceInstall == null) {
 			this.captureEvent( "loading_featureFlags_failed",
 				mapOf(
@@ -164,7 +168,8 @@ class Analytics(
 				startDay = feedbackStartDay,
 				cooldownDays = feedbackCooldownDays,
 			),
-					isHardPaywallEnabled = isHardPaywall
+					isHardPaywallEnabled = isHardPaywall,
+					isWeeklyRepeatPremium = isWeeklyRepeatPremium
 		)
 	}
 

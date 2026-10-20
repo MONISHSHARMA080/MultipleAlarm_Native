@@ -7,6 +7,7 @@ data class FeatureFlagsData(
 		val inAppReviewEnabled: Boolean = true,
 		val feedbackPromptConfig: FeedbackPromptConfig = FeedbackPromptConfig(),
 		val isHardPaywallEnabled: Boolean = false,
+		val isWeeklyRepeatPremium: Boolean = true,
 )
 
 data class FeedbackPromptConfig(
