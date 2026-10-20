@@ -451,6 +451,13 @@ private fun ReviewStep(
 			),
 			minLines = 3,
 			maxLines = 5,
+			supportingText = {
+				Text(
+					text = stringResource(R.string.in_app_review_feedback_optional_hint),
+					style = MaterialTheme.typography.labelSmall,
+					color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+				)
+			},
 		)
 
 		Spacer(Modifier.height(20.dp))
@@ -506,7 +513,7 @@ private fun ReviewStep(
 
 			Button(
 				onClick = onSubmit,
-				enabled = feedback.isNotBlank(),
+				enabled = rating != null,
 				interactionSource = submitInteractionSource,
 				shape = RoundedCornerShape(submitCorner),
 				colors = ButtonDefaults.buttonColors(

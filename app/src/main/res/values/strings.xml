@@ -110,6 +110,7 @@
     <string name="in_app_review_feedback_title">Tell us more</string>
     <string name="in_app_review_feedback_description">What would you like us to improve. Your feedback helps us make the app better.</string>
     <string name="in_app_review_feedback_placeholder">What could we improve?</string>
+    <string name="in_app_review_feedback_optional_hint">What could we improve</string>
     <string name="in_app_review_not_now">Not now</string>
     <string name="in_app_review_submit">Send feedback</string>
     <string name="in_app_review_star_description">%1$d out of 5 stars</string>
