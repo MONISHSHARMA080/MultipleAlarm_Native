@@ -50,14 +50,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.R
-import com.coolApps.MultipleAlarmClock.presentation.paywall.OfferingState
-import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallEvent
-import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallTriggerType
+import com.coolApps.MultipleAlarmClock.data.paywall.OfferingState
+import com.coolApps.MultipleAlarmClock.data.paywall.PaywallEvent
+import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
+import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
-
-/** Height of the band the floating CTA occupies (button + paddings + nav-bar inset max) so content stays above it. */
-//val OnboardingCtaReservedHeight = 100.dp
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable fun OnboardingScreen(onShowPaywall: (PaywallTriggerType) -> Unit = {}) {
@@ -108,8 +106,9 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 	Scaffold(
 		topBar = {
-			if (uiState.displaySate != DisplaySate.OnboardingPaywall &&
-				uiState.displaySate != DisplaySate.PrePaywall
+			if (uiState.displaySate != DisplaySate.OnboardingPaywall
+//				&&
+//				uiState.displaySate != DisplaySate.PrePaywall
 			) {
 				Row(
 					modifier = Modifier
@@ -199,6 +198,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 						onButtonStateChange = { buttonState = it }
 					)
 					DisplaySate.PrePaywall -> {
+						logD("in the pre paywall step")
 						when (val billingOffering = onboardingOffering) {
 							OfferingState.Loading -> OfferingsPlaceholderScreen(
 								onButtonStateChange = { buttonState = it }
@@ -206,7 +206,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 							is OfferingState.Loaded -> {
 								val currentOffering = billingOffering.offering
 								if (currentOffering != null) {
-									HardPaywallEnabledScreen(
+									HardPaywallScreen(
 										offering = currentOffering,
 										onContinue = {
 											view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)

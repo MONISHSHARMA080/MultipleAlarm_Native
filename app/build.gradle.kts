@@ -203,6 +203,8 @@ dependencies {
 	}
 	implementation(platform(libs.firebase.bom))
 	implementation(libs.androidx.compose.animation)
+	implementation(libs.androidx.compose.foundation)
+	implementation(libs.androidx.compose.runtime)
 	implementation(libs.androidx.compose.runtime.saveable)
 	implementation(libs.firebase.messaging)
     implementation(libs.hilt.android)
@@ -213,6 +215,7 @@ dependencies {
 	implementation(libs.androidx.datastore.core)
 	implementation(libs.androidx.hilt.work)
 	implementation(libs.play.services.appset)
+	implementation(libs.ui)
 	ksp(libs.androidx.hilt.compiler)
 	implementation(libs.androidx.hilt.navigation.compose)
 	ksp(libs.hilt.android.compiler)     // main source set (KSP only, no kapt)

@@ -58,6 +58,9 @@ robolectric = "4.17"
 mockk = "1.14.11"
 truth = "1.4.5"
 animation = "1.13.0-beta01"
+runtime = "1.12.1"
+foundation = "1.12.1"
+uiVersion = "1.12.1"
 #firebaseFunctionsKtx = "22.1.1"
 
 [libraries]
@@ -128,6 +131,9 @@ robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectr
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
 androidx-compose-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
+androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+ui = { group = "androidx.compose.ui", name = "ui", version.ref = "uiVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

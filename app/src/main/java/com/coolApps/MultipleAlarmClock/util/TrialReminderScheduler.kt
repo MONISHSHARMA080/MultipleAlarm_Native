@@ -6,7 +6,7 @@ import android.content.Context
 import android.content.Intent
 import com.coolApps.MultipleAlarmClock.data.billing.EntitlementManager
 import com.coolApps.MultipleAlarmClock.presentation.logD
-import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallEvent
+import com.coolApps.MultipleAlarmClock.data.paywall.PaywallEvent
 import com.coolApps.MultipleAlarmClock.receiver.ScheduledNotificationReceiver
 import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.PeriodType
@@ -35,7 +35,7 @@ object TrialReminderScheduler {
 		customerInfo: CustomerInfo,
 		purchaseCompleted: PaywallEvent.PurchaseCompleted? = null,
 	) {
-		TODO("take the purchasse completed and check how long is the free trial if there is one")
+//		TODO("take the purchase completed and check how long is the free trial if there is one")
 		logD("in scheduleIfOnTrial:$context, ${customerInfo.toString()}")
 		val entitlement = customerInfo.entitlements[PREMIUM_ENTITLEMENT] ?: return
 		if (entitlement.periodType != PeriodType.TRIAL) return

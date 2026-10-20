@@ -18,7 +18,7 @@ import com.coolApps.MultipleAlarmClock.data.preferences.Settings
 import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.data.repository.AlarmSoundRepository
 import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
-import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallTriggerType
+import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionUtils
 import com.coolApps.MultipleAlarmClock.receiver.PlayAlarm
 import com.coolApps.MultipleAlarmClock.util.Analytics

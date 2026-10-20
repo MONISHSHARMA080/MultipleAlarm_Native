@@ -83,7 +83,7 @@ import com.coolApps.MultipleAlarmClock.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.presentation.AlarmContainerBoundsTransform
 import com.coolApps.MultipleAlarmClock.presentation.AlarmTimeBoundsTransform
 import com.coolApps.MultipleAlarmClock.presentation.logD
-import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallTriggerType
+import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.AlarmPermissionDialog
 import java.util.Calendar
 

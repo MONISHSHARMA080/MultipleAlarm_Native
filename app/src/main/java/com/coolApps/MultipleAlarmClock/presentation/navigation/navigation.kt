@@ -35,8 +35,8 @@ import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import com.coolApps.MultipleAlarmClock.presentation.home.AlarmContainer
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingScreen
-import com.coolApps.MultipleAlarmClock.presentation.paywall.OfferingState
-import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallTriggerType
+import com.coolApps.MultipleAlarmClock.data.paywall.OfferingState
+import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.picker.EditAlarmFlowScreen
 import com.coolApps.MultipleAlarmClock.presentation.picker.NewAlarmFlowScreen
 import com.coolApps.MultipleAlarmClock.presentation.settings.PremiumPaywallDialog

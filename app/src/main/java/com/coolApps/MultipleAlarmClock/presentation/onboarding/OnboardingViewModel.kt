@@ -2,6 +2,7 @@ package com.coolApps.MultipleAlarmClock.presentation.onboarding
 
 import android.app.AlarmManager
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,10 +11,9 @@ import com.coolApps.MultipleAlarmClock.data.preferences.Settings
 import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.domain.repository.AlarmRepository
 import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
-import com.coolApps.MultipleAlarmClock.presentation.logD
-import com.coolApps.MultipleAlarmClock.presentation.paywall.OfferingState
-import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallEvent
-import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallTriggerType
+import com.coolApps.MultipleAlarmClock.data.paywall.OfferingState
+import com.coolApps.MultipleAlarmClock.data.paywall.PaywallEvent
+import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionUtils
 import com.coolApps.MultipleAlarmClock.util.Analytics
 import com.coolApps.MultipleAlarmClock.util.TrialReminderScheduler
@@ -74,7 +74,7 @@ import kotlinx.coroutines.launch
 			val serving = offerings
 				.getCurrentOfferingForPlacement(PaywallTriggerType.OnboardingEnd.placementId)
 				?: offerings.current
-			logD("Paywall: offering(${PaywallTriggerType.OnboardingEnd.placementId}) = ${serving?.identifier ?: "none"}")
+			logD("Paywall: offering(${PaywallTriggerType.OnboardingEnd.placementId}) = ${serving?.identifier ?: "none"}, serving:$serving, offerings:$offerings")
 			_onboardingOffering.value = OfferingState.Loaded(serving)
 		} catch (e: PurchasesException) {
 			logD("Paywall: failed to fetch offerings for ${PaywallTriggerType.OnboardingEnd.placementId}: $e")
@@ -121,7 +121,6 @@ import kotlinx.coroutines.launch
 			OnboardingNavigationAction.Back -> navigateBack()
 			OnboardingNavigationAction.Next,
 			OnboardingNavigationAction.SkipAlarmCreation -> {
-				logD("hard paywall enabled ${analytics.featureFlagsData.value?.isHardPaywallEnabled}")
 				val currentStep = _displayState.value.displaySate
 				val nextStep = reduceNavigation(
 					currentStep = currentStep,
@@ -129,6 +128,7 @@ import kotlinx.coroutines.launch
 					hasAlarm = displayState.value.alarmData != null,
 					isHardPaywallEnabled = analytics.featureFlagsData.value?.isHardPaywallEnabled == true,
 				)
+				logD("hard paywall enabled ${analytics.featureFlagsData.value?.isHardPaywallEnabled}  hasAlarm = ${displayState.value.alarmData != null} nextStep: $nextStep")
 				if (nextStep != currentStep) {
 					navigationBackStack += currentStep
 					_displayState.update { it.copy(displaySate = nextStep) }
@@ -229,5 +229,8 @@ import kotlinx.coroutines.launch
 				 }
 			 }
 		 }
+	}
+	private fun logD(msg: String){
+		Log.d("AAAAA", "[OnboardingViewModel] $msg")
 	}
 }

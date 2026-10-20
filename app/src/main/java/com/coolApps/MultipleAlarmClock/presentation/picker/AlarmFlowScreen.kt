@@ -26,7 +26,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.presentation.navigation.AlarmFlowRoute
 import com.coolApps.MultipleAlarmClock.presentation.navigation.Screen
-import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallTriggerType
+import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.picker.listAlarmRingtone.ListAlarmSoundScreen
 
 /**

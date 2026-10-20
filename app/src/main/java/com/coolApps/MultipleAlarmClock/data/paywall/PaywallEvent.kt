@@ -1,4 +1,4 @@
-package com.coolApps.MultipleAlarmClock.presentation.paywall
+package com.coolApps.MultipleAlarmClock.data.paywall
 
 import com.coolApps.MultipleAlarmClock.util.toAnalyticsString
 import com.revenuecat.purchases.CustomerInfo

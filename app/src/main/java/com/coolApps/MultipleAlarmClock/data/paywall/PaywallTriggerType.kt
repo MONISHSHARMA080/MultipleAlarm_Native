@@ -1,4 +1,4 @@
-package com.coolApps.MultipleAlarmClock.presentation.paywall
+package com.coolApps.MultipleAlarmClock.data.paywall
 
 sealed interface PaywallTriggerType {
 	val placementId: String

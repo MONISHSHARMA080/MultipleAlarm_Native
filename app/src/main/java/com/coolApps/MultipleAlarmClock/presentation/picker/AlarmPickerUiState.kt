@@ -2,7 +2,7 @@ package com.coolApps.MultipleAlarmClock.presentation.picker
 
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.local.AlarmDataValidationResult
-import com.coolApps.MultipleAlarmClock.presentation.paywall.PaywallTriggerType
+import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionStep
 import java.time.DayOfWeek
 import java.util.Calendar
