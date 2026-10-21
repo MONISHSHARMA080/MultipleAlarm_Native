@@ -27,10 +27,6 @@ jobs:
       - name: Run Unit Tests
         run: ./gradlew test --parallel
 
-  # ---------------------------------------------------------------------------
-  # Baseline profile – needs an emulator, so it is the slow job. The app build
-  # consumes its output.
-  # ---------------------------------------------------------------------------
   baseline-profile:
     name: Baseline Profile
     runs-on: ubuntu-latest

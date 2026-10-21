@@ -1,0 +1,10 @@
+{
+  "mcp": {
+    "servers": {
+      "posthog": {
+        "type": "remote",
+        "url": "https://mcp.posthog.com/mcp"
+      }
+    }
+  }
+}
