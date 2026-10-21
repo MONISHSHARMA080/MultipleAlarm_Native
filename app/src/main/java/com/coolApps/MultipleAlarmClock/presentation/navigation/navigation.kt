@@ -38,6 +38,7 @@ import com.coolApps.MultipleAlarmClock.data.preferences.OnboardingFlow
 import com.coolApps.MultipleAlarmClock.presentation.home.AlarmContainer
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingScreen
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingScreen2
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingScreen3
 import com.coolApps.MultipleAlarmClock.presentation.picker.EditAlarmFlowScreen
 import com.coolApps.MultipleAlarmClock.presentation.picker.NewAlarmFlowScreen
 import com.coolApps.MultipleAlarmClock.presentation.settings.PremiumPaywallDialog
@@ -57,6 +58,7 @@ import com.revenuecat.purchases.ui.revenuecatui.customercenter.CustomerCenter
 			deepLinkScreen != null -> deepLinkScreen
 			isFirstLaunch == true -> when (onboardingFlow) {
 				OnboardingFlow.ONBOARDING_FLOW_VARIANT_SHORT -> Screen.OnboardingScreen2
+				OnboardingFlow.ONBOARDING_FLOW_VARIANT_V3 -> Screen.OnboardingScreen3
 				else -> Screen.OnboardingScreen
 			}
 			else -> Screen.AlarmContainer
@@ -134,6 +136,10 @@ import com.revenuecat.purchases.ui.revenuecatui.customercenter.CustomerCenter
 
 					entry<Screen.OnboardingScreen2> {
 						OnboardingScreen2()
+					}
+
+					entry<Screen.OnboardingScreen3> {
+						OnboardingScreen3()
 					}
 
 					entry<Screen.SettingsScreen> {

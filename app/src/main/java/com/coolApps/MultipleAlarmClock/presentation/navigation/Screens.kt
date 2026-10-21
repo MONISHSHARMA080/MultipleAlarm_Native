@@ -20,6 +20,11 @@ sealed interface Screen : NavKey {
 	}
 
 	@Serializable
+	data object OnboardingScreen3 : Screen {
+		override val screenName = "OnboardingScreen3"
+	}
+
+	@Serializable
 	data object AlarmContainer : Screen {
 		override val screenName = "AlarmContainer"
 	}

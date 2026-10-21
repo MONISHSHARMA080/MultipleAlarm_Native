@@ -179,6 +179,10 @@
     <string name="onboarding_problem_better_way_subtitle">Select the time interval and how frequent you want the alarm and app handles the rest</string>
     <string name="onboarding_problem_preview_interval">7:00 → 7:40</string>
     <string name="onboarding_problem_preview_frequency">every 10 minutes</string>
+    <string name="onboarding_problem3_title">Wake up on time</string>
+    <string name="onboarding_problem3_title_alternate">Be on time</string>
+    <string name="onboarding_problem3_subtitle">Get repeating alarms — made for heavy sleepers.</string>
+    <string name="onboarding_problem3_subtitle_alternate">One alarm every minute until you\'re up.</string>
 
     <!-- Onboarding Create First Alarm Intro -->
     <string name="onboarding_create_alarm_title">Let\'s create your first alarm</string>
