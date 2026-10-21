@@ -48,7 +48,7 @@
     <string name="alarm_picker_force_loud_volume">Max volume</string>
     <string name="alarm_picker_force_loud_volume_desc">Rings at maximum volume, even if the phone\'s volume is set lower.</string>
     <string name="alarm_picker_message">Message</string>
-    <string name="alarm_picker_message_placeholder">Add message…</string>
+    <string name="alarm_picker_message_placeholder">Add message</string>
     <string name="alarm_picker_ok">Select</string>
     <string name="alarm_picker_cancel">Cancel</string>
     <string name="alarm_picker_delete_alarm">Delete</string>
@@ -84,7 +84,7 @@
     <string name="settings_feedback_send">Send</string>
     <string name="settings_version_format">v%1$s (%2$d)</string>
 
-<!-- Permission Steps -->
+    <!-- Permission Steps -->
     <string name="perm_notifications_title">Notifications</string>
     <string name="perm_notifications_rationale">Required to show the alarm notification. No spam</string>
 
@@ -97,10 +97,10 @@
     <string name="perm_xiaomi_title">Autostart (Xiaomi)</string>
     <string name="perm_xiaomi_rationale">Xiaomi devices require Autostart to schedule alarms; without this, the app will not function properly</string>
 
-<!-- Feedback Card -->
+    <!-- Feedback Card -->
     <string name="feedback_card">Feedback</string>
     <string name="feedback_description">Tell us what you love and what needs work. From design tweaks to feature requests and bug fixes, help us improve the app </string>
-    <string name="feedback_placeholder">Tell us what you think…</string>
+    <string name="feedback_placeholder">Tell us what you think </string>
     <string name="feedback_char_count">%1$d / %2$d</string>
     <string name="feedback_btn_maybe_later">Maybe later</string>
     <string name="feedback_btn_submit">Submit</string>
@@ -116,7 +116,7 @@
     <string name="in_app_review_submit">Send feedback</string>
     <string name="in_app_review_star_description">%1$d out of 5 stars</string>
 
-<!-- Alarm Sound card   -->
+    <!-- Alarm Sound card   -->
     <string name="alarm_sound_title">Alarm sound</string>
     <string name="Sound_screen_Random">Random</string>
     <string name="Sound_screen_selected">Now playing</string>
@@ -187,7 +187,7 @@
 
     <!-- Onboarding Create First Alarm Intro -->
     <string name="onboarding_create_alarm_title">Let\'s create your first alarm</string>
-<!--    <string name="onboarding_create_alarm_subtitle">Set an alarm interval in just two simple steps.</string>-->
+    <!--    <string name="onboarding_create_alarm_subtitle">Set an alarm interval in just two simple steps.</string>-->
     <string name="onboarding_create_alarm_step_start_title">Start time</string>
     <string name="onboarding_create_alarm_step_start_desc">Select when you want the alarms to start, eg wake up time </string>
     <string name="onboarding_create_alarm_step_end_title">End time</string>
@@ -227,8 +227,8 @@
 
     <!-- Paywall demo card -->
     <string name="paywall_demo_repeat_badge">Repeat alarm</string>
-    <string name="paywall_demo_every_min">Every 1 min · %1$d alarms</string>
-    <string name="paywall_demo_notification_app">Alarm · wake up</string>
+    <string name="paywall_demo_every_min">Every 1 min • %1$d alarms</string>
+    <string name="paywall_demo_notification_app">Alarm • wake up</string>
     <string name="paywall_demo_repeat_count">Alarm %1$d of %2$d</string>
     <string name="paywall_demo_stop">Stop</string>
     <string name="paywall_demo_start_time">5:00</string>
