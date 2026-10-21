@@ -5,10 +5,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ---------------------------------------------------------------------------
-  # Unit tests – runs in parallel with the baseline profile and the app build.
-  # Only gates publishing (see the `publish` job).
-  # ---------------------------------------------------------------------------
   unit-test:
     name: Unit Tests
     runs-on: ubuntu-latest
