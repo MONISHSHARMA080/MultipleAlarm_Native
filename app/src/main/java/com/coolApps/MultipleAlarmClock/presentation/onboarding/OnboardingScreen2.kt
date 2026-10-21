@@ -49,7 +49,6 @@ import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -63,18 +62,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.paywall.OfferingState
-import com.coolApps.MultipleAlarmClock.data.paywall.PaywallEvent
-import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.logD
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.AlarmResultScreen
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.CreateFirstAlarmScreen
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.FirstAlarmIntroView
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.HardPaywallScreen
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.OnboardingPaywallScreen
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.PermissionScreen
@@ -85,7 +78,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalPermissionsApi::class)
-@Composable fun OnboardingScreen2(onShowPaywall: (PaywallTriggerType) -> Unit = {}) {
+@Composable fun OnboardingScreen2() {
 	val viewModel : OnboardingViewModel2 = hiltViewModel()
 
 	val uiState by viewModel.displayState.collectAsStateWithLifecycle()
@@ -103,8 +96,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 	var buttonState by remember { mutableStateOf(ButtonState.Enabled) }
 	LaunchedEffect(uiState.displaySate) {
 		buttonState = when (uiState.displaySate) {
-			DisplaySate2.CreateFirstAlarm,
-			DisplaySate2.AlarmResult,
 			DisplaySate2.PrePaywall,
 			DisplaySate2.OnboardingPaywall -> ButtonState.Hidden
 			else -> buttonState  // keep current; child screens will refine via callback
@@ -114,17 +105,12 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 	val motionScheme = MaterialTheme.motionScheme
 
 	val progress = when (uiState.displaySate) {
-		DisplaySate2.Problem -> 1f / 8f
-		DisplaySate2.UserStruggles -> 2f / 8f
-		DisplaySate2.UserProfile -> 3f / 8f
-		DisplaySate2.Permission -> 4f / 8f
-		DisplaySate2.FirstAlarmIntro -> 5f / 8f
-		DisplaySate2.CreateFirstAlarm -> {
-			6f / 8f
-		}
-		DisplaySate2.AlarmResult -> 7f / 8f
-		DisplaySate2.PrePaywall -> 7f / 8f
-		DisplaySate2.OnboardingPaywall -> 8f / 8f
+		DisplaySate2.Problem -> 1f / 5f
+		DisplaySate2.UserStruggles -> 2f / 5f
+		DisplaySate2.UserProfile -> 3f / 5f
+		DisplaySate2.Permission -> 4f / 5f
+		DisplaySate2.PrePaywall -> 4f / 5f
+		DisplaySate2.OnboardingPaywall -> 5f / 5f
 	}
 
 	val animatedProgress by animateFloatAsState(
@@ -206,28 +192,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 							onButtonStateChange = { buttonState = it }
 						)
 					}
-					DisplaySate2.FirstAlarmIntro -> {
-						FirstAlarmIntroView(
-							onButtonStateChange = { buttonState = it }
-						)
-					}
-					DisplaySate2.CreateFirstAlarm -> {
-						CreateFirstAlarmScreen(
-							onAlarmSetProceed = { viewModel.onNextClicked() },
-							linearProgressBar = {
-								LinearProgressIndicator(
-									progress = { animatedProgress },
-									modifier = Modifier.fillMaxWidth().padding(end = 16.dp)
-								)
-							},
-							onButtonStateChange = { buttonState = it },
-							onShowPaywall = onShowPaywall
-						)
-					}
-					DisplaySate2.AlarmResult -> AlarmResultScreen(
-						alarmData = uiState.alarmData,
-						onButtonStateChange = { buttonState = it }
-					)
 					DisplaySate2.PrePaywall -> {
 						logD("in the pre paywall step")
 						when (val billingOffering = onboardingOffering) {
@@ -258,26 +222,15 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 						}
 					}
 					DisplaySate2.OnboardingPaywall -> {
-						LaunchedEffect(isHardPaywall) {
-							if (isHardPaywall) {
-								uiState.alarmData?.let { viewModel.stopAlarm(it) }
-							}
-						}
 						when (val billingOffering = onboardingOffering) {
 							is OfferingState.Loaded -> OnboardingPaywallScreen(
 								isHardPaywall = isHardPaywall,
 								onBackPress = {
 									viewModel.onPreviousClicked()
-									uiState.alarmData?.let { viewModel.stopAlarm(it) }
 								},
 								onFinished = { viewModel.finishedOnboarding() },
 								offering = billingOffering.offering,
-								onEvent = { event ->
-									if (isHardPaywall && (event is PaywallEvent.PurchaseCompleted || event is PaywallEvent.RestoreCompleted)) {
-										uiState.alarmData?.let { alarm -> viewModel.resetAlarm(alarm) }
-									}
-									viewModel.onPaywallEvent(event)
-								},
+								onEvent = { viewModel.onPaywallEvent(it) },
 								onButtonStateChange = { buttonState = it }
 							)
 							OfferingState.Loading -> {
@@ -367,30 +320,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 								text = stringResource(R.string.permission_continue),
 								style = typography.titleMedium
 							)
-						}
-
-						AnimatedVisibility(
-							visible = uiState.displaySate == DisplaySate2.FirstAlarmIntro,
-							enter = fadeIn(motionScheme.defaultEffectsSpec<Float>()) +
-								expandVertically(motionScheme.defaultSpatialSpec<IntSize>()),
-							exit = fadeOut(motionScheme.defaultEffectsSpec<Float>()) +
-								shrinkVertically(motionScheme.defaultSpatialSpec<IntSize>()),
-						) {
-							TextButton(
-								onClick = {
-									view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-									viewModel.onSkipAlarmCreation()
-								},
-								enabled = buttonState == ButtonState.Enabled,
-								modifier = Modifier
-									.fillMaxWidth()
-									.height(48.dp),
-							) {
-								Text(
-									text = stringResource(R.string.onboarding_skip_alarm_creation),
-									style = typography.bodyLarge.copy(color = colorScheme.onBackground.copy(alpha = 0.5f)),
-								)
-							}
 						}
 					}
 				}

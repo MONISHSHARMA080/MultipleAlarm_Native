@@ -1,20 +1,16 @@
 package com.coolApps.MultipleAlarmClock.presentation.onboarding
 
-import android.app.AlarmManager
 import android.content.Context
 import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.paywall.OfferingState
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallEvent
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.data.preferences.OnboardingFlow
 import com.coolApps.MultipleAlarmClock.data.preferences.Settings
 import com.coolApps.MultipleAlarmClock.data.preferences.copy
-import com.coolApps.MultipleAlarmClock.domain.repository.AlarmRepository
-import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionUtils
 import com.coolApps.MultipleAlarmClock.util.Analytics
 import com.coolApps.MultipleAlarmClock.util.TrialReminderScheduler
@@ -26,35 +22,22 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 
 @HiltViewModel class OnboardingViewModel2 @Inject constructor(
 	val analytics: Analytics,
-	alarmRepository: AlarmRepository,
 	private val settingsDataStore: DataStore<Settings>,
-	private val alarmsController: AlarmsController,
-	private val alarmManager: AlarmManager,
 	@ApplicationContext val context: Context
 ) : ViewModel() {
 
 	private val _displayState = MutableStateFlow(OnboardingUiState2())
 
-	val displayState = combine(_displayState, alarmRepository.getAlarmsStream()){ uiState, alarmList ->
-		uiState.copy(alarmData = alarmList.firstOrNull(),)
-	}.stateIn(
-		scope = viewModelScope,
-		started = SharingStarted.WhileSubscribed(5_000),
-		initialValue = OnboardingUiState2()
-	)
+	val displayState: StateFlow<OnboardingUiState2> = _displayState.asStateFlow()
 
 	init {
 		viewModelScope.launch {
@@ -124,9 +107,6 @@ import kotlinx.coroutines.launch
 		dispatchNavigationAction(OnboardingNavigationAction.Next)
 	}
 
-	fun onSkipAlarmCreation() {
-		dispatchNavigationAction(OnboardingNavigationAction.SkipAlarmCreation)
-	}
 
 	fun onPreviousClicked()  {
 		val currentStep = _displayState.value.displaySate.name
@@ -137,16 +117,13 @@ import kotlinx.coroutines.launch
 	private fun dispatchNavigationAction(action: OnboardingNavigationAction) {
 		when (action) {
 			OnboardingNavigationAction.Back -> navigateBack()
-			OnboardingNavigationAction.Next,
-			OnboardingNavigationAction.SkipAlarmCreation -> {
+			OnboardingNavigationAction.Next -> {
 				val currentStep = _displayState.value.displaySate
 				val nextStep = reduceNavigation(
 					currentStep = currentStep,
-					action = action,
-					hasAlarm = displayState.value.alarmData != null,
 					isHardPaywallEnabled = analytics.featureFlagsData.value?.isHardPaywallEnabled == true,
 				)
-				logD("hard paywall enabled ${analytics.featureFlagsData.value?.isHardPaywallEnabled}  hasAlarm = ${displayState.value.alarmData != null} nextStep: $nextStep")
+				logD("hard paywall enabled ${analytics.featureFlagsData.value?.isHardPaywallEnabled} nextStep: $nextStep")
 				if (nextStep != currentStep) {
 					navigationBackStack += currentStep
 					_displayState.update { it.copy(displaySate = nextStep) }
@@ -162,35 +139,21 @@ import kotlinx.coroutines.launch
 
 	private fun reduceNavigation(
 		currentStep: DisplaySate2,
-		action: OnboardingNavigationAction,
-		hasAlarm: Boolean,
 		isHardPaywallEnabled: Boolean,
 	): DisplaySate2 {
-		return when (action) {
-			OnboardingNavigationAction.Next -> when (currentStep) {
-				DisplaySate2.Problem -> DisplaySate2.UserStruggles
-				DisplaySate2.UserStruggles -> DisplaySate2.UserProfile
-				DisplaySate2.UserProfile -> DisplaySate2.Permission
-				DisplaySate2.Permission -> if (hasAlarm) DisplaySate2.AlarmResult else DisplaySate2.FirstAlarmIntro
-				DisplaySate2.FirstAlarmIntro -> if (hasAlarm) DisplaySate2.AlarmResult else DisplaySate2.CreateFirstAlarm
-				DisplaySate2.CreateFirstAlarm -> DisplaySate2.AlarmResult
-				DisplaySate2.AlarmResult -> if (isHardPaywallEnabled) DisplaySate2.PrePaywall else DisplaySate2.OnboardingPaywall
-				DisplaySate2.PrePaywall -> DisplaySate2.OnboardingPaywall
-				DisplaySate2.OnboardingPaywall -> DisplaySate2.OnboardingPaywall
-			}
-			OnboardingNavigationAction.SkipAlarmCreation -> when (currentStep) {
-				DisplaySate2.FirstAlarmIntro ->
-					if (isHardPaywallEnabled) DisplaySate2.PrePaywall else DisplaySate2.OnboardingPaywall
-				else -> currentStep
-			}
-			OnboardingNavigationAction.Back -> currentStep
+		return when (currentStep) {
+			DisplaySate2.Problem -> DisplaySate2.UserStruggles
+			DisplaySate2.UserStruggles -> DisplaySate2.UserProfile
+			DisplaySate2.UserProfile -> DisplaySate2.Permission
+			DisplaySate2.Permission -> if (isHardPaywallEnabled) DisplaySate2.PrePaywall else DisplaySate2.OnboardingPaywall
+			DisplaySate2.PrePaywall -> DisplaySate2.OnboardingPaywall
+			DisplaySate2.OnboardingPaywall -> DisplaySate2.OnboardingPaywall
 		}
 	}
 
 	private sealed interface OnboardingNavigationAction {
 		data object Next : OnboardingNavigationAction
 		data object Back : OnboardingNavigationAction
-		data object SkipAlarmCreation : OnboardingNavigationAction
 	}
 
 
@@ -210,32 +173,6 @@ import kotlinx.coroutines.launch
 	}
 
 
-
-	fun stopAlarm(alarmData: AlarmData) {
-		viewModelScope.launch {
-			alarmsController.cancelAlarmHandler(alarmData, context, alarmManager).fold(
-				onSuccess = {},
-				onError = { error ->
-					// Handle error if needed
-				}
-			)
-		}
-	}
-
-	fun resetAlarm(alarmData: AlarmData) {
-		viewModelScope.launch {
-			alarmsController.resetAlarmsHandler(
-				alarmData = alarmData,
-				alarmManager = alarmManager,
-				activityContext = context,
-			).fold(
-				onSuccess = {},
-				onError = { error ->
-					// Handle error if needed
-				}
-			)
-		}
-	}
 
 	  fun finishedOnboarding(){
 		 analytics.captureEvent("onboarding_finished", emptyMap())

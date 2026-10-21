@@ -133,7 +133,7 @@ import com.revenuecat.purchases.ui.revenuecatui.customercenter.CustomerCenter
 					}
 
 					entry<Screen.OnboardingScreen2> {
-						OnboardingScreen2(onShowPaywall = { paywallTriggerType = it })
+						OnboardingScreen2()
 					}
 
 					entry<Screen.SettingsScreen> {
