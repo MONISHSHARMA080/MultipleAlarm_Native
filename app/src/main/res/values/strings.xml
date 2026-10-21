@@ -46,6 +46,7 @@
     <string name="alarm_picker_sound">Sound</string>
     <string name="alarm_picker_sound_random">Random</string>
     <string name="alarm_picker_force_loud_volume">Max volume</string>
+    <string name="alarm_picker_force_loud_volume_desc">Rings at maximum volume, even if the phone\'s volume is set lower.</string>
     <string name="alarm_picker_message">Message</string>
     <string name="alarm_picker_message_placeholder">Add message…</string>
     <string name="alarm_picker_ok">Select</string>

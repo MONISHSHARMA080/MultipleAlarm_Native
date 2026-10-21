@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -81,6 +82,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -254,6 +256,9 @@ fun SettingsCard(
 					title = stringResource(
 						R.string.alarm_picker_force_loud_volume
 					),
+					description = stringResource(
+						R.string.alarm_picker_force_loud_volume_desc
+					),
 					checked = uiState.alarmData.isForceLoudVolume,
 					onCheckedChange = { isChecked ->
 						updateIsForceLoudVolume(isChecked)
@@ -292,12 +297,17 @@ fun SwitchRow(
 	icon: ImageVector,
 	title: String,
 	checked: Boolean,
-	onCheckedChange: (Boolean) -> Unit
+	onCheckedChange: (Boolean) -> Unit,
+	description: String? = null
 ) {
 	Row(
 		modifier = Modifier
 			.fillMaxWidth()
-			.clickable(onClick = { onCheckedChange(!checked) })
+			.toggleable(
+				value = checked,
+				role = Role.Switch,
+				onValueChange = onCheckedChange
+			)
 			.padding(horizontal = 16.dp, vertical = 14.dp)
 			.animateContentSize(
 				animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
@@ -306,15 +316,24 @@ fun SwitchRow(
 	) {
 		ExpressiveSettingIconBadge(icon = icon)
 		Spacer(modifier = Modifier.width(14.dp))
-		Text(
-			text = title,
-			color = colorScheme.onSurface,
-			style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-		)
-		Spacer(modifier = Modifier.weight(1f))
+		Column(modifier = Modifier.weight(1f)) {
+			Text(
+				text = title,
+				color = colorScheme.onSurface,
+				style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+			)
+			if (description != null) {
+				Text(
+					text = description,
+					color = colorScheme.onSurfaceVariant,
+					style = typography.bodySmall,
+					modifier = Modifier.padding(top = 1.dp)
+				)
+			}
+		}
 		Switch(
 			checked = checked,
-			onCheckedChange = null // Handled by Row click
+			onCheckedChange = null // Handled by Row toggleable
 		)
 	}
 }
