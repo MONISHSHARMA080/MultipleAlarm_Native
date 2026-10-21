@@ -153,6 +153,22 @@
     <string name="onboarding_struggle_ignoring_alarms">Ignoring alarms</string>
     <string name="onboarding_struggle_forgetting">Forgetting things</string>
 
+    <!-- Onboarding User Profile (life stage) Screen -->
+    <string name="onboarding_profile_title">Which best describes you?</string>
+    <string name="onboarding_profile_subtitle">Helps tailor app to you.</string>
+    <string name="onboarding_profile_school">School student</string>
+    <string name="onboarding_profile_school_age">3–17</string>
+    <string name="onboarding_profile_college">College student</string>
+    <string name="onboarding_profile_college_age">18–24</string>
+    <string name="onboarding_profile_work">Working professional</string>
+    <string name="onboarding_profile_work_age">25–59</string>
+    <string name="onboarding_profile_parent">Homemaker / Parent</string>
+    <string name="onboarding_profile_parent_age">Any age</string>
+    <string name="onboarding_profile_retired">Retired</string>
+    <string name="onboarding_profile_retired_age">60+</string>
+    <string name="onboarding_profile_ages_format">Ages %1$s</string>
+    <string name="onboarding_profile_private_hint">Data stays private and it\'s not sold for ads.</string>
+
     <!-- Onboarding Problem Screen -->
     <string name="onboarding_problem_btn_set">Set my own</string>
     <string name="onboarding_problem_btn_fix">Fix this</string>
@@ -193,7 +209,6 @@
     <string name="onboarding_result_more_notifications">%1$d more notifications</string>
     <string name="onboarding_result_time_range">%1$s - %2$s</string>
     <string name="onboarding_result_time_range_arrow">%1$s → %2$s</string>
-<!--    <string name="onboarding_create_alarm_edit_note">You can change this anytime</string>-->
 
     <!-- Pre-hard Paywall -->
     <string name="paywall_headline_plain">"We want you to\ntry the app "</string>

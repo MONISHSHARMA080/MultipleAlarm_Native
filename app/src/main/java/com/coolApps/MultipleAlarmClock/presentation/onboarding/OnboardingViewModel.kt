@@ -10,6 +10,7 @@ import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.paywall.OfferingState
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallEvent
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
+import com.coolApps.MultipleAlarmClock.data.preferences.OnboardingFlow
 import com.coolApps.MultipleAlarmClock.data.preferences.Settings
 import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.domain.repository.AlarmRepository
@@ -29,6 +30,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -55,10 +58,27 @@ import kotlinx.coroutines.launch
 
 	init {
 		viewModelScope.launch {
+			assignOnboardingFlow()
 			refreshPermissions()
 		}
 		viewModelScope.launch(Dispatchers.IO) {
 			fetchOnboardingEndOffering()
+		}
+	}
+
+	private suspend fun assignOnboardingFlow() {
+		val stored = settingsDataStore.data.first()
+		val flow = if (stored.onboardingFlow != OnboardingFlow.ONBOARDING_FLOW_UNSPECIFIED) {
+			stored.onboardingFlow
+		} else {
+			val flags = analytics.featureFlagsData.filterNotNull().first()
+			if (flags.isHardPaywallEnabled) OnboardingFlow.ONBOARDING_FLOW_VARIANT_LONG else OnboardingFlow.ONBOARDING_FLOW_VARIANT_SHORT
+		}
+		logD("onboarding flow: assigned $flow")
+		analytics.captureEvent("onboarding_variant_assigned", mapOf("variant" to flow.name))
+		_displayState.update { it.copy(onboardingFlow = flow) }
+		if (stored.onboardingFlow == OnboardingFlow.ONBOARDING_FLOW_UNSPECIFIED) {
+			settingsDataStore.updateData { it.copy { onboardingFlow = flow } }
 		}
 	}
 
@@ -89,20 +109,27 @@ import kotlinx.coroutines.launch
 	}
 
 	private var selectedStruggles = emptySet<String>()
+	private var selectedProfile: String? = null
 	private val navigationBackStack = mutableListOf<DisplaySate>()
 
 	fun onStrugglesSelected(struggles: Set<String>) {
 		selectedStruggles = struggles
 	}
 
+	fun onProfileSelected(profile: String?) {
+		selectedProfile = profile
+	}
+
 	fun onNextClicked()  {
 		val currentStep = _displayState.value.displaySate.name
 		analytics.captureEvent("onboarding_next_clicked", mapOf("step" to currentStep, "onBoardingUiState" to displayState.value.toString() ))
-		
+
 		if (_displayState.value.displaySate == DisplaySate.UserStruggles && selectedStruggles.isNotEmpty()) {
 			analytics.captureEvent("onboarding_struggles_submitted", mapOf("struggles" to selectedStruggles.toList()))
 		}
-		
+		if (_displayState.value.displaySate == DisplaySate.UserProfile) {
+			selectedProfile?.let {analytics.captureEvent("onboarding_profile_submitted", mapOf("profile" to it))   }
+		}
 		dispatchNavigationAction(OnboardingNavigationAction.Next)
 	}
 
@@ -147,23 +174,26 @@ import kotlinx.coroutines.launch
 		action: OnboardingNavigationAction,
 		hasAlarm: Boolean,
 		isHardPaywallEnabled: Boolean,
-	): DisplaySate = when (action) {
-		OnboardingNavigationAction.Next -> when (currentStep) {
-			DisplaySate.Problem -> DisplaySate.UserStruggles
-			DisplaySate.UserStruggles -> DisplaySate.Permission
-			DisplaySate.Permission -> if (hasAlarm) DisplaySate.AlarmResult else DisplaySate.FirstAlarmIntro
-			DisplaySate.FirstAlarmIntro -> if (hasAlarm) DisplaySate.AlarmResult else DisplaySate.CreateFirstAlarm
-			DisplaySate.CreateFirstAlarm -> DisplaySate.AlarmResult
-			DisplaySate.AlarmResult -> if (isHardPaywallEnabled) DisplaySate.PrePaywall else DisplaySate.OnboardingPaywall
-			DisplaySate.PrePaywall -> DisplaySate.OnboardingPaywall
-			DisplaySate.OnboardingPaywall -> DisplaySate.OnboardingPaywall
+	): DisplaySate {
+		return when (action) {
+			OnboardingNavigationAction.Next -> when (currentStep) {
+				DisplaySate.Problem -> DisplaySate.UserStruggles
+				DisplaySate.UserStruggles -> DisplaySate.UserProfile
+				DisplaySate.UserProfile -> DisplaySate.Permission
+				DisplaySate.Permission -> if (hasAlarm) DisplaySate.AlarmResult else DisplaySate.FirstAlarmIntro
+				DisplaySate.FirstAlarmIntro -> if (hasAlarm) DisplaySate.AlarmResult else DisplaySate.CreateFirstAlarm
+				DisplaySate.CreateFirstAlarm -> DisplaySate.AlarmResult
+				DisplaySate.AlarmResult -> if (isHardPaywallEnabled) DisplaySate.PrePaywall else DisplaySate.OnboardingPaywall
+				DisplaySate.PrePaywall -> DisplaySate.OnboardingPaywall
+				DisplaySate.OnboardingPaywall -> DisplaySate.OnboardingPaywall
+			}
+			OnboardingNavigationAction.SkipAlarmCreation -> when (currentStep) {
+				DisplaySate.FirstAlarmIntro ->
+					if (isHardPaywallEnabled) DisplaySate.PrePaywall else DisplaySate.OnboardingPaywall
+				else -> currentStep
+			}
+			OnboardingNavigationAction.Back -> currentStep
 		}
-		OnboardingNavigationAction.SkipAlarmCreation -> when (currentStep) {
-			DisplaySate.FirstAlarmIntro ->
-				if (isHardPaywallEnabled) DisplaySate.PrePaywall else DisplaySate.OnboardingPaywall
-			else -> currentStep
-		}
-		OnboardingNavigationAction.Back -> currentStep
 	}
 
 	private sealed interface OnboardingNavigationAction {

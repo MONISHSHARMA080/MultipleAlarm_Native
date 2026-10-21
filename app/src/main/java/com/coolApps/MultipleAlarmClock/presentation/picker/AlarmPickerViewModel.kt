@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.content.ContextCompat
-import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
@@ -14,8 +13,6 @@ import com.coolApps.MultipleAlarmClock.data.billing.EntitlementManager
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.data.local.RepeatDays
-import com.coolApps.MultipleAlarmClock.data.preferences.Settings
-import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.data.repository.AlarmSoundRepository
 import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
@@ -46,7 +43,6 @@ import java.util.Calendar
 class AlarmPickerViewModel @AssistedInject constructor(
 		val analytics: Analytics,
 		private val alarmManager: AlarmManager,
-		private val dataStore: DataStore<Settings>,
 		private val alarmsController: AlarmsController,
 		private val entitlementManager: EntitlementManager,
 		private val errorHandler: ErrorHandler,
@@ -312,7 +308,6 @@ class AlarmPickerViewModel @AssistedInject constructor(
 			val liveCheck = PermissionUtils.allCriticalPermissionsGranted(context)
 			_uiState.update { it.copy(areAllPermissionsGranted = liveCheck) }
 			captureUiStateAndSendAnalytics(_uiState.value)
-			dataStore.updateData { currentVal ->  currentVal.copy {  allPermissionsGranted = liveCheck }}
 		}
 	}
 
@@ -412,9 +407,6 @@ class AlarmPickerViewModel @AssistedInject constructor(
 			)
 			alarmScheduledResult.fold(
 				onSuccess = {
-					launch {
-						dataStore.updateData { data ->data.copy { firstAlarmSet = true } }
-					}
 					launch {
 						val eventText = if (oldAlarm != null) "alarm_edited"  else "new_alarm_set"
 						analytics.captureEvent(eventText,

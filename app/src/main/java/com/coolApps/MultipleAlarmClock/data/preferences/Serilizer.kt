@@ -11,13 +11,8 @@ object SettingsSerializer : Serializer<Settings> {
 	// this will run on the first run, like default values
 	override val defaultValue: Settings = settings {
 		isFirstLaunch = true
-		allPermissionsGranted = false
-		firstAlarmSet = false
-		firstAlarmNotificationReceived = false
-		// this should be shouldWeShowFedbackCard
-		shouldWeShowFeedbackCard = false
-		shouldWeShowInAppReview = false
-		installEpochTimeMs= 0L
+		onboardingFlow = OnboardingFlow.ONBOARDING_FLOW_UNSPECIFIED
+		installEpochTimeMs = 0L
 		lastReviewAttemptedAt = 0L
 		lastFeedbackPromptAttemptedAt = 0L
 	}

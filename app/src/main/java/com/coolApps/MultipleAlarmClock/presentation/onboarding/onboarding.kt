@@ -5,7 +5,11 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -25,11 +29,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -53,6 +59,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
@@ -98,16 +105,17 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 	val motionScheme = MaterialTheme.motionScheme
 
 	val progress = when (uiState.displaySate) {
-		DisplaySate.Problem -> 1f / 7f
-		DisplaySate.UserStruggles -> 2f / 7f
-		DisplaySate.Permission -> 3f / 7f
-		DisplaySate.FirstAlarmIntro -> 4f / 7f
+		DisplaySate.Problem -> 1f / 8f
+		DisplaySate.UserStruggles -> 2f / 8f
+		DisplaySate.UserProfile -> 3f / 8f
+		DisplaySate.Permission -> 4f / 8f
+		DisplaySate.FirstAlarmIntro -> 5f / 8f
 		DisplaySate.CreateFirstAlarm -> {
-			5f / 7f
+			6f / 8f
 		}
-		DisplaySate.AlarmResult -> 6f / 7f
-		DisplaySate.PrePaywall -> 6f / 7f
-		DisplaySate.OnboardingPaywall -> 7f / 7f
+		DisplaySate.AlarmResult -> 7f / 8f
+		DisplaySate.PrePaywall -> 7f / 8f
+		DisplaySate.OnboardingPaywall -> 8f / 8f
 	}
 
 	val animatedProgress by animateFloatAsState(
@@ -119,8 +127,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 	Scaffold(
 		topBar = {
 			if (uiState.displaySate != DisplaySate.OnboardingPaywall
-//				&&
-//				uiState.displaySate != DisplaySate.PrePaywall
 			) {
 				Row(
 					modifier = Modifier
@@ -178,6 +184,10 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 					DisplaySate.UserStruggles -> UserStrugglesScreen(
 						onButtonStateChange = { buttonState = it },
 						onStrugglesSelected = { viewModel.onStrugglesSelected(it) }
+					)
+					DisplaySate.UserProfile -> UserProfileScreen(
+						onButtonStateChange = { buttonState = it },
+						onProfileSelected = { viewModel.onProfileSelected(it) }
 					)
 					DisplaySate.Permission -> {
 						PermissionScreen(
@@ -307,6 +317,28 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 						horizontalAlignment = Alignment.CenterHorizontally,
 						verticalArrangement = Arrangement.spacedBy(8.dp),
 					) {
+						AnimatedVisibility(
+							visible = uiState.displaySate == DisplaySate.UserProfile,
+							enter = fadeIn(motionScheme.defaultEffectsSpec()) +
+								expandVertically(motionScheme.defaultSpatialSpec()),
+							exit = fadeOut(motionScheme.defaultEffectsSpec()) +
+								shrinkVertically(motionScheme.defaultSpatialSpec()),
+						) {
+							Row(
+								modifier = Modifier.fillMaxWidth(),
+								horizontalArrangement = Arrangement.Center,
+								verticalAlignment = Alignment.CenterVertically,
+							) {
+								LockBadge()
+								Spacer(modifier = Modifier.width(6.dp))
+								Text(
+									text = stringResource(R.string.onboarding_profile_private_hint),
+									style = typography.bodySmall,
+									color = colorScheme.onBackground.copy(alpha = 0.45f),
+								)
+							}
+						}
+
 						Button(
 							onClick = {
 								view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
@@ -359,9 +391,31 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 }
 
 /**
- * Minimal placeholder shown while the RevenueCat offerings are still loading.
- * Design pass pending (same as the rest of the flow).
+ * Privacy-cue lock shown inside the CTA on the user-profile step. Springs in,
+ * then breathes gently while the step is visible.
  */
+@Composable
+private fun LockBadge() {
+	val pulse = rememberInfiniteTransition(label = "lockPulse")
+	val lockScale by pulse.animateFloat(
+		initialValue = 1f,
+		targetValue = 1.12f,
+		animationSpec = infiniteRepeatable(
+			animation = tween(900, easing = FastOutSlowInEasing),
+			repeatMode = RepeatMode.Reverse
+		),
+		label = "lockPulseScale"
+	)
+	Icon(
+		imageVector = Icons.Rounded.Lock,
+		contentDescription = null,
+		tint = colorScheme.onBackground.copy(alpha = 0.5f),
+		modifier = Modifier.graphicsLayer {
+			scaleX = lockScale
+			scaleY = lockScale
+		}.size(18.dp)
+	)
+}
 @Composable
 private fun OfferingsPlaceholderScreen(onButtonStateChange: (ButtonState) -> Unit) {
 	LaunchedEffect(Unit) {
