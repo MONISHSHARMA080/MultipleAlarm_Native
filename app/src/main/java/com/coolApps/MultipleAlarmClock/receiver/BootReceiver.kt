@@ -11,8 +11,7 @@ import com.coolApps.MultipleAlarmClock.data.background.ResetAlarmAfterBoot
 
 class BootReceiver : BroadcastReceiver(){
 	override fun onReceive(context: Context, intent: Intent) {
-		if (intent.action == Intent.ACTION_BOOT_COMPLETED || intent.action == Intent.ACTION_MY_PACKAGE_REPLACED ||
-			intent.action == Intent.ACTION_LOCKED_BOOT_COMPLETED) {
+		if (intent.action == Intent.ACTION_BOOT_COMPLETED || intent.action == Intent.ACTION_MY_PACKAGE_REPLACED) {
 			val inputData = Data.Builder()
 				.putBoolean("isPackageReplaced", intent.action == Intent.ACTION_MY_PACKAGE_REPLACED)
 				.putBoolean("isBootCompleted", intent.action == Intent.ACTION_BOOT_COMPLETED)
