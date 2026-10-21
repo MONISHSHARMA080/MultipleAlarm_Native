@@ -178,7 +178,7 @@
     <string name="onboarding_problem_subtitle">Managing multiple alarms for a task takes time and effort.</string>
     <string name="onboarding_problem_better_way_title">Better way</string>
     <string name="onboarding_problem_better_way_subtitle">Select the time interval and how frequent you want the alarm and app handles the rest</string>
-    <string name="onboarding_problem_preview_interval">7:00 → 7:40</string>
+    <string name="onboarding_problem_preview_interval">7:00 – 7:40</string>
     <string name="onboarding_problem_preview_frequency">every 10 minutes</string>
     <string name="onboarding_problem3_title">Wake up on time</string>
     <string name="onboarding_problem3_title_alternate">Be on time</string>
@@ -227,8 +227,8 @@
 
     <!-- Paywall demo card -->
     <string name="paywall_demo_repeat_badge">Repeat alarm</string>
-    <string name="paywall_demo_every_min">Every 1 min • %1$d alarms</string>
-    <string name="paywall_demo_notification_app">Alarm • wake up</string>
+    <string name="paywall_demo_every_min">Every 1 min · %1$d alarms</string>
+    <string name="paywall_demo_notification_app">Alarm · wake up</string>
     <string name="paywall_demo_repeat_count">Alarm %1$d of %2$d</string>
     <string name="paywall_demo_stop">Stop</string>
     <string name="paywall_demo_start_time">5:00</string>
