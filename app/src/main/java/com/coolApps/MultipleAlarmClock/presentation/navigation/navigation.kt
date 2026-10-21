@@ -21,7 +21,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,10 +32,12 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.runtime.result.rememberResultEventBusNavEntryDecorator
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
-import com.coolApps.MultipleAlarmClock.presentation.home.AlarmContainer
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingScreen
 import com.coolApps.MultipleAlarmClock.data.paywall.OfferingState
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
+import com.coolApps.MultipleAlarmClock.data.preferences.OnboardingFlow
+import com.coolApps.MultipleAlarmClock.presentation.home.AlarmContainer
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingScreen
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingScreen2
 import com.coolApps.MultipleAlarmClock.presentation.picker.EditAlarmFlowScreen
 import com.coolApps.MultipleAlarmClock.presentation.picker.NewAlarmFlowScreen
 import com.coolApps.MultipleAlarmClock.presentation.settings.PremiumPaywallDialog
@@ -44,18 +45,24 @@ import com.coolApps.MultipleAlarmClock.presentation.settings.SettingsScreen
 import com.revenuecat.purchases.ui.revenuecatui.Paywall
 import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 import com.revenuecat.purchases.ui.revenuecatui.customercenter.CustomerCenter
-import kotlinx.coroutines.launch
-
 
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable fun NavigationStack(navViewModel: NavigationViewModel, deepLinkScreen: Screen?) {
 	val isFirstLaunch by navViewModel.isFirstLaunch.collectAsStateWithLifecycle()
+	val onboardingFlow by navViewModel.onboardingFlow.collectAsStateWithLifecycle()
 	if (isFirstLaunch == null) return
-	val startKey = remember(deepLinkScreen, isFirstLaunch) {
-		deepLinkScreen ?: if (isFirstLaunch == true) Screen.OnboardingScreen else Screen.AlarmContainer
+	if (isFirstLaunch == true && onboardingFlow == OnboardingFlow.ONBOARDING_FLOW_UNSPECIFIED) return
+	val startKey = remember(deepLinkScreen, isFirstLaunch, onboardingFlow) {
+		when {
+			deepLinkScreen != null -> deepLinkScreen
+			isFirstLaunch == true -> when (onboardingFlow) {
+				OnboardingFlow.ONBOARDING_FLOW_VARIANT_SHORT -> Screen.OnboardingScreen2
+				else -> Screen.OnboardingScreen
+			}
+			else -> Screen.AlarmContainer
+		}
 	}
 	val backStack = rememberNavBackStack(startKey)
-	val coroutineScope = rememberCoroutineScope()
 	var paywallTriggerType by remember { mutableStateOf<PaywallTriggerType?>(null) }
 	val offeringsByPlacement by navViewModel.offeringsByPlacement.collectAsStateWithLifecycle()
 
@@ -101,13 +108,12 @@ import kotlinx.coroutines.launch
 				onBack = {
 					when {
 						backStack.size > 1 -> backStack.removeLastOrNull()
-						else ->{
+						else -> {
+							backStack.clear()
 							backStack.add(Screen.AlarmContainer)
-							backStack.removeAt(0)
 						}
 					}
-
-			    },
+				},
 
 				entryDecorators = listOf(
 					rememberSaveableStateHolderNavEntryDecorator(),
@@ -124,6 +130,10 @@ import kotlinx.coroutines.launch
 
 					entry<Screen.OnboardingScreen> {
 						OnboardingScreen(onShowPaywall = { paywallTriggerType = it })
+					}
+
+					entry<Screen.OnboardingScreen2> {
+						OnboardingScreen2(onShowPaywall = { paywallTriggerType = it })
 					}
 
 					entry<Screen.SettingsScreen> {
@@ -232,9 +242,7 @@ import kotlinx.coroutines.launch
 						onEvent = navViewModel::onPaywallEvent
 					) {
 						paywallTriggerType = null
-						coroutineScope.launch {
-							navViewModel.captureEvent("paywall_dismissed", mapOf())
-						}
+						navViewModel.captureEvent("paywall_dismissed", emptyMap())
 					}
 				} else {
 					// Loaded(null) only survives visually for a frame —

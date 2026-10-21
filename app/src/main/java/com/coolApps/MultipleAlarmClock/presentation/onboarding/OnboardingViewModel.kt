@@ -10,7 +10,6 @@ import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.paywall.OfferingState
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallEvent
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
-import com.coolApps.MultipleAlarmClock.data.preferences.OnboardingFlow
 import com.coolApps.MultipleAlarmClock.data.preferences.Settings
 import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.domain.repository.AlarmRepository
@@ -30,8 +29,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -58,7 +55,6 @@ import kotlinx.coroutines.launch
 
 	init {
 		viewModelScope.launch {
-			assignOnboardingFlow()
 			refreshPermissions()
 		}
 		viewModelScope.launch(Dispatchers.IO) {
@@ -66,21 +62,6 @@ import kotlinx.coroutines.launch
 		}
 	}
 
-	private suspend fun assignOnboardingFlow() {
-		val stored = settingsDataStore.data.first()
-		val flow = if (stored.onboardingFlow != OnboardingFlow.ONBOARDING_FLOW_UNSPECIFIED) {
-			stored.onboardingFlow
-		} else {
-			val flags = analytics.featureFlagsData.filterNotNull().first()
-			if (flags.isHardPaywallEnabled) OnboardingFlow.ONBOARDING_FLOW_VARIANT_LONG else OnboardingFlow.ONBOARDING_FLOW_VARIANT_SHORT
-		}
-		logD("onboarding flow: assigned $flow")
-		analytics.captureEvent("onboarding_variant_assigned", mapOf("variant" to flow.name))
-		_displayState.update { it.copy(onboardingFlow = flow) }
-		if (stored.onboardingFlow == OnboardingFlow.ONBOARDING_FLOW_UNSPECIFIED) {
-			settingsDataStore.updateData { it.copy { onboardingFlow = flow } }
-		}
-	}
 
 	private val _onboardingOffering = MutableStateFlow<OfferingState>(OfferingState.Loading)
 
