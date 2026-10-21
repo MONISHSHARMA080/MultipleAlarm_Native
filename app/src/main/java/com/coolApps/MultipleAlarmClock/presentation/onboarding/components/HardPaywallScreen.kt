@@ -1,4 +1,6 @@
-package com.coolApps.MultipleAlarmClock.presentation.onboarding
+package com.coolApps.MultipleAlarmClock.presentation.onboarding.components
+
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable

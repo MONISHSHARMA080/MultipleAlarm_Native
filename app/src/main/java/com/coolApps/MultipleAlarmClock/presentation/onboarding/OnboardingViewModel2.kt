@@ -46,14 +46,14 @@ import kotlinx.coroutines.launch
 	@ApplicationContext val context: Context
 ) : ViewModel() {
 
-	private val _displayState = MutableStateFlow(OnboardingUiState())
+	private val _displayState = MutableStateFlow(OnboardingUiState2())
 
 	val displayState = combine(_displayState, alarmRepository.getAlarmsStream()){ uiState, alarmList ->
 		uiState.copy(alarmData = alarmList.firstOrNull(),)
 	}.stateIn(
 		scope = viewModelScope,
 		started = SharingStarted.WhileSubscribed(5_000),
-		initialValue = OnboardingUiState()
+		initialValue = OnboardingUiState2()
 	)
 
 	init {
@@ -101,7 +101,7 @@ import kotlinx.coroutines.launch
 
 	private var selectedStruggles = emptySet<String>()
 	private var selectedProfile: String? = null
-	private val navigationBackStack = mutableListOf<DisplaySate>()
+	private val navigationBackStack = mutableListOf<DisplaySate2>()
 
 	fun onStrugglesSelected(struggles: Set<String>) {
 		selectedStruggles = struggles
@@ -115,10 +115,10 @@ import kotlinx.coroutines.launch
 		val currentStep = _displayState.value.displaySate.name
 		analytics.captureEvent("onboarding_next_clicked", mapOf("step" to currentStep, "onBoardingUiState" to displayState.value.toString() ))
 
-		if (_displayState.value.displaySate == DisplaySate.UserStruggles && selectedStruggles.isNotEmpty()) {
+		if (_displayState.value.displaySate == DisplaySate2.UserStruggles && selectedStruggles.isNotEmpty()) {
 			analytics.captureEvent("onboarding_struggles_submitted", mapOf("struggles" to selectedStruggles.toList()))
 		}
-		if (_displayState.value.displaySate == DisplaySate.UserProfile) {
+		if (_displayState.value.displaySate == DisplaySate2.UserProfile) {
 			selectedProfile?.let {analytics.captureEvent("onboarding_profile_submitted", mapOf("profile" to it))   }
 		}
 		dispatchNavigationAction(OnboardingNavigationAction.Next)
@@ -161,26 +161,26 @@ import kotlinx.coroutines.launch
 	}
 
 	private fun reduceNavigation(
-		currentStep: DisplaySate,
+		currentStep: DisplaySate2,
 		action: OnboardingNavigationAction,
 		hasAlarm: Boolean,
 		isHardPaywallEnabled: Boolean,
-	): DisplaySate {
+	): DisplaySate2 {
 		return when (action) {
 			OnboardingNavigationAction.Next -> when (currentStep) {
-				DisplaySate.Problem -> DisplaySate.UserStruggles
-				DisplaySate.UserStruggles -> DisplaySate.UserProfile
-				DisplaySate.UserProfile -> DisplaySate.Permission
-				DisplaySate.Permission -> if (hasAlarm) DisplaySate.AlarmResult else DisplaySate.FirstAlarmIntro
-				DisplaySate.FirstAlarmIntro -> if (hasAlarm) DisplaySate.AlarmResult else DisplaySate.CreateFirstAlarm
-				DisplaySate.CreateFirstAlarm -> DisplaySate.AlarmResult
-				DisplaySate.AlarmResult -> if (isHardPaywallEnabled) DisplaySate.PrePaywall else DisplaySate.OnboardingPaywall
-				DisplaySate.PrePaywall -> DisplaySate.OnboardingPaywall
-				DisplaySate.OnboardingPaywall -> DisplaySate.OnboardingPaywall
+				DisplaySate2.Problem -> DisplaySate2.UserStruggles
+				DisplaySate2.UserStruggles -> DisplaySate2.UserProfile
+				DisplaySate2.UserProfile -> DisplaySate2.Permission
+				DisplaySate2.Permission -> if (hasAlarm) DisplaySate2.AlarmResult else DisplaySate2.FirstAlarmIntro
+				DisplaySate2.FirstAlarmIntro -> if (hasAlarm) DisplaySate2.AlarmResult else DisplaySate2.CreateFirstAlarm
+				DisplaySate2.CreateFirstAlarm -> DisplaySate2.AlarmResult
+				DisplaySate2.AlarmResult -> if (isHardPaywallEnabled) DisplaySate2.PrePaywall else DisplaySate2.OnboardingPaywall
+				DisplaySate2.PrePaywall -> DisplaySate2.OnboardingPaywall
+				DisplaySate2.OnboardingPaywall -> DisplaySate2.OnboardingPaywall
 			}
 			OnboardingNavigationAction.SkipAlarmCreation -> when (currentStep) {
-				DisplaySate.FirstAlarmIntro ->
-					if (isHardPaywallEnabled) DisplaySate.PrePaywall else DisplaySate.OnboardingPaywall
+				DisplaySate2.FirstAlarmIntro ->
+					if (isHardPaywallEnabled) DisplaySate2.PrePaywall else DisplaySate2.OnboardingPaywall
 				else -> currentStep
 			}
 			OnboardingNavigationAction.Back -> currentStep

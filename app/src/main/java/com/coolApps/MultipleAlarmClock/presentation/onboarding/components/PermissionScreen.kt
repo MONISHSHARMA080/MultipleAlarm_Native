@@ -1,4 +1,6 @@
-package com.coolApps.MultipleAlarmClock.presentation.onboarding
+package com.coolApps.MultipleAlarmClock.presentation.onboarding.components
+
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
 
 import android.content.Intent
 import android.net.Uri
@@ -67,7 +69,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionStep
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState

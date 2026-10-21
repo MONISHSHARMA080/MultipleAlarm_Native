@@ -72,6 +72,15 @@ import com.coolApps.MultipleAlarmClock.data.paywall.OfferingState
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallEvent
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.logD
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.AlarmResultScreen
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.CreateFirstAlarmScreen
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.FirstAlarmIntroView
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.HardPaywallScreen
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.OnboardingPaywallScreen
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.PermissionScreen
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.ProblemScreen
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.UserProfileScreen
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.UserStrugglesScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 

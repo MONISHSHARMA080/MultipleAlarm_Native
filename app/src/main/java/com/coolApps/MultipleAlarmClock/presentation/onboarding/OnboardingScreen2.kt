@@ -72,6 +72,15 @@ import com.coolApps.MultipleAlarmClock.data.paywall.OfferingState
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallEvent
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.logD
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.AlarmResultScreen
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.CreateFirstAlarmScreen
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.FirstAlarmIntroView
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.HardPaywallScreen
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.OnboardingPaywallScreen
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.PermissionScreen
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.ProblemScreen
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.UserProfileScreen
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.UserStrugglesScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 
@@ -94,10 +103,10 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 	var buttonState by remember { mutableStateOf(ButtonState.Enabled) }
 	LaunchedEffect(uiState.displaySate) {
 		buttonState = when (uiState.displaySate) {
-			DisplaySate.CreateFirstAlarm,
-			DisplaySate.AlarmResult,
-			DisplaySate.PrePaywall,
-			DisplaySate.OnboardingPaywall -> ButtonState.Hidden
+			DisplaySate2.CreateFirstAlarm,
+			DisplaySate2.AlarmResult,
+			DisplaySate2.PrePaywall,
+			DisplaySate2.OnboardingPaywall -> ButtonState.Hidden
 			else -> buttonState  // keep current; child screens will refine via callback
 		}
 	}
@@ -105,17 +114,17 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 	val motionScheme = MaterialTheme.motionScheme
 
 	val progress = when (uiState.displaySate) {
-		DisplaySate.Problem -> 1f / 8f
-		DisplaySate.UserStruggles -> 2f / 8f
-		DisplaySate.UserProfile -> 3f / 8f
-		DisplaySate.Permission -> 4f / 8f
-		DisplaySate.FirstAlarmIntro -> 5f / 8f
-		DisplaySate.CreateFirstAlarm -> {
+		DisplaySate2.Problem -> 1f / 8f
+		DisplaySate2.UserStruggles -> 2f / 8f
+		DisplaySate2.UserProfile -> 3f / 8f
+		DisplaySate2.Permission -> 4f / 8f
+		DisplaySate2.FirstAlarmIntro -> 5f / 8f
+		DisplaySate2.CreateFirstAlarm -> {
 			6f / 8f
 		}
-		DisplaySate.AlarmResult -> 7f / 8f
-		DisplaySate.PrePaywall -> 7f / 8f
-		DisplaySate.OnboardingPaywall -> 8f / 8f
+		DisplaySate2.AlarmResult -> 7f / 8f
+		DisplaySate2.PrePaywall -> 7f / 8f
+		DisplaySate2.OnboardingPaywall -> 8f / 8f
 	}
 
 	val animatedProgress by animateFloatAsState(
@@ -126,7 +135,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
 	Scaffold(
 		topBar = {
-			if (uiState.displaySate != DisplaySate.OnboardingPaywall
+			if (uiState.displaySate != DisplaySate2.OnboardingPaywall
 			) {
 				Row(
 					modifier = Modifier
@@ -178,18 +187,18 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 			) { state ->
 				when (state) {
 					// here make this into one uniform animation and no click etc. and then loop
-					DisplaySate.Problem -> ProblemScreen(
+					DisplaySate2.Problem -> ProblemScreen(
 						onButtonStateChange = { buttonState = it }
 					)
-					DisplaySate.UserStruggles -> UserStrugglesScreen(
+					DisplaySate2.UserStruggles -> UserStrugglesScreen(
 						onButtonStateChange = { buttonState = it },
 						onStrugglesSelected = { viewModel.onStrugglesSelected(it) }
 					)
-					DisplaySate.UserProfile -> UserProfileScreen(
+					DisplaySate2.UserProfile -> UserProfileScreen(
 						onButtonStateChange = { buttonState = it },
 						onProfileSelected = { viewModel.onProfileSelected(it) }
 					)
-					DisplaySate.Permission -> {
+					DisplaySate2.Permission -> {
 						PermissionScreen(
 							missingSteps = uiState.missingSteps,
 							allCriticalGranted = uiState.allCriticalGranted,
@@ -197,12 +206,12 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 							onButtonStateChange = { buttonState = it }
 						)
 					}
-					DisplaySate.FirstAlarmIntro -> {
+					DisplaySate2.FirstAlarmIntro -> {
 						FirstAlarmIntroView(
 							onButtonStateChange = { buttonState = it }
 						)
 					}
-					DisplaySate.CreateFirstAlarm -> {
+					DisplaySate2.CreateFirstAlarm -> {
 						CreateFirstAlarmScreen(
 							onAlarmSetProceed = { viewModel.onNextClicked() },
 							linearProgressBar = {
@@ -215,11 +224,11 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 							onShowPaywall = onShowPaywall
 						)
 					}
-					DisplaySate.AlarmResult -> AlarmResultScreen(
+					DisplaySate2.AlarmResult -> AlarmResultScreen(
 						alarmData = uiState.alarmData,
 						onButtonStateChange = { buttonState = it }
 					)
-					DisplaySate.PrePaywall -> {
+					DisplaySate2.PrePaywall -> {
 						logD("in the pre paywall step")
 						when (val billingOffering = onboardingOffering) {
 							OfferingState.Loading -> OfferingsPlaceholderScreen(
@@ -248,7 +257,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 							}
 						}
 					}
-					DisplaySate.OnboardingPaywall -> {
+					DisplaySate2.OnboardingPaywall -> {
 						LaunchedEffect(isHardPaywall) {
 							if (isHardPaywall) {
 								uiState.alarmData?.let { viewModel.stopAlarm(it) }
@@ -318,7 +327,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 						verticalArrangement = Arrangement.spacedBy(8.dp),
 					) {
 						AnimatedVisibility(
-							visible = uiState.displaySate == DisplaySate.UserProfile,
+							visible = uiState.displaySate == DisplaySate2.UserProfile,
 							enter = fadeIn(motionScheme.defaultEffectsSpec()) +
 								expandVertically(motionScheme.defaultSpatialSpec()),
 							exit = fadeOut(motionScheme.defaultEffectsSpec()) +
@@ -361,7 +370,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 						}
 
 						AnimatedVisibility(
-							visible = uiState.displaySate == DisplaySate.FirstAlarmIntro,
+							visible = uiState.displaySate == DisplaySate2.FirstAlarmIntro,
 							enter = fadeIn(motionScheme.defaultEffectsSpec<Float>()) +
 								expandVertically(motionScheme.defaultSpatialSpec<IntSize>()),
 							exit = fadeOut(motionScheme.defaultEffectsSpec<Float>()) +
