@@ -73,11 +73,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.util.extractTrialOfferDetails
 import com.revenuecat.purchases.Offering
-import com.revenuecat.purchases.models.OfferPaymentMode
 import com.revenuecat.purchases.models.Period
-import com.revenuecat.purchases.models.PricingPhase
-import com.revenuecat.purchases.models.StoreProduct
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -635,39 +633,6 @@ private fun StopPill(press: Float) {
 			.background(lerp(colorScheme.secondaryContainer, colorScheme.primary, press))
 			.padding(horizontal = 18.dp, vertical = 10.dp),
 	)
-}
-
-/* ------------------------------------------------------------------ */
-/* Offering -> offer details                                           */
-/* ------------------------------------------------------------------ */
-
-private data class TrialOfferDetails(
-		val trialPeriod: Period?,
-		val fullPrice: String?,
-		val fullPriceUnit: Period?,
-)
-
-private fun extractTrialOfferDetails(offering: Offering): TrialOfferDetails {
-	val trialPhaseProduct = offering.availablePackages.firstOrNull { pkg ->
-		pkg.product.freeTrialPhase() != null
-	}
-
-	val product: StoreProduct? =
-		trialPhaseProduct?.product ?: offering.availablePackages.firstOrNull()?.product
-
-	val freePhase = product?.freeTrialPhase()
-	val pricePhase = product?.defaultOption?.fullPricePhase
-
-	return TrialOfferDetails(
-		trialPeriod = freePhase?.billingPeriod,
-		fullPrice = pricePhase?.price?.formatted,
-		fullPriceUnit = pricePhase?.billingPeriod,
-	)
-}
-
-private fun StoreProduct.freeTrialPhase(): PricingPhase? {
-	val default = defaultOption ?: return null
-	return default.freePhase?.takeIf { it.offerPaymentMode == OfferPaymentMode.FREE_TRIAL }
 }
 
 @Composable

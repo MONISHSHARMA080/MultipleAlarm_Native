@@ -1,6 +1,11 @@
 package com.coolApps.MultipleAlarmClock.util
 
 import com.revenuecat.purchases.ExperimentalPreviewRevenueCatPurchasesAPI
+import com.revenuecat.purchases.Offering
+import com.revenuecat.purchases.models.OfferPaymentMode
+import com.revenuecat.purchases.models.Period
+import com.revenuecat.purchases.models.PricingPhase
+import com.revenuecat.purchases.models.StoreProduct
 import com.revenuecat.purchases.models.StoreTransaction
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -30,4 +35,34 @@ fun StoreTransaction.toAnalyticsString(): String {
             " storeUserID: $storeUserID\n" +
             " replacementMode: $replacementMode\n" +
             ">"
+}
+
+fun Offering.trialPeriodFor(productIds: List<String>): Period? = availablePackages.firstOrNull { it.product.id in productIds }?.product?.freeTrialPhase()?.billingPeriod
+
+data class TrialOfferDetails(
+	val trialPeriod: Period?,
+	val fullPrice: String?,
+	val fullPriceUnit: Period?,
+)
+
+fun extractTrialOfferDetails(offering: Offering): TrialOfferDetails {
+	val trialPhaseProduct = offering.availablePackages.firstOrNull { pkg ->
+		pkg.product.freeTrialPhase() != null
+	}
+
+	val product: StoreProduct? = trialPhaseProduct?.product ?: offering.availablePackages.firstOrNull()?.product
+
+	val freePhase = product?.freeTrialPhase()
+	val pricePhase = product?.defaultOption?.fullPricePhase
+
+	return TrialOfferDetails(
+		trialPeriod = freePhase?.billingPeriod,
+		fullPrice = pricePhase?.price?.formatted,
+		fullPriceUnit = pricePhase?.billingPeriod,
+	)
+}
+
+private fun StoreProduct.freeTrialPhase(): PricingPhase? {
+	val default = defaultOption ?: return null
+	return default.freePhase?.takeIf { it.offerPaymentMode == OfferPaymentMode.FREE_TRIAL }
 }

@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.billing.EntitlementManager.RevenueCatEntitlements
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallEvent
+import com.coolApps.MultipleAlarmClock.util.trialPeriodFor
 import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.Offering
 import com.revenuecat.purchases.Package
@@ -61,7 +62,13 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 							override fun onRestoreStarted() = onEvent(PaywallEvent.RestoreStarted)
 							override fun onRestoreError(error: PurchasesError) = onEvent(PaywallEvent.RestoreError(error))
 							override fun onPurchaseCompleted(customerInfo: CustomerInfo, storeTransaction: StoreTransaction) {
-								onEvent(PaywallEvent.PurchaseCompleted(customerInfo, storeTransaction))
+								onEvent(
+									PaywallEvent.PurchaseCompleted(
+										customerInfo,
+										storeTransaction,
+										offering.trialPeriodFor(storeTransaction.productIds),
+									)
+								)
 								onFinished()
 							}
 							
@@ -97,10 +104,5 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 			// offerings failed to load (e.g. offline) — don't block onboarding
 			LaunchedEffect(Unit) { onFinished() }
 		}
-//		else -> {
-//			Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-//				CircularProgressIndicator()
-//			}
-//		}
 	}
 }

@@ -26,6 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallEvent
+import com.coolApps.MultipleAlarmClock.util.trialPeriodFor
 import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.Offering
 import com.revenuecat.purchases.Package
@@ -55,7 +56,13 @@ fun PremiumPaywallDialog(
 				override fun onRestoreError(error: PurchasesError) = onEvent(PaywallEvent.RestoreError(error))
 
 				override fun onPurchaseCompleted(customerInfo: CustomerInfo, storeTransaction: StoreTransaction) {
-					onEvent(PaywallEvent.PurchaseCompleted(customerInfo, storeTransaction))
+					onEvent(
+						PaywallEvent.PurchaseCompleted(
+							customerInfo,
+							storeTransaction,
+							offering.trialPeriodFor(storeTransaction.productIds),
+						)
+					)
 					onDismiss()
 				}
 				override fun onRestoreCompleted(customerInfo: CustomerInfo) {

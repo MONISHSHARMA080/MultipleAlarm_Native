@@ -7,13 +7,13 @@ import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
+import com.coolApps.MultipleAlarmClock.data.paywall.OfferingState
+import com.coolApps.MultipleAlarmClock.data.paywall.PaywallEvent
+import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.data.preferences.Settings
 import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.domain.repository.AlarmRepository
 import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
-import com.coolApps.MultipleAlarmClock.data.paywall.OfferingState
-import com.coolApps.MultipleAlarmClock.data.paywall.PaywallEvent
-import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionUtils
 import com.coolApps.MultipleAlarmClock.util.Analytics
 import com.coolApps.MultipleAlarmClock.util.TrialReminderScheduler
@@ -178,6 +178,9 @@ import kotlinx.coroutines.launch
 			analytics.captureEvent(event.eventName, event.eventParams)
 			when (event) {
 				is PaywallEvent.PurchaseCompleted -> {
+					TrialReminderScheduler.scheduleIfOnTrial(context, event.customerInfo)
+				}
+				is PaywallEvent.RestoreCompleted -> {
 					TrialReminderScheduler.scheduleIfOnTrial(context, event.customerInfo)
 				}
 				else -> Unit

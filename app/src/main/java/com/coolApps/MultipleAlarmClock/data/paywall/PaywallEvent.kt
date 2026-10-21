@@ -4,6 +4,7 @@ import com.coolApps.MultipleAlarmClock.util.toAnalyticsString
 import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.Package
 import com.revenuecat.purchases.PurchasesError
+import com.revenuecat.purchases.models.Period
 import com.revenuecat.purchases.models.StoreTransaction
 
 sealed interface PaywallEvent {
@@ -21,13 +22,15 @@ sealed interface PaywallEvent {
 
     data class PurchaseCompleted(
         val customerInfo: CustomerInfo, 
-        val transaction: StoreTransaction
+        val transaction: StoreTransaction,
+        val trialPeriod: Period? = null,
     ) : PaywallEvent {
         override val eventName = "paywall_purchase_completed"
         override val eventParams = mapOf(
             "order_id" to (transaction.orderId ?: "unknown"),
             "product_ids" to transaction.productIds.joinToString(","),
             "active_entitlements" to customerInfo.entitlements.active.keys.joinToString(","),
+            "trial_period" to (trialPeriod?.let { "${it.value} ${it.unit}" } ?: "none"),
             "customerInfo" to customerInfo.toString(),
             "storeTransaction" to transaction.toAnalyticsString()
         )
