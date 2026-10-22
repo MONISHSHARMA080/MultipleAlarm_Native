@@ -12,6 +12,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -83,68 +85,69 @@ fun UserProfileScreen(
         onProfileSelected(selectedProfile)
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = 340.dp),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(top = 56.dp, start = 24.dp, end = 24.dp, bottom = 160.dp),
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Spacer(modifier = Modifier.height(32.dp))
-        Text(
-            text = stringResource(id = R.string.onboarding_profile_title),
-            style = typography.headlineMedium,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = stringResource(id = R.string.onboarding_profile_subtitle),
-            style = typography.bodyLarge,
-            color = colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 340.dp),
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+        item(
+            key = "header",
+            span = { GridItemSpan(maxLineSpan) }
         ) {
-            items(profiles) { option ->
-                val analyticsString = option.analyticsString
-                val isSelected = selectedProfile == analyticsString
+            Column(
+                modifier = Modifier.padding(bottom = 18.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = stringResource(id = R.string.onboarding_profile_title),
+                    style = typography.headlineMedium,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(id = R.string.onboarding_profile_subtitle),
+                    style = typography.bodyLarge,
+                    color = colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+        items(profiles) { option ->
+            val analyticsString = option.analyticsString
+            val isSelected = selectedProfile == analyticsString
 
-                val cardContainer by animateColorAsState(
-                    targetValue = if (isSelected) colorScheme.secondaryContainer else colorScheme.surface,
-                    animationSpec = motionScheme.defaultEffectsSpec(),
-                    label = "profileCardContainer"
-                )
-                val iconContainer by animateColorAsState(
-                    targetValue = if (isSelected) colorScheme.primary else colorScheme.surfaceContainerHighest,
-                    animationSpec = motionScheme.defaultEffectsSpec(),
-                    label = "profileIconContainer"
-                )
-                val iconTint by animateColorAsState(
-                    targetValue = if (isSelected) colorScheme.onPrimary else colorScheme.onSurfaceVariant,
-                    animationSpec = motionScheme.defaultEffectsSpec(),
-                    label = "profileIconTint"
-                )
-                val iconBorder by animateColorAsState(
-                    targetValue = if (isSelected) colorScheme.primary else colorScheme.outlineVariant,
-                    animationSpec = motionScheme.defaultEffectsSpec(),
-                    label = "profileIconBorder"
-                )
+            val cardContainer by animateColorAsState(
+                targetValue = if (isSelected) colorScheme.secondaryContainer else colorScheme.surface,
+                animationSpec = motionScheme.defaultEffectsSpec(),
+                label = "profileCardContainer"
+            )
+            val iconContainer by animateColorAsState(
+                targetValue = if (isSelected) colorScheme.primary else colorScheme.surfaceContainerHighest,
+                animationSpec = motionScheme.defaultEffectsSpec(),
+                label = "profileIconContainer"
+            )
+            val iconTint by animateColorAsState(
+                targetValue = if (isSelected) colorScheme.onPrimary else colorScheme.onSurfaceVariant,
+                animationSpec = motionScheme.defaultEffectsSpec(),
+                label = "profileIconTint"
+            )
+            val iconBorder by animateColorAsState(
+                targetValue = if (isSelected) colorScheme.primary else colorScheme.outlineVariant,
+                animationSpec = motionScheme.defaultEffectsSpec(),
+                label = "profileIconBorder"
+            )
 
-                ProfileCard(
-                    option = option,
-                    isSelected = isSelected,
-                    cardContainer = cardContainer,
-                    iconContainer = iconContainer,
-                    iconTint = iconTint,
-                    iconBorder = iconBorder
-                ) {
-                    selectedProfile = if (isSelected) null else analyticsString
-                }
+            ProfileCard(
+                option = option,
+                isSelected = isSelected,
+                cardContainer = cardContainer,
+                iconContainer = iconContainer,
+                iconTint = iconTint,
+                iconBorder = iconBorder
+            ) {
+                selectedProfile = if (isSelected) null else analyticsString
             }
         }
     }
