@@ -99,6 +99,7 @@ fun InAppFeedbackPrompt(
 			dismissOnBackPress = true,
 			dismissOnClickOutside = true,
 			usePlatformDefaultWidth = false,
+			decorFitsSystemWindows = false,
 		),
 	) {
 		BoxWithConstraints(

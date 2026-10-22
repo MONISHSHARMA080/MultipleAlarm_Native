@@ -33,7 +33,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -540,7 +539,6 @@ private fun ExpressiveAlarmTopBar(
 	CenterAlignedTopAppBar(
 		modifier = Modifier
 			.fillMaxWidth()
-			.statusBarsPadding()
 			.padding(horizontal = 8.dp),
 		colors = TopAppBarDefaults.topAppBarColors(
 			containerColor = Color.Transparent,

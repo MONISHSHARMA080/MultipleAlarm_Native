@@ -117,7 +117,11 @@ class Analytics(
 				minAlarmsCreated = 3,
 				cooldownDays = 7,
 				minDaysSinceInstall = 3,
-				isHardPaywallEnabled = true,
+				feedbackPromptConfig = FeedbackPromptConfig(
+					startDay = 0,
+					cooldownDays = 0
+				),
+				isHardPaywallEnabled = false,
 			)
 		}
 	}
