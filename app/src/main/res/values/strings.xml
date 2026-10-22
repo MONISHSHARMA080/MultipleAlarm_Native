@@ -1,5 +1,5 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="app_name">Multiple_Alarms</string>
+    <string name="app_name">Clock It</string>
     <string name="msg_copied_clipboard">Message copied to clipboard</string>
     <string name="msg_not_present">Alarm message not present</string>
     <string name="update_downloaded_restart">Update downloaded. Restart to install it</string>

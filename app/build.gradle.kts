@@ -17,7 +17,7 @@ plugins {
 	id("com.google.gms.google-services")
 }
 
-val myAppName="Multiple alarms"
+val myAppName="Clock It"
 configureAndroid()
 fun Project.configureAndroid() {
 
