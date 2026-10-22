@@ -8,7 +8,7 @@ enum class DisplaySate2 {
 	UserStruggles,
 	UserProfile,
 	Permission,
-	PrePaywall, // prepare screen for hard paywall
+	PrePaywall,
 	OnboardingPaywall;
 
 	override fun toString(): String {

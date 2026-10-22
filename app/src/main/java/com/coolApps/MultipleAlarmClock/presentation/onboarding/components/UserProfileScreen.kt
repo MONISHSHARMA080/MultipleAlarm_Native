@@ -88,7 +88,7 @@ fun UserProfileScreen(
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 340.dp),
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = 56.dp, start = 24.dp, end = 24.dp, bottom = 160.dp),
+        contentPadding = PaddingValues(top = 56.dp, start = 24.dp, end = 24.dp, bottom = 200.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
