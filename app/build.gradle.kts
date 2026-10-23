@@ -105,14 +105,7 @@ fun Project.configureAndroid() {
 
 		buildTypes {
             release {
-                val isProductionBuild = file("release.keystore").exists()
-                val appName = if (isProductionBuild) {
-                    myAppName
-                } else {
-					myAppName
-//                    "debug-$myAppName"
-                }
-                resValue("string", "app_name", appName)
+                resValue("string", "app_name", myAppName)
                 isShrinkResources = true
                 isMinifyEnabled = true
                 proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
