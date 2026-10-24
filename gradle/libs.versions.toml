@@ -33,7 +33,7 @@ espressoContrib = "3.7.0"
 uiTestJunit4 = "1.13.0-beta01"
 uiTestJunit4Android = "1.13.0-beta01"
 uiText = "1.13.0-beta01"
-material3 = "1.5.0-beta01"
+material3 = "1.5.0-beta02"
 foundationLayout = "1.13.0-beta01"
 nav3Core = "1.2.0"
 lifecycleViewmodelNav3 = "2.11.0"
@@ -98,7 +98,7 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
-posthog-android = { module = "com.posthog:posthog-android", version = "3.63.1" }
+posthog-android = { module = "com.posthog:posthog-android", version = "3.72.8" }
 androidx-media3-common = { group = "androidx.media3", name = "media3-common", version.ref = "media3Common" }
 androidx-ui-test-android = { group = "androidx.compose.ui", name = "ui-test-android", version.ref = "uiTestAndroid" }
 androidx-junit-ktx = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "junitKtx" }

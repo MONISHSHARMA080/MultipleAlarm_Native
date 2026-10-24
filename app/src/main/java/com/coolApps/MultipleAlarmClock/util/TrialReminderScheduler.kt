@@ -79,7 +79,7 @@ object TrialReminderScheduler {
 	private fun scheduleAlarm(context: Context, triggerAtMillis: Long) {
 		val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
 		cancelReminder(context) // cancel any existing one first
-		logD("in TrialReminderScheduler.scheduleAlarm")
+		logD("in TrialReminderScheduler.scheduleAlarm, and trigger time is $triggerAtMillis")
 		val pendingIntent = buildPendingIntent(context, PendingIntent.FLAG_UPDATE_CURRENT) ?: return
 		alarmManager.setAndAllowWhileIdle(
 			AlarmManager.RTC_WAKEUP,
