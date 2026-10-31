@@ -108,12 +108,8 @@ import com.revenuecat.purchases.ui.revenuecatui.customercenter.CustomerCenter
 			NavDisplay(
 				backStack = backStack,
 				onBack = {
-					when {
-						backStack.size > 1 -> backStack.removeLastOrNull()
-						else -> {
-							backStack.clear()
-							backStack.add(Screen.AlarmContainer)
-						}
+					if (backStack.size > 1){
+						backStack.removeLastOrNull()
 					}
 				},
 
