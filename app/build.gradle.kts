@@ -231,8 +231,6 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
 
-    implementation(libs.androidx.espresso.contrib)
-    implementation(libs.androidx.ui.test.junit4.android)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.foundation.layout)
 	implementation(libs.androidx.navigation3.runtime)
@@ -242,7 +240,6 @@ dependencies {
     implementation(libs.androidx.profileinstaller)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     "baselineProfile"(project(":baselineprofile"))
-    implementation(libs.androidx.junit.ktx)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.work.runtime.ktx)
 
@@ -252,6 +249,10 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.truth)
     testImplementation(libs.hilt.android.testing)
+    testImplementation(libs.androidx.junit.ktx)
+    testImplementation(libs.androidx.espresso.contrib)
+    testImplementation(libs.androidx.ui.test.junit4.android)
+    testImplementation(libs.androidx.ui.test.android)
     kspTest(libs.hilt.android.compiler)
 
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
@@ -259,7 +260,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.core)
 
     implementation(libs.androidx.material.icons.extended)
-    implementation(libs.androidx.ui.test.android)
     implementation(libs.kotlinx.coroutines.android)
 
 //	val roomVersion = "3.0.1"
