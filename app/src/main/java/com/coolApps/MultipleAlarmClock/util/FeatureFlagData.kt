@@ -8,6 +8,8 @@ data class FeatureFlagsData(
 		val feedbackPromptConfig: FeedbackPromptConfig = FeedbackPromptConfig(),
 		val isHardPaywallEnabled: Boolean = false,
 		val isWeeklyRepeatPremium: Boolean = true,
+		val isSnoozePremium: Boolean = false,
+		val isSoundPickerPremium: Boolean = true,
 )
 
 data class FeedbackPromptConfig(

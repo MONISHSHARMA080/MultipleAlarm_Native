@@ -38,6 +38,7 @@ data class AlarmPickerUiState(
 	val paywallTriggerType: PaywallTriggerType? = null,
 		val pendingRepeatDay: DayOfWeek? = null, // remember what the user was trying to do
 		val pendingSound: AlarmSound? = null,
+		val pendingRingDuration: Long? = null,
 		val alarmOperationCompletedGoBack: Boolean = false,
 		val soundSelectionCompletedGoBack: Boolean = false,
 		val progress: Progress = if (initialAlarm == null) Progress.StartTime else Progress.FullEditor

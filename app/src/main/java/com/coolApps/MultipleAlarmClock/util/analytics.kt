@@ -33,6 +33,8 @@ object FeatureFlagKeys {
 	const val IN_APP_FEEDBACK_COOLDOWN_DAYS = "feedback_cooldown_days"
 
 	const val WEEKLY_REPEAT_PREMIUM_ENABLED = "weekly_repeat_premium_enabled"
+	const val SNOOZE_PREMIUM_ENABLED = "snooze_premium_enabled"
+	const val SOUND_PICKER_PREMIUM_ENABLED = "sound_picker_premium_enabled"
 
 	const val PUSH_NOTIFICATION_ENABLED = "push_notification_enabled"
 	const val PUSH_NOTIFICATION_INACTIVE_DAYS = "push_notification_inactive_days"
@@ -150,8 +152,10 @@ class Analytics(
 		val feedbackCooldownDays = getIntFeatureFlag(FeatureFlagKeys.IN_APP_FEEDBACK_COOLDOWN_DAYS)
 			?.takeIf { it > 0 } ?: 14
 		val isWeeklyRepeatPremium = PostHog.isFeatureEnabled(FeatureFlagKeys.WEEKLY_REPEAT_PREMIUM_ENABLED, defaultValue = true)
+		val isSnoozePremium = PostHog.isFeatureEnabled(FeatureFlagKeys.SNOOZE_PREMIUM_ENABLED, defaultValue = false)
+		val isSoundPickerPremium = PostHog.isFeatureEnabled(FeatureFlagKeys.SOUND_PICKER_PREMIUM_ENABLED, defaultValue = false)
 
-		logD("loading feature flags from PostHog: reviewEnabled=$enabled, minAlarms=$minAlarms, reviewCooldownDays=$cooldownDays, minDaysSinceInstall=$minDaysSinceInstall, feedbackEnabled=$feedbackEnabled, feedbackStartDay=$feedbackStartDay, feedbackCooldownDays=$feedbackCooldownDays, hardPaywall=$isHardPaywall, weeklyRepeatPremium=$isWeeklyRepeatPremium")
+		logD("loading feature flags from PostHog: reviewEnabled=$enabled, minAlarms=$minAlarms, reviewCooldownDays=$cooldownDays, minDaysSinceInstall=$minDaysSinceInstall, feedbackEnabled=$feedbackEnabled, feedbackStartDay=$feedbackStartDay, feedbackCooldownDays=$feedbackCooldownDays, hardPaywall=$isHardPaywall, weeklyRepeatPremium=$isWeeklyRepeatPremium, snoozePremium=$isSnoozePremium, soundPickerPremium=$isSoundPickerPremium")
 		if (minAlarms == null || cooldownDays == null || minDaysSinceInstall == null) {
 			this.captureEvent( "loading_featureFlags_failed",
 				mapOf(
@@ -172,7 +176,9 @@ class Analytics(
 				cooldownDays = feedbackCooldownDays,
 			),
 					isHardPaywallEnabled = isHardPaywall,
-					isWeeklyRepeatPremium = isWeeklyRepeatPremium
+					isWeeklyRepeatPremium = isWeeklyRepeatPremium,
+				isSnoozePremium = isSnoozePremium,
+				isSoundPickerPremium = isSoundPickerPremium
 		)
 	}
 

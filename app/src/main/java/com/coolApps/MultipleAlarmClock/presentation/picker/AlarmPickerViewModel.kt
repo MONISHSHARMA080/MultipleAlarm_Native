@@ -219,7 +219,8 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	}
 
 	fun onAlarmSoundSelected(sound: AlarmSound?) {
-		if (!isPremium.value && sound != null) {
+		val isSoundPickerPremium = analytics.featureFlagsData.value?.isSoundPickerPremium ?: true
+		if (isSoundPickerPremium && !isPremium.value && sound != null) {
 			_uiState.update {
 				it.copy(
 					paywallTriggerType = PaywallTriggerType.PremiumFeature,
@@ -372,6 +373,20 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	}
 
 	fun updateRingDuration(newDuration: Long) {
+		val isSnoozePremium = analytics.featureFlagsData.value?.isSnoozePremium ?: false
+		if (isSnoozePremium && !isPremium.value) {
+			_uiState.update {
+				it.copy(
+					paywallTriggerType = PaywallTriggerType.PremiumFeature,
+					pendingRingDuration = newDuration
+				)
+			}
+			return
+		}
+		applyRingDuration(newDuration)
+	}
+
+	private fun applyRingDuration(newDuration: Long) {
 		_uiState.update { state ->
 			val updated = state.alarmData.copy(ringDurationInMin = newDuration).rollOverIfTimeIntervalPassed()
 			state.copy(
@@ -503,9 +518,14 @@ class AlarmPickerViewModel @AssistedInject constructor(
 				if (isPremium) {
 					val pendingDay = _uiState.value.pendingRepeatDay
 					val pendingSound = _uiState.value.pendingSound
+					val pendingRingDuration = _uiState.value.pendingRingDuration
 
 					if (pendingDay != null) {
 						toggleRepeatDay(pendingDay)
+					}
+
+					if (pendingRingDuration != null) {
+						applyRingDuration(pendingRingDuration)
 					}
 
 					if (pendingSound != null) {
@@ -518,12 +538,13 @@ class AlarmPickerViewModel @AssistedInject constructor(
 						}
 					}
 
-					if (pendingDay != null || pendingSound != null) {
+					if (pendingDay != null || pendingSound != null || pendingRingDuration != null) {
 						_uiState.update {
 							it.copy(
 								paywallTriggerType = null,
 								pendingRepeatDay = null,
-								pendingSound = null
+								pendingSound = null,
+								pendingRingDuration = null
 							)
 						}
 					}
