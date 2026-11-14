@@ -371,6 +371,16 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		}
 	}
 
+	fun updateRingDuration(newDuration: Long) {
+		_uiState.update { state ->
+			val updated = state.alarmData.copy(ringDurationInMin = newDuration).rollOverIfTimeIntervalPassed()
+			state.copy(
+				alarmData = updated,
+				validationResult = updated.validate()
+			)
+		}
+	}
+
 	fun updateMessage(newMessage: String) {
 		_uiState.update { it.copy(alarmData = it.alarmData.copy(message = newMessage)) }
 	}

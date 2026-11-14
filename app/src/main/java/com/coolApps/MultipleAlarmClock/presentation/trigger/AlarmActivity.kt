@@ -61,12 +61,14 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.IntentCompat
 import androidx.lifecycle.lifecycleScope
+import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.presentation.ExpressiveAlarmTheme
 import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.receiver.AlarmService
@@ -90,7 +92,7 @@ class AlarmActivity : ComponentActivity() {
     private var wakeLock: PowerManager.WakeLock? = null
     private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var intentReceived: Intent
-    private  val AUTO_FINISH_DELAY = 2.minutes
+    private val DEFAULT_RING_DURATION = 2.minutes
     private var dismissIntent : Intent? = null
 	private var shouldDismissAlarm = false
 	@Inject lateinit var analytics: Analytics
@@ -124,7 +126,10 @@ class AlarmActivity : ComponentActivity() {
                 )
             }
         }
-        lifecycleScope.launch { delay(AUTO_FINISH_DELAY); stopAlarmAndFinish() }
+        lifecycleScope.launch {
+			delay(parseTheIntent()?.ringDurationInMin?.minutes ?: DEFAULT_RING_DURATION)
+			stopAlarmAndFinish()
+		}
         lifecycleScope.launch(Dispatchers.Main) {keepScreenON()  }
     }
 
@@ -280,8 +285,8 @@ class AlarmActivity : ComponentActivity() {
                     }
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Stop",
-                        style = typography.headlineLarge,
+                        text = stringResource(R.string.stop_button),
+                        style = typography.headlineSmall,
                         fontWeight = FontWeight.Black,
                         letterSpacing = 0.5.sp
                     )

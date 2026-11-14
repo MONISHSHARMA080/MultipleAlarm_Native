@@ -26,13 +26,14 @@ data class AlarmData(
 	val sound: String?,
 	@ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean,
 	@ColumnInfo(name = "repeat_days", defaultValue = "NULL") val repeatDays: RepeatDays? = null,
-	@ColumnInfo(name = "is_force_loud_volume", defaultValue = "0") val isForceLoudVolume: Boolean = false
+	@ColumnInfo(name = "is_force_loud_volume", defaultValue = "0") val isForceLoudVolume: Boolean = false,
+	@ColumnInfo(name = "ring_duration_in_min", defaultValue = "2") val ringDurationInMin: Long = 2
 ){
 	private fun getDateTimeFormatted(time:Long):String{
 		return SimpleDateFormat("hh:mm a dd/MM/yyyy", Locale.getDefault()).format(time)
 	}
 	override fun toString(): String {
-		return "AlarmData: startTime:${getDateTimeFormatted(startTime)}, endTime:${getDateTimeFormatted(endTime)}, message:$message freqGottenAfterCallback:$frequencyInMin alarmSoundUri:$sound repeatDays:$repeatDays, id:$id, isREadyToUse:$isReadyToUse, isForceLoudVolume:$isForceLoudVolume"
+		return "AlarmData: startTime:${getDateTimeFormatted(startTime)}, endTime:${getDateTimeFormatted(endTime)}, message:$message freqGottenAfterCallback:$frequencyInMin ringDurationInMin:$ringDurationInMin alarmSoundUri:$sound repeatDays:$repeatDays, id:$id, isREadyToUse:$isReadyToUse, isForceLoudVolume:$isForceLoudVolume"
 	}
 
 	val startTimeCalendar: Calendar get() = Calendar.getInstance().apply { timeInMillis = startTime }
@@ -72,7 +73,8 @@ data class AlarmData(
 			isReadyToUse = this.isReadyToUse,
 			repeatDays = this.repeatDays,
 			id = id,
-			isForceLoudVolume = this.isForceLoudVolume
+			isForceLoudVolume = this.isForceLoudVolume,
+			ringDurationInMin = this.ringDurationInMin
 		)
 	}
 
@@ -109,6 +111,9 @@ data class AlarmData(
 		}
 		if (frequencyInMin !in 1..700) {
 			return AlarmDataValidationResult.Frequency("Expected a value between 1 to 700 minutes, but Got $frequencyInMin")
+		}
+		if (ringDurationInMin !in 1..30) {
+			return AlarmDataValidationResult.RingDuration("Expected a value between 1 to 30 minutes, but Got $ringDurationInMin")
 		}
 		val now = Calendar.getInstance()
 		val startCalendar = Calendar.getInstance().apply { timeInMillis = startTime }
@@ -157,6 +162,7 @@ sealed class AlarmDataValidationResult(
 	data class IntervalNotInFuture( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
 	data class DifferentDate( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
 	data class Frequency( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
+	data class RingDuration( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
 	data class WeekdayMismatch( val errorMessage: String) : AlarmDataValidationResult(errorMessage)
 
 	override fun toString(): String {
@@ -172,6 +178,7 @@ sealed class AlarmDataValidationResult(
 			is IntervalNotInFuture ->"IntervalNotInFuture"
 			is DifferentDate -> "DifferentDate"
 			is Frequency -> "Frequency"
+			is RingDuration -> "RingDuration"
 			is WeekdayMismatch -> "WeekdayMismatch"
 		}
 		return "$className, $err "
@@ -188,6 +195,7 @@ sealed class AlarmDataValidationResult(
 			is IntervalNotInFuture -> this.errorMessage
 			is DifferentDate ->this.errorMessage
 			is Frequency ->this.errorMessage
+			is RingDuration -> this.errorMessage
 			is WeekdayMismatch -> this.errorMessage
 		}
 	}

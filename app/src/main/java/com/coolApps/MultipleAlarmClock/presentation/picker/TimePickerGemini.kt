@@ -36,8 +36,13 @@ import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.KeyboardActionHandler
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -67,6 +72,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -119,7 +125,6 @@ import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
@@ -1722,6 +1727,19 @@ private fun TimePickerTextField(
             focusedTextColor = colors.timeSelectorContentColor(true),
         )
     val selected = selection == state.selection
+    val textFieldState = rememberTextFieldState(initialText = value.text, initialSelection = value.selection)
+
+    LaunchedEffect(value) {
+        if (value.text != textFieldState.text.toString()) {
+            textFieldState.setTextAndPlaceCursorAtEnd(value.text)
+        }
+    }
+
+    LaunchedEffect(textFieldState) {
+        snapshotFlow { textFieldState.text to textFieldState.selection }.collect { (text, selection) ->
+            onValueChange(TextFieldValue(text.toString(), selection))
+        }
+    }
     Column(modifier = modifier) {
         if (!selected) {
             TimeSelector(
@@ -1743,18 +1761,26 @@ private fun TimePickerTextField(
 
         Box(Modifier.visible(selected)) {
             BasicTextField(
-                value = value,
-                onValueChange = onValueChange,
+                state = textFieldState,
                 modifier =
                     Modifier.focusRequester(focusRequester)
                         .size(TimeFieldContainerWidth, TimeFieldContainerHeight)
                         .semantics { this.contentDescription = contentDescription },
                 interactionSource = interactionSource,
                 keyboardOptions = keyboardOptions,
-                keyboardActions = keyboardActions,
+                onKeyboardAction =
+					KeyboardActionHandler { performDefaultAction ->
+						val scope =
+							object : KeyboardActionScope {
+								override fun defaultKeyboardAction(imeAction: ImeAction) {
+									performDefaultAction()
+								}
+							}
+						(keyboardActions.onNext?.let { with(scope) { it() } }) ?: performDefaultAction()
+					},
                 textStyle = LocalTextStyle.current,
                 enabled = true,
-                singleLine = true,
+                lineLimits = TextFieldLineLimits.SingleLine,
                 cursorBrush =
                     Brush.verticalGradient(
                         0.00f to Color.Transparent,
@@ -1764,27 +1790,18 @@ private fun TimePickerTextField(
                         0.90f to Color.Transparent,
                         1.00f to Color.Transparent,
                     ),
-            ) {
-                OutlinedTextFieldDefaults.DecorationBox(
-                    value = value.text,
-                    visualTransformation = VisualTransformation.None,
-                    innerTextField = it,
-                    singleLine = true,
-                    colors = textFieldColors,
-                    enabled = true,
-                    interactionSource = interactionSource,
-                    contentPadding = PaddingValues(0.dp),
-                    container = {
-                        OutlinedTextFieldDefaults.Container(
-                            enabled = true,
-                            isError = false,
-                            interactionSource = interactionSource,
-                            shape = RoundedCornerShape(16.dp),
-                            colors = textFieldColors,
-                        )
-                    },
-                )
-            }
+                decorator = { innerTextField ->
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = textFieldColors.focusedContainerColor,
+                        modifier = Modifier.size(TimeFieldContainerWidth, TimeFieldContainerHeight)
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(TimeFieldContainerWidth, TimeFieldContainerHeight)) {
+                            innerTextField()
+                        }
+                    }
+                },
+            )
         }
 
         Text(

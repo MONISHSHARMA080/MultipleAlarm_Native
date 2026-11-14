@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
 import androidx.room.Room
 import com.coolApps.MultipleAlarmClock.data.preferences.Settings
@@ -14,6 +15,7 @@ import com.coolApps.MultipleAlarmClock.data.local.AlarmDatabase
 import com.coolApps.MultipleAlarmClock.data.local.MIGRATION_1_2
 import com.coolApps.MultipleAlarmClock.data.local.MIGRATION_2_3
 import com.coolApps.MultipleAlarmClock.data.local.MIGRATION_3_4
+import com.coolApps.MultipleAlarmClock.data.local.MIGRATION_4_5
 import com.coolApps.MultipleAlarmClock.data.repository.AlarmRepositoryImpl
 import com.coolApps.MultipleAlarmClock.domain.repository.AlarmRepository
 import com.coolApps.MultipleAlarmClock.util.Analytics
@@ -40,7 +42,7 @@ object AppModule {
 			context,
 			AlarmDatabase::class.java,
 			"alarm-database"
-		).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
+		).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build()
 	}
 
 	@Provides
@@ -49,6 +51,7 @@ object AppModule {
 		return DataStoreFactory.create(
 			serializer = SettingsSerializer,
 			produceFile = { context.dataStoreFile("user_settings.pb") },
+			corruptionHandler = ReplaceFileCorruptionHandler { Settings.getDefaultInstance() },
 		)
 	}
 

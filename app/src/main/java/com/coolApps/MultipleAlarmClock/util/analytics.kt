@@ -86,7 +86,7 @@ class Analytics(
 		logD("Analytics isEnabled=$isEnabled (debug=${BuildConfig.DEBUG}, skipPostHog=${BuildConfig.SKIP_POSTHOG}, keyPresent=${BuildConfig.POSTHOG_API_KEY.isNotBlank()}, emulator=${isRunningOnEmulator()})")
 		if (isEnabled) {
 			val postHogConfig = PostHogAndroidConfig(
-				apiKey = BuildConfig.POSTHOG_API_KEY,
+				projectToken = BuildConfig.POSTHOG_API_KEY,
 				host = POSTHOG_HOST,
 			).apply {
 				captureScreenViews = true

@@ -627,6 +627,7 @@ private fun AlarmEditorBody(
 			SettingsCard(
 				uiState = uiState,
 				updateFrequency = { viewModel.updateFrequency(it) },
+				updateRingDuration = { viewModel.updateRingDuration(it) },
 				messageValueChanged = { viewModel.updateMessage(it) },
 				updateIsForceLoudVolume = { viewModel.updateIsForceLoudVolume(it) },
 				calenderButtonClicked = showCalendarRequest,

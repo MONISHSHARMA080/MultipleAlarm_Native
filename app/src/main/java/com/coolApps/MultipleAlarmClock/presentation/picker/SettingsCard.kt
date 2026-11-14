@@ -35,6 +35,8 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -46,6 +48,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Remove
+import androidx.compose.material.icons.rounded.Schedule
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -85,13 +88,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.TransformedText
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
@@ -130,6 +129,7 @@ fun SettingsCard(
 		messageValueChanged: (String) -> Unit,
 		updateIsForceLoudVolume: (Boolean) -> Unit,
 		updateFrequency: (Long) -> Unit,
+		updateRingDuration: (Long) -> Unit,
 		calenderButtonClicked: () -> Unit,
 		selectSoundButtonClicked: () -> Unit,
 		repeatDayToggled: (DayOfWeek) -> Unit,
@@ -183,7 +183,7 @@ fun SettingsCard(
 				color = colorScheme.surfaceContainer,
 				modifier = Modifier.fillMaxWidth()
 			) {
-				FrequencyRow(
+				MinuteStepperRow(
 					icon = Icons.Rounded.Timer,
 					title = stringResource(
 						R.string.alarm_picker_repeat_every
@@ -194,7 +194,7 @@ fun SettingsCard(
 							updateFrequency(newValue)
 						}
 					},
-					uiState = uiState
+					hasError = uiState.validationResult is AlarmDataValidationResult.Frequency
 				)
 			}
 
@@ -265,6 +265,29 @@ fun SettingsCard(
 					}
 				)
 			}
+			Surface(
+				shape = SegmentedMiddleShape,
+				color = colorScheme.surfaceContainer,
+				modifier = Modifier.fillMaxWidth()
+			) {
+				MinuteStepperRow(
+					icon = Icons.Rounded.Schedule,
+					title = stringResource(
+						R.string.alarm_picker_ring_for
+					),
+					value = uiState.alarmData.ringDurationInMin,
+					onValueChange = { newValue ->
+						if (newValue in 0..30) {
+							updateRingDuration(newValue)
+						}
+					},
+					hasError = uiState.validationResult is AlarmDataValidationResult.RingDuration,
+					minValue = 1,
+					maxValue = 30,
+					emphasized = false
+				)
+			}
+
 		}
 	}
 }
@@ -617,17 +640,33 @@ fun SettingRow(icon: ImageVector, title: String, value: String, onClick: () -> U
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun FrequencyRow(
+fun MinuteStepperRow(
 			icon: ImageVector,
 			title: String,
 			value: Long,
 			onValueChange: (Long) -> Unit,
-			uiState: AlarmPickerUiState,
+			hasError: Boolean = false,
+			minValue: Long = 1,
+			maxValue: Long = 700,
+			emphasized: Boolean = true,
 		) {
-		val doWeHaveFrequencyError = uiState.validationResult is AlarmDataValidationResult.Frequency
 
 		val view = LocalView.current
-		var textValue by remember(value) { mutableStateOf(if (value == 0L) "" else value.toString()) }
+		val textFieldState = rememberTextFieldState(initialText = if (value == 0L) "" else value.toString())
+		val textValue = textFieldState.text.toString()
+
+		LaunchedEffect(value) {
+			if (value != textValue.toLongOrNull()) {
+				textFieldState.setTextAndPlaceCursorAtEnd(if (value == 0L) "" else value.toString())
+			}
+		}
+
+		LaunchedEffect(textFieldState) {
+			snapshotFlow { textFieldState.text.toString() }
+				.collectLatest { text ->
+					text.filter { it.isDigit() }.toLongOrNull()?.let { onValueChange(it) }
+				}
+		}
 		val spatialIntSizeSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntSize>()
 		val spatialIntOffsetSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
 		val effectsFloatSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
@@ -652,15 +691,16 @@ fun FrequencyRow(
 					modifier =
 						Modifier.background(
 							color =
-								if (doWeHaveFrequencyError) colorScheme.errorContainer
-								else colorScheme.secondaryContainer,
+								if (hasError) colorScheme.errorContainer
+								else if (emphasized) colorScheme.secondaryContainer
+								else colorScheme.surfaceContainerHighest,
 							shape = RoundedCornerShape(16.dp)
 						)
 							.padding(4.dp)
 				) {
 					IconButton(
 						onClick = {
-							if (value - 1 > 0) {
+							if (value - 1 >= minValue) {
 								view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 								onValueChange(value - 1)
 							} else {
@@ -677,15 +717,8 @@ fun FrequencyRow(
 					}
 
 					val minSuffixTransformation = remember {
-						VisualTransformation { text ->
-							val display = if (text.isEmpty()) text else AnnotatedString(text.text + " min")
-							TransformedText(
-								display,
-								object : OffsetMapping {
-									override fun originalToTransformed(offset: Int) = offset
-									override fun transformedToOriginal(offset: Int) = offset.coerceAtMost(text.text.length)
-								}
-							)
+						OutputTransformation {
+							if (length > 0) append(" min")
 						}
 					}
 
@@ -752,15 +785,15 @@ fun FrequencyRow(
 						}
 
 						BasicTextField(
-							value = textValue,
-							onValueChange = { newValue ->
-								val digitsOnly = newValue.filter { it.isDigit() }
-								// Only propagate when we actually have a parseable value.
-								// Empty (e.g. user backspaced everything) stays local-only.
-								textValue = digitsOnly
-								digitsOnly.toLongOrNull()?.let { onValueChange(it) }
+							state = textFieldState,
+							inputTransformation = remember {
+								InputTransformation {
+									val filtered = toString().filter { it.isDigit() }
+									if (filtered.length != length) replace(0, length, filtered)
+								}
 							},
-							visualTransformation = minSuffixTransformation,
+							outputTransformation = minSuffixTransformation,
+							lineLimits = TextFieldLineLimits.SingleLine,
 							modifier = Modifier.fillMaxWidth(),
 							textStyle = typography.titleMedium.copy(
 								textAlign = TextAlign.Center,
@@ -768,14 +801,13 @@ fun FrequencyRow(
 								fontWeight = FontWeight.ExtraBold
 							),
 							keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-							singleLine = true,
 							cursorBrush = SolidColor(colorScheme.onSecondaryContainer)
 						)
 					}
 
 					IconButton(
 						onClick = {
-							if (value + 1 <= 700) {
+							if (value + 1 <= maxValue) {
 								view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 								onValueChange(value + 1)
 							} else {

@@ -383,7 +383,7 @@ class AlarmsController @Inject constructor(
 		val intent = Intent(ALARM_ACTION)
 		val intentData = AlarmActivityIntentData(
 			startTimeForDb = alarmData.startTime, alarmTriggerTime = alarmTriggerTime, endTime = alarmData.endTime,
-			message = alarmData.message, alarmIdInDb = alarmData.id
+			message = alarmData.message, alarmIdInDb = alarmData.id, ringDurationInMin = alarmData.ringDurationInMin
 		)
 		intent.setClass(context, receiverClass)
 		intent.putExtra("intentData", intentData)

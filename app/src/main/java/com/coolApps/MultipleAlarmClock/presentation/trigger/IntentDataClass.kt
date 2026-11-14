@@ -12,15 +12,9 @@ data class AlarmActivityIntentData(
 		val alarmTriggerTime: Long,
 		val endTime: Long,
 		val message: String,
+		val ringDurationInMin: Long = 2,
 ) : Parcelable {
     override fun toString(): String {
-        return "AlarmActivityIntentData: alarmIdInDb=$alarmIdInDb, startTimeForDb=$startTimeForDb, alarmTriggerTime=$alarmTriggerTime, endTime=$endTime, message:$message"
+        return "AlarmActivityIntentData: alarmIdInDb=$alarmIdInDb, startTimeForDb=$startTimeForDb, alarmTriggerTime=$alarmTriggerTime, endTime=$endTime, message:$message, ringDurationInMin:$ringDurationInMin"
     }
-
-
-
-}
-
-fun  AlarmActivityIntentData.toIntent(){
-
 }

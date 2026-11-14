@@ -20,3 +20,9 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
 		db.execSQL("ALTER TABLE AlarmData ADD COLUMN is_force_loud_volume INTEGER NOT NULL DEFAULT 0")
 	}
 }
+
+val MIGRATION_4_5 = object : Migration(4, 5) {
+	override fun migrate(db: SupportSQLiteDatabase) {
+		db.execSQL("ALTER TABLE AlarmData ADD COLUMN ring_duration_in_min INTEGER NOT NULL DEFAULT 2")
+	}
+}

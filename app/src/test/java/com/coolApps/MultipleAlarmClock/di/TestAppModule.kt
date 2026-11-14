@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
 import androidx.room.Room
 import com.coolApps.MultipleAlarmClock.data.preferences.Settings
@@ -55,7 +56,8 @@ object TestAppModule {
 			serializer = SettingsSerializer,
 			produceFile = {
 				context.dataStoreFile("test_user_settings.pb")
-			}
+			},
+			corruptionHandler = ReplaceFileCorruptionHandler { Settings.getDefaultInstance() },
 		)
 
 	@Provides
