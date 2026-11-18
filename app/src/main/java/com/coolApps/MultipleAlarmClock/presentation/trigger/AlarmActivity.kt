@@ -255,13 +255,15 @@ class AlarmActivity : ComponentActivity() {
 				  	},
                     interactionSource = stopInteractionSource,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = colorScheme.primary,
-                        contentColor = colorScheme.onPrimary
+                        containerColor = colorScheme.primaryContainer,
+                        contentColor = colorScheme.onPrimaryContainer
                     ),
                     shape = RoundedCornerShape(stopButtonCorner),
                     elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 6.dp,
-                        pressedElevation = 2.dp
+                        defaultElevation = 0.dp,
+                        pressedElevation = 0.dp,
+                        focusedElevation = 0.dp,
+                        hoveredElevation = 0.dp
                     ),
                     modifier = Modifier
                         .scale(stopButtonScale)
@@ -271,24 +273,23 @@ class AlarmActivity : ComponentActivity() {
                 ) {
                     Surface(
                         shape = RoundedCornerShape(stopIconInnerCorner),
-                        color = colorScheme.onPrimary.copy(alpha = 0.18f),
-                        contentColor = colorScheme.onPrimary,
+                        color = colorScheme.onPrimaryContainer.copy(alpha = 0.12f),
+                        contentColor = colorScheme.onPrimaryContainer,
                         modifier = Modifier.size(48.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                             Icon(
                                 imageVector = Icons.Filled.Cancel,
                                 modifier = Modifier.size(28.dp),
-                                contentDescription = "Cancel"
+                                contentDescription = null
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = stringResource(R.string.stop_button),
                         style = typography.headlineSmall,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 0.5.sp
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
@@ -302,6 +303,12 @@ class AlarmActivity : ComponentActivity() {
             contentAlignment = Alignment.Center
         ) {
             val isCompactHeight = maxHeight < 460.dp
+            val contentWidth = minOf(maxWidth, 640.dp)
+            val timeFontSize = minOf(
+                (contentWidth - 8.dp).value / 4.2f,
+                maxHeight.value * 0.38f
+            ).coerceIn(48f, 168f).sp
+            val amPmFontSize = (timeFontSize.value * 0.22f).coerceIn(16f, 34f).sp
             val defaultSpatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
             val defaultEffectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
 
@@ -335,19 +342,27 @@ class AlarmActivity : ComponentActivity() {
                     ) {
                         Text(
                             text = currentTime,
-                            color = colorScheme.primary,
-                            fontWeight = FontWeight.Medium,
-                            style = typography.displayLarge
+                            color = colorScheme.onSurface,
+                            maxLines = 1,
+                            softWrap = false,
+                            style = typography.displayLarge.copy(
+                                fontSize = timeFontSize,
+                                lineHeight = timeFontSize,
+//                                fontWeight = FontWeight.Normal,
+                                letterSpacing = (-2).sp,
+                                fontFeatureSettings = "tnum"
+                            )
                         )
 
                         Spacer(modifier = Modifier.width(8.dp))
 
                         Text(
                             text = amPm,
-                            color = colorScheme.secondary,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(bottom = 12.dp),
-                            style = typography.titleLarge
+                            color = colorScheme.onSurfaceVariant.copy(alpha = 0.9f),
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = 2.sp,
+                            modifier = Modifier.padding(bottom = (timeFontSize.value * 0.12f).dp),
+                            style = typography.headlineMedium.copy(fontSize = amPmFontSize)
                         )
                     }
 
@@ -364,11 +379,10 @@ class AlarmActivity : ComponentActivity() {
 							) {
 								Text(
 									text = message,
-									color = colorScheme.onSurface,
-									style = typography.titleMedium,
+									color = colorScheme.onSurface.copy(alpha = 0.85f),
+									style = typography.titleLarge,
 									fontWeight = FontWeight.Normal,
-									textAlign = TextAlign.Center,
-									lineHeight = 32.sp
+									textAlign = TextAlign.Center
 								)
 								Spacer(modifier = Modifier.height(24.dp))
 							}
