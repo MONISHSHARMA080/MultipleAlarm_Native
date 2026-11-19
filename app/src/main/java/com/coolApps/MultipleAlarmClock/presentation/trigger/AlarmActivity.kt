@@ -47,7 +47,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -237,7 +236,6 @@ class AlarmActivity : ComponentActivity() {
 			delay(30.seconds)
 		}
 	}
-
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         contentWindowInsets = WindowInsets.safeContent,
@@ -273,20 +271,11 @@ class AlarmActivity : ComponentActivity() {
                         .widthIn(max = 520.dp)
                         .fillMaxWidth(0.94f)
                 ) {
-                    Surface(
-                        shape = RoundedCornerShape(stopIconInnerCorner),
-                        color = colorScheme.onPrimaryContainer.copy(alpha = 0.12f),
-                        contentColor = colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                            Icon(
-                                imageVector = Icons.Filled.Cancel,
-                                modifier = Modifier.size(28.dp),
-                                contentDescription = null
-                            )
-                        }
-                    }
+					Icon(
+						imageVector = Icons.Filled.Cancel,
+						modifier = Modifier.size(28.dp),
+						contentDescription = null
+					)
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = stringResource(R.string.stop_button),
