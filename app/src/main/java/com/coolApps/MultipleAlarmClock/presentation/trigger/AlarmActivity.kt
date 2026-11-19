@@ -60,9 +60,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -303,11 +305,21 @@ class AlarmActivity : ComponentActivity() {
             contentAlignment = Alignment.Center
         ) {
             val isCompactHeight = maxHeight < 460.dp
-            val contentWidth = minOf(maxWidth, 640.dp)
-            val timeFontSize = minOf(
-                (contentWidth - 8.dp).value / 4.2f,
-                maxHeight.value * 0.38f
-            ).coerceIn(48f, 168f).sp
+			val textMeasurer = rememberTextMeasurer()
+			val density = LocalDensity.current
+			val baseStyle = typography.displayLarge.copy(letterSpacing = (-2).sp, fontFeatureSettings = "tnum")
+
+			val timeFontSize = remember(maxWidth, maxHeight) {
+				val availableWidthPx = with(density) { (minOf(maxWidth, 640.dp) - 16.dp).toPx() }
+				val refSize = 100.sp
+				val measured = textMeasurer.measure(
+					text = "00:00:00 AM",              // widest realistic string
+					style = baseStyle.copy(fontSize = refSize),
+					maxLines = 1, softWrap = false
+				).size.width
+				val scaled = refSize.value * availableWidthPx / measured
+				minOf(scaled, maxHeight.value * 0.38f).coerceIn(32f, 168f).sp
+			}
             val amPmFontSize = (timeFontSize.value * 0.22f).coerceIn(16f, 34f).sp
             val defaultSpatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<Float>()
             val defaultEffectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
