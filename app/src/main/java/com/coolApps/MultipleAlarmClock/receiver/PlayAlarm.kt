@@ -18,6 +18,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
 
 class PlayAlarm @Inject constructor(
@@ -80,15 +81,15 @@ class PlayAlarm @Inject constructor(
 
 	private var originalAlarmVolume: Int? = null
 
-	fun play(soundUri: Uri, isForceLoudVolume: Boolean = false) {
+	fun play(soundUri: Uri, alarmVolume: Float? = null) {
 		stop(abandonFocus = true)
-		
-		if (isForceLoudVolume) {
+		if (alarmVolume != null) {
 			try {
 				originalAlarmVolume = audioManager.getStreamVolume(AudioManager.STREAM_ALARM)
 				val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
-				audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0)
-			} catch (e: SecurityException) {
+				val targetVolume = (alarmVolume.coerceIn(0f, 1f) * maxVolume).roundToInt()
+				audioManager.setStreamVolume(AudioManager.STREAM_ALARM, targetVolume, 0)
+			} catch (e: Exception) {
 				logD("Failed to set stream volume: ${e.message}")
 			}
 		}

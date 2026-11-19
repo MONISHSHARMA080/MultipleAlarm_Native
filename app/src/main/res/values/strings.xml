@@ -42,12 +42,13 @@
     <string name="alarm_picker_btn_change">Change something</string>
     <string name="alarm_picker_btn_fix">Fix the error</string>
     <string name="alarm_picker_repeat_every">Ring every</string>
-    <string name="alarm_picker_ring_for">Snooze after</string>
+    <string name="alarm_picker_ring_for">Auto dismiss after</string>
     <string name="alarm_picker_repeat_days">Repeat</string>
     <string name="alarm_picker_sound">Sound</string>
     <string name="alarm_picker_sound_random">Random</string>
-    <string name="alarm_picker_force_loud_volume">Max volume</string>
-    <string name="alarm_picker_force_loud_volume_desc">Rings at maximum volume, even if the phone\'s volume is set lower.</string>
+    <string name="alarm_picker_alarm_volume">Alarm volume</string>
+    <string name="alarm_picker_alarm_volume_system">Play alarm at custom volume regardless of the system volume</string>
+    <string name="alarm_picker_alarm_volume_value">alarm will ring at %1$d%%. click x to cancel</string>
     <string name="alarm_picker_message">Message</string>
     <string name="alarm_picker_message_placeholder">Add message</string>
     <string name="alarm_picker_ok">Select</string>

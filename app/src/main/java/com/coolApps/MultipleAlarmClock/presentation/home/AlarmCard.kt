@@ -474,7 +474,6 @@ private fun AddAlarmButtonFontScalePreview() {
 						sound = null,
 						isReadyToUse = true,
 						repeatDays = null,
-						isForceLoudVolume = false,
 					),
 					todayStartMs = todayCalendar,
 					onEdit = {},

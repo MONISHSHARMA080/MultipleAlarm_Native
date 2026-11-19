@@ -629,7 +629,7 @@ private fun AlarmEditorBody(
 				updateFrequency = { viewModel.updateFrequency(it) },
 				updateRingDuration = { viewModel.updateRingDuration(it) },
 				messageValueChanged = { viewModel.updateMessage(it) },
-				updateIsForceLoudVolume = { viewModel.updateIsForceLoudVolume(it) },
+				updateAlarmVolume = { viewModel.updateAlarmVolume(it) },
 				calenderButtonClicked = showCalendarRequest,
 				selectSoundButtonClicked = onNavigateToSoundList,
 				repeatDayToggled = { day -> viewModel.onRepeatDayClicked(day) },

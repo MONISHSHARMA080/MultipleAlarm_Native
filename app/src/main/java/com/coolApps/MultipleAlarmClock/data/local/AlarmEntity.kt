@@ -26,14 +26,21 @@ data class AlarmData(
 	val sound: String?,
 	@ColumnInfo(name = "is_ready_to_use") val isReadyToUse: Boolean,
 	@ColumnInfo(name = "repeat_days", defaultValue = "NULL") val repeatDays: RepeatDays? = null,
-	@ColumnInfo(name = "is_force_loud_volume", defaultValue = "0") val isForceLoudVolume: Boolean = false,
+	@ColumnInfo(name = "alarm_volume", defaultValue = "NULL") val alarmVolume: Float? = null,
 	@ColumnInfo(name = "ring_duration_in_min", defaultValue = "2") val ringDurationInMin: Long = 2
 ){
+	/**
+	 * SQLite on API 33 cannot drop columns, so the retired max-volume column stays mapped for
+	 * Room's schema check. Nothing reads or writes it.
+	 */
+	@ColumnInfo(name = "is_force_loud_volume", defaultValue = "0")
+	var legacyForceLoudVolume: Boolean = false
+
 	private fun getDateTimeFormatted(time:Long):String{
 		return SimpleDateFormat("hh:mm a dd/MM/yyyy", Locale.getDefault()).format(time)
 	}
 	override fun toString(): String {
-		return "AlarmData: startTime:${getDateTimeFormatted(startTime)}, endTime:${getDateTimeFormatted(endTime)}, message:$message freqGottenAfterCallback:$frequencyInMin ringDurationInMin:$ringDurationInMin alarmSoundUri:$sound repeatDays:$repeatDays, id:$id, isREadyToUse:$isReadyToUse, isForceLoudVolume:$isForceLoudVolume"
+		return "AlarmData: startTime:${getDateTimeFormatted(startTime)}, endTime:${getDateTimeFormatted(endTime)}, message:$message freqGottenAfterCallback:$frequencyInMin ringDurationInMin:$ringDurationInMin alarmSoundUri:$sound repeatDays:$repeatDays, id:$id, isREadyToUse:$isReadyToUse, alarmVolume:$alarmVolume"
 	}
 
 	val startTimeCalendar: Calendar get() = Calendar.getInstance().apply { timeInMillis = startTime }
@@ -73,7 +80,7 @@ data class AlarmData(
 			isReadyToUse = this.isReadyToUse,
 			repeatDays = this.repeatDays,
 			id = id,
-			isForceLoudVolume = this.isForceLoudVolume,
+			alarmVolume = this.alarmVolume,
 			ringDurationInMin = this.ringDurationInMin
 		)
 	}

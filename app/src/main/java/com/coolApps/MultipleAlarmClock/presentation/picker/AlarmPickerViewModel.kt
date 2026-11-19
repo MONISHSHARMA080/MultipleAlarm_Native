@@ -400,10 +400,13 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		_uiState.update { it.copy(alarmData = it.alarmData.copy(message = newMessage)) }
 	}
 
-	fun updateIsForceLoudVolume(isForceLoudVolume: Boolean) {
+	fun updateAlarmVolume(alarmVolume: Float?) {
+		val isCustomAlarmVolumePremium = analytics.featureFlagsData.value?.isCustomAlarmVolumePremium ?: true
 		when {
-			isPremium.value -> {
-				_uiState.update { it.copy(alarmData = it.alarmData.copy(isForceLoudVolume = isForceLoudVolume)) }
+			!isCustomAlarmVolumePremium  || isPremium.value-> {
+				_uiState.update {
+					it.copy(alarmData = it.alarmData.copy(alarmVolume = alarmVolume?.coerceIn(0f, 1f)))
+				}
 			}
 			else -> {
 				_uiState.update { it.copy(paywallTriggerType = PaywallTriggerType.PremiumFeature) }

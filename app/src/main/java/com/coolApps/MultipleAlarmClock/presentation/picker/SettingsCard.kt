@@ -1,5 +1,7 @@
 package com.coolApps.MultipleAlarmClock.presentation.picker
 
+import android.content.Context
+import android.media.AudioManager
 import android.view.HapticFeedbackConstants
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -8,6 +10,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -31,7 +34,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -46,6 +48,7 @@ import androidx.compose.material.icons.automirrored.rounded.Message
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Schedule
@@ -56,9 +59,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSliderState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -77,15 +82,16 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -98,6 +104,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.local.AlarmDataValidationResult
+import com.coolApps.MultipleAlarmClock.presentation.logD
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -127,7 +134,7 @@ fun SettingsCard(
 		uiState: AlarmPickerUiState,
 		selectedSoundName: String,
 		messageValueChanged: (String) -> Unit,
-		updateIsForceLoudVolume: (Boolean) -> Unit,
+		updateAlarmVolume: (Float?) -> Unit,
 		updateFrequency: (Long) -> Unit,
 		updateRingDuration: (Long) -> Unit,
 		calenderButtonClicked: () -> Unit,
@@ -246,25 +253,13 @@ fun SettingsCard(
 				)
 			}
 
-			Surface(
-				shape = SegmentedBottomShape,
-				color = colorScheme.surfaceContainer,
+			AlarmVolumeRow(
+				volume = uiState.alarmData.alarmVolume,
+				shape = SegmentedMiddleShape,
+				onVolumeChange = { updateAlarmVolume(it) },
+				onUseSystemVolume = { updateAlarmVolume(null) },
 				modifier = Modifier.fillMaxWidth()
-			) {
-				SwitchRow(
-					icon = Icons.AutoMirrored.Rounded.VolumeUp,
-					title = stringResource(
-						R.string.alarm_picker_force_loud_volume
-					),
-					description = stringResource(
-						R.string.alarm_picker_force_loud_volume_desc
-					),
-					checked = uiState.alarmData.isForceLoudVolume,
-					onCheckedChange = { isChecked ->
-						updateIsForceLoudVolume(isChecked)
-					}
-				)
-			}
+			)
 			Surface(
 				shape = SegmentedMiddleShape,
 				color = colorScheme.surfaceContainer,
@@ -294,20 +289,22 @@ fun SettingsCard(
 
 @Composable
 private fun ExpressiveSettingIconBadge(
-	icon: ImageVector,
-	modifier: Modifier = Modifier
+		icon: ImageVector,
+		modifier: Modifier = Modifier,
+		containerColor: Color = colorScheme.surfaceContainer,
+		contentColor: Color= colorScheme.onSurface
 ) {
 	Surface(
 		shape = RoundedCornerShape(12.dp),
-		color = colorScheme.secondaryContainer.copy(alpha = 0.65f),
-		contentColor = colorScheme.onSecondaryContainer,
+		color = containerColor,
+		contentColor = contentColor,
 		modifier = modifier.size(36.dp)
 	) {
 		Box(contentAlignment = Alignment.Center) {
 			Icon(
 				imageVector = icon,
 				contentDescription = null,
-				tint = colorScheme.onSecondaryContainer,
+				tint = contentColor,
 				modifier = Modifier.size(20.dp)
 			)
 		}
@@ -316,48 +313,113 @@ private fun ExpressiveSettingIconBadge(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun SwitchRow(
-	icon: ImageVector,
-	title: String,
-	checked: Boolean,
-	onCheckedChange: (Boolean) -> Unit,
-	description: String? = null
+fun AlarmVolumeRow(
+	volume: Float?,
+	shape: Shape,
+	onVolumeChange: (Float) -> Unit,
+	onUseSystemVolume: () -> Unit,
+	modifier: Modifier = Modifier
 ) {
-	Row(
-		modifier = Modifier
-			.fillMaxWidth()
-			.toggleable(
-				value = checked,
-				role = Role.Switch,
-				onValueChange = onCheckedChange
-			)
-			.padding(horizontal = 16.dp, vertical = 14.dp)
-			.animateContentSize(
-				animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
-			),
-		verticalAlignment = Alignment.CenterVertically
+	val view = LocalView.current
+	val context = LocalContext.current
+	val isCustomVolume = volume != null
+	val systemVolume = remember(context) { systemAlarmVolumeFraction(context) }
+	val displayedVolume = (volume ?: systemVolume).coerceIn(0f, 1f)
+	val sliderAccentColor by animateColorAsState(
+		targetValue = if (isCustomVolume) {
+			colorScheme.primary
+		} else {
+			colorScheme.secondary.copy(alpha = 0.5f)
+		},
+		animationSpec = tween(durationMillis = 250),
+		label = "volumeSliderAccentColor",
+	)
+	val sliderColors = SliderDefaults.colors(
+		thumbColor = sliderAccentColor,
+		activeTrackColor = sliderAccentColor,
+		activeTickColor = sliderAccentColor,
+	)
+	val sliderState = rememberSliderState(value = displayedVolume)
+	sliderState.value = displayedVolume
+	val title = stringResource(R.string.alarm_picker_alarm_volume)
+
+	Surface(
+		shape = shape,
+		color = colorScheme.surfaceContainer,
+		contentColor = colorScheme.onSurface,
+		modifier = modifier
 	) {
-		ExpressiveSettingIconBadge(icon = icon)
-		Spacer(modifier = Modifier.width(14.dp))
-		Column(modifier = Modifier.weight(1f)) {
-			Text(
-				text = title,
-				color = colorScheme.onSurface,
-				style = typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-			)
-			if (description != null) {
-				Text(
-					text = description,
-					color = colorScheme.onSurfaceVariant,
-					style = typography.bodySmall,
-					modifier = Modifier.padding(top = 1.dp)
+		Column(
+			modifier = Modifier.padding(start = 16.dp, end = 12.dp, top = 12.dp, bottom = 2.dp)
+		) {
+			Row(verticalAlignment = Alignment.CenterVertically) {
+				ExpressiveSettingIconBadge(
+					icon = Icons.AutoMirrored.Rounded.VolumeUp,
+					containerColor = colorScheme.surfaceContainer,
+					contentColor = colorScheme.onSurface
 				)
+				Spacer(modifier = Modifier.width(14.dp))
+				Column(modifier = Modifier.weight(1f)) {
+					Text(
+						text = title,
+						color = colorScheme.onSurface,
+						style = typography.titleSmall
+					)
+//					AnimatedContent(isCustomVolume) {isCustomVolume ->
+//						Text(
+//							text = if (isCustomVolume) {
+//								stringResource(
+//									R.string.alarm_picker_alarm_volume_value,
+//									(displayedVolume * 100).roundToInt()
+//								)
+//							} else {
+//								stringResource(R.string.alarm_picker_alarm_volume_system)
+//							},
+//							color = colorScheme.onSurfaceVariant,
+//							style = typography.bodySmall,
+//							modifier = Modifier.padding(top = 1.dp)
+//						)
+//					}
+				}
+				IconButton(
+					onClick = {
+						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+						onUseSystemVolume()
+					},
+					enabled = isCustomVolume
+				) {
+					Icon(
+						imageVector = Icons.Rounded.Close,
+						contentDescription = null,
+						modifier = Modifier.size(20.dp)
+					)
+				}
 			}
+			Slider(
+				state = sliderState,
+				onValueChange = onVolumeChange,
+				colors = sliderColors,
+				track = { state ->
+					SliderDefaults.Track(
+						sliderState = state,
+						colors = sliderColors,
+						drawStopIndicator = null
+					)
+				},
+				modifier = Modifier.fillMaxWidth()
+			)
 		}
-		Switch(
-			checked = checked,
-			onCheckedChange = null // Handled by Row toggleable
-		)
+	}
+}
+
+private fun systemAlarmVolumeFraction(context: Context): Float {
+	val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return 0f
+	val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM)
+	logD("current alarm stream volume ${audioManager.getStreamVolume(AudioManager.STREAM_ALARM).toFloat()}")
+	return if (maxVolume > 0) {
+		audioManager.getStreamVolume(AudioManager.STREAM_ALARM).toFloat() / maxVolume
+	} else {
+		0f
 	}
 }
 

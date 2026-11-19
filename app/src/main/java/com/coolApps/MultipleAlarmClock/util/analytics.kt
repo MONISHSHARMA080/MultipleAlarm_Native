@@ -35,6 +35,7 @@ object FeatureFlagKeys {
 	const val WEEKLY_REPEAT_PREMIUM_ENABLED = "weekly_repeat_premium_enabled"
 	const val SNOOZE_PREMIUM_ENABLED = "snooze_premium_enabled"
 	const val SOUND_PICKER_PREMIUM_ENABLED = "sound_picker_premium_enabled"
+	const val ALARM_VOLUME_PREMIUM_ENABLED = "alarm_volume_premium_enabled"
 
 	const val PUSH_NOTIFICATION_ENABLED = "push_notification_enabled"
 	const val PUSH_NOTIFICATION_INACTIVE_DAYS = "push_notification_inactive_days"
@@ -154,8 +155,9 @@ class Analytics(
 		val isWeeklyRepeatPremium = PostHog.isFeatureEnabled(FeatureFlagKeys.WEEKLY_REPEAT_PREMIUM_ENABLED, defaultValue = true)
 		val isSnoozePremium = PostHog.isFeatureEnabled(FeatureFlagKeys.SNOOZE_PREMIUM_ENABLED, defaultValue = false)
 		val isSoundPickerPremium = PostHog.isFeatureEnabled(FeatureFlagKeys.SOUND_PICKER_PREMIUM_ENABLED, defaultValue = false)
+		val isCustomAlarmVolumePremium = PostHog.isFeatureEnabled(FeatureFlagKeys.ALARM_VOLUME_PREMIUM_ENABLED, defaultValue = false)
 
-		logD("loading feature flags from PostHog: reviewEnabled=$enabled, minAlarms=$minAlarms, reviewCooldownDays=$cooldownDays, minDaysSinceInstall=$minDaysSinceInstall, feedbackEnabled=$feedbackEnabled, feedbackStartDay=$feedbackStartDay, feedbackCooldownDays=$feedbackCooldownDays, hardPaywall=$isHardPaywall, weeklyRepeatPremium=$isWeeklyRepeatPremium, snoozePremium=$isSnoozePremium, soundPickerPremium=$isSoundPickerPremium")
+		logD("loading feature flags from PostHog: reviewEnabled=$enabled, minAlarms=$minAlarms, reviewCooldownDays=$cooldownDays, minDaysSinceInstall=$minDaysSinceInstall, feedbackEnabled=$feedbackEnabled, feedbackStartDay=$feedbackStartDay, feedbackCooldownDays=$feedbackCooldownDays, hardPaywall=$isHardPaywall, weeklyRepeatPremium=$isWeeklyRepeatPremium, snoozePremium=$isSnoozePremium, soundPickerPremium=$isSoundPickerPremium, customAlarmVolumePremium=$isCustomAlarmVolumePremium")
 		if (minAlarms == null || cooldownDays == null || minDaysSinceInstall == null) {
 			this.captureEvent( "loading_featureFlags_failed",
 				mapOf(
@@ -178,7 +180,8 @@ class Analytics(
 					isHardPaywallEnabled = isHardPaywall,
 					isWeeklyRepeatPremium = isWeeklyRepeatPremium,
 				isSnoozePremium = isSnoozePremium,
-				isSoundPickerPremium = isSoundPickerPremium
+				isSoundPickerPremium = isSoundPickerPremium,
+				isCustomAlarmVolumePremium = isCustomAlarmVolumePremium
 		)
 	}
 
