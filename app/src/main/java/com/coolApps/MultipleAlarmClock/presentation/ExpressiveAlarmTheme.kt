@@ -1,15 +1,21 @@
 package com.coolApps.MultipleAlarmClock.presentation
 
+import android.content.Context
+import android.content.res.Resources
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,11 +56,7 @@ fun ExpressiveAlarmTheme(
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
-    val colorScheme = if (darkTheme) {
-        dynamicDarkColorScheme(context)
-    } else {
-        dynamicLightColorScheme(context)
-    }
+    val colorScheme = remember(context, darkTheme) { resolveColorScheme(context, darkTheme) }
 
     MaterialExpressiveTheme(
         colorScheme = colorScheme,
@@ -64,3 +66,12 @@ fun ExpressiveAlarmTheme(
         content = content,
     )
 }
+
+/** Some Android 14 devices do not have all the system color resources that the dynamic scheme reads. */
+internal fun resolveColorScheme(context: Context, darkTheme: Boolean): ColorScheme =
+    try {
+        if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    } catch (e: Resources.NotFoundException) {
+        logD("dynamic color scheme is not available, using the static scheme: $e")
+        if (darkTheme) darkColorScheme() else lightColorScheme()
+    }
