@@ -1,12 +1,13 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">Clock It</string>
+    <string name="ad_label">Sponsored</string>
     <string name="msg_copied_clipboard">Message copied to clipboard</string>
     <string name="msg_not_present">Alarm message not present</string>
     <string name="update_downloaded_restart">Update downloaded. Restart to install it</string>
     <string name="update_restart_action">Restart</string>
     <string name="settings_content_description">Settings</string>
     <string name="empty_state_title">Add an alarm</string>
-    <string name="empty_state_description">Tap \'Add alarm\' to set an alarm</string>
+    <string name="empty_state_description1">Tap \'Add alarm\' to set an alarm</string>
     <string name="add_alarm_button_text">Add alarm</string>
     <string name="date_label_today">Today</string>
     <string name="date_label_yesterday">Yesterday</string>

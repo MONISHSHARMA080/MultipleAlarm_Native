@@ -45,6 +45,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -94,8 +95,11 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.result.ResultEffect
+import com.coolApps.MultipleAlarmClock.BuildConfig
 import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.data.ads.AdManager
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
+import com.coolApps.MultipleAlarmClock.presentation.ads.AlarmListBannerAdCard
 import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.util.AppUpdateChecker
 import com.google.android.play.core.install.model.ActivityResult
@@ -130,9 +134,9 @@ import java.util.Calendar
 	}
 
 	val uiState by alarmContainerViewModel.alarmControllerUi.collectAsStateWithLifecycle()
-	val alarmList = uiState.alarmList
+	val items = uiState.items
 	var selectedAlarmId by remember { mutableStateOf<Int?>(null) }
-	ReportDrawnWhen { alarmList != null }
+	ReportDrawnWhen { items != null }
 	val colorScheme = colorScheme
 	val inAppReviewState = uiState.showReviewUi
 	val feedbackPrompt = uiState.feedbackPrompt
@@ -323,47 +327,59 @@ import java.util.Calendar
 				horizontalArrangement = Arrangement.spacedBy(8.dp),
 				verticalArrangement = Arrangement.spacedBy(4.dp)
 			) {
-				alarmList?.let { list ->
+				items?.let { list ->
 					items(
 						items = list,
-						key = { it.id }
-					) { individualAlarm ->
-						AlarmCard(
-							alarmData = individualAlarm,
-							todayStartMs = todayStartMs,
-							onEdit = { alarmData -> onNavigateToEdit(alarmData) },
-							onToggle = { alarmData, isChecked ->
-								if (isChecked){
-									alarmContainerViewModel.resetAlarm(alarmData)
-									alarmContainerViewModel.onPositiveUserAction()
-									if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-										view.performHapticFeedback(HapticFeedbackConstants.TOGGLE_OFF)
-									}
-								}
-								else {
-									alarmContainerViewModel.stopAlarm(alarmData)
-									if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-										view.performHapticFeedback(HapticFeedbackConstants.TOGGLE_OFF)
-									}
-								}
-							},
-							onDelete = { alarmData -> alarmContainerViewModel.deleteAlarm(alarmData) },
-							onLongPress = { alarmData ->
-								selectedAlarmId = if (selectedAlarmId == alarmData.id) null else alarmData.id
-							},
-							sharedTransitionScope = sharedTransitionScope,
-							animatedVisibilityScope = animatedVisibilityScope,
-							modifier = Modifier.animateItem(
-								fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-								fadeOutSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-								placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
-							)
+						key = { it.key },
+						span = { item ->
+							GridItemSpan(if (item is AlarmListItem.Ad) maxLineSpan else 1)
+						},
+						contentType = { it::class }
+					) { item ->
+						val itemModifier = Modifier.animateItem(
+							fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+							fadeOutSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+							placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
 						)
+						when (item) {
+							is AlarmListItem.Alarm -> {
+								AlarmCard(
+									alarmData = item.alarmData,
+									todayStartMs = todayStartMs,
+									onEdit = { alarmData -> onNavigateToEdit(alarmData) },
+									onToggle = { alarmData, isChecked ->
+										if (isChecked) {
+											alarmContainerViewModel.resetAlarm(alarmData)
+											alarmContainerViewModel.onPositiveUserAction()
+										} else {
+											alarmContainerViewModel.stopAlarm(alarmData)
+										}
+										if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+											view.performHapticFeedback(HapticFeedbackConstants.TOGGLE_OFF)
+										}
+									},
+									onDelete = { alarmData -> alarmContainerViewModel.deleteAlarm(alarmData) },
+									onLongPress = { alarmData ->
+										selectedAlarmId = if (selectedAlarmId == alarmData.id) null else alarmData.id
+									},
+									sharedTransitionScope = sharedTransitionScope,
+									animatedVisibilityScope = animatedVisibilityScope,
+									modifier = itemModifier
+								)
+							}
+							is AlarmListItem.Ad -> {
+								AlarmListBannerAdCard(
+									adUnitId = BuildConfig.ADMOB_BANNER_HOME_AD_UNIT_ID,
+									placement = AdManager.PLACEMENT_HOME_LIST,
+									modifier = itemModifier
+								)
+							}
+						}
 					}
 				}
 			}
 
-			if (alarmList?.isEmpty() == true) {
+			if (items?.isEmpty() == true) {
 				EmptyAlarmsView(
 					modifier = Modifier
 						.fillMaxSize()
@@ -378,7 +394,7 @@ import java.util.Calendar
 					.padding(bottom = edgeToEdgePadding.calculateBottomPadding() + 20.dp)
 			) {
 				AnimatedVisibility(
-					visible = alarmList != null,
+					visible = items != null,
 					enter = scaleIn(
 						initialScale = 0.8f,
 						animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()
@@ -493,7 +509,7 @@ fun EmptyAlarmsView(modifier: Modifier = Modifier) {
 			Spacer(modifier = Modifier.height(8.dp))
 
 			Text(
-				text = stringResource(R.string.empty_state_description),
+				text = stringResource(R.string.empty_state_description1),
 				style = MaterialTheme.typography.bodyLarge,
 				textAlign = TextAlign.Center,
 				color = colorScheme.onSurfaceVariant,
@@ -569,9 +585,3 @@ private fun AddAlarmButtonFontScalePreview() {
 	MaterialTheme { AddAlarmButton(onClick = {}) }
 }
 
-//@PreviewFontScale
-//@Composable
-//private fun EmptyAlarmsViewFontScalePreview() {
-//	MaterialTheme { EmptyAlarmsView(modifier = Modifier.fillMaxSize()) }
-//}
-//

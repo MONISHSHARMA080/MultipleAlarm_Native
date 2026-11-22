@@ -6,6 +6,7 @@ import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
+import com.coolApps.MultipleAlarmClock.data.ads.AdManager
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.preferences.Settings
 import com.coolApps.MultipleAlarmClock.data.preferences.copy
@@ -23,11 +24,13 @@ import com.google.android.play.core.review.model.ReviewErrorCode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -35,6 +38,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class AlarmContainerViewModel @Inject constructor(
 	val analytics: Analytics,
+	adManager: AdManager,
 	private val alarmRepository: AlarmRepository,
 	private val alarmManager: AlarmManager,
 	private val dataStore: DataStore<Settings>,
@@ -49,22 +53,43 @@ class AlarmContainerViewModel @Inject constructor(
 	private val _feedbackPrompt = MutableStateFlow(InAppFeedbackPromptUiState())
 
 	val alarmControllerUi: StateFlow<AlarmContainerUiState> = combine(
-		dataStore.data,
 		alarmRepository.getAlarmsStream(),
 		_showReviewUi,
 		_feedbackPrompt,
-	) { settings, alarmList, showReviewUi, feedbackPrompt ->
+		adManager.shouldShowAds,
+	) { alarmList, showReviewUi, feedbackPrompt, shouldShowAds ->
 		AlarmContainerUiState(
-			alarmList = alarmList,
+			items = buildAlarmItems(alarmList, shouldShowAds),
 			showReviewUi = showReviewUi,
 			reviewInelligiblityReason = null,
 			feedbackPrompt = feedbackPrompt,
 		)
-	}.stateIn(
-		scope = viewModelScope,
-		started = SharingStarted.WhileSubscribed(5_000),
-		initialValue = AlarmContainerUiState()
-	)
+	}
+		.flowOn(Dispatchers.Default)
+		.stateIn(
+			scope = viewModelScope,
+			started = SharingStarted.WhileSubscribed(5_000),
+			initialValue = AlarmContainerUiState()
+		)
+
+	private fun buildAlarmItems(
+		alarms: List<AlarmData>,
+		shouldShowAds: Boolean,
+	): List<AlarmListItem> {
+		if (!shouldShowAds || alarms.isEmpty()) return alarms.map(AlarmListItem::Alarm)
+		if (alarms.size == 1) return listOf(AlarmListItem.Alarm(alarms[0]), AlarmListItem.Ad(0))
+
+		val firstAdAfter = if (alarms.size <= 3) 0 else 1
+		return buildList(alarms.size + 2) {
+			alarms.forEachIndexed { index, alarm ->
+				add(AlarmListItem.Alarm(alarm))
+				val isAdSlot = index == firstAdAfter || (index > firstAdAfter && (index - firstAdAfter) % 4 == 0)
+				if (isAdSlot && index < alarms.lastIndex) {
+					add(AlarmListItem.Ad(index))
+				}
+			}
+		}
+	}
 
 
 	fun onPositiveUserAction() {

@@ -1,5 +1,6 @@
 package com.coolApps.MultipleAlarmClock.presentation.trigger
 
+import android.app.KeyguardManager
 import android.content.Intent
 import android.os.Bundle
 import android.os.PowerManager
@@ -68,9 +69,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.IntentCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import com.coolApps.MultipleAlarmClock.BuildConfig
 import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.data.ads.AdManager
 import com.coolApps.MultipleAlarmClock.presentation.ExpressiveAlarmTheme
+import com.coolApps.MultipleAlarmClock.presentation.ads.AdMobBanner
 import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.receiver.AlarmService
 import com.coolApps.MultipleAlarmClock.util.Analytics
@@ -93,10 +100,11 @@ class AlarmActivity : ComponentActivity() {
     private var wakeLock: PowerManager.WakeLock? = null
     private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var intentReceived: Intent
-    private val DEFAULT_RING_DURATION = 2.minutes
+    private val defaultAlarmDismissDuration = 2.minutes
     private var dismissIntent : Intent? = null
 	private var shouldDismissAlarm = false
 	@Inject lateinit var analytics: Analytics
+	@Inject lateinit var adManager: AdManager
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -106,29 +114,25 @@ class AlarmActivity : ComponentActivity() {
 		this.intentReceived = intent
         setContent {
             ExpressiveAlarmTheme {
-                var messageVarToSet by remember { mutableStateOf("") }
-                var intentData by remember { mutableStateOf<AlarmActivityIntentData?>(null)  }
-
-                LaunchedEffect(Unit) {
-                    intentData = this@AlarmActivity.parseTheIntent()
-                    val intentDataAccessed = intentData
-                    logD("the intent data we got from parsing is $intentData")
-                    if (intentDataAccessed !=  null ) {
-                        messageVarToSet = intentDataAccessed.message
-                    }
-                    logD("the message from intent we got is $messageVarToSet ")
-                }
+                val message = remember { parseTheIntent()?.message.orEmpty() }
                 LaunchedEffect(Unit) {
                     if (dismissIntent == null) dismissIntent = makeDismissIntent()
                 }
+                val shouldShowAds by adManager.shouldShowAds.collectAsStateWithLifecycle()
+                val keyguardManager = remember { getSystemService(KeyguardManager::class.java) }
+                var isDeviceLocked by remember { mutableStateOf(keyguardManager?.isKeyguardLocked == true) }
+                LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+                    isDeviceLocked = keyguardManager?.isKeyguardLocked == true
+                }
                 TimeDisplay(
                     onFinish = { stopAlarmAndFinish() },
-                    message = messageVarToSet
+                    message = message,
+                    shouldShowAds = shouldShowAds && !isDeviceLocked,
                 )
             }
         }
         lifecycleScope.launch {
-			delay(parseTheIntent()?.ringDurationInMin?.minutes ?: DEFAULT_RING_DURATION)
+			delay(parseTheIntent()?.ringDurationInMin?.minutes ?: defaultAlarmDismissDuration)
 			stopAlarmAndFinish()
 		}
         lifecycleScope.launch(Dispatchers.Main) {keepScreenON()  }
@@ -200,7 +204,12 @@ class AlarmActivity : ComponentActivity() {
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable fun TimeDisplay(onFinish: () -> Unit , message: String , modifier: Modifier = Modifier) {
+@Composable fun TimeDisplay(
+    onFinish: () -> Unit,
+    message: String,
+    modifier: Modifier = Modifier,
+    shouldShowAds: Boolean = false,
+) {
     var currentTime by remember { mutableStateOf(getCurrentTime()) }
     var amPm by remember { mutableStateOf(getAmPm()) }
 	val colorScheme = MaterialTheme.colorScheme
@@ -218,13 +227,8 @@ class AlarmActivity : ComponentActivity() {
         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "stopButtonCorner"
     )
-    val stopIconInnerCorner by animateDpAsState(
-        targetValue = if (isStopPressed) 12.dp else 24.dp,
-        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-        label = "stopIconInnerCorner"
-    )
 
-    LaunchedEffect(Unit) {
+	LaunchedEffect(Unit) {
         while (true) {
             currentTime = getCurrentTime()
             delay(1.seconds)
@@ -367,10 +371,19 @@ class AlarmActivity : ComponentActivity() {
                         )
                     }
 
+                    if (shouldShowAds) {
+                        Spacer(modifier = Modifier.height(if (messageIsEmpty) 24.dp else 16.dp))
+                        AdMobBanner(
+                            adUnitId = BuildConfig.ADMOB_BANNER_ALARM_AD_UNIT_ID,
+                            placement = AdManager.PLACEMENT_ALARM_RING,
+                            modifier = Modifier.padding(horizontal = 4.dp),
+                        )
+                    }
+
                     if (!messageIsEmpty) {
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(if (shouldShowAds) 12.dp else 20.dp))
                         // Expressive Tonal Message Card
-						Box(modifier = Modifier.fillMaxSize()) {
+						Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
 							Column(
 								modifier = Modifier
 									.fillMaxSize()

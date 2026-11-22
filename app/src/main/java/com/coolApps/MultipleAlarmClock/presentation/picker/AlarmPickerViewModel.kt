@@ -1,6 +1,7 @@
 package com.coolApps.MultipleAlarmClock.presentation.picker
 
 import android.Manifest
+import android.app.Activity
 import android.app.AlarmManager
 import android.content.Context
 import android.content.pm.PackageManager
@@ -9,6 +10,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
+import com.coolApps.MultipleAlarmClock.data.ads.AdManager
 import com.coolApps.MultipleAlarmClock.data.billing.EntitlementManager
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.local.AlarmDataValidationResult
@@ -45,6 +47,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		private val alarmManager: AlarmManager,
 		private val alarmsController: AlarmsController,
 		private val entitlementManager: EntitlementManager,
+		private val adManager: AdManager,
 		private val errorHandler: ErrorHandler,
 		private val alarmSoundRepository: AlarmSoundRepository,
 		@ApplicationContext val context: Context,
@@ -87,6 +90,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	private val nonCancellableScope = CoroutineScope(NonCancellable)
 
 	val isPremium: StateFlow<Boolean> = entitlementManager.isPremium
+	val shouldShowAds: StateFlow<Boolean> = adManager.shouldShowAds
 
 	private val playAlarm = PlayAlarm(context, analytics)
 
@@ -129,13 +133,21 @@ class AlarmPickerViewModel @AssistedInject constructor(
 
 		viewModelScope.launch {
 			setNewOrUpdateAlarm(alarmToUse, current.initialAlarm)
-			_uiState.update { it.copy(alarmOperationCompletedGoBack = true) }
+			_uiState.update { it.copy(completedAction = AlarmCompletionAction.Saved) }
 			captureUiStateAndSendAnalytics(_uiState.value)
 		}
 	}
 
+	fun preloadSetAlarmAd() {
+		adManager.preloadSetAlarmInterstitial()
+	}
+
+	fun showSetAlarmAd(activity: Activity?, onFinished: () -> Unit) {
+		adManager.showSetAlarmInterstitial(activity, onFinished)
+	}
+
 	fun consumeAlarmOperationCompleted() {
-		_uiState.update { it.copy(alarmOperationCompletedGoBack = false) }
+		_uiState.update { it.copy(completedAction = null) }
 	}
 
 	fun consumeSoundSelectionCompleted() {
@@ -324,7 +336,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 			alarmsController.deleteAlarmHandler(alarmData, context, alarmManager).fold(
 				onSuccess = {
 					analytics.captureEvent("alarm successfully deleted", mapOf("alarmId" to alarmData.id))
-					_uiState.update { it.copy(alarmOperationCompletedGoBack = true) }
+					_uiState.update { it.copy(completedAction = AlarmCompletionAction.Deleted) }
 					captureUiStateAndSendAnalytics(_uiState.value)
 				},
 				onError = { error ->

@@ -1,5 +1,6 @@
 package com.coolApps.MultipleAlarmClock.presentation.picker
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -44,6 +45,11 @@ fun EditAlarmFlowScreen(
 ) {
 	val viewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory ->
 		factory.create(alarmData)
+	}
+	val activity = LocalActivity.current
+	val shouldShowAds by viewModel.shouldShowAds.collectAsStateWithLifecycle()
+	LaunchedEffect(shouldShowAds) {
+		if (shouldShowAds) viewModel.preloadSetAlarmAd()
 	}
 	val flowBackStack = rememberNavBackStack(AlarmFlowRoute.AlarmPicker)
 	val currentScreen = flowBackStack.lastOrNull() as? Screen
@@ -105,7 +111,8 @@ fun EditAlarmFlowScreen(
 				EditAlarmScreen(
 					viewModel = viewModel,
 					alarmData = alarmData,
-					alarmSetProceed = { onCloseFlow() },
+					alarmSetProceed = { viewModel.showSetAlarmAd(activity, onCloseFlow) },
+					onAlarmDeleted = onCloseFlow,
 					settingAlarmCancelled = onCloseFlow,
 					onNavigateToSoundList = { flowBackStack.add(AlarmFlowRoute.AlarmSoundListScreen) },
 					onShowPaywall = onShowPaywall,
@@ -151,6 +158,11 @@ fun NewAlarmFlowScreen(
 ) {
 	val viewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory ->
 		factory.create(null)
+	}
+	val activity = LocalActivity.current
+	val shouldShowAds by viewModel.shouldShowAds.collectAsStateWithLifecycle()
+	LaunchedEffect(shouldShowAds) {
+		if (shouldShowAds) viewModel.preloadSetAlarmAd()
 	}
 	val flowBackStack = rememberNavBackStack(AlarmFlowRoute.AlarmPicker)
 	val currentScreen = flowBackStack.lastOrNull() as? Screen
@@ -212,8 +224,10 @@ fun NewAlarmFlowScreen(
 				NewAlarmScreen(
 					viewModel = viewModel,
 					alarmSetProceed = {
-						resultBus.sendResult(true)
-						onCloseFlow()
+						viewModel.showSetAlarmAd(activity) {
+							resultBus.sendResult(true)
+							onCloseFlow()
+						}
 					},
 					settingAlarmCancelled = onCloseFlow,
 					onNavigateToSoundList = { flowBackStack.add(AlarmFlowRoute.AlarmSoundListScreen) },

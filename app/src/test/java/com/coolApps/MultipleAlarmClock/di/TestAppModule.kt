@@ -69,9 +69,10 @@ object TestAppModule {
 	@Provides
 	@Singleton
 	fun provideAnalytics(
-			@ApplicationContext context: Context
+			@ApplicationContext context: Context,
+			settingsDataStore: DataStore<Settings>,
 	): Analytics =
-		Analytics(context)
+		Analytics(context, settingsDataStore)
 
 	@Provides
 	fun provideNotificationHandler(

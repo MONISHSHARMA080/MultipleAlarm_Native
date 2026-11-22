@@ -99,6 +99,7 @@ import java.util.Calendar
 @Composable
 fun EditAlarmScreen(
 		alarmSetProceed: () -> Unit,
+		onAlarmDeleted: () -> Unit,
 		settingAlarmCancelled: () -> Unit,
 		onNavigateToSoundList: () -> Unit,
 		onShowPaywall: (PaywallTriggerType) -> Unit,
@@ -117,10 +118,17 @@ fun EditAlarmScreen(
 		logD("ui state:$uiState")
 		logD("isPremium:$isPremium")
 	}
-	LaunchedEffect(uiState.alarmOperationCompletedGoBack) {
-		if (uiState.alarmOperationCompletedGoBack) {
-			viewModel.consumeAlarmOperationCompleted()
-			alarmSetProceed()
+	LaunchedEffect(uiState.completedAction) {
+		when (uiState.completedAction) {
+			AlarmCompletionAction.Saved -> {
+				viewModel.consumeAlarmOperationCompleted()
+				alarmSetProceed()
+			}
+			AlarmCompletionAction.Deleted -> {
+				viewModel.consumeAlarmOperationCompleted()
+				onAlarmDeleted()
+			}
+			null -> Unit
 		}
 	}
 	LaunchedEffect(uiState.paywallTriggerType) {
@@ -276,8 +284,8 @@ fun NewAlarmScreen(
 		logD("ui state:$uiState")
 		logD("isPremium:$isPremium")
 	}
-	LaunchedEffect(uiState.alarmOperationCompletedGoBack) {
-		if (uiState.alarmOperationCompletedGoBack) {
+	LaunchedEffect(uiState.completedAction) {
+		if (uiState.completedAction != null) {
 			viewModel.consumeAlarmOperationCompleted()
 			alarmSetProceed()
 		}

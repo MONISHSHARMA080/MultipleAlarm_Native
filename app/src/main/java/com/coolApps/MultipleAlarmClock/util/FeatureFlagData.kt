@@ -11,6 +11,7 @@ data class FeatureFlagsData(
 		val isSnoozePremium: Boolean = false,
 		val isSoundPickerPremium: Boolean = true,
 		val isCustomAlarmVolumePremium: Boolean = false,
+		val isAdsEnabled: Boolean = false,
 )
 
 data class FeedbackPromptConfig(

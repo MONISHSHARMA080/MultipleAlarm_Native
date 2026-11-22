@@ -71,8 +71,11 @@ object AppModule {
 
 	@Provides
 	@Singleton
-	fun provideAnalytics(@ApplicationContext context: Context): Analytics {
-		return Analytics(context)
+	fun provideAnalytics(
+		@ApplicationContext context: Context,
+		settingsDataStore: DataStore<Settings>,
+	): Analytics {
+		return Analytics(context, settingsDataStore)
 	}
 
 	@Provides
