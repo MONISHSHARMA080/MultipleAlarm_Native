@@ -5,7 +5,7 @@ plugins {
 	alias(libs.plugins.android.test) apply false
 	alias(libs.plugins.baselineprofile) apply false
 	id("com.google.dagger.hilt.android") version "2.60.1" apply false
-	id("com.google.devtools.ksp") version "2.3.9" apply false
-	id("androidx.room") version "2.8.4" apply false
+	id("com.google.devtools.ksp") version "2.3.12" apply false
+	id("androidx.room") version "2.8.5" apply false
 	id("com.google.gms.google-services") version "4.5.0" apply false
 }
