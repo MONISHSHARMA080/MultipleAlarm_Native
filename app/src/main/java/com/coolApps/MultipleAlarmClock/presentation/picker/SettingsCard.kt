@@ -365,21 +365,6 @@ fun AlarmVolumeRow(
 						color = colorScheme.onSurface,
 						style = typography.titleSmall
 					)
-//					AnimatedContent(isCustomVolume) {isCustomVolume ->
-//						Text(
-//							text = if (isCustomVolume) {
-//								stringResource(
-//									R.string.alarm_picker_alarm_volume_value,
-//									(displayedVolume * 100).roundToInt()
-//								)
-//							} else {
-//								stringResource(R.string.alarm_picker_alarm_volume_system)
-//							},
-//							color = colorScheme.onSurfaceVariant,
-//							style = typography.bodySmall,
-//							modifier = Modifier.padding(top = 1.dp)
-//						)
-//					}
 				}
 				IconButton(
 					onClick = {
