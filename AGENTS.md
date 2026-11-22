@@ -12,4 +12,5 @@
 
 - my app allows setting multiple/repeating alarms, it does that by, creating the first alarm and when it rings it checks if it need to set next alarm and the cycle continues, it can set an alarm from 5:00 -> 6:00 am every 1 min, also on every week days
 
-Because of this, keep commit messages conventional (`feat:`, `fix:`) — the next release version depends on them (the user does the actual commits).
+- do not write or run tests unless I tell you to
+

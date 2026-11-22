@@ -3,7 +3,9 @@ package com.coolApps.MultipleAlarmClock.util
 import android.content.Context
 import android.os.Build
 import androidx.core.content.edit
+import androidx.datastore.core.DataStore
 import com.coolApps.MultipleAlarmClock.BuildConfig
+import com.coolApps.MultipleAlarmClock.data.preferences.Settings
 import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.google.android.gms.appset.AppSet
 import com.google.android.gms.appset.AppSetIdInfo
@@ -19,7 +21,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.util.UUID
 
 object FeatureFlagKeys {
@@ -36,6 +40,8 @@ object FeatureFlagKeys {
 	const val SNOOZE_PREMIUM_ENABLED = "snooze_premium_enabled"
 	const val SOUND_PICKER_PREMIUM_ENABLED = "sound_picker_premium_enabled"
 	const val ALARM_VOLUME_PREMIUM_ENABLED = "alarm_volume_premium_enabled"
+	const val BANNER_ADS_ENABLED = "banner_ads_enabled"
+	const val INTERSTITIAL_ADS_ENABLED = "interstitial_ads_enabled"
 
 	const val PUSH_NOTIFICATION_ENABLED = "push_notification_enabled"
 	const val PUSH_NOTIFICATION_INACTIVE_DAYS = "push_notification_inactive_days"
@@ -47,6 +53,7 @@ object FeatureFlagKeys {
 
 class Analytics(
 		val context: Context,
+		private val settingsDataStore: DataStore<Settings>? = null,
 	){
 	private var isFeatureFlagsLoaded = false
 	companion object {
@@ -125,6 +132,8 @@ class Analytics(
 					cooldownDays = 0
 				),
 				isHardPaywallEnabled = false,
+				isBannerAdsEnabled = BuildConfig.DEBUG,
+				isInterstitialAdsEnabled = BuildConfig.DEBUG,
 			)
 		}
 	}
@@ -156,8 +165,10 @@ class Analytics(
 		val isSnoozePremium = PostHog.isFeatureEnabled(FeatureFlagKeys.SNOOZE_PREMIUM_ENABLED, defaultValue = false)
 		val isSoundPickerPremium = PostHog.isFeatureEnabled(FeatureFlagKeys.SOUND_PICKER_PREMIUM_ENABLED, defaultValue = false)
 		val isCustomAlarmVolumePremium = PostHog.isFeatureEnabled(FeatureFlagKeys.ALARM_VOLUME_PREMIUM_ENABLED, defaultValue = false)
+		val isBannerAdsEnabled = PostHog.isFeatureEnabled(FeatureFlagKeys.BANNER_ADS_ENABLED, defaultValue = false)
+		val isInterstitialAdsEnabled = PostHog.isFeatureEnabled(FeatureFlagKeys.INTERSTITIAL_ADS_ENABLED, defaultValue = false)
 
-		logD("loading feature flags from PostHog: reviewEnabled=$enabled, minAlarms=$minAlarms, reviewCooldownDays=$cooldownDays, minDaysSinceInstall=$minDaysSinceInstall, feedbackEnabled=$feedbackEnabled, feedbackStartDay=$feedbackStartDay, feedbackCooldownDays=$feedbackCooldownDays, hardPaywall=$isHardPaywall, weeklyRepeatPremium=$isWeeklyRepeatPremium, snoozePremium=$isSnoozePremium, soundPickerPremium=$isSoundPickerPremium, customAlarmVolumePremium=$isCustomAlarmVolumePremium")
+		logD("loading feature flags from PostHog: reviewEnabled=$enabled, minAlarms=$minAlarms, reviewCooldownDays=$cooldownDays, minDaysSinceInstall=$minDaysSinceInstall, feedbackEnabled=$feedbackEnabled, feedbackStartDay=$feedbackStartDay, feedbackCooldownDays=$feedbackCooldownDays, hardPaywall=$isHardPaywall, weeklyRepeatPremium=$isWeeklyRepeatPremium, snoozePremium=$isSnoozePremium, soundPickerPremium=$isSoundPickerPremium, customAlarmVolumePremium=$isCustomAlarmVolumePremium, bannerAdsEnabled=$isBannerAdsEnabled, interstitialAdsEnabled=$isInterstitialAdsEnabled")
 		if (minAlarms == null || cooldownDays == null || minDaysSinceInstall == null) {
 			this.captureEvent( "loading_featureFlags_failed",
 				mapOf(
@@ -181,7 +192,9 @@ class Analytics(
 					isWeeklyRepeatPremium = isWeeklyRepeatPremium,
 				isSnoozePremium = isSnoozePremium,
 				isSoundPickerPremium = isSoundPickerPremium,
-				isCustomAlarmVolumePremium = isCustomAlarmVolumePremium
+				isCustomAlarmVolumePremium = isCustomAlarmVolumePremium,
+				isBannerAdsEnabled = isBannerAdsEnabled,
+				isInterstitialAdsEnabled = isInterstitialAdsEnabled,
 		)
 	}
 
@@ -294,28 +307,42 @@ class Analytics(
 					 prefs.edit { putString("anonymous_user_id", newId) }
 				 }
 
-			 PostHog.identify(
-				 distinctId = id,
-				 userProperties = if (info != null) mapOf(
-					 "app_set_id_scope" to if (info.scope == AppSetIdInfo.SCOPE_APP) "app" else "developer",
-					 "id_source" to "app_set_id"
-				 ) else mapOf("id_source" to "uuid_fallback")
-			 )
-			 // ---- RevenueCat link ----
-			 if (Purchases.isConfigured) {
-				 val purchases = Purchases.sharedInstance
-
-				 purchases.setPostHogUserId(id)
-
-				 // Past RC events were sent under RC's own ID, so merge that person into this one (once)
-				 val rcId = purchases.appUserID
-				 val aliasKey = "rc_aliased_$rcId"
-				 if (!prefs.getBoolean(aliasKey, false)) {
-					 PostHog.alias(rcId)
-					 prefs.edit { putBoolean(aliasKey, true) }
+			 coroutineScope.launch {
+				 val installEpochMs = runCatching {
+					 settingsDataStore?.data?.first()?.installEpochTimeMs ?: 0L
+				 }.getOrDefault(0L)
+				 val installedAtIso = if (installEpochMs > 0L) {
+					 Instant.ofEpochMilli(installEpochMs).toString()
+				 } else {
+					 Instant.now().toString()
 				 }
-			 } else {
-				 logD("RevenueCat not configured, skipping link")
+
+				 PostHog.identify(
+					 distinctId = id,
+					 userProperties = if (info != null) mapOf(
+						 "app_set_id_scope" to if (info.scope == AppSetIdInfo.SCOPE_APP) "app" else "developer",
+						 "id_source" to "app_set_id"
+					 ) else mapOf("id_source" to "uuid_fallback"),
+					 userPropertiesSetOnce = mapOf(
+						 "installed_at" to installedAtIso
+					 )
+				 )
+				 // ---- RevenueCat link ----
+				 if (Purchases.isConfigured) {
+					 val purchases = Purchases.sharedInstance
+
+					 purchases.setPostHogUserId(id)
+
+					 // Past RC events were sent under RC's own ID, so merge that person into this one (once)
+					 val rcId = purchases.appUserID
+					 val aliasKey = "rc_aliased_$rcId"
+					 if (!prefs.getBoolean(aliasKey, false)) {
+						 PostHog.alias(rcId)
+						 prefs.edit { putBoolean(aliasKey, true) }
+					 }
+				 } else {
+					 logD("RevenueCat not configured, skipping link")
+				 }
 			 }
 		 }
 	}

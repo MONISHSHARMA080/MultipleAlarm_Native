@@ -1,10 +1,12 @@
 package com.coolApps.MultipleAlarmClock.presentation.picker
 
 import android.app.AlarmManager
+import android.app.Application
 import android.content.Context
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
+import com.coolApps.MultipleAlarmClock.data.ads.AdManager
 import com.coolApps.MultipleAlarmClock.data.billing.EntitlementManager
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.data.repository.AlarmSoundRepository
@@ -27,8 +29,10 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
+@Config(application = Application::class)
 class AlarmPickerViewModelFlagsTest {
 
 	@Before
@@ -70,6 +74,9 @@ class AlarmPickerViewModelFlagsTest {
 		val entitlementManager: EntitlementManager = mockk {
 			every { isPremium } returns premium
 		}
+		val adManager: AdManager = mockk(relaxed = true) {
+			every { shouldShowInterstitialAds } returns MutableStateFlow(false)
+		}
 		val alarmSoundRepository: AlarmSoundRepository = mockk {
 			every { getAlarmSoundsStream() } returns flowOf(emptyList())
 		}
@@ -78,6 +85,7 @@ class AlarmPickerViewModelFlagsTest {
 			alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager,
 			alarmsController = alarmsController,
 			entitlementManager = entitlementManager,
+			adManager = adManager,
 			errorHandler = mockk(),
 			alarmSoundRepository = alarmSoundRepository,
 			context = context,

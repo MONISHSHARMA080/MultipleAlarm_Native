@@ -4,12 +4,23 @@ import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.domain.usecase.InAppReviewEligibilityChecker
 import com.google.android.play.core.appupdate.AppUpdateInfo
 
+sealed interface AlarmListItem {
+	val key: String
+
+	data class Alarm(val alarmData: AlarmData) : AlarmListItem {
+		override val key: String get() = "alarm_${alarmData.id}"
+	}
+
+	data class Ad(val slotIndex: Int) : AlarmListItem {
+		override val key: String get() = "ad_$slotIndex"
+	}
+}
 
 data class AlarmContainerUiState(
-		val alarmList: List<AlarmData>? = null,
+	val items: List<AlarmListItem>? = null,
 	val showReviewUi: Boolean = false,
 	val feedbackPrompt: InAppFeedbackPromptUiState = InAppFeedbackPromptUiState(),
-	val reviewInelligiblityReason: InAppReviewEligibilityChecker.Reason? = null
+	val reviewInelligiblityReason: InAppReviewEligibilityChecker.Reason? = null,
 )
 
 data class InAppFeedbackPromptUiState(

@@ -1,5 +1,6 @@
 package com.coolApps.MultipleAlarmClock.presentation.picker
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -37,6 +38,11 @@ fun EditAlarmFlowScreen(
 	val viewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory ->
 		factory.create(alarmData)
 	}
+	val activity = LocalActivity.current
+	val shouldShowInterstitialAds by viewModel.shouldShowInterstitialAds.collectAsStateWithLifecycle()
+	LaunchedEffect(shouldShowInterstitialAds) {
+		if (shouldShowInterstitialAds) viewModel.preloadSetAlarmAd()
+	}
 	val flowBackStack = rememberNavBackStack(AlarmFlowRoute.AlarmPicker)
 	val currentScreen = flowBackStack.lastOrNull() as? AlarmFlowRoute
 	LaunchedEffect(currentScreen) {
@@ -60,7 +66,12 @@ fun EditAlarmFlowScreen(
 				EditAlarmScreen(
 					viewModel = viewModel,
 					alarmData = alarmData,
-					alarmSetProceed = { onCloseFlow() },
+					alarmSetProceed = {
+						// Pop before showing the ad: onCloseFlow uses dropUnlessResumed and would drop pops fired while AdActivity is dismissing.
+						onCloseFlow()
+						viewModel.showSetAlarmAd(activity) {}
+					},
+					onAlarmDeleted = onCloseFlow,
 					settingAlarmCancelled = onCloseFlow,
 					onNavigateToSoundList = { flowBackStack.add(AlarmFlowRoute.AlarmSoundListScreen) },
 					onNavigateToMissionList = { flowBackStack.add(AlarmFlowRoute.AlarmMissionListScreen) },
@@ -115,6 +126,11 @@ fun NewAlarmFlowScreen(
 	val viewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory ->
 		factory.create(null)
 	}
+	val activity = LocalActivity.current
+	val shouldShowInterstitialAds by viewModel.shouldShowInterstitialAds.collectAsStateWithLifecycle()
+	LaunchedEffect(shouldShowInterstitialAds) {
+		if (shouldShowInterstitialAds) viewModel.preloadSetAlarmAd()
+	}
 	val flowBackStack = rememberNavBackStack(AlarmFlowRoute.AlarmPicker)
 	val currentScreen = flowBackStack.lastOrNull() as? AlarmFlowRoute
 	LaunchedEffect(currentScreen) {
@@ -139,8 +155,11 @@ fun NewAlarmFlowScreen(
 				NewAlarmScreen(
 					viewModel = viewModel,
 					alarmSetProceed = {
-						resultBus.sendResult(true)
+						// Pop before showing the ad (dropUnlessResumed can drop pops on ad dismiss); emit result after so prompts don't race with the ad.
 						onCloseFlow()
+						viewModel.showSetAlarmAd(activity) {
+							resultBus.sendResult(true)
+						}
 					},
 					settingAlarmCancelled = onCloseFlow,
 					onNavigateToSoundList = { flowBackStack.add(AlarmFlowRoute.AlarmSoundListScreen) },

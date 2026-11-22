@@ -32,31 +32,42 @@ fun Project.configureAndroid() {
     val skipPostHog = project.findProperty("skipPostHog")?.toString() == "true"
     val resolvedPostHogKey = if (skipPostHog) "" else postHogApiKey
 
+    fun envOrProp(name: String, fallback: String): String =
+        System.getenv(name)?.takeIf { it.isNotBlank() }
+            ?: project.findProperty(name)?.toString()?.takeIf { it.isNotBlank() }
+            ?: fallback
+
+    val testAdmobAppId = "ca-app-pub-3940256099942544~3347511713"
+    val testAdmobBannerId = "ca-app-pub-3940256099942544/6300978111"
+    val testAdmobInterstitialId = "ca-app-pub-3940256099942544/1033173712"
+
+    val admobAppId = envOrProp("ADMOB_APP_ID", testAdmobAppId)
+    val admobBannerHomeId = envOrProp("ADMOB_BANNER_HOME_AD_UNIT_ID", testAdmobBannerId)
+    val admobBannerAlarmId = envOrProp("ADMOB_BANNER_ALARM_AD_UNIT_ID", testAdmobBannerId)
+    val admobInterstitialSetAlarmId = envOrProp("ADMOB_INTERSTITIAL_SET_ALARM_AD_UNIT_ID", testAdmobInterstitialId)
+
     androidComponents {
         onVariants { variant ->
-            variant.buildConfigFields?.put(
-                "REVENUECAT_API_KEY",
-                com.android.build.api.variant.BuildConfigField("String", "\"$revenueCatApiKey\"", "")
-            )
-            if (variant.name == "release") {
+            val isRelease = variant.name == "release"
+            fun putStringField(name: String, value: String) {
                 variant.buildConfigFields?.put(
-                    "SKIP_POSTHOG",
-                    com.android.build.api.variant.BuildConfigField("boolean", skipPostHog.toString(), "")
-                )
-                variant.buildConfigFields?.put(
-                    "POSTHOG_API_KEY",
-                    com.android.build.api.variant.BuildConfigField("String", "\"$resolvedPostHogKey\"", "")
-                )
-            } else {
-                variant.buildConfigFields?.put(
-                    "SKIP_POSTHOG",
-                    com.android.build.api.variant.BuildConfigField("boolean", "true", "")
-                )
-                variant.buildConfigFields?.put(
-                    "POSTHOG_API_KEY",
-                    com.android.build.api.variant.BuildConfigField("String", "\"\"", "")
+                    name,
+                    com.android.build.api.variant.BuildConfigField("String", "\"$value\"", "")
                 )
             }
+
+            val resolvedAppId = if (isRelease) admobAppId else testAdmobAppId
+            variant.manifestPlaceholders.put("admobAppId", resolvedAppId)
+            putStringField("ADMOB_APP_ID", resolvedAppId)
+            putStringField("ADMOB_BANNER_HOME_AD_UNIT_ID", if (isRelease) admobBannerHomeId else testAdmobBannerId)
+            putStringField("ADMOB_BANNER_ALARM_AD_UNIT_ID", if (isRelease) admobBannerAlarmId else testAdmobBannerId)
+            putStringField("ADMOB_INTERSTITIAL_SET_ALARM_AD_UNIT_ID", if (isRelease) admobInterstitialSetAlarmId else testAdmobInterstitialId)
+            putStringField("REVENUECAT_API_KEY", revenueCatApiKey)
+            variant.buildConfigFields?.put(
+                "SKIP_POSTHOG",
+                com.android.build.api.variant.BuildConfigField("boolean", if (isRelease) skipPostHog.toString() else "true", "")
+            )
+            putStringField("POSTHOG_API_KEY", if (isRelease) resolvedPostHogKey else "")
         }
     }
 
@@ -76,6 +87,7 @@ fun Project.configureAndroid() {
             versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 1
             versionName = project.findProperty("versionName") as String? ?: "1.0.0"
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+            manifestPlaceholders["admobAppId"] = testAdmobAppId
             vectorDrawables {
                 useSupportLibrary = true
             }
@@ -192,6 +204,8 @@ protobuf {
 dependencies {
 	configurations.configureEach {
 		exclude(group = "com.google.protobuf", module = "protobuf-lite")
+		exclude(group = "com.google.android.gms", module = "play-services-ads")
+		exclude(group = "com.google.android.gms", module = "play-services-ads-lite")
 	}
 	implementation(platform(libs.firebase.bom))
 	implementation(libs.androidx.compose.animation)
@@ -202,6 +216,8 @@ dependencies {
     implementation(libs.hilt.android)
 	implementation(libs.purchases)
 	implementation(libs.purchases.ui)
+	implementation(libs.purchases.admob.next.gen)
+	implementation(libs.ads.mobile.sdk)
 	implementation(libs.androidx.compose.animation.core)
 	implementation(libs.androidx.compose.ui)
 	implementation(libs.androidx.datastore.core)
@@ -210,7 +226,7 @@ dependencies {
 	implementation(libs.ui)
 	ksp(libs.androidx.hilt.compiler)
 	implementation(libs.androidx.hilt.navigation.compose)
-	ksp(libs.hilt.android.compiler)     // main source set (KSP only, no kapt)
+	ksp(libs.hilt.android.compiler)
 
 	implementation(libs.review)
 	implementation(libs.review.ktx)
