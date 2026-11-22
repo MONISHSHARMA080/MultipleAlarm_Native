@@ -268,7 +268,7 @@ fun SettingsCard(
 				MinuteStepperRow(
 					icon = Icons.Rounded.Schedule,
 					title = stringResource(
-						R.string.alarm_picker_ring_for
+						R.string.alarm_picker_auto_stop_after
 					),
 					value = uiState.alarmData.ringDurationInMin,
 					onValueChange = { newValue ->

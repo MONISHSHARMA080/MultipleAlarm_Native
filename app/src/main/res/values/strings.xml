@@ -42,7 +42,7 @@
     <string name="alarm_picker_btn_change">Change something</string>
     <string name="alarm_picker_btn_fix">Fix the error</string>
     <string name="alarm_picker_repeat_every">Ring every</string>
-    <string name="alarm_picker_ring_for">Auto dismiss after</string>
+    <string name="alarm_picker_auto_stop_after">Auto dismiss after</string>
     <string name="alarm_picker_repeat_days">Repeat</string>
     <string name="alarm_picker_sound">Sound</string>
     <string name="alarm_picker_sound_random">Random</string>
