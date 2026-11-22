@@ -90,7 +90,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	private val nonCancellableScope = CoroutineScope(NonCancellable)
 
 	val isPremium: StateFlow<Boolean> = entitlementManager.isPremium
-	val shouldShowAds: StateFlow<Boolean> = adManager.shouldShowAds
+	val shouldShowInterstitialAds: StateFlow<Boolean> = adManager.shouldShowInterstitialAds
 
 	private val playAlarm = PlayAlarm(context, analytics)
 

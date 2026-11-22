@@ -40,7 +40,8 @@ object FeatureFlagKeys {
 	const val SNOOZE_PREMIUM_ENABLED = "snooze_premium_enabled"
 	const val SOUND_PICKER_PREMIUM_ENABLED = "sound_picker_premium_enabled"
 	const val ALARM_VOLUME_PREMIUM_ENABLED = "alarm_volume_premium_enabled"
-	const val ADS_ENABLED = "ads_enabled"
+	const val BANNER_ADS_ENABLED = "banner_ads_enabled"
+	const val INTERSTITIAL_ADS_ENABLED = "interstitial_ads_enabled"
 
 	const val PUSH_NOTIFICATION_ENABLED = "push_notification_enabled"
 	const val PUSH_NOTIFICATION_INACTIVE_DAYS = "push_notification_inactive_days"
@@ -131,7 +132,8 @@ class Analytics(
 					cooldownDays = 0
 				),
 				isHardPaywallEnabled = false,
-				isAdsEnabled = BuildConfig.DEBUG,
+				isBannerAdsEnabled = BuildConfig.DEBUG,
+				isInterstitialAdsEnabled = BuildConfig.DEBUG,
 			)
 		}
 	}
@@ -163,9 +165,10 @@ class Analytics(
 		val isSnoozePremium = PostHog.isFeatureEnabled(FeatureFlagKeys.SNOOZE_PREMIUM_ENABLED, defaultValue = false)
 		val isSoundPickerPremium = PostHog.isFeatureEnabled(FeatureFlagKeys.SOUND_PICKER_PREMIUM_ENABLED, defaultValue = false)
 		val isCustomAlarmVolumePremium = PostHog.isFeatureEnabled(FeatureFlagKeys.ALARM_VOLUME_PREMIUM_ENABLED, defaultValue = false)
-		val isAdsEnabled = PostHog.isFeatureEnabled(FeatureFlagKeys.ADS_ENABLED, defaultValue = false)
+		val isBannerAdsEnabled = PostHog.isFeatureEnabled(FeatureFlagKeys.BANNER_ADS_ENABLED, defaultValue = false)
+		val isInterstitialAdsEnabled = PostHog.isFeatureEnabled(FeatureFlagKeys.INTERSTITIAL_ADS_ENABLED, defaultValue = false)
 
-		logD("loading feature flags from PostHog: reviewEnabled=$enabled, minAlarms=$minAlarms, reviewCooldownDays=$cooldownDays, minDaysSinceInstall=$minDaysSinceInstall, feedbackEnabled=$feedbackEnabled, feedbackStartDay=$feedbackStartDay, feedbackCooldownDays=$feedbackCooldownDays, hardPaywall=$isHardPaywall, weeklyRepeatPremium=$isWeeklyRepeatPremium, snoozePremium=$isSnoozePremium, soundPickerPremium=$isSoundPickerPremium, customAlarmVolumePremium=$isCustomAlarmVolumePremium, adsEnabled=$isAdsEnabled")
+		logD("loading feature flags from PostHog: reviewEnabled=$enabled, minAlarms=$minAlarms, reviewCooldownDays=$cooldownDays, minDaysSinceInstall=$minDaysSinceInstall, feedbackEnabled=$feedbackEnabled, feedbackStartDay=$feedbackStartDay, feedbackCooldownDays=$feedbackCooldownDays, hardPaywall=$isHardPaywall, weeklyRepeatPremium=$isWeeklyRepeatPremium, snoozePremium=$isSnoozePremium, soundPickerPremium=$isSoundPickerPremium, customAlarmVolumePremium=$isCustomAlarmVolumePremium, bannerAdsEnabled=$isBannerAdsEnabled, interstitialAdsEnabled=$isInterstitialAdsEnabled")
 		if (minAlarms == null || cooldownDays == null || minDaysSinceInstall == null) {
 			this.captureEvent( "loading_featureFlags_failed",
 				mapOf(
@@ -190,7 +193,8 @@ class Analytics(
 				isSnoozePremium = isSnoozePremium,
 				isSoundPickerPremium = isSoundPickerPremium,
 				isCustomAlarmVolumePremium = isCustomAlarmVolumePremium,
-				isAdsEnabled = isAdsEnabled,
+				isBannerAdsEnabled = isBannerAdsEnabled,
+				isInterstitialAdsEnabled = isInterstitialAdsEnabled,
 		)
 	}
 

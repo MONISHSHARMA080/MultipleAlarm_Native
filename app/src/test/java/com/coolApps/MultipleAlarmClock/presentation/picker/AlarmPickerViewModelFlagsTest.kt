@@ -75,7 +75,7 @@ class AlarmPickerViewModelFlagsTest {
 			every { isPremium } returns premium
 		}
 		val adManager: AdManager = mockk(relaxed = true) {
-			every { shouldShowAds } returns MutableStateFlow(false)
+			every { shouldShowInterstitialAds } returns MutableStateFlow(false)
 		}
 		val alarmSoundRepository: AlarmSoundRepository = mockk {
 			every { getAlarmSoundsStream() } returns flowOf(emptyList())

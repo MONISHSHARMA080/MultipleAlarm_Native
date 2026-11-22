@@ -118,7 +118,7 @@ class AlarmActivity : ComponentActivity() {
                 LaunchedEffect(Unit) {
                     if (dismissIntent == null) dismissIntent = makeDismissIntent()
                 }
-                val shouldShowAds by adManager.shouldShowAds.collectAsStateWithLifecycle()
+                val shouldShowBannerAds by adManager.shouldShowBannerAds.collectAsStateWithLifecycle()
                 val keyguardManager = remember { getSystemService(KeyguardManager::class.java) }
                 var isDeviceLocked by remember { mutableStateOf(keyguardManager?.isKeyguardLocked == true) }
                 LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
@@ -127,7 +127,7 @@ class AlarmActivity : ComponentActivity() {
                 TimeDisplay(
                     onFinish = { stopAlarmAndFinish() },
                     message = message,
-                    shouldShowAds = shouldShowAds && !isDeviceLocked,
+                    shouldShowAds = shouldShowBannerAds && !isDeviceLocked,
                 )
             }
         }

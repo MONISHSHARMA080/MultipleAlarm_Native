@@ -41,11 +41,18 @@ class AdManager @Inject constructor(
 
 	private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
-	val shouldShowAds: StateFlow<Boolean> = combine(
+	val shouldShowBannerAds: StateFlow<Boolean> = combine(
 		entitlementManager.isPremium,
 		analytics.featureFlagsData,
 	) { isPremium, flags ->
-		!isPremium && (flags?.isAdsEnabled == true)
+		!isPremium && flags?.isBannerAdsEnabled == true
+	}.stateIn(scope, SharingStarted.Eagerly, false)
+
+	val shouldShowInterstitialAds: StateFlow<Boolean> = combine(
+		entitlementManager.isPremium,
+		analytics.featureFlagsData,
+	) { isPremium, flags ->
+		!isPremium && flags?.isInterstitialAdsEnabled == true
 	}.stateIn(scope, SharingStarted.Eagerly, false)
 
 	private var setAlarmInterstitial: InterstitialAd? = null
@@ -53,20 +60,20 @@ class AdManager @Inject constructor(
 	private var isLoadingInterstitial = false
 
 	init {
-		shouldShowAds
+		shouldShowInterstitialAds
 			.onEach { if (!it) clearCachedInterstitial() }
 			.launchIn(scope)
 	}
 
 	fun preloadSetAlarmInterstitial() {
-		if (!shouldShowAds.value || isLoadingInterstitial || hasFreshInterstitial() || !Purchases.isConfigured) return
+		if (!shouldShowInterstitialAds.value || isLoadingInterstitial || hasFreshInterstitial() || !Purchases.isConfigured) return
 		clearCachedInterstitial()
 		isLoadingInterstitial = true
 
 		scope.launch {
 			val request = AdRequest.Builder(BuildConfig.ADMOB_INTERSTITIAL_SET_ALARM_AD_UNIT_ID).build()
 			when (val result = Purchases.sharedInstance.adTracker.loadAndTrackInterstitialAd(request, PLACEMENT_SET_ALARM)) {
-				is AdLoadResult.Success -> if (shouldShowAds.value) {
+				is AdLoadResult.Success -> if (shouldShowInterstitialAds.value) {
 					setAlarmInterstitial = result.ad
 					interstitialLoadedAtMs = System.currentTimeMillis()
 				}
@@ -77,8 +84,8 @@ class AdManager @Inject constructor(
 	}
 
 	fun showSetAlarmInterstitial(activity: Activity?, onFinished: () -> Unit) {
-		if (!shouldShowAds.value || activity == null || activity.isFinishing || activity.isDestroyed) {
-			if (!shouldShowAds.value) clearCachedInterstitial()
+		if (!shouldShowInterstitialAds.value || activity == null || activity.isFinishing || activity.isDestroyed) {
+			if (!shouldShowInterstitialAds.value) clearCachedInterstitial()
 			onFinished()
 			return
 		}

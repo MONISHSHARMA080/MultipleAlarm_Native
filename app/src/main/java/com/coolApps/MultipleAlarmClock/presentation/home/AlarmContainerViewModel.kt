@@ -56,7 +56,7 @@ class AlarmContainerViewModel @Inject constructor(
 		alarmRepository.getAlarmsStream(),
 		_showReviewUi,
 		_feedbackPrompt,
-		adManager.shouldShowAds,
+		adManager.shouldShowBannerAds,
 	) { alarmList, showReviewUi, feedbackPrompt, shouldShowAds ->
 		AlarmContainerUiState(
 			items = buildAlarmItems(alarmList, shouldShowAds),
