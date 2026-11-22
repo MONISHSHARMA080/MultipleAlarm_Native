@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -48,7 +47,6 @@ import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -79,10 +77,10 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.local.AlarmDataValidationResult
+import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.AlarmContainerBoundsTransform
 import com.coolApps.MultipleAlarmClock.presentation.AlarmTimeBoundsTransform
 import com.coolApps.MultipleAlarmClock.presentation.logD
-import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.AlarmPermissionDialog
 import java.util.Calendar
 
@@ -554,38 +552,14 @@ private fun ExpressiveAlarmTopBar(
 			}
 		},
 		navigationIcon = {
-			Surface(
-				onClick = onBackClick,
-				interactionSource = interactionSource,
-				shape = RoundedCornerShape(cornerRadius),
-				color = colorScheme.surfaceContainerHigh,
-				contentColor = colorScheme.onSurface,
-				modifier = Modifier
-					.padding(start = 4.dp)
-					.size(44.dp)
-					.graphicsLayer {
-						scaleX = scale
-						scaleY = scale
-					}
-			) {
-				Box(contentAlignment = Alignment.Center) {
 					Icon(
 						imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
 						contentDescription = stringResource(R.string.alarm_picker_back_desc)
 					)
-				}
-			}
 		}
 	)
 }
 
-// ─── Private body composable ──────────────────────────────────────────────────
-
-/**
- * The TimeRow + SettingsCard + spacers layout, shared between both screens.
- * sharedTransitionScope / animatedVisibilityScope are forwarded to TimeRow
- * only when this is called from EditAlarmScreen (non-null).
- */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 private fun AlarmEditorBody(
