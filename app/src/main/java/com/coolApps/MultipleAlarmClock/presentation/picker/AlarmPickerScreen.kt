@@ -42,6 +42,7 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
@@ -519,24 +520,13 @@ fun NewAlarmScreen(
 	}
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ExpressiveAlarmTopBar(
 	onBackClick: () -> Unit,
 	title: String = ""
 ) {
-//	val interactionSource = remember { MutableInteractionSource() }
-//	val isPressed by interactionSource.collectIsPressedAsState()
-//	val cornerRadius by animateDpAsState(
-//		targetValue = if (isPressed) 22.dp else 14.dp,
-//		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-//		label = "top_bar_back_corner"
-//	)
-//	val scale by animateFloatAsState(
-//		targetValue = if (isPressed) 0.92f else 1f,
-//		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-//		label = "top_bar_back_scale"
-//	)
+	val view = LocalView.current
 
 	CenterAlignedTopAppBar(
 		modifier = Modifier
@@ -556,10 +546,17 @@ private fun ExpressiveAlarmTopBar(
 			}
 		},
 		navigationIcon = {
-					Icon(
-						imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-						contentDescription = stringResource(R.string.alarm_picker_back_desc)
-					)
+			IconButton(
+				onClick = {
+					view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+					onBackClick()
+				}
+			) {
+				Icon(
+					imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+					contentDescription = stringResource(R.string.alarm_picker_back_desc)
+				)
+			}
 		}
 	)
 }

@@ -3,16 +3,7 @@ package com.coolApps.MultipleAlarmClock.presentation.picker
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -24,8 +15,9 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.result.LocalResultEventBus
 import androidx.navigation3.ui.NavDisplay
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
-import com.coolApps.MultipleAlarmClock.presentation.navigation.AlarmFlowRoute
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
+import com.coolApps.MultipleAlarmClock.presentation.navigation.AlarmFlowRoute
+import com.coolApps.MultipleAlarmClock.presentation.navigation.NavTransitions
 import com.coolApps.MultipleAlarmClock.presentation.picker.listAlarmRingtone.ListAlarmSoundScreen
 import com.coolApps.MultipleAlarmClock.presentation.picker.missions.AlarmMissionListScreen
 
@@ -51,12 +43,6 @@ fun EditAlarmFlowScreen(
 		currentScreen?.let { viewModel.screen(it.screenName) }
 	}
 
-	val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
-	val fastSpatialSpec = MaterialTheme.motionScheme.fastSpatialSpec<IntOffset>()
-	val effectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
-	val fastEffectsSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
-
-	// Inner NavDisplay — the sound-list sub-screen nav; uses expressive motion scheme.
 	NavDisplay(
 		backStack = flowBackStack,
 		onBack = {
@@ -66,40 +52,9 @@ fun EditAlarmFlowScreen(
 				flowBackStack.removeLastOrNull()
 			}
 		},
-		transitionSpec = {
-			if (initialState == targetState) {
-				EnterTransition.None togetherWith ExitTransition.None
-			} else {
-				slideInHorizontally(
-					animationSpec = spatialSpec,
-					initialOffsetX = { it }
-				) + fadeIn(effectsSpec) togetherWith
-						slideOutHorizontally(
-							animationSpec = spatialSpec,
-							targetOffsetX = { -it }
-						) + fadeOut(effectsSpec)
-			}
-		},
-		popTransitionSpec = {
-			slideInHorizontally(
-				animationSpec = fastSpatialSpec,
-				initialOffsetX = { -it }
-			) + fadeIn(fastEffectsSpec) togetherWith
-					slideOutHorizontally(
-						animationSpec = fastSpatialSpec,
-						targetOffsetX = { it }
-					) + fadeOut(fastEffectsSpec)
-		},
-		predictivePopTransitionSpec = {
-			slideInHorizontally(
-				animationSpec = fastSpatialSpec,
-				initialOffsetX = { (-it * 0.3f).toInt() }
-			) + fadeIn(fastEffectsSpec) togetherWith
-					slideOutHorizontally(
-						animationSpec = fastSpatialSpec,
-						targetOffsetX = { it }
-					) + fadeOut(fastEffectsSpec)
-		},
+		transitionSpec = { NavTransitions.forward() },
+		popTransitionSpec = { NavTransitions.pop() },
+		predictivePopTransitionSpec = { NavTransitions.pop() },
 		entryProvider = entryProvider {
 			entry<AlarmFlowRoute.AlarmPicker> {
 				EditAlarmScreen(
@@ -166,11 +121,6 @@ fun NewAlarmFlowScreen(
 		currentScreen?.let { viewModel.screen(it.screenName) }
 	}
 
-	val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
-	val fastSpatialSpec = MaterialTheme.motionScheme.fastSpatialSpec<IntOffset>()
-	val effectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
-	val fastEffectsSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
-
 	NavDisplay(
 		backStack = flowBackStack,
 		onBack = {
@@ -180,40 +130,9 @@ fun NewAlarmFlowScreen(
 				flowBackStack.removeLastOrNull()
 			}
 		},
-		transitionSpec = {
-			if (initialState == targetState) {
-				EnterTransition.None togetherWith ExitTransition.None
-			} else {
-				slideInHorizontally(
-					animationSpec = spatialSpec,
-					initialOffsetX = { it }
-				) + fadeIn(effectsSpec) togetherWith
-						slideOutHorizontally(
-							animationSpec = spatialSpec,
-							targetOffsetX = { -it }
-						) + fadeOut(effectsSpec)
-			}
-		},
-		popTransitionSpec = {
-			slideInHorizontally(
-				animationSpec = fastSpatialSpec,
-				initialOffsetX = { -it }
-			) + fadeIn(fastEffectsSpec) togetherWith
-					slideOutHorizontally(
-						animationSpec = fastSpatialSpec,
-						targetOffsetX = { it }
-					) + fadeOut(fastEffectsSpec)
-		},
-		predictivePopTransitionSpec = {
-			slideInHorizontally(
-				animationSpec = fastSpatialSpec,
-				initialOffsetX = { (-it * 0.3f).toInt() }
-			) + fadeIn(fastEffectsSpec) togetherWith
-					slideOutHorizontally(
-						animationSpec = fastSpatialSpec,
-						targetOffsetX = { it }
-					) + fadeOut(fastEffectsSpec)
-		},
+		transitionSpec = { NavTransitions.forward() },
+		popTransitionSpec = { NavTransitions.pop() },
+		predictivePopTransitionSpec = { NavTransitions.pop() },
 		entryProvider = entryProvider {
 			entry<AlarmFlowRoute.AlarmPicker> {
 				val resultBus = LocalResultEventBus.current
