@@ -8,4 +8,4 @@
 
 ### ⚠️ Device Specific Setup
 
-To ensure alarms trigger reliably on **Xiaomi/HyperOS** devices, please enable the **Autostart** permission:
+[//]: # (To ensure alarms trigger reliably on **Xiaomi/HyperOS** devices, please enable the **Autostart** permission:)

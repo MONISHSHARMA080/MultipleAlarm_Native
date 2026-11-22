@@ -49,6 +49,7 @@ import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Schedule
@@ -139,6 +140,7 @@ fun SettingsCard(
 		updateRingDuration: (Long) -> Unit,
 		calenderButtonClicked: () -> Unit,
 		selectSoundButtonClicked: () -> Unit,
+		selectMissionButtonClicked: () -> Unit,
 		repeatDayToggled: (DayOfWeek) -> Unit,
 		modifier: Modifier = Modifier,
 		animateScroll: Boolean = true
@@ -235,6 +237,19 @@ fun SettingsCard(
 					),
 					value = selectedSoundName,
 					onClick = selectSoundButtonClicked
+				)
+			}
+
+			Surface(
+				shape = SegmentedMiddleShape,
+				color = colorScheme.surfaceContainer,
+				modifier = Modifier.fillMaxWidth()
+			) {
+				SettingRow(
+					icon = Icons.Rounded.Flag,
+					title = stringResource(R.string.alarm_picker_missions),
+					value = stringResource(R.string.alarm_picker_missions_none),
+					onClick = selectMissionButtonClicked
 				)
 			}
 

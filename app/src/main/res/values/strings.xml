@@ -46,6 +46,8 @@
     <string name="alarm_picker_repeat_days">Repeat</string>
     <string name="alarm_picker_sound">Sound</string>
     <string name="alarm_picker_sound_random">Random</string>
+    <string name="alarm_picker_missions">Missions</string>
+    <string name="alarm_picker_missions_none">None</string>
     <string name="alarm_picker_alarm_volume">Alarm volume</string>
     <string name="alarm_picker_alarm_volume_system">Play alarm at custom volume regardless of the system volume</string>
     <string name="alarm_picker_alarm_volume_value">alarm will ring at %1$d%%. click x to cancel</string>
@@ -125,6 +127,29 @@
     <string name="Sound_screen_preview">Tap to preview</string>
     <string name="Sound_screen_Random_sound">Plays a different sound for each alarm.</string>
     <string name="Sound_screen_Random_sound_choosen">Plays a different sound for each alarm.</string>
+
+    <!-- Alarm Missions -->
+    <string name="alarm_missions_title">Missions</string>
+    <string name="alarm_missions_subtitle">Complete a quick challenge to turn off your alarm</string>
+    <string name="alarm_missions_select_button">Select</string>
+    <string name="alarm_missions_select_mission">Select %1$s</string>
+    <string name="alarm_missions_back_desc">Back</string>
+    <string name="mission_shake_title">Shake</string>
+    <string name="mission_shake_desc">Shake your phone until the wake-up bar fills up</string>
+    <string name="mission_typing_title">Typing</string>
+    <string name="mission_typing_desc">Type a short wake-up phrase to stop the alarm</string>
+    <string name="mission_math_title">Math</string>
+    <string name="mission_math_desc">Solve quick math problems to wake up your brain</string>
+    <string name="mission_item_hunt_title">Item hunt</string>
+    <string name="mission_item_hunt_desc">Take a photo of a household item to dismiss</string>
+    <string name="mission_steps_title">Steps</string>
+    <string name="mission_steps_desc">Get out of bed and walk a few steps</string>
+    <string name="mission_push_ups_title">Push-ups</string>
+    <string name="mission_push_ups_desc">Do a set of push-ups to turn off the alarm</string>
+    <string name="mission_coming_soon_badge">Coming soon</string>
+    <string name="mission_coming_soon_title">%1$s is coming soon</string>
+    <string name="mission_coming_soon_body">We\'re building wake-up missions to help you get out of bed on time. Thanks for your interest — it\'ll be ready in an upcoming update.</string>
+    <string name="mission_coming_soon_cta">Got it</string>
 
     <!-- About & Rate App -->
     <string name="about_section_title">About</string>

@@ -69,4 +69,9 @@ sealed interface Screen : NavKey {
 	data object AlarmSoundListScreen : AlarmFlowRoute{
 		override val screenName ="AlarmSoundListScreen"
 	}
+
+	@Serializable
+	data object AlarmMissionListScreen : AlarmFlowRoute {
+		override val screenName = "AlarmMissionListScreen"
+	}
 }

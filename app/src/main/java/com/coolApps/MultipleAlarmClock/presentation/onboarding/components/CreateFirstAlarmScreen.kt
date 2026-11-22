@@ -21,10 +21,12 @@ import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.picker.NewAlarmScreen
 import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmPickerViewModel
 import com.coolApps.MultipleAlarmClock.presentation.picker.listAlarmRingtone.ListAlarmSoundScreen
+import com.coolApps.MultipleAlarmClock.presentation.picker.missions.AlarmMissionListScreen
 
 private enum class CreateFirstAlarmStep {
 	Picker,
-	SoundList
+	SoundList,
+	MissionList
 }
 
 
@@ -75,6 +77,9 @@ fun CreateFirstAlarmScreen(
 					onNavigateToSoundList = {
 						currentStep = CreateFirstAlarmStep.SoundList
 					},
+					onNavigateToMissionList = {
+						currentStep = CreateFirstAlarmStep.MissionList
+					},
 					settingAlarmCancelled = {
 						// Optionally handle cancellation, maybe go back to previous Onboarding screen
 					},
@@ -96,6 +101,16 @@ fun CreateFirstAlarmScreen(
 					},
 					linearProgressBar = linearProgressBar,
 					onShowPaywall = onShowPaywall
+				)
+			}
+
+			CreateFirstAlarmStep.MissionList -> {
+				AlarmMissionListScreen(
+					onBack = {
+						currentStep = CreateFirstAlarmStep.Picker
+					},
+					onTrackEvent = { event, props -> alarmPickerViewModel.captureEvent(event, props) },
+					linearProgressBar = linearProgressBar
 				)
 			}
 		}

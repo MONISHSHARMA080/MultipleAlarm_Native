@@ -25,9 +25,9 @@ import androidx.navigation3.runtime.result.LocalResultEventBus
 import androidx.navigation3.ui.NavDisplay
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.presentation.navigation.AlarmFlowRoute
-import com.coolApps.MultipleAlarmClock.presentation.navigation.Screen
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.picker.listAlarmRingtone.ListAlarmSoundScreen
+import com.coolApps.MultipleAlarmClock.presentation.picker.missions.AlarmMissionListScreen
 
 /**
  * Host for the edit-alarm sub-navigation (AlarmPicker → SoundList).
@@ -46,7 +46,7 @@ fun EditAlarmFlowScreen(
 		factory.create(alarmData)
 	}
 	val flowBackStack = rememberNavBackStack(AlarmFlowRoute.AlarmPicker)
-	val currentScreen = flowBackStack.lastOrNull() as? Screen
+	val currentScreen = flowBackStack.lastOrNull() as? AlarmFlowRoute
 	LaunchedEffect(currentScreen) {
 		currentScreen?.let { viewModel.screen(it.screenName) }
 	}
@@ -108,6 +108,7 @@ fun EditAlarmFlowScreen(
 					alarmSetProceed = { onCloseFlow() },
 					settingAlarmCancelled = onCloseFlow,
 					onNavigateToSoundList = { flowBackStack.add(AlarmFlowRoute.AlarmSoundListScreen) },
+					onNavigateToMissionList = { flowBackStack.add(AlarmFlowRoute.AlarmMissionListScreen) },
 					onShowPaywall = onShowPaywall,
 					sharedTransitionScope = sharedTransitionScope,
 					animatedVisibilityScope = animatedVisibilityScope
@@ -135,6 +136,13 @@ fun EditAlarmFlowScreen(
 					onShowPaywall = onShowPaywall
 				)
 			}
+
+			entry<AlarmFlowRoute.AlarmMissionListScreen> {
+				AlarmMissionListScreen(
+					onBack = { flowBackStack.removeLastOrNull() },
+					onTrackEvent = { event, props -> viewModel.captureEvent(event, props) }
+				)
+			}
 		}
 	)
 }
@@ -153,7 +161,7 @@ fun NewAlarmFlowScreen(
 		factory.create(null)
 	}
 	val flowBackStack = rememberNavBackStack(AlarmFlowRoute.AlarmPicker)
-	val currentScreen = flowBackStack.lastOrNull() as? Screen
+	val currentScreen = flowBackStack.lastOrNull() as? AlarmFlowRoute
 	LaunchedEffect(currentScreen) {
 		currentScreen?.let { viewModel.screen(it.screenName) }
 	}
@@ -217,6 +225,7 @@ fun NewAlarmFlowScreen(
 					},
 					settingAlarmCancelled = onCloseFlow,
 					onNavigateToSoundList = { flowBackStack.add(AlarmFlowRoute.AlarmSoundListScreen) },
+					onNavigateToMissionList = { flowBackStack.add(AlarmFlowRoute.AlarmMissionListScreen) },
 					onShowPaywall = onShowPaywall
 				)
 			}
@@ -240,6 +249,13 @@ fun NewAlarmFlowScreen(
 						viewModel.onAlarmSoundSelected(sound)
 					},
 					onShowPaywall = onShowPaywall
+				)
+			}
+
+			entry<AlarmFlowRoute.AlarmMissionListScreen> {
+				AlarmMissionListScreen(
+					onBack = { flowBackStack.removeLastOrNull() },
+					onTrackEvent = { event, props -> viewModel.captureEvent(event, props) }
 				)
 			}
 		}
