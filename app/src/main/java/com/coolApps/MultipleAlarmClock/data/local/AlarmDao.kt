@@ -1,11 +1,11 @@
 package com.coolApps.MultipleAlarmClock.data.local
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.Update
-import androidx.room.Upsert
+import androidx.room3.Dao
+import androidx.room3.Delete
+import androidx.room3.Insert
+import androidx.room3.Query
+import androidx.room3.Update
+import androidx.room3.Upsert
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -24,7 +24,7 @@ interface AlarmDao {
 	suspend fun deleteAlarm(alarm: AlarmData): Int
 
 	@Query("SELECT * FROM AlarmData")
-	fun getAll(): List<AlarmData>
+	suspend fun getAll(): List<AlarmData>
 
 	@Query("SELECT * FROM AlarmData")
 	suspend fun getAllAlarms(): List<AlarmData>

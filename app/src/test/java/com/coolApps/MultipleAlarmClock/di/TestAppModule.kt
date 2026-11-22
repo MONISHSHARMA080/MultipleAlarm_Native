@@ -6,7 +6,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStoreFile
-import androidx.room.Room
+import androidx.room3.Room
+import androidx.sqlite.driver.AndroidSQLiteDriver
 import com.coolApps.MultipleAlarmClock.data.preferences.Settings
 import com.coolApps.MultipleAlarmClock.data.preferences.SettingsSerializer
 import com.coolApps.MultipleAlarmClock.ErrorHandling.ErrorHandler
@@ -34,10 +35,8 @@ object TestAppModule {
 	fun provideDatabase(
 			@ApplicationContext context: Context
 	): AlarmDatabase =
-		Room.inMemoryDatabaseBuilder(
-			context,
-			AlarmDatabase::class.java
-		)
+		Room.inMemoryDatabaseBuilder<AlarmDatabase>(context)
+			.setDriver(AndroidSQLiteDriver())
 			.allowMainThreadQueries()
 			.build()
 

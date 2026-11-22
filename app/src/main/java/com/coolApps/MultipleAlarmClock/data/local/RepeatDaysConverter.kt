@@ -1,11 +1,11 @@
 package com.coolApps.MultipleAlarmClock.data.local
 
-import androidx.room.TypeConverter
+import androidx.room3.ColumnTypeConverter
 
 class RepeatDaysConverter {
-    @TypeConverter
+    @ColumnTypeConverter
     fun fromInt(bits: Int?): RepeatDays? = bits?.let { RepeatDays(it) }
 
-    @TypeConverter
+    @ColumnTypeConverter
     fun toInt(repeatDays: RepeatDays?): Int? = repeatDays?.bits
 }

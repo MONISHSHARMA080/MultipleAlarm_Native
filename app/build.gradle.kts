@@ -12,7 +12,7 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.serialization)
 	id("com.google.protobuf") version "0.10.1"
     id("com.google.dagger.hilt.android")
-	id("androidx.room")
+	id("androidx.room3")
 //	id("com.android.application")
 	id("com.google.gms.google-services")
 }
@@ -173,7 +173,7 @@ fun Project.configureAndroid() {
     }
 }
 
-room {
+room3 {
 	schemaDirectory("$projectDir/schemas")
 }
 
@@ -277,18 +277,10 @@ dependencies {
     implementation(libs.androidx.ui.test.android)
     implementation(libs.kotlinx.coroutines.android)
 
-//	val roomVersion = "3.0.1"
-    val roomVersion = "2.8.5"
-    implementation("androidx.room:room-runtime:$roomVersion")
-//    annotationProcessor("androidx.room:room-compiler:$roomVersion")
-    ksp("androidx.room:room-compiler:$roomVersion")
-    implementation("androidx.room:room-ktx:$roomVersion")
-    implementation("androidx.room:room-rxjava2:$roomVersion")
-    implementation("androidx.room:room-rxjava3:$roomVersion")
-    implementation("androidx.room:room-guava:$roomVersion")
-    testImplementation("androidx.room:room-testing:$roomVersion")
-    implementation("androidx.room:room-paging:$roomVersion")
-	testImplementation("androidx.multidex:multidex:2.0.1")
+    implementation(libs.androidx.room3.runtime)
+    ksp(libs.androidx.room3.compiler)
+    testImplementation(libs.androidx.room3.testing)
+	testImplementation(libs.androidx.multidex)
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
