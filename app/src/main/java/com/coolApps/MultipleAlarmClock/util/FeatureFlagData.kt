@@ -1,9 +1,9 @@
 package com.coolApps.MultipleAlarmClock.util
 
 data class FeatureFlagsData(
-		val minDaysSinceInstall: Int = 7,
-		val minAlarmsCreated: Int = 3,
-		val cooldownDays: Int = 8,
+		val minDaysSinceInstall: Int = 3,
+		val minAlarmsCreated: Int = 1,
+		val cooldownDays: Int = 30,
 		val inAppReviewEnabled: Boolean = true,
 		val feedbackPromptConfig: FeedbackPromptConfig = FeedbackPromptConfig(),
 		val isHardPaywallEnabled: Boolean = false,
@@ -17,7 +17,7 @@ data class FeatureFlagsData(
 
 data class FeedbackPromptConfig(
 		val enabled: Boolean = true,
-		val startDay: Int = 2,
+		val startDay: Int = 14,
 		val cooldownDays: Int = 14,
 )
 

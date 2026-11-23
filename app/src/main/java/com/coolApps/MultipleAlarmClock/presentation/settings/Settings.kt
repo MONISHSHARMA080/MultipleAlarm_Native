@@ -1,7 +1,6 @@
 package com.coolApps.MultipleAlarmClock.presentation.settings
 
 import android.content.Context
-import android.content.Intent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -74,11 +73,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
+import com.coolApps.MultipleAlarmClock.util.openPlayStore
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -468,22 +467,6 @@ fun SettingsScreen(
 	}
 }
 
-
-private fun openPlayStore(context: Context) {
-	val packageName = context.packageName
-	try {
-		val intent = Intent(Intent.ACTION_VIEW, "market://details?id=$packageName".toUri()).apply {
-			addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-		}
-		context.startActivity(intent)
-	} catch (e: Exception) {
-		val webIntent = Intent(Intent.ACTION_VIEW,
-			"https://play.google.com/store/apps/details?id=$packageName".toUri()).apply {
-			addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-		}
-		context.startActivity(webIntent)
-	}
-}
 
 private fun getAppVersion(context: Context): String {
 	return try {

@@ -579,7 +579,7 @@ private fun InAppFeedbackTextPromptPreview() {
 		InAppFeedbackPrompt(
 			state = InAppFeedbackPromptUiState(
 				isVisible = true,
-				rating = 5,
+				rating = 3,
 				step = InAppFeedbackPromptStep.Review,
 			),
 			onRatingSelected = {},

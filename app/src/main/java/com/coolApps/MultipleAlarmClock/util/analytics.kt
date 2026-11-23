@@ -158,7 +158,7 @@ class Analytics(
 		val minDaysSinceInstall = getIntFeatureFlag(FeatureFlagKeys.MIN_DAYS_SINCE_INSTALL)
 		val feedbackEnabled = PostHog.isFeatureEnabled(FeatureFlagKeys.IN_APP_FEEDBACK_ENABLED, defaultValue = false)
 		val feedbackStartDay = getIntFeatureFlag(FeatureFlagKeys.IN_APP_FEEDBACK_START_DAY)
-			?.takeIf { it >= 0 } ?: 7
+			?.takeIf { it >= 0 } ?: 14
 		val feedbackCooldownDays = getIntFeatureFlag(FeatureFlagKeys.IN_APP_FEEDBACK_COOLDOWN_DAYS)
 			?.takeIf { it > 0 } ?: 14
 		val isWeeklyRepeatPremium = PostHog.isFeatureEnabled(FeatureFlagKeys.WEEKLY_REPEAT_PREMIUM_ENABLED, defaultValue = true)
@@ -179,22 +179,22 @@ class Analytics(
 			)
 		}
 		_featureFlagsData.value = FeatureFlagsData(
-					inAppReviewEnabled = enabled && minAlarms != null && cooldownDays != null && minDaysSinceInstall != null,
-					minAlarmsCreated = minAlarms ?: 3,
-					cooldownDays = cooldownDays ?: 8,
-					minDaysSinceInstall = minDaysSinceInstall ?: 7,
+			inAppReviewEnabled = enabled,
+			minAlarmsCreated = minAlarms?.takeIf { it > 0 } ?: 1,
+			cooldownDays = cooldownDays?.takeIf { it > 0 } ?: 30,
+			minDaysSinceInstall = minDaysSinceInstall?.takeIf { it >= 0 } ?: 3,
 			feedbackPromptConfig = FeedbackPromptConfig(
 				enabled = feedbackEnabled,
 				startDay = feedbackStartDay,
 				cooldownDays = feedbackCooldownDays,
 			),
-					isHardPaywallEnabled = isHardPaywall,
-					isWeeklyRepeatPremium = isWeeklyRepeatPremium,
-				isSnoozePremium = isSnoozePremium,
-				isSoundPickerPremium = isSoundPickerPremium,
-				isCustomAlarmVolumePremium = isCustomAlarmVolumePremium,
-				isBannerAdsEnabled = isBannerAdsEnabled,
-				isInterstitialAdsEnabled = isInterstitialAdsEnabled,
+			isHardPaywallEnabled = isHardPaywall,
+			isWeeklyRepeatPremium = isWeeklyRepeatPremium,
+			isSnoozePremium = isSnoozePremium,
+			isSoundPickerPremium = isSoundPickerPremium,
+			isCustomAlarmVolumePremium = isCustomAlarmVolumePremium,
+			isBannerAdsEnabled = isBannerAdsEnabled,
+			isInterstitialAdsEnabled = isInterstitialAdsEnabled,
 		)
 	}
 
@@ -308,9 +308,10 @@ class Analytics(
 				 }
 
 			 coroutineScope.launch {
-				 val installEpochMs = runCatching {
+				 val storedInstallMs = runCatching {
 					 settingsDataStore?.data?.first()?.installEpochTimeMs ?: 0L
 				 }.getOrDefault(0L)
+				 val installEpochMs = if (storedInstallMs > 0L) storedInstallMs else getFirstInstallTimeMs(context)
 				 val installedAtIso = if (installEpochMs > 0L) {
 					 Instant.ofEpochMilli(installEpochMs).toString()
 				 } else {

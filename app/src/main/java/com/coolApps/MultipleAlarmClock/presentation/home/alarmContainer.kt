@@ -3,6 +3,7 @@ package com.coolApps.MultipleAlarmClock.presentation.home
 import android.app.Activity
 import android.os.Build
 import android.view.HapticFeedbackConstants
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.ReportDrawnWhen
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -93,6 +94,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.result.ResultEffect
 import com.coolApps.MultipleAlarmClock.BuildConfig
@@ -102,6 +105,7 @@ import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.presentation.ads.AlarmListBannerAdCard
 import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.util.AppUpdateChecker
+import com.coolApps.MultipleAlarmClock.util.openPlayStore
 import com.google.android.play.core.install.model.ActivityResult
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
@@ -110,8 +114,10 @@ import com.google.android.play.core.ktx.clientVersionStalenessDays
 import com.google.android.play.core.ktx.installStatus
 import com.google.android.play.core.ktx.isFlexibleUpdateAllowed
 import com.google.android.play.core.ktx.isImmediateUpdateAllowed
+import com.google.android.play.core.ktx.launchReview
+import com.google.android.play.core.ktx.requestReview
 import com.google.android.play.core.ktx.updatePriority
-import com.google.android.play.core.review.ReviewManagerFactory
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -141,6 +147,8 @@ import java.util.Calendar
 	val inAppReviewState = uiState.showReviewUi
 	val feedbackPrompt = uiState.feedbackPrompt
 	val context = LocalContext.current
+	val activity = LocalActivity.current
+	val lifecycleOwner = LocalLifecycleOwner.current
 
 	// Computed once per composition — the start of today at midnight (local timezone).
 	// Passed to every AlarmCard so all cards share the same day boundary.
@@ -154,25 +162,41 @@ import java.util.Calendar
 	}
 
 	LaunchedEffect(inAppReviewState) {
-		val activity = context as? Activity
-
+		if (!inAppReviewState) return@LaunchedEffect
 		logD("asking for  review inAppReviewState:$inAppReviewState, :) ")
-		if (inAppReviewState  && (activity != null)) {
-			val manager = ReviewManagerFactory.create(context)
-			val request = manager.requestReviewFlow()
-			request.addOnCompleteListener { task ->
-				if (task.isSuccessful) {
-					val reviewInfo = task.result
-					val flow = manager.launchReviewFlow(activity, reviewInfo)
-					logD("review successful, $task")
-					flow.addOnCompleteListener {
-						alarmContainerViewModel.setInAppReviewConsumed( task)
-					}
-				} else {
-					logD("review unSuccessful, $task")
-					alarmContainerViewModel.setInAppReviewConsumed(task)
-				}
+
+		if (activity == null || activity.isFinishing || activity.isDestroyed ||
+			!lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+		) {
+			alarmContainerViewModel.dismissReviewUi()
+			return@LaunchedEffect
+		}
+
+		val reviewManager = alarmContainerViewModel.reviewManager
+		var launched = false
+		try {
+			val reviewInfo = alarmContainerViewModel.consumePrefetchedReviewInfo()
+				?: reviewManager.requestReview()
+			if (activity.isFinishing || activity.isDestroyed ||
+				!lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+			) {
+				alarmContainerViewModel.dismissReviewUi()
+				return@LaunchedEffect
 			}
+			launched = true
+			reviewManager.launchReview(activity, reviewInfo)
+			logD("review flow completed")
+			alarmContainerViewModel.setInAppReviewConsumed(isSuccessful = true, exception = null)
+		} catch (e: CancellationException) {
+			if (launched) {
+				alarmContainerViewModel.setInAppReviewConsumed(isSuccessful = true, exception = null)
+			} else {
+				alarmContainerViewModel.dismissReviewUi()
+			}
+			throw e
+		} catch (e: Exception) {
+			logD("review unSuccessful, $e")
+			alarmContainerViewModel.setInAppReviewConsumed(isSuccessful = false, exception = e)
 		}
 	}
 
@@ -306,13 +330,14 @@ import java.util.Calendar
 			if (feedbackPrompt.isVisible) {
 				InAppFeedbackPrompt(
 					state = feedbackPrompt,
-					onRatingSelected = alarmContainerViewModel::selectFeedbackRating,
+					onRatingSelected = { rating ->
+						if (alarmContainerViewModel.selectFeedbackRating(rating)) {
+							openPlayStore(context)
+						}
+					},
 					onFeedbackSubmitted = alarmContainerViewModel::submitFeedback,
 					onDismiss = alarmContainerViewModel::dismissFeedbackPrompt,
 				)
-				LaunchedEffect(Unit) {
-					alarmContainerViewModel.captureEvent("FeedBackPopUp card shown", mapOf())
-				}
 			}
 
 			LazyVerticalGrid(
