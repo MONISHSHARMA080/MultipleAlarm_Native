@@ -1,6 +1,7 @@
 package com.coolApps.MultipleAlarmClock.presentation.settings
 
 import android.content.Context
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -29,8 +30,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Send
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Info
@@ -39,9 +40,8 @@ import androidx.compose.material.icons.outlined.WorkspacePremium
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -67,6 +67,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -75,8 +76,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.coolApps.MultipleAlarmClock.R
-import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
+import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.util.openPlayStore
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -92,6 +93,7 @@ fun SettingsScreen(
 	val isPro by settingsViewModel.isPremium.collectAsState()
 	val context = LocalContext.current
 	val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+	val view = LocalView.current
 
 	Scaffold(
 		modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -120,27 +122,18 @@ fun SettingsScreen(
 					)
 				},
 				navigationIcon = {
-					FilledTonalIconButton(
-						onClick = onNavigateBack,
-						interactionSource = backInteractionSource,
-						shape = RoundedCornerShape(backCorner),
-						colors = IconButtonDefaults.filledTonalIconButtonColors(
-							containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-							contentColor = MaterialTheme.colorScheme.onSurface
-						),
-						modifier = Modifier
-							.padding(start = 8.dp)
-							.size(42.dp)
-							.graphicsLayer {
-								scaleX = backScale
-								scaleY = backScale
-							}
+					IconButton(
+						onClick = {
+							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+							onNavigateBack()
+						}
 					) {
 						Icon(
-							imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-							contentDescription = stringResource(R.string.settings_back_desc)
+							imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+							contentDescription = stringResource(R.string.alarm_picker_back_desc)
 						)
 					}
+
 				},
 				colors = TopAppBarDefaults.topAppBarColors(
 					containerColor = Color.Transparent,
