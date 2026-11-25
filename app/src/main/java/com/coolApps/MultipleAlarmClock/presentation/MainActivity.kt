@@ -9,10 +9,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.coolApps.MultipleAlarmClock.data.background.EngagementScheduler
 import com.coolApps.MultipleAlarmClock.presentation.navigation.NavigationStack
 import com.coolApps.MultipleAlarmClock.presentation.navigation.NavigationViewModel
 import com.coolApps.MultipleAlarmClock.presentation.navigation.Screen
-import com.coolApps.MultipleAlarmClock.data.background.EngagementScheduler
 import com.coolApps.MultipleAlarmClock.util.Analytics
 import com.coolApps.MultipleAlarmClock.util.NotificationHandler
 import dagger.hilt.android.AndroidEntryPoint
@@ -72,6 +72,10 @@ class MainActivity : ComponentActivity() {
 			"alarmapp" if data.host == "settings" -> Screen.SettingsScreen
 			"alarmapp" if data.host == "create" -> Screen.AlarmCreateRoute
 			"alarmapp" if data.host == "onboarding" -> Screen.OnboardingScreen
+			"alarmapp" if data.host == "settings" -> Screen.SettingsScreen
+			"alarmapp" if data.host == "create" -> Screen.AlarmCreateRoute
+			"alarmapp" if data.host == "onboarding" -> Screen.OnboardingScreen
+			"alarmapp" if data.host == "onboarding4" -> Screen.OnboardingScreen4
 			else -> null
 		}
 	}

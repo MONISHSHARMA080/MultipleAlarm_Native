@@ -4,6 +4,7 @@ import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,9 +40,12 @@ data class StruggleOption(
 @Composable
 fun UserStrugglesScreen(
     onButtonStateChange: (ButtonState) -> Unit,
-    onStrugglesSelected: (Set<String>) -> Unit
+    onStrugglesSelected: (Set<String>) -> Unit,
+    initialSelectedStruggles: Set<String> = emptySet(),
 ) {
-	onButtonStateChange(ButtonState.Enabled)
+	LaunchedEffect(Unit) {
+		onButtonStateChange(ButtonState.Enabled)
+	}
 	val struggles = listOf(
         StruggleOption(R.string.onboarding_struggle_waking_up, "Waking up on time"),
         StruggleOption(R.string.onboarding_struggle_being_on_time, "Being on time"),
@@ -50,7 +54,7 @@ fun UserStrugglesScreen(
         StruggleOption(R.string.onboarding_struggle_forgetting, "Forgetting things"),
     )
 
-    var selectedStruggles by remember { mutableStateOf(emptySet<String>()) }
+    var selectedStruggles by remember { mutableStateOf(initialSelectedStruggles) }
 
     LaunchedEffect(selectedStruggles) {
         onStrugglesSelected(selectedStruggles)
@@ -80,6 +84,7 @@ fun UserStrugglesScreen(
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 340.dp),
             modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(bottom = 140.dp),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {

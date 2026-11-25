@@ -18,45 +18,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import jakarta.inject.Inject
 import kotlin.random.Random
 
-//sealed class NotificationChannelType(val channelId: String, val channelName: String, val importance: Int, val description: String ) {
-//	data object AlarmNotification : NotificationChannelType(
-//		channelId = "alarm_channel",
-//		channelName = "Alarms",
-//		importance = NotificationManager.IMPORTANCE_HIGH,
-//		description = "Alarm notification channel"
-//	)
-//
-//	data object ErrorChannel : NotificationChannelType(
-//		channelId = "reminder_channel",
-//		channelName = "Reminders",
-//		importance = NotificationManager.IMPORTANCE_HIGH,
-//		description = "Alarm error channel"
-//	)
-//
-//	data object GeneralNotification : NotificationChannelType(
-//		channelId = "general_channel",
-//		channelName = "General",
-//		importance = NotificationManager.IMPORTANCE_DEFAULT ,
-//		description = "Alarm notification channel"
-//	)
-//	data object PushNotification : NotificationChannelType(
-//		channelId = "push_notification",
-//		channelName = "General",
-//		importance = NotificationManager.IMPORTANCE_DEFAULT ,
-//		description = "Updates related to the app"
-//	)
-//
-//	data object Engagement : NotificationChannelType(
-//		channelId = "engagement_channel",
-//		channelName = "Reminders",
-//		importance = NotificationManager.IMPORTANCE_DEFAULT,
-//		description = "Re-engagement reminders when you haven't used alarms recently"
-//	)
-//
-//	companion object {
-//		val values:List<NotificationChannelType> = listOf(AlarmNotification, ErrorChannel, GeneralNotification, PushNotification, Engagement)
-//	}
-//}
 enum class NotificationChannelType(
 		val channelId: String,
 		val channelName: String,
@@ -126,7 +87,7 @@ class NotificationHandler @Inject constructor(@ApplicationContext val context: C
 			is Screen.AlarmContainer -> "alarmapp://home".toUri()
 			is Screen.SettingsScreen -> "alarmapp://settings".toUri()
 			is Screen.AlarmEditRoute, is Screen.AlarmCreateRoute -> "alarmapp://create".toUri()
-			is Screen.OnboardingScreen, is Screen.OnboardingScreen2, is Screen.OnboardingScreen3 -> "alarmapp://onboarding".toUri()
+			is Screen.OnboardingScreen, is Screen.OnboardingScreen2, is Screen.OnboardingScreen3, is Screen.OnboardingScreen4 -> "alarmapp://onboarding".toUri()
 			is Screen.Paywall -> "alarmapp://paywall".toUri()
 			is Screen.CustomerCenter -> "alarmapp://customercenter".toUri()
 		}

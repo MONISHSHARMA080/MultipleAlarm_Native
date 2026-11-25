@@ -1,7 +1,6 @@
 package com.coolApps.MultipleAlarmClock.presentation.onboarding.components
 
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
-
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -10,16 +9,19 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
-import com.coolApps.MultipleAlarmClock.presentation.picker.NewAlarmScreen
 import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmPickerViewModel
+import com.coolApps.MultipleAlarmClock.presentation.picker.NewAlarmScreen
 import com.coolApps.MultipleAlarmClock.presentation.picker.listAlarmRingtone.ListAlarmSoundScreen
 import com.coolApps.MultipleAlarmClock.presentation.picker.missions.AlarmMissionListScreen
 
@@ -29,20 +31,50 @@ private enum class CreateFirstAlarmStep {
 	MissionList
 }
 
-
 @Composable
 fun CreateFirstAlarmScreen(
 		onAlarmSetProceed: () -> Unit,
 		modifier: Modifier = Modifier,
 		linearProgressBar: (@Composable () -> Unit)? = null,
-		onButtonStateChange: (ButtonState) -> Unit = {},
-		onShowPaywall: (PaywallTriggerType) -> Unit = {}
+		onShowPaywall: (PaywallTriggerType) -> Unit = {},
+		presetAlarm: AlarmData? = null,
+		presetKey: String? = null,
+		existingAlarmId: Int? = null,
+		alarmPickerViewModel: AlarmPickerViewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory -> factory.create(null) },
+		onBackOverrideChanged: ((() -> Unit)?) -> Unit = {},
+		onCancelled: () -> Unit = {}
 ) {
-	// buttonState is now pre-set by the parent before this screen composes
-	val alarmPickerViewModel : AlarmPickerViewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory -> factory.create(null) }
-	var currentStep by remember { mutableStateOf(CreateFirstAlarmStep.Picker) }
+	if (presetAlarm != null && presetKey != null) {
+		LaunchedEffect(presetKey) {
+			alarmPickerViewModel.applyPresetIfNeeded(presetAlarm, presetKey)
+		}
+	}
+	LaunchedEffect(existingAlarmId) {
+		alarmPickerViewModel.syncSavedAlarmId(existingAlarmId)
+	}
+
+	var currentStep by rememberSaveable { mutableStateOf(CreateFirstAlarmStep.Picker) }
 	val selected by alarmPickerViewModel.selectedAlarmSound.collectAsStateWithLifecycle()
 	val previewing by alarmPickerViewModel.previewingSound.collectAsStateWithLifecycle()
+
+	LaunchedEffect(currentStep) {
+		onBackOverrideChanged(
+			if (currentStep != CreateFirstAlarmStep.Picker) {
+				{ currentStep = CreateFirstAlarmStep.Picker }
+			} else {
+				null
+			}
+		)
+	}
+	DisposableEffect(Unit) {
+		onDispose {
+			onBackOverrideChanged(null)
+		}
+	}
+
+	BackHandler(enabled = currentStep != CreateFirstAlarmStep.Picker) {
+		currentStep = CreateFirstAlarmStep.Picker
+	}
 
 	AnimatedContent(
 		targetState = currentStep,
@@ -80,15 +112,18 @@ fun CreateFirstAlarmScreen(
 					onNavigateToMissionList = {
 						currentStep = CreateFirstAlarmStep.MissionList
 					},
-					settingAlarmCancelled = {
-						// Optionally handle cancellation, maybe go back to previous Onboarding screen
-					},
+					settingAlarmCancelled = onCancelled,
 					onShowPaywall = onShowPaywall,
 					linearProgressBar = linearProgressBar
 				)
 			}
 
 			CreateFirstAlarmStep.SoundList -> {
+				DisposableEffect(Unit) {
+					onDispose {
+						alarmPickerViewModel.stopPreview()
+					}
+				}
 				ListAlarmSoundScreen(
 					alarmPickerViewModel,
 					previewingUri = previewing?.soundUri,

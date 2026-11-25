@@ -7,11 +7,8 @@ import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionS
 import java.time.DayOfWeek
 import java.util.Calendar
 
-enum class Progress{StartTime, EndTime, FullEditor}
-
 enum class AlarmCompletionAction { Saved, Deleted }
 
-/** [areAllPermissionsGranted] - make sure to set the right value when loading this, as the true is a false value */
 data class AlarmPickerUiState(
 		val alarmData: AlarmData = AlarmData(
 		startTime = Calendar.getInstance().apply {
@@ -43,5 +40,4 @@ data class AlarmPickerUiState(
 		val pendingRingDuration: Long? = null,
 		val completedAction: AlarmCompletionAction? = null,
 		val soundSelectionCompletedGoBack: Boolean = false,
-		val progress: Progress = if (initialAlarm == null) Progress.StartTime else Progress.FullEditor
 )

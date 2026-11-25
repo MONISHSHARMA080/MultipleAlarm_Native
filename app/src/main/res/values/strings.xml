@@ -309,5 +309,33 @@
     <!-- Alarm Activity -->
     <string name="stop_button">Stop</string>
 
+    <!-- Onboarding V4 -->
+    <string name="onboarding_v4_wakeup_title_waking_up">When do you wake up?</string>
+    <string name="onboarding_v4_wakeup_title_heavy_sleeper">When should we wake you up?</string>
+    <string name="onboarding_v4_wakeup_title_ignoring">When do you need to be up?</string>
+    <string name="onboarding_v4_wakeup_title_being_on_time">When do you need to get moving?</string>
+    <string name="onboarding_v4_wakeup_title_forgetting">When do you want your reminders?</string>
+    <string name="onboarding_v4_wakeup_summary">%1$s → %2$s · Every %3$d min</string>
+
+    <string name="onboarding_v4_default_msg_waking_up">Wake up</string>
+    <string name="onboarding_v4_default_msg_heavy_sleeper">Time to wake up!</string>
+    <string name="onboarding_v4_default_msg_ignoring">Don\'t go back to sleep</string>
+    <string name="onboarding_v4_default_msg_being_on_time">Time to get ready</string>
+    <string name="onboarding_v4_default_msg_forgetting">Don\'t forget</string>
+
+    <string name="onboarding_v4_preview_title_waking_up">Here\'s your morning</string>
+    <string name="onboarding_v4_preview_subtitle_waking_up">Alarms repeat every %1$d min until you\'re up.</string>
+    <string name="onboarding_v4_preview_title_heavy_sleeper">Built for heavy sleepers</string>
+    <string name="onboarding_v4_preview_subtitle_heavy_sleeper">Ringing every %1$d min — no more sleeping through.</string>
+    <string name="onboarding_v4_preview_title_ignoring">Impossible to ignore</string>
+    <string name="onboarding_v4_preview_subtitle_ignoring">Dismiss one, another rings %1$d min later.</string>
+    <string name="onboarding_v4_preview_title_being_on_time">Right on schedule</string>
+    <string name="onboarding_v4_preview_subtitle_being_on_time">An alarm every %1$d min keeps you on time.</string>
+    <string name="onboarding_v4_preview_title_forgetting">You won\'t forget</string>
+    <string name="onboarding_v4_preview_subtitle_forgetting">Persistent reminders every %1$d min.</string>
+
+    <string name="onboarding_v4_preview_every_min">Every %1$d min · %2$d alarms</string>
+    <string name="onboarding_v4_preview_alarm_count">Alarm %1$d of %2$d</string>
+    <string name="onboarding_v4_preview_app_time">%1$s · %2$s</string>
 
 </resources>

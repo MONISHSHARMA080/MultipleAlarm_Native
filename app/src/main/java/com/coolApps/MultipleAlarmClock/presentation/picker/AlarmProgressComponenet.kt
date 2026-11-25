@@ -3,7 +3,6 @@ package com.coolApps.MultipleAlarmClock.presentation.picker
 import android.view.HapticFeedbackConstants
 import androidx.annotation.IntRange
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -11,16 +10,12 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
@@ -35,7 +30,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
@@ -44,7 +38,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
-import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -102,8 +98,10 @@ fun TimePickerWithoutDialog(
 			exit = shrinkVertically(spatialSpec) + fadeOut(effectsSpec)
 		) {
 			val locale = LocalLocale.current.platformLocale
-			val startTimeString = remember(uiState.alarmData.startTime, locale) {
-				SimpleDateFormat("h:mm a", locale).format(uiState.alarmData.startTime)
+			val zoneId = remember { ZoneId.systemDefault() }
+			val formatter = remember(locale) { DateTimeFormatter.ofPattern("h:mm a", locale) }
+			val startTimeString = remember(uiState.alarmData.startTime, formatter, zoneId) {
+				Instant.ofEpochMilli(uiState.alarmData.startTime).atZone(zoneId).format(formatter)
 			}
 			Surface(
 				shape = RoundedCornerShape(16.dp),
@@ -119,35 +117,5 @@ fun TimePickerWithoutDialog(
 				)
 			}
 		}
-	}
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-fun LinearProgressForNewAlarm(modifier: Modifier = Modifier, progress: Progress) {
-	val (step, total) = when (progress) {
-		Progress.StartTime -> 1 to 3
-		Progress.EndTime -> 2 to 3
-		Progress.FullEditor -> 3 to 3
-	}
-
-	val progressFraction by animateFloatAsState(
-		targetValue = step / total.toFloat(),
-		animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
-		label = "progress_animation"
-	)
-
-	Column(
-		modifier = modifier.fillMaxWidth().widthIn(max = 600.dp).padding(horizontal = 24.dp),
-		horizontalAlignment = Alignment.CenterHorizontally
-	) {
-		Spacer(modifier = Modifier.height(8.dp))
-		LinearProgressIndicator(
-			progress = { progressFraction },
-			modifier = Modifier.fillMaxWidth().height(6.dp),
-			color = colorScheme.primary,
-			trackColor = colorScheme.surfaceContainerHighest,
-			strokeCap = StrokeCap.Round
-		)
 	}
 }

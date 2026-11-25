@@ -57,7 +57,9 @@ import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.presentation.AlarmTimeBoundsTransform
-import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 
 @OptIn(
@@ -88,19 +90,11 @@ fun TimeRow(
 	val amPmStyle = typography.titleSmall.copy(fontWeight = FontWeight.Bold)
 
 	val titleSpacing = (screenHeightDp * 0.03f).coerceIn(12.dp, 28.dp)
-
-	val endTimePickerState = rememberTimePickerState(
-		initialHour = endTime.get(Calendar.HOUR_OF_DAY),
-		initialMinute = endTime.get(Calendar.MINUTE),
-		is24Hour = false
-	)
-
-	val timePickerState =
-		rememberTimePickerState(
-			initialHour = startTime.get(Calendar.HOUR_OF_DAY),
-			initialMinute = startTime.get(Calendar.MINUTE),
-			is24Hour = false
-		)
+	val locale = LocalLocale.current.platformLocale
+	val zoneId = remember { ZoneId.systemDefault() }
+	val fullTimeFormatter = remember(locale) { DateTimeFormatter.ofPattern("h:mm a", locale) }
+	val clockFormatter = remember(locale) { DateTimeFormatter.ofPattern("h:mm ", locale) }
+	val amPmFormatter = remember(locale) { DateTimeFormatter.ofPattern("a", locale) }
 
 	var showStartTimePicker by remember { mutableStateOf(false) }
 	var showEndTimePicker by remember { mutableStateOf(false) }
@@ -116,6 +110,11 @@ fun TimeRow(
 	val effectsFloatSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
 
 	if (showStartTimePicker) {
+		val timePickerState = rememberTimePickerState(
+			initialHour = startTime.get(Calendar.HOUR_OF_DAY),
+			initialMinute = startTime.get(Calendar.MINUTE),
+			is24Hour = false
+		)
 		val confirmInteraction = remember { MutableInteractionSource() }
 		val isConfirmPressed by confirmInteraction.collectIsPressedAsState()
 		val confirmCorner by animateDpAsState(
@@ -197,7 +196,19 @@ fun TimeRow(
 	}
 
 	if (showEndTimePicker) {
-		// live-compute validity as the user spins the dial
+		val endTimePickerState = rememberTimePickerState(
+			initialHour = endTime.get(Calendar.HOUR_OF_DAY),
+			initialMinute = endTime.get(Calendar.MINUTE),
+			is24Hour = false
+		)
+		val startHour = startTime.get(Calendar.HOUR_OF_DAY)
+		val startMinute = startTime.get(Calendar.MINUTE)
+		val (minEndHour, minEndMinute) = if (startMinute == 59 && startHour < 23) {
+			(startHour + 1) to 0
+		} else {
+			startHour to (startMinute + 1).coerceAtMost(59)
+		}
+
 		val candidateEnd = (endTime.clone() as Calendar).apply {
 			set(Calendar.HOUR_OF_DAY, endTimePickerState.hour)
 			set(Calendar.MINUTE, endTimePickerState.minute)
@@ -266,9 +277,8 @@ fun TimeRow(
 						enter = expandVertically(spatialIntSizeSpec) + fadeIn(effectsFloatSpec),
 						exit = shrinkVertically(spatialIntSizeSpec) + fadeOut(effectsFloatSpec)
 					) {
-						val locale = LocalLocale.current.platformLocale
-						val startTimeString = remember(startTime, locale) {
-							SimpleDateFormat("h:mm a", locale).format(startTime.time)
+						val startTimeString = remember(uiState.alarmData.startTime, fullTimeFormatter, zoneId) {
+							Instant.ofEpochMilli(uiState.alarmData.startTime).atZone(zoneId).format(fullTimeFormatter)
 						}
 						Text(
 							text = stringResource(R.string.alarm_error_fix_alarm_time, startTimeString),
@@ -292,8 +302,8 @@ fun TimeRow(
 			}
 			TimePicker(
 				state = endTimePickerState,
-				minHour = timePickerState.hour,
-				minMinute = if (timePickerState.minute == 59) 59 else timePickerState.minute + 1,
+				minHour = minEndHour,
+				minMinute = minEndMinute,
 				onDisabledTimeSelected = onDisabledTimeSelected
 			)
 		}
@@ -330,8 +340,14 @@ fun TimeRow(
 					} else Modifier
 				)
 			) {
+				val startClock = remember(uiState.alarmData.startTime, clockFormatter, zoneId) {
+					Instant.ofEpochMilli(uiState.alarmData.startTime).atZone(zoneId).format(clockFormatter)
+				}
+				val startAmPm = remember(uiState.alarmData.startTime, amPmFormatter, zoneId) {
+					Instant.ofEpochMilli(uiState.alarmData.startTime).atZone(zoneId).format(amPmFormatter)
+				}
 				Text(
-					text = SimpleDateFormat("h:mm ", LocalLocale.current.platformLocale).format(startTime.time),
+					text = startClock,
 					style = timeStyle,
 					color = timeColor,
 					maxLines = 1,
@@ -339,7 +355,7 @@ fun TimeRow(
 					modifier = Modifier.alignByBaseline()
 				)
 				Text(
-					text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(startTime.time),
+					text = startAmPm,
 					style = amPmStyle,
 					color = amPmColor,
 					maxLines = 1,
@@ -387,8 +403,14 @@ fun TimeRow(
 					} else Modifier
 				)
 			) {
+				val endClock = remember(uiState.alarmData.endTime, clockFormatter, zoneId) {
+					Instant.ofEpochMilli(uiState.alarmData.endTime).atZone(zoneId).format(clockFormatter)
+				}
+				val endAmPm = remember(uiState.alarmData.endTime, amPmFormatter, zoneId) {
+					Instant.ofEpochMilli(uiState.alarmData.endTime).atZone(zoneId).format(amPmFormatter)
+				}
 				Text(
-					text = SimpleDateFormat("h:mm ", LocalLocale.current.platformLocale).format(endTime.time),
+					text = endClock,
 					style = timeStyle,
 					color = timeColor,
 					maxLines = 1,
@@ -396,7 +418,7 @@ fun TimeRow(
 					modifier = Modifier.alignByBaseline()
 				)
 				Text(
-					text = SimpleDateFormat("a", LocalLocale.current.platformLocale).format(endTime.time),
+					text = endAmPm,
 					style = amPmStyle,
 					color = amPmColor,
 					maxLines = 1,

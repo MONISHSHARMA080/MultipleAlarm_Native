@@ -1,10 +1,8 @@
 package com.coolApps.MultipleAlarmClock.presentation.picker
 
-import android.os.Build
 import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -51,12 +49,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -71,10 +66,10 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.local.AlarmDataValidationResult
@@ -85,13 +80,6 @@ import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.AlarmPermissionDialog
 import java.util.Calendar
 
-// ─── Public entry-point screens ───────────────────────────────────────────────
-
-/**
- * Edit-alarm route entry point.
- * Owns the Scaffold with sharedBounds so the card-to-screen hero transition
- * works. Always shows Progress.FullEditor — no stepper inside.
- */
 @OptIn(
 	ExperimentalMaterial3Api::class,
 	ExperimentalMaterial3ExpressiveApi::class,
@@ -110,9 +98,9 @@ fun EditAlarmScreen(
 		sharedTransitionScope: SharedTransitionScope? = null,
 		animatedVisibilityScope: AnimatedVisibilityScope? = null
 ) {
-	val uiState by viewModel.uiState.collectAsState()
-	val isPremium by viewModel.isPremium.collectAsState()
-	val selectedSound by viewModel.selectedAlarmSound.collectAsState()
+	val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+	val isPremium by viewModel.isPremium.collectAsStateWithLifecycle()
+	val selectedSound by viewModel.selectedAlarmSound.collectAsStateWithLifecycle()
 	val view = LocalView.current
 	val context = LocalContext.current
 
@@ -208,9 +196,7 @@ fun EditAlarmScreen(
 					horizontalArrangement = Arrangement.SpaceBetween,
 					verticalAlignment = Alignment.CenterVertically
 				) {
-					// Delete button (edit mode — always FullEditor, never new alarm)
 					CancelAndDeleteButton(
-						currentProgress = Progress.FullEditor,
 						isNewAlarm = false,
 						onClick = { viewModel.onDeleteClicked() }
 					)
@@ -218,9 +204,7 @@ fun EditAlarmScreen(
 					val isInactiveEdit = uiState.initialAlarm?.isReadyToUse == false
 					val canSetAlarm = uiState.validationResult == AlarmDataValidationResult.Success || isInactiveEdit
 					PrimaryActionButton(
-						currentProgress = Progress.FullEditor,
 						uiState = uiState,
-						isCandidateInvalid = false,
 						onAction = {
 							if (canSetAlarm) {
 								viewModel.onSetAlarmClicked()
@@ -252,11 +236,6 @@ fun EditAlarmScreen(
 	}
 }
 
-/**
- * New-alarm route entry point.
- * Owns the Scaffold with StartTime → EndTime → FullEditor stepper.
- * No sharedBounds on the scaffold. AnimatedContent stepper is kept as-is.
- */
 @OptIn(
 	ExperimentalMaterial3Api::class,
 	ExperimentalMaterial3ExpressiveApi::class,
@@ -271,16 +250,12 @@ fun NewAlarmScreen(
 		onShowPaywall: (PaywallTriggerType) -> Unit,
 		linearProgressBar: (@Composable () -> Unit)? = null,
 		viewModel: AlarmPickerViewModel,
-		// kept for API compatibility but unused in this route (no shared-element)
-		sharedTransitionScope: SharedTransitionScope? = null,
-		animatedVisibilityScope: AnimatedVisibilityScope? = null
 ) {
 	val fromOnboarding = linearProgressBar != null
-	logD("fromOnboarding:$fromOnboarding")
 
-	val uiState by viewModel.uiState.collectAsState()
-	val isPremium by viewModel.isPremium.collectAsState()
-	val selectedSound by viewModel.selectedAlarmSound.collectAsState()
+	val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+	val isPremium by viewModel.isPremium.collectAsStateWithLifecycle()
+	val selectedSound by viewModel.selectedAlarmSound.collectAsStateWithLifecycle()
 	val view = LocalView.current
 	val context = LocalContext.current
 
@@ -330,32 +305,9 @@ fun NewAlarmScreen(
 	}
 
 	val horizontalPadding = rememberAdaptiveHorizontalPadding()
-	val currentProgress = if (fromOnboarding) uiState.progress else Progress.FullEditor
-
-	val startTimePickerState = key(currentProgress, uiState.alarmData.startTime) {
-		rememberTimePickerState(
-			initialHour = uiState.alarmData.startTimeCalendar.get(Calendar.HOUR_OF_DAY),
-			initialMinute = uiState.alarmData.startTimeCalendar.get(Calendar.MINUTE),
-			is24Hour = false
-		)
-	}
-	val endTimePickerState = key(currentProgress) {
-		rememberTimePickerState(
-			initialHour = uiState.alarmData.endTimeCalendar.get(Calendar.HOUR_OF_DAY),
-			initialMinute = uiState.alarmData.endTimeCalendar.get(Calendar.MINUTE),
-			is24Hour = false
-		)
-	}
-	val candidateEnd = remember(endTimePickerState.hour, endTimePickerState.minute, uiState.alarmData.startTime) {
-		(uiState.alarmData.endTimeCalendar.clone() as Calendar).apply {
-			set(Calendar.HOUR_OF_DAY, endTimePickerState.hour)
-			set(Calendar.MINUTE, endTimePickerState.minute)
-		}
-	}
-	val isCandidateInvalid = currentProgress != Progress.StartTime && candidateEnd.timeInMillis <= uiState.alarmData.startTime
 
 	Scaffold(
-		contentWindowInsets = WindowInsets.safeDrawing,
+		contentWindowInsets = if (fromOnboarding) WindowInsets(0) else WindowInsets.safeDrawing,
 		topBar = {
 			if (!fromOnboarding) {
 				ExpressiveAlarmTopBar(
@@ -368,7 +320,7 @@ fun NewAlarmScreen(
 				modifier = Modifier
 					.fillMaxWidth()
 					.background(colorScheme.background)
-					.navigationBarsPadding()
+					.then(if (fromOnboarding) Modifier else Modifier.navigationBarsPadding())
 					.padding(16.dp)
 					.padding(bottom = 20.dp),
 				contentAlignment = Alignment.Center
@@ -379,71 +331,19 @@ fun NewAlarmScreen(
 					verticalAlignment = Alignment.CenterVertically
 				) {
 					CancelAndDeleteButton(
-						currentProgress = currentProgress,
 						isNewAlarm = true,
 						fromOnboarding = fromOnboarding,
-						onClick = {
-							when (currentProgress) {
-								Progress.StartTime -> settingAlarmCancelled()
-								Progress.EndTime -> {
-									if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-										view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
-									}
-									viewModel.updateProgress(Progress.StartTime)
-								}
-								Progress.FullEditor -> {
-									if (fromOnboarding) {
-										if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-											view.performHapticFeedback(HapticFeedbackConstants.SEGMENT_TICK)
-										}
-										viewModel.updateProgress(Progress.EndTime)
-									} else {
-										settingAlarmCancelled()
-									}
-								}
-							}
-						}
+						onClick = settingAlarmCancelled
 					)
 
+					val isInactiveEdit = uiState.initialAlarm?.isReadyToUse == false
+					val canSetAlarm = uiState.validationResult == AlarmDataValidationResult.Success || isInactiveEdit
 					PrimaryActionButton(
-						currentProgress = currentProgress,
 						uiState = uiState,
-						isCandidateInvalid = isCandidateInvalid,
 						onAction = {
-							if (fromOnboarding) {
-								when (currentProgress) {
-									Progress.StartTime -> {
-										val selectedStartTime = (uiState.alarmData.startTimeCalendar.clone() as Calendar).apply {
-											set(Calendar.HOUR_OF_DAY, startTimePickerState.hour)
-											set(Calendar.MINUTE, startTimePickerState.minute)
-										}
-										view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-										viewModel.updateStartTime(selectedStartTime)
-										viewModel.updateProgress(Progress.EndTime)
-									}
-									Progress.EndTime -> {
-										if (!isCandidateInvalid) {
-											view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-											viewModel.updateEndTime(candidateEnd)
-											viewModel.updateProgress(Progress.FullEditor)
-										}
-									}
-									Progress.FullEditor -> {
-										val isInactiveEdit = uiState.initialAlarm?.isReadyToUse == false
-										val canSetAlarm = uiState.validationResult == AlarmDataValidationResult.Success || isInactiveEdit
-										if (canSetAlarm) {
-											viewModel.onSetAlarmClicked()
-											view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-										}
-									}
-								}
-							} else {
-								val isInactiveEdit = uiState.initialAlarm?.isReadyToUse == false
-								val canSetAlarm = uiState.validationResult == AlarmDataValidationResult.Success || isInactiveEdit
-								if (canSetAlarm) {
-									viewModel.onSetAlarmClicked()
-									view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-								}
+							if (canSetAlarm) {
+								viewModel.onSetAlarmClicked()
+								view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
 							}
 						}
 					)
@@ -451,80 +351,23 @@ fun NewAlarmScreen(
 			}
 		}
 	) { screenPadding ->
-		Column(
+		AlarmEditorBody(
 			modifier = Modifier
 				.fillMaxSize()
 				.padding(screenPadding)
-				.consumeWindowInsets(screenPadding),
-		) {
-			val stepperSpatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
-			val stepperEffectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
-			AnimatedContent(
-				targetState = currentProgress,
-				modifier = Modifier.weight(1f).fillMaxWidth(),
-				transitionSpec = {
-					val direction = if (targetState.ordinal > initialState.ordinal) {
-						AnimatedContentTransitionScope.SlideDirection.Left
-					} else {
-						AnimatedContentTransitionScope.SlideDirection.Right
-					}
-					slideIntoContainer(
-						towards = direction,
-						animationSpec = stepperSpatialSpec
-					) + fadeIn(
-						animationSpec = stepperEffectsSpec
-					) togetherWith
-							slideOutOfContainer(
-								towards = direction,
-								animationSpec = stepperSpatialSpec
-							) + fadeOut(
-						animationSpec = stepperEffectsSpec
-					)
-				},
-				contentAlignment = Alignment.Center,
-				label = "alarm_picker_navigation"
-			) { progress ->
-				when (progress) {
-					Progress.StartTime -> {
-						TimePickerWithoutDialog(
-							state = startTimePickerState,
-							modifier = Modifier.padding(horizontal = horizontalPadding),
-							uiState = uiState,
-							onDisabledTimeSelected = { onDisabledTimeSelected(view) }
-						)
-					}
-					Progress.EndTime -> {
-						TimePickerWithoutDialog(
-							state = endTimePickerState,
-							isCandidateInvalid = isCandidateInvalid,
-							modifier = Modifier.padding(horizontal = horizontalPadding),
-							uiState = uiState,
-							minHour = startTimePickerState.hour,
-							minMin = if (startTimePickerState.minute == 59) 59 else startTimePickerState.minute + 1,
-							onDisabledTimeSelected = { onDisabledTimeSelected(view) }
-						)
-					}
-					Progress.FullEditor -> {
-						AlarmEditorBody(
-							modifier = Modifier
-								.fillMaxSize()
-								.padding(horizontal = horizontalPadding),
-							uiState = uiState,
-							viewModel = viewModel,
-							selectedSoundTitle = selectedSound?.title,
-							alarmId = null,
-							showCalendarRequest = { showCalendar = true },
-							onNavigateToSoundList = onNavigateToSoundList,
-							onNavigateToMissionList = onNavigateToMissionList,
-							// NewAlarmScreen never participates in the card hero transition
-							sharedTransitionScope = null,
-							animatedVisibilityScope = null,
-							animateScroll = true
-						)
-					}
-				}
-			}
-		}
+				.consumeWindowInsets(screenPadding)
+				.padding(horizontal = horizontalPadding),
+			uiState = uiState,
+			viewModel = viewModel,
+			selectedSoundTitle = selectedSound?.title,
+			alarmId = null,
+			showCalendarRequest = { showCalendar = true },
+			onNavigateToSoundList = onNavigateToSoundList,
+			onNavigateToMissionList = onNavigateToMissionList,
+			sharedTransitionScope = null,
+			animatedVisibilityScope = null,
+			animateScroll = true
+		)
 	}
 }
 
@@ -635,218 +478,142 @@ private fun AlarmEditorBody(
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CancelAndDeleteButton(
-        currentProgress: Progress,
-        modifier: Modifier = Modifier,
-        isNewAlarm: Boolean,
-        fromOnboarding: Boolean = false,
-        onClick: () -> Unit,
+	isNewAlarm: Boolean,
+	modifier: Modifier = Modifier,
+	fromOnboarding: Boolean = false,
+	onClick: () -> Unit,
 ) {
-  val isDeleteMode = currentProgress == Progress.FullEditor && !isNewAlarm
-  val effectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
-  val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntSize>()
+	val interactionSource = remember { MutableInteractionSource() }
+	val isPressed by interactionSource.collectIsPressedAsState()
+	val cornerRadius by animateDpAsState(
+		targetValue = if (isPressed) 16.dp else 28.dp,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "cancel_delete_corner",
+	)
+	val scale by animateFloatAsState(
+		targetValue = if (isPressed) 0.96f else 1f,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "cancel_delete_scale",
+	)
 
-  AnimatedContent(
-          targetState = isDeleteMode,
-          transitionSpec = {
-            fadeIn(effectsSpec) togetherWith fadeOut(effectsSpec) using SizeTransform { _, _ -> spatialSpec }
-          },
-          label = "cancel_delete_button_animation"
-  ) { targetIsDelete ->
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val cornerRadius by animateDpAsState(
-            targetValue = if (isPressed) 16.dp else 28.dp,
-            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-            label = "cancel_delete_corner"
-    )
-    val scale by animateFloatAsState(
-            targetValue = if (isPressed) 0.96f else 1f,
-            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-            label = "cancel_delete_scale"
-    )
-
-    if (targetIsDelete) {
-      TextButton(
-              onClick = onClick,
-              interactionSource = interactionSource,
-              modifier = modifier
-                      .height(56.dp)
-                      .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                      },
-              contentPadding = PaddingValues(horizontal = 24.dp, vertical = 0.dp),
-              shape = RoundedCornerShape(cornerRadius),
-              colors = ButtonDefaults.textButtonColors(
-                      containerColor = colorScheme.errorContainer.copy(alpha = 0.45f),
-                      contentColor = colorScheme.error
-              )
-      ) {
-        Text(
-                text = stringResource(R.string.alarm_picker_delete_alarm),
-                style = typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-        )
-      }
-    } else {
-      OutlinedButton(
-              onClick = onClick,
-              interactionSource = interactionSource,
-              modifier = modifier
-                      .height(56.dp)
-                      .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                      },
-              contentPadding = PaddingValues(horizontal = 28.dp, vertical = 0.dp),
-              shape = RoundedCornerShape(cornerRadius)
-      ) {
-        AnimatedContent(
-                targetState = currentProgress,
-                transitionSpec = {
-                  fadeIn(effectsSpec) togetherWith fadeOut(effectsSpec) using SizeTransform { _, _ -> spatialSpec }
-                },
-                label = "cancel_button_text"
-        ) { progress ->
-          Text(
-			  text = when (progress) {
-				Progress.StartTime -> stringResource(R.string.alarm_picker_cancel)
-				Progress.EndTime -> stringResource(R.string.alarm_picker_previous)
-				Progress.FullEditor -> if (isNewAlarm && !fromOnboarding) {
-					stringResource(R.string.alarm_picker_cancel)
-				} else {
-					stringResource(R.string.alarm_picker_previous)
-				}
-			  },
-			  style = typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-          )
-        }
-      }
-    }
-  }
+	if (!isNewAlarm) {
+		TextButton(
+			onClick = onClick,
+			interactionSource = interactionSource,
+			modifier = modifier
+				.height(56.dp)
+				.graphicsLayer {
+					scaleX = scale
+					scaleY = scale
+				},
+			contentPadding = PaddingValues(horizontal = 24.dp, vertical = 0.dp),
+			shape = RoundedCornerShape(cornerRadius),
+			colors = ButtonDefaults.textButtonColors(
+				containerColor = colorScheme.errorContainer.copy(alpha = 0.45f),
+				contentColor = colorScheme.error,
+			),
+		) {
+			Text(
+				text = stringResource(R.string.alarm_picker_delete_alarm),
+				style = typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+			)
+		}
+	} else {
+		OutlinedButton(
+			onClick = onClick,
+			interactionSource = interactionSource,
+			modifier = modifier
+				.height(56.dp)
+				.graphicsLayer {
+					scaleX = scale
+					scaleY = scale
+				},
+			contentPadding = PaddingValues(horizontal = 28.dp, vertical = 0.dp),
+			shape = RoundedCornerShape(cornerRadius),
+		) {
+			Text(
+				text = stringResource(
+					if (fromOnboarding) R.string.alarm_picker_previous else R.string.alarm_picker_cancel,
+				),
+				style = typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+			)
+		}
+	}
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun PrimaryActionButton(
-        currentProgress: Progress,
-        uiState: AlarmPickerUiState,
-        isCandidateInvalid: Boolean,
-        onAction: () -> Unit,
-        modifier: Modifier = Modifier
+	uiState: AlarmPickerUiState,
+	onAction: () -> Unit,
+	modifier: Modifier = Modifier,
 ) {
-  val effectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
-  val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntSize>()
+	val effectsSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+	val spatialSpec = MaterialTheme.motionScheme.defaultSpatialSpec<IntSize>()
 
-  AnimatedContent(
-          targetState = currentProgress,
-          transitionSpec = {
-            fadeIn(effectsSpec) togetherWith fadeOut(effectsSpec) using SizeTransform { _, _ -> spatialSpec }
-          },
-          label = "primary_action_button_animation"
-  ) { progress ->
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val cornerRadius by animateDpAsState(
-            targetValue = if (isPressed) 16.dp else 28.dp,
-            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-            label = "primary_cta_corner"
-    )
-    val scale by animateFloatAsState(
-            targetValue = if (isPressed) 0.96f else 1f,
-            animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-            label = "primary_cta_scale"
-    )
+	val interactionSource = remember { MutableInteractionSource() }
+	val isPressed by interactionSource.collectIsPressedAsState()
+	val cornerRadius by animateDpAsState(
+		targetValue = if (isPressed) 16.dp else 28.dp,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "primary_cta_corner",
+	)
+	val scale by animateFloatAsState(
+		targetValue = if (isPressed) 0.96f else 1f,
+		animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+		label = "primary_cta_scale",
+	)
 
-    when (progress) {
-      Progress.StartTime, Progress.EndTime -> {
-        Button(
-                onClick = onAction,
-                enabled = !isCandidateInvalid,
-                interactionSource = interactionSource,
-                colors = if (!isCandidateInvalid) {
-                  ButtonDefaults.buttonColors(
-                          containerColor = colorScheme.primary,
-                          contentColor = colorScheme.onPrimary
-                  )
-                } else {
-                  ButtonDefaults.buttonColors(
-                          containerColor = colorScheme.surfaceVariant,
-                          contentColor = colorScheme.onSurfaceVariant
-                  )
-                },
-                modifier = modifier
-                        .height(56.dp)
-                        .graphicsLayer {
-                          scaleX = scale
-                          scaleY = scale
-                        },
-                contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
-                shape = RoundedCornerShape(cornerRadius)
-        ) {
-          Text(
-                  stringResource(R.string.alarm_picker_ok),
-                  style = typography.bodyLarge.copy(fontWeight = FontWeight.ExtraBold),
-          )
-        }
-      }
+	val isInactiveEdit = uiState.initialAlarm?.isReadyToUse == false
+	val canSetAlarm = uiState.validationResult == AlarmDataValidationResult.Success || isInactiveEdit
+	val containerColor by animateColorAsState(
+		targetValue = when {
+			canSetAlarm -> colorScheme.primary
+			uiState.validationResult.isFailure() -> colorScheme.errorContainer
+			else -> colorScheme.primary
+		},
+		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+		label = "primary_cta_container_color",
+	)
+	val contentColor by animateColorAsState(
+		targetValue = when {
+			canSetAlarm -> colorScheme.onPrimary
+			uiState.validationResult.isFailure() -> colorScheme.onErrorContainer
+			else -> colorScheme.onPrimary
+		},
+		animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+		label = "primary_cta_content_color",
+	)
 
-      Progress.FullEditor -> {
-        val isInactiveEdit = uiState.initialAlarm?.isReadyToUse == false
-        val canSetAlarm = uiState.validationResult == AlarmDataValidationResult.Success || isInactiveEdit
-        val containerColor by animateColorAsState(
-                targetValue = when {
-                  canSetAlarm -> colorScheme.primary
-                  uiState.validationResult.isFailure() -> colorScheme.errorContainer
-                  else -> colorScheme.primary
-                },
-                animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-                label = "primary_cta_container_color"
-        )
-        val contentColor by animateColorAsState(
-                targetValue = when {
-                  canSetAlarm -> colorScheme.onPrimary
-                  uiState.validationResult.isFailure() -> colorScheme.onErrorContainer
-                  else -> colorScheme.onPrimary
-                },
-                animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-                label = "primary_cta_content_color"
-        )
-
-        Button(
-                onClick = onAction,
-                interactionSource = interactionSource,
-                colors = ButtonDefaults.buttonColors(
-                        containerColor = containerColor,
-                        contentColor = contentColor
-                ),
-                modifier = modifier
-                        .height(56.dp)
-                        .graphicsLayer {
-                          scaleX = scale
-                          scaleY = scale
-                        },
-                contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
-                shape = RoundedCornerShape(cornerRadius)
-        ) {
-          AnimatedContent(
-                  targetState = canSetAlarm,
-                  transitionSpec = {
-                    fadeIn(effectsSpec) togetherWith fadeOut(effectsSpec) using SizeTransform { _, _ -> spatialSpec }
-                  },
-                  label = "button_text"
-          ) { isValid ->
-            Text(
-                    when {
-                      isValid -> stringResource(R.string.alarm_picker_btn_set)
-                      else -> stringResource(R.string.alarm_picker_btn_fix)
-                    },
-                    style = typography.bodyLarge.copy(fontWeight = FontWeight.ExtraBold),
-            )
-          }
-        }
-      }
-    }
-  }
+	Button(
+		onClick = onAction,
+		interactionSource = interactionSource,
+		colors = ButtonDefaults.buttonColors(
+			containerColor = containerColor,
+			contentColor = contentColor,
+		),
+		modifier = modifier
+			.height(56.dp)
+			.graphicsLayer {
+				scaleX = scale
+				scaleY = scale
+			},
+		contentPadding = PaddingValues(horizontal = 36.dp, vertical = 0.dp),
+		shape = RoundedCornerShape(cornerRadius),
+	) {
+		AnimatedContent(
+			targetState = canSetAlarm,
+			transitionSpec = {
+				fadeIn(effectsSpec) togetherWith fadeOut(effectsSpec) using SizeTransform { _, _ -> spatialSpec }
+			},
+			label = "button_text",
+		) { isValid ->
+			Text(
+				text = stringResource(if (isValid) R.string.alarm_picker_btn_set else R.string.alarm_picker_btn_fix),
+				style = typography.bodyLarge.copy(fontWeight = FontWeight.ExtraBold),
+			)
+		}
+	}
 }
 
 fun onDisabledTimeSelected(view: View) {

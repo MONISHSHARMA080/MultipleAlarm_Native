@@ -39,7 +39,9 @@ import com.revenuecat.purchases.ui.revenuecatui.PaywallOptions
 		onButtonStateChange: (ButtonState) -> Unit,
 		onEvent: (PaywallEvent) -> Unit
 ) {
-	onButtonStateChange(ButtonState.Hidden)
+	LaunchedEffect(Unit) {
+		onButtonStateChange(ButtonState.Hidden)
+	}
 	BackHandler {
 		if (isHardPaywall) {
 			onBackPress()

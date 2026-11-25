@@ -61,10 +61,11 @@ class NavigationViewModel @Inject constructor(
 			_onboardingFlow.value = stored
 			return stored
 		}
-		val flow = when (Random.nextInt(3)) {
+		val flow = when (Random.nextInt(4)) {
 			0 -> OnboardingFlow.ONBOARDING_FLOW_VARIANT_LONG
 			1 -> OnboardingFlow.ONBOARDING_FLOW_VARIANT_SHORT
-			else -> OnboardingFlow.ONBOARDING_FLOW_VARIANT_V3
+			2 -> OnboardingFlow.ONBOARDING_FLOW_VARIANT_V3
+			else -> OnboardingFlow.ONBOARDING_FLOW_VARIANT_V4
 		}
 		_onboardingFlow.value = flow
 		logD("onboarding flow: assigned $flow")

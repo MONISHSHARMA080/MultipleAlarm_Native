@@ -24,10 +24,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -73,10 +73,10 @@ import com.coolApps.MultipleAlarmClock.data.paywall.PaywallEvent
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.AlarmResultScreen
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.CreateFirstAlarmScreen
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.FirstAlarmIntroView
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.HardPaywallScreen
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.OnboardingPaywallScreen
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.OnboardingTimeStepperAlarmScreen
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.PermissionScreen
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.ProblemScreen
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.UserProfileScreen
@@ -101,13 +101,17 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 	// *before* AnimatedContent composes the new screen – prevents layout jitter
 	// from child screens changing it during their first composition frame.
 	var buttonState by remember { mutableStateOf(ButtonState.Enabled) }
+	var childBackOverride by remember { mutableStateOf<(() -> Unit)?>(null) }
 	LaunchedEffect(uiState.displaySate) {
+		if (uiState.displaySate != DisplaySate.CreateFirstAlarm) {
+			childBackOverride = null
+		}
 		buttonState = when (uiState.displaySate) {
 			DisplaySate.CreateFirstAlarm,
 			DisplaySate.AlarmResult,
 			DisplaySate.PrePaywall,
 			DisplaySate.OnboardingPaywall -> ButtonState.Hidden
-			else -> buttonState  // keep current; child screens will refine via callback
+			else -> buttonState
 		}
 	}
 	val view = LocalView.current
@@ -146,8 +150,13 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 				) {
 					IconButton(onClick = {
 						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-						viewModel.onPreviousClicked()
-						buttonState = ButtonState.Enabled
+						val override = childBackOverride
+						if (override != null) {
+							override()
+						} else {
+							viewModel.onPreviousClicked()
+							buttonState = ButtonState.Enabled
+						}
 					}) {
 						Icon(
 							imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
@@ -163,12 +172,11 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 			}
 		}
 	) { innerPadding ->
-		// Box overlay: content always gets the same innerPadding (no bottomBar),
-		// button floats on top without affecting layout measurements.
 		Box(
 			modifier = Modifier
 				.fillMaxSize()
 				.padding(innerPadding)
+				.consumeWindowInsets(innerPadding)
 		) {
 			AnimatedContent(
 				targetState = uiState.displaySate,
@@ -212,7 +220,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 						)
 					}
 					DisplaySate.CreateFirstAlarm -> {
-						CreateFirstAlarmScreen(
+						OnboardingTimeStepperAlarmScreen(
 							onAlarmSetProceed = { viewModel.onNextClicked() },
 							linearProgressBar = {
 								LinearProgressIndicator(
@@ -220,8 +228,9 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 									modifier = Modifier.fillMaxWidth().padding(end = 16.dp)
 								)
 							},
-							onButtonStateChange = { buttonState = it },
-							onShowPaywall = onShowPaywall
+							onShowPaywall = onShowPaywall,
+							onBackOverrideChanged = { childBackOverride = it },
+							onCancelled = { viewModel.onPreviousClicked() }
 						)
 					}
 					DisplaySate.AlarmResult -> AlarmResultScreen(
@@ -309,12 +318,11 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 						.fillMaxWidth()
 						.background(
 						brush = Brush.verticalGradient(
-							0f to colorScheme.background,
+							0f to colorScheme.background.copy(alpha = 0f),
 							0.35f to colorScheme.background,
-							1f to colorScheme.background.copy(alpha = 0f),
+							1f to colorScheme.background,
 						)
 					)
-						.navigationBarsPadding()
 						.padding(26.dp)
 						.padding(bottom = 20.dp),
 					contentAlignment = Alignment.Center,

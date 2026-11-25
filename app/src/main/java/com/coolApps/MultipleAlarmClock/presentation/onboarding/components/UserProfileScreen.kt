@@ -69,9 +69,12 @@ data class ProfileOption(
 @Composable
 fun UserProfileScreen(
     onButtonStateChange: (ButtonState) -> Unit,
-    onProfileSelected: (String?) -> Unit
+    onProfileSelected: (String?) -> Unit,
+    initialSelectedProfile: String? = null,
 ) {
-	onButtonStateChange(ButtonState.Enabled)
+	LaunchedEffect(Unit) {
+		onButtonStateChange(ButtonState.Enabled)
+	}
     val profiles = listOf(
         ProfileOption(R.string.onboarding_profile_school, R.string.onboarding_profile_school_age, "School student", Icons.AutoMirrored.Rounded.MenuBook),
         ProfileOption(R.string.onboarding_profile_college, R.string.onboarding_profile_college_age, "College student", Icons.Rounded.School),
@@ -79,7 +82,7 @@ fun UserProfileScreen(
         ProfileOption(R.string.onboarding_profile_parent, R.string.onboarding_profile_parent_age, "Homemaker/Parent", Icons.Rounded.ChildCare),
         ProfileOption(R.string.onboarding_profile_retired, R.string.onboarding_profile_retired_age, "Retired", Icons.Rounded.Elderly),
     )
-    var selectedProfile by rememberSaveable { mutableStateOf<String?>(null) }
+    var selectedProfile by rememberSaveable { mutableStateOf(initialSelectedProfile) }
 
     LaunchedEffect(selectedProfile) {
         onProfileSelected(selectedProfile)
