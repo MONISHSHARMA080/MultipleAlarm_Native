@@ -15,9 +15,9 @@ import com.coolApps.MultipleAlarmClock.data.billing.EntitlementManager
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.local.AlarmDataValidationResult
 import com.coolApps.MultipleAlarmClock.data.local.RepeatDays
+import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.data.repository.AlarmSoundRepository
 import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
-import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionUtils
 import com.coolApps.MultipleAlarmClock.receiver.PlayAlarm
 import com.coolApps.MultipleAlarmClock.util.Analytics
@@ -63,7 +63,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 	private val _uiState = MutableStateFlow(
 		AlarmPickerUiState(
 			alarmData = createDefaultAlarm(alarmData),
-			initialAlarm = alarmData,
+			initialAlarm = alarmData?.takeIf { it.id > 0 },
 			areAllPermissionsGranted = PermissionUtils.allCriticalPermissionsGranted(context),
 		)
 	)
@@ -86,8 +86,6 @@ class AlarmPickerViewModel @AssistedInject constructor(
 
 	private val _selectedAlarmSound = MutableStateFlow<AlarmSound?>(null)
 	val selectedAlarmSound = _selectedAlarmSound.asStateFlow()
-
-	private var appliedPresetKey: String? = null
 
 	private val nonCancellableScope = CoroutineScope(NonCancellable)
 
@@ -137,9 +135,15 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		_uiState.update { it.copy(isLoading = true) }
 		viewModelScope.launch {
 			try {
-				val saved = setNewOrUpdateAlarm(alarmToUse, current.initialAlarm)
-				if (saved) {
-					_uiState.update { it.copy(completedAction = AlarmCompletionAction.Saved) }
+				val savedAlarm = setNewOrUpdateAlarm(alarmToUse, current.initialAlarm)
+				if (savedAlarm != null) {
+					_uiState.update {
+						it.copy(
+							alarmData = savedAlarm,
+							initialAlarm = savedAlarm,
+							completedAction = AlarmCompletionAction.Saved(savedAlarm),
+						)
+					}
 				}
 				captureUiStateAndSendAnalytics(_uiState.value)
 			} finally {
@@ -197,34 +201,6 @@ class AlarmPickerViewModel @AssistedInject constructor(
 				"notification permission granted" to isNotificationsEnabled
 			)
 		)
-	}
-
-	fun applyPresetIfNeeded(preset: AlarmData, presetKey: String) {
-		if (appliedPresetKey == presetKey) return
-		appliedPresetKey = presetKey
-		val rolled = preset.rollOverIfTimeIntervalPassed()
-		_uiState.update {
-			it.copy(
-				alarmData = rolled,
-				validationResult = rolled.validate(),
-			)
-		}
-		val soundUri = rolled.sound
-		if (soundUri == null) {
-			_selectedAlarmSound.value = null
-		} else {
-			viewModelScope.launch(Dispatchers.IO) {
-				_selectedAlarmSound.value = alarmSoundRepository.resolveSound(soundUri)
-			}
-		}
-	}
-
-	fun syncSavedAlarmId(alarmId: Int?) {
-		if (alarmId == null || alarmId <= 0) return
-		_uiState.update { state ->
-			if (state.alarmData.id == alarmId) state
-			else state.copy(alarmData = state.alarmData.copy(id = alarmId))
-		}
 	}
 
 	private fun updateAlarmData(transform: (AlarmData) -> AlarmData) {
@@ -471,7 +447,7 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		}
 	}
 
-	private suspend fun setNewOrUpdateAlarm(newAlarmData: AlarmData, oldAlarm: AlarmData?): Boolean {
+	private suspend fun setNewOrUpdateAlarm(newAlarmData: AlarmData, oldAlarm: AlarmData?): AlarmData? {
 		logD("deleting the alarm $oldAlarm")
 		val alarmScheduledResult = withContext(NonCancellable) {
 			alarmsController.startAlarmSeriesHandler(
@@ -480,21 +456,21 @@ class AlarmPickerViewModel @AssistedInject constructor(
 			)
 		}
 		return alarmScheduledResult.fold(
-			onSuccess = {
+			onSuccess = { savedAlarm ->
 				val eventText = if (oldAlarm != null) "alarm_edited" else "new_alarm_set"
 				analytics.captureEvent(
 					eventText,
 					mapOf(
-						"alarmData" to newAlarmData.toString(),
+						"alarmData" to savedAlarm.toString(),
 						"oldAlarm" to oldAlarm.toString(),
 					)
 				)
-				true
+				savedAlarm
 			},
 			onError = { error ->
 				errorHandler.handleError(Result.Failure(error))
 				logD("there is a error in editing new alarm-->${error.internalErrorMessage}")
-				false
+				null
 			}
 		)
 	}

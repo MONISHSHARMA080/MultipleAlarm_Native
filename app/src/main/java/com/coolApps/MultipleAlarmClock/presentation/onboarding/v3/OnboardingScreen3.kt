@@ -1,7 +1,6 @@
-package com.coolApps.MultipleAlarmClock.presentation.onboarding
+package com.coolApps.MultipleAlarmClock.presentation.onboarding.v3
 
 import android.view.HapticFeedbackConstants
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
@@ -25,10 +24,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -67,204 +66,137 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.R
-import com.coolApps.MultipleAlarmClock.data.billing.EntitlementManager.RevenueCatEntitlements
 import com.coolApps.MultipleAlarmClock.data.paywall.OfferingState
-import com.coolApps.MultipleAlarmClock.data.paywall.PaywallEvent
-import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.CreateFirstAlarmScreen
+import com.coolApps.MultipleAlarmClock.presentation.logD
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.HardPaywallScreen
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.OnboardingPaywallScreen
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.PermissionScreen
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.PixelLockScreenPreviewScreen
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.UserProfileScreen
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.UserStrugglesScreen
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.WakeUpTimeScreen
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.v3.components.ProblemScreen3
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-fun OnboardingScreen4(onShowPaywall: (PaywallTriggerType) -> Unit = {}) {
-	val viewModel: OnboardingViewModel4 = hiltViewModel()
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalPermissionsApi::class)
+@Composable fun OnboardingScreen3() {
+	val viewModel : OnboardingViewModel3 = hiltViewModel()
 
 	val uiState by viewModel.displayState.collectAsStateWithLifecycle()
 	val featureFlags by viewModel.analytics.featureFlagsData.collectAsStateWithLifecycle()
 	val isHardPaywall = featureFlags?.isHardPaywallEnabled ?: false
+
 	val onboardingOffering by viewModel.onboardingOffering.collectAsStateWithLifecycle()
 
-	val personalization = remember(uiState.primaryStruggle) {
-		uiState.primaryStruggle.toPersonalization()
+	LaunchedEffect(uiState.displaySate) {
+		viewModel.analytics.screen("Onboarding_${uiState.displaySate.name.lowercase()}")
 	}
-
-	LaunchedEffect(uiState.displayState) {
-		viewModel.analytics.screen("Onboarding_${uiState.displayState.name.lowercase()}")
-	}
-
+	// Pre-compute the initial button state from the display state so it's set
+	// *before* AnimatedContent composes the new screen – prevents layout jitter
+	// from child screens changing it during their first composition frame.
 	var buttonState by remember { mutableStateOf(ButtonState.Enabled) }
-	var childBackOverride by remember { mutableStateOf<(() -> Unit)?>(null) }
-
-	LaunchedEffect(uiState.displayState) {
-		if (uiState.displayState != DisplayState4.CreateFirstAlarm) {
-			childBackOverride = null
-		}
-		buttonState = when (uiState.displayState) {
-			DisplayState4.CreateFirstAlarm,
-			DisplayState4.PrePaywall,
-			DisplayState4.OnboardingPaywall -> ButtonState.Hidden
-			DisplayState4.Permission -> if (uiState.allCriticalGranted) ButtonState.Enabled else ButtonState.Disabled
-			else -> ButtonState.Enabled
+	LaunchedEffect(uiState.displaySate) {
+		buttonState = when (uiState.displaySate) {
+			DisplaySate3.PrePaywall,
+			DisplaySate3.OnboardingPaywall -> ButtonState.Hidden
+			else -> buttonState  // keep current; child screens will refine via callback
 		}
 	}
-
-	BackHandler(
-		enabled = childBackOverride != null ||
-			(uiState.canNavigateBack && uiState.displayState != DisplayState4.OnboardingPaywall),
-	) {
-		childBackOverride?.invoke() ?: viewModel.onPreviousClicked()
-	}
-
 	val view = LocalView.current
 	val motionScheme = MaterialTheme.motionScheme
 
-	val progress = when (uiState.displayState) {
-		DisplayState4.UserStruggles -> 1f / 7f
-		DisplayState4.UserProfile -> 2f / 7f
-		DisplayState4.WakeUpTime -> 3f / 7f
-		DisplayState4.Permission -> 4f / 7f
-		DisplayState4.CreateFirstAlarm -> 5f / 7f
-		DisplayState4.AlarmPreview -> 6f / 7f
-		DisplayState4.PrePaywall -> 6f / 7f
-		DisplayState4.OnboardingPaywall -> 7f / 7f
+	val progress = when (uiState.displaySate) {
+		DisplaySate3.Problem -> 1f / 5f
+		DisplaySate3.UserStruggles -> 2f / 5f
+		DisplaySate3.UserProfile -> 3f / 5f
+		DisplaySate3.Permission -> 4f / 5f
+		DisplaySate3.PrePaywall -> 4f / 5f
+		DisplaySate3.OnboardingPaywall -> 5f / 5f
 	}
 
 	val animatedProgress by animateFloatAsState(
 		targetValue = progress,
-		animationSpec = motionScheme.defaultSpatialSpec(),
-		label = "progress4",
+		animationSpec = tween(durationMillis = 400),
+		label = "progress"
 	)
 
 	Scaffold(
 		topBar = {
-			if (uiState.displayState != DisplayState4.OnboardingPaywall) {
+			if (uiState.displaySate != DisplaySate3.OnboardingPaywall
+			) {
 				Row(
 					modifier = Modifier
 						.fillMaxWidth()
 						.statusBarsPadding()
 						.padding(horizontal = 8.dp, vertical = 8.dp),
-					verticalAlignment = Alignment.CenterVertically,
+					verticalAlignment = Alignment.CenterVertically
 				) {
-					IconButton(
-						enabled = childBackOverride != null || uiState.canNavigateBack,
-						onClick = {
-							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-							childBackOverride?.invoke() ?: viewModel.onPreviousClicked()
-						},
-					) {
+					IconButton(onClick = {
+						view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+						viewModel.onPreviousClicked()
+						buttonState = ButtonState.Enabled
+					}) {
 						Icon(
 							imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-							contentDescription = stringResource(R.string.alarm_picker_previous),
+							contentDescription = "Back"
 						)
 					}
 					Spacer(modifier = Modifier.width(8.dp))
 					LinearProgressIndicator(
 						progress = { animatedProgress },
-						modifier = Modifier
-							.fillMaxWidth()
-							.padding(end = 12.dp),
+						modifier = Modifier.fillMaxWidth().padding(end = 12.dp)
 					)
 				}
 			}
-		},
+		}
 	) { innerPadding ->
-		val stepSpatialSpec = motionScheme.defaultSpatialSpec<IntOffset>()
+		// Box overlay: content always gets the same innerPadding (no bottomBar),
+		// button floats on top without affecting layout measurements.
 		Box(
 			modifier = Modifier
 				.fillMaxSize()
 				.padding(innerPadding)
-				.consumeWindowInsets(innerPadding),
 		) {
 			AnimatedContent(
-				targetState = uiState.displayState,
+				targetState = uiState.displaySate,
 				modifier = Modifier.fillMaxSize(),
 				transitionSpec = {
+					// Use natural enum ordering to determine navigation direction
 					val isForward = targetState > initialState
 					slideIntoContainer(
-						towards = if (isForward) {
-							AnimatedContentTransitionScope.SlideDirection.Left
-						} else {
-							AnimatedContentTransitionScope.SlideDirection.Right
-						},
-						animationSpec = stepSpatialSpec,
+						towards = if (isForward) AnimatedContentTransitionScope.SlideDirection.Left else AnimatedContentTransitionScope.SlideDirection.Right,
+						animationSpec = tween(370, easing = FastOutSlowInEasing)
 					) togetherWith slideOutOfContainer(
-						towards = if (isForward) {
-							AnimatedContentTransitionScope.SlideDirection.Left
-						} else {
-							AnimatedContentTransitionScope.SlideDirection.Right
-						},
-						animationSpec = stepSpatialSpec,
+						towards = if (isForward) AnimatedContentTransitionScope.SlideDirection.Left else AnimatedContentTransitionScope.SlideDirection.Right,
+						animationSpec = tween(370, easing = FastOutSlowInEasing)
 					)
 				},
-				label = "onboarding4StepTransition",
 			) { state ->
 				when (state) {
-					DisplayState4.UserStruggles -> UserStrugglesScreen(
-						initialSelectedStruggles = uiState.selectedStruggles,
-						onButtonStateChange = { buttonState = it },
-						onStrugglesSelected = viewModel::onStrugglesSelected,
+					DisplaySate3.Problem -> ProblemScreen3(
+						onButtonStateChange = { buttonState = it }
 					)
-
-					DisplayState4.UserProfile -> UserProfileScreen(
-						initialSelectedProfile = uiState.selectedProfile,
+					DisplaySate3.UserStruggles -> UserStrugglesScreen(
 						onButtonStateChange = { buttonState = it },
-						onProfileSelected = viewModel::onProfileSelected,
+						onStrugglesSelected = { viewModel.onStrugglesSelected(it) }
 					)
-					DisplayState4.WakeUpTime -> WakeUpTimeScreen(
-						initialHour = uiState.wakeUpHour,
-						initialMinute = uiState.wakeUpMinute,
-						personalization = personalization,
-						onTimeChanged = viewModel::onWakeUpTimeChanged,
+					DisplaySate3.UserProfile -> UserProfileScreen(
 						onButtonStateChange = { buttonState = it },
+						onProfileSelected = { viewModel.onProfileSelected(it) }
 					)
-					DisplayState4.Permission -> PermissionScreen(
-						missingSteps = uiState.missingSteps,
-						allCriticalGranted = uiState.allCriticalGranted,
-						refreshPermissionUiState = viewModel::refreshPermissions,
-						onButtonStateChange = { buttonState = it },
-					)
-
-					DisplayState4.CreateFirstAlarm -> {
-						val defaultMessage = stringResource(personalization.defaultAlarmMessageRes)
-						val presetKey = "${uiState.wakeUpHour}:${uiState.wakeUpMinute}:${uiState.primaryStruggle?.name.orEmpty()}"
-						val presetAlarm = remember(presetKey, defaultMessage) {
-							viewModel.buildPresetAlarm(defaultMessage)
-						}
-						CreateFirstAlarmScreen(
-							onAlarmSetProceed = { viewModel.onNextClicked() },
-							linearProgressBar = {
-								LinearProgressIndicator(
-									progress = { animatedProgress },
-									modifier = Modifier
-										.fillMaxWidth()
-										.padding(end = 16.dp),
-								)
-							},
-							onShowPaywall = onShowPaywall,
-							presetAlarm = presetAlarm,
-							presetKey = presetKey,
-							existingAlarmId = uiState.alarmData?.id,
-							onBackOverrideChanged = { childBackOverride = it },
-							onCancelled = { viewModel.onPreviousClicked() },
+					DisplaySate3.Permission -> {
+						PermissionScreen(
+							missingSteps = uiState.missingSteps,
+							allCriticalGranted = uiState.allCriticalGranted,
+							refreshPermissionUiState = { viewModel.refreshPermissions() },
+							onButtonStateChange = { buttonState = it }
 						)
 					}
-
-					DisplayState4.AlarmPreview -> PixelLockScreenPreviewScreen(
-						alarmData = uiState.alarmData,
-						personalization = personalization,
-						onButtonStateChange = { buttonState = it },
-					)
-
-					DisplayState4.PrePaywall -> {
+					DisplaySate3.PrePaywall -> {
+						logD("in the pre paywall step")
 						when (val billingOffering = onboardingOffering) {
-							OfferingState.Loading -> OfferingsPlaceholderScreen4(
-								onButtonStateChange = { buttonState = it },
+							OfferingState.Loading -> OfferingsPlaceholderScreen(
+								onButtonStateChange = { buttonState = it }
 							)
 							is OfferingState.Loaded -> {
 								val currentOffering = billingOffering.offering
@@ -278,56 +210,38 @@ fun OnboardingScreen4(onShowPaywall: (PaywallTriggerType) -> Unit = {}) {
 										onButtonStateChange = { buttonState = it },
 									)
 								} else {
-									LaunchedEffect(Unit) { viewModel.skipPrePaywall() }
+									// RevenueCat serves no offering for the placement — skip
+									// ahead to the paywall step, which has its own fallback UI.
+									LaunchedEffect(Unit) { viewModel.onNextClicked() }
 								}
 							}
 							OfferingState.Failed -> {
-								LaunchedEffect(Unit) { viewModel.skipPrePaywall() }
+								// offerings failed to load (e.g. offline) — skip this step
+								LaunchedEffect(Unit) { viewModel.onNextClicked() }
 							}
 						}
 					}
-
-					DisplayState4.OnboardingPaywall -> {
-						var shouldRestoreAlarmOnFinish by remember { mutableStateOf(false) }
-						val hasPaywallOffering = (onboardingOffering as? OfferingState.Loaded)?.offering != null
-						LaunchedEffect(isHardPaywall, hasPaywallOffering) {
-							if (isHardPaywall && hasPaywallOffering) {
-								uiState.alarmData?.let { viewModel.stopAlarm(it) }
-							}
-						}
+					DisplaySate3.OnboardingPaywall -> {
 						when (val billingOffering = onboardingOffering) {
 							is OfferingState.Loaded -> OnboardingPaywallScreen(
 								isHardPaywall = isHardPaywall,
 								onBackPress = {
 									viewModel.onPreviousClicked()
-									if (hasPaywallOffering) {
-										uiState.alarmData?.let { viewModel.stopAlarm(it) }
-									}
 								},
-								onFinished = {
-									viewModel.finishedOnboarding(
-										restoreAlarm = if (shouldRestoreAlarmOnFinish) uiState.alarmData else null,
-									)
-								},
+								onFinished = { viewModel.finishedOnboarding() },
 								offering = billingOffering.offering,
-								onEvent = { event ->
-									val unlockedPremium = when (event) {
-										is PaywallEvent.PurchaseCompleted -> true
-										is PaywallEvent.RestoreCompleted ->
-											event.customerInfo.entitlements[RevenueCatEntitlements.PREMIUM]?.isActive == true
-										else -> false
-									}
-									if (isHardPaywall && unlockedPremium) {
-										shouldRestoreAlarmOnFinish = true
-									}
-									viewModel.onPaywallEvent(event)
-								},
-								onButtonStateChange = { buttonState = it },
+								onEvent = { viewModel.onPaywallEvent(it) },
+								onButtonStateChange = { buttonState = it }
 							)
-							OfferingState.Loading -> OfferingsPlaceholderScreen4(
-								onButtonStateChange = { buttonState = it },
-							)
+							OfferingState.Loading -> {
+								// offerings still loading — hold on the placeholder, the
+								// paywall step will render (or fall back) once resolved.
+								OfferingsPlaceholderScreen(
+									onButtonStateChange = { buttonState = it }
+								)
+							}
 							OfferingState.Failed -> {
+								// same fallback the paywall screen used for a null offering
 								LaunchedEffect(Unit) { viewModel.finishedOnboarding() }
 							}
 						}
@@ -347,12 +261,13 @@ fun OnboardingScreen4(onShowPaywall: (PaywallTriggerType) -> Unit = {}) {
 					modifier = Modifier
 						.fillMaxWidth()
 						.background(
-							brush = Brush.verticalGradient(
-								0f to colorScheme.background.copy(alpha = 0f),
-								0.35f to colorScheme.background,
-								1f to colorScheme.background,
-							),
+						brush = Brush.verticalGradient(
+							0f to colorScheme.background,
+							0.35f to colorScheme.background,
+							1f to colorScheme.background.copy(alpha = 0f),
 						)
+					)
+						.navigationBarsPadding()
 						.padding(26.dp)
 						.padding(bottom = 20.dp),
 					contentAlignment = Alignment.Center,
@@ -365,7 +280,7 @@ fun OnboardingScreen4(onShowPaywall: (PaywallTriggerType) -> Unit = {}) {
 						verticalArrangement = Arrangement.spacedBy(8.dp),
 					) {
 						AnimatedVisibility(
-							visible = uiState.displayState == DisplayState4.UserProfile,
+							visible = uiState.displaySate == DisplaySate3.UserProfile,
 							enter = fadeIn(motionScheme.defaultEffectsSpec()) +
 								expandVertically(motionScheme.defaultSpatialSpec()),
 							exit = fadeOut(motionScheme.defaultEffectsSpec()) +
@@ -376,7 +291,7 @@ fun OnboardingScreen4(onShowPaywall: (PaywallTriggerType) -> Unit = {}) {
 								horizontalArrangement = Arrangement.Center,
 								verticalAlignment = Alignment.CenterVertically,
 							) {
-								LockBadge4()
+								LockBadge()
 								Spacer(modifier = Modifier.width(6.dp))
 								Text(
 									text = stringResource(R.string.onboarding_profile_private_hint),
@@ -398,12 +313,12 @@ fun OnboardingScreen4(onShowPaywall: (PaywallTriggerType) -> Unit = {}) {
 							shape = shapes.extraLarge,
 							colors = ButtonDefaults.buttonColors(
 								containerColor = colorScheme.primaryContainer,
-								contentColor = colorScheme.onPrimaryContainer,
-							),
+								contentColor = colorScheme.onPrimaryContainer
+							)
 						) {
 							Text(
 								text = stringResource(R.string.permission_continue),
-								style = typography.titleMedium,
+								style = typography.titleMedium
 							)
 						}
 					}
@@ -413,33 +328,34 @@ fun OnboardingScreen4(onShowPaywall: (PaywallTriggerType) -> Unit = {}) {
 	}
 }
 
+/**
+ * Privacy-cue lock shown inside the CTA on the user-profile step. Springs in,
+ * then breathes gently while the step is visible.
+ */
 @Composable
-private fun LockBadge4() {
-	val pulse = rememberInfiniteTransition(label = "lockPulse4")
+private fun LockBadge() {
+	val pulse = rememberInfiniteTransition(label = "lockPulse")
 	val lockScale by pulse.animateFloat(
 		initialValue = 1f,
 		targetValue = 1.12f,
 		animationSpec = infiniteRepeatable(
 			animation = tween(900, easing = FastOutSlowInEasing),
-			repeatMode = RepeatMode.Reverse,
+			repeatMode = RepeatMode.Reverse
 		),
-		label = "lockPulseScale4",
+		label = "lockPulseScale"
 	)
 	Icon(
 		imageVector = Icons.Rounded.Lock,
 		contentDescription = null,
 		tint = colorScheme.onBackground.copy(alpha = 0.5f),
-		modifier = Modifier
-			.graphicsLayer {
-				scaleX = lockScale
-				scaleY = lockScale
-			}
-			.size(18.dp),
+		modifier = Modifier.graphicsLayer {
+			scaleX = lockScale
+			scaleY = lockScale
+		}.size(18.dp)
 	)
 }
-
 @Composable
-private fun OfferingsPlaceholderScreen4(onButtonStateChange: (ButtonState) -> Unit) {
+private fun OfferingsPlaceholderScreen(onButtonStateChange: (ButtonState) -> Unit) {
 	LaunchedEffect(Unit) {
 		onButtonStateChange(ButtonState.Hidden)
 	}

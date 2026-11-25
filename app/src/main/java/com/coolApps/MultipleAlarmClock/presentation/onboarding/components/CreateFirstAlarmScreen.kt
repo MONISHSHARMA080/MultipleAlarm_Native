@@ -33,26 +33,17 @@ private enum class CreateFirstAlarmStep {
 
 @Composable
 fun CreateFirstAlarmScreen(
-		onAlarmSetProceed: () -> Unit,
+		onAlarmSetProceed: (AlarmData) -> Unit,
 		modifier: Modifier = Modifier,
 		linearProgressBar: (@Composable () -> Unit)? = null,
 		onShowPaywall: (PaywallTriggerType) -> Unit = {},
-		presetAlarm: AlarmData? = null,
-		presetKey: String? = null,
-		existingAlarmId: Int? = null,
-		alarmPickerViewModel: AlarmPickerViewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory -> factory.create(null) },
+		initialAlarm: AlarmData? = null,
+		alarmPickerViewModel: AlarmPickerViewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory ->
+			factory.create(initialAlarm)
+		},
 		onBackOverrideChanged: ((() -> Unit)?) -> Unit = {},
 		onCancelled: () -> Unit = {}
 ) {
-	if (presetAlarm != null && presetKey != null) {
-		LaunchedEffect(presetKey) {
-			alarmPickerViewModel.applyPresetIfNeeded(presetAlarm, presetKey)
-		}
-	}
-	LaunchedEffect(existingAlarmId) {
-		alarmPickerViewModel.syncSavedAlarmId(existingAlarmId)
-	}
-
 	var currentStep by rememberSaveable { mutableStateOf(CreateFirstAlarmStep.Picker) }
 	val selected by alarmPickerViewModel.selectedAlarmSound.collectAsStateWithLifecycle()
 	val previewing by alarmPickerViewModel.previewingSound.collectAsStateWithLifecycle()

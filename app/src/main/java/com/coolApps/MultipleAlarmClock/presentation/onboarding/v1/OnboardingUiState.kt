@@ -1,14 +1,8 @@
-package com.coolApps.MultipleAlarmClock.presentation.onboarding
+package com.coolApps.MultipleAlarmClock.presentation.onboarding.v1
 
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.preferences.OnboardingFlow
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionStep
-
-enum class ButtonState {
-	Enabled,
-	Disabled,
-	Hidden
-}
 
 enum class DisplaySate {
 	Problem,

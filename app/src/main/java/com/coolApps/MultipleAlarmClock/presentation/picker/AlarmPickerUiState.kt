@@ -7,7 +7,10 @@ import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionS
 import java.time.DayOfWeek
 import java.util.Calendar
 
-enum class AlarmCompletionAction { Saved, Deleted }
+sealed interface AlarmCompletionAction {
+	data class Saved(val alarmData: AlarmData) : AlarmCompletionAction
+	data object Deleted : AlarmCompletionAction
+}
 
 data class AlarmPickerUiState(
 		val alarmData: AlarmData = AlarmData(

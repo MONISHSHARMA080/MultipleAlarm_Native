@@ -110,7 +110,7 @@ fun EditAlarmScreen(
 	}
 	LaunchedEffect(uiState.completedAction) {
 		when (uiState.completedAction) {
-			AlarmCompletionAction.Saved -> {
+			is AlarmCompletionAction.Saved -> {
 				viewModel.consumeAlarmOperationCompleted()
 				alarmSetProceed()
 			}
@@ -243,7 +243,7 @@ fun EditAlarmScreen(
 )
 @Composable
 fun NewAlarmScreen(
-		alarmSetProceed: () -> Unit,
+		alarmSetProceed: (AlarmData) -> Unit,
 		settingAlarmCancelled: () -> Unit,
 		onNavigateToSoundList: () -> Unit,
 		onNavigateToMissionList: () -> Unit,
@@ -264,9 +264,12 @@ fun NewAlarmScreen(
 		logD("isPremium:$isPremium")
 	}
 	LaunchedEffect(uiState.completedAction) {
-		if (uiState.completedAction != null) {
-			viewModel.consumeAlarmOperationCompleted()
-			alarmSetProceed()
+		when (val action = uiState.completedAction) {
+			is AlarmCompletionAction.Saved -> {
+				viewModel.consumeAlarmOperationCompleted()
+				alarmSetProceed(action.alarmData)
+			}
+			else -> Unit
 		}
 	}
 	LaunchedEffect(uiState.paywallTriggerType) {

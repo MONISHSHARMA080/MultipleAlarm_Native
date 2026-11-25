@@ -1,14 +1,14 @@
-package com.coolApps.MultipleAlarmClock.presentation.onboarding
+package com.coolApps.MultipleAlarmClock.presentation.onboarding.v2
 
 import com.coolApps.MultipleAlarmClock.data.preferences.OnboardingFlow
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionStep
 
-enum class DisplaySate3 {
+enum class DisplaySate2 {
 	Problem,
 	UserStruggles,
 	UserProfile,
 	Permission,
-	PrePaywall, // prepare screen for hard paywall
+	PrePaywall,
 	OnboardingPaywall;
 
 	override fun toString(): String {
@@ -24,14 +24,14 @@ enum class DisplaySate3 {
 }
 
 
-data class OnboardingUiState3(
-	val displaySate: DisplaySate3 = DisplaySate3.Problem,
+data class OnboardingUiState2(
+	val displaySate: DisplaySate2 = DisplaySate2.Problem,
 	val askForNotificationPermission: Boolean = false,
 	val missingSteps: List<PermissionStep> = emptyList(),
 	val allCriticalGranted: Boolean = false,
 	val onboardingFlow: OnboardingFlow = OnboardingFlow.ONBOARDING_FLOW_UNSPECIFIED
 ){
 	override fun toString(): String {
-		return "OnboardingUiState3: DisplayState: $displaySate , askForNotificationPermission: $askForNotificationPermission, missingSteps: $missingSteps, allCriticalGranted: $allCriticalGranted, onboardingFlow: $onboardingFlow"
+		return "OnboardingUiState2: DisplayState: $displaySate , askForNotificationPermission: $askForNotificationPermission, missingSteps: $missingSteps, allCriticalGranted: $allCriticalGranted, onboardingFlow: $onboardingFlow"
 	}
 }

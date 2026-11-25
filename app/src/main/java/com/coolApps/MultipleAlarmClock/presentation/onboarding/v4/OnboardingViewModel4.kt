@@ -1,4 +1,4 @@
-package com.coolApps.MultipleAlarmClock.presentation.onboarding
+package com.coolApps.MultipleAlarmClock.presentation.onboarding.v4
 
 import android.app.AlarmManager
 import android.content.Context
@@ -57,7 +57,10 @@ class OnboardingViewModel4 @Inject constructor(
 		_displayState,
 		alarmRepository.getAlarmsStream(),
 	) { uiState, alarmList ->
-		uiState.copy(alarmData = alarmList.maxByOrNull { it.id })
+		val alarm = uiState.savedAlarmId?.let { id ->
+			alarmList.firstOrNull { it.id == id } ?: uiState.alarmData
+		}
+		uiState.copy(alarmData = alarm)
 	}.stateIn(
 		scope = viewModelScope,
 		started = SharingStarted.WhileSubscribed(5_000),
@@ -66,8 +69,6 @@ class OnboardingViewModel4 @Inject constructor(
 
 	private val _onboardingOffering = MutableStateFlow<OfferingState>(OfferingState.Loading)
 	val onboardingOffering: StateFlow<OfferingState> = _onboardingOffering.asStateFlow()
-
-	private val navigationBackStack = mutableListOf<DisplayState4>()
 
 	init {
 		viewModelScope.launch {
@@ -89,8 +90,6 @@ class OnboardingViewModel4 @Inject constructor(
 	private suspend fun fetchOnboardingEndOffering() {
 		try {
 			val offerings = Purchases.sharedInstance.awaitOfferings()
-			// Placement offering first; `current` as fallback (covers the
-			// case before the placement has any "for all other cases" rule).
 			val serving = offerings
 				.getCurrentOfferingForPlacement(PaywallTriggerType.OnboardingEnd.placementId)
 				?: offerings.current
@@ -125,8 +124,17 @@ class OnboardingViewModel4 @Inject constructor(
 		_displayState.update { it.copy(wakeUpHour = hour, wakeUpMinute = minute) }
 	}
 
-	fun buildPresetAlarm(defaultMessage: String): AlarmData {
-		val state = displayState.value
+	fun onAlarmSaved(alarm: AlarmData) {
+		_displayState.update { it.copy(savedAlarmId = alarm.id, alarmData = alarm) }
+	}
+
+	fun resolveInitialAlarm(): AlarmData {
+		return displayState.value.alarmData ?: _displayState.value.alarmData ?: buildPresetAlarm()
+	}
+
+	private fun buildPresetAlarm(): AlarmData {
+		val state = _displayState.value
+		val defaultMessage = context.getString(state.primaryStruggle.toPersonalization().defaultAlarmMessageRes)
 		val minSpan = state.defaultFrequencyMin.toInt().coerceAtLeast(1)
 		val maxEndMin = 23 * 60 + 59
 		val rawStartMin = state.wakeUpHour * 60 + state.wakeUpMinute
@@ -145,7 +153,6 @@ class OnboardingViewModel4 @Inject constructor(
 			.toEpochMilli()
 
 		val rolled = AlarmData(
-			id = state.alarmData?.id ?: 0,
 			startTime = startMillis,
 			endTime = endMillis,
 			message = defaultMessage,
@@ -161,16 +168,15 @@ class OnboardingViewModel4 @Inject constructor(
 		return rolled.copy(startTime = tomorrowStart, endTime = tomorrowEnd)
 	}
 
-	fun onNextClicked() {
+	fun onNextClicked(currentStep: Onboarding4Route): Onboarding4Route? {
 		val currentState = _displayState.value
-		val currentStep = currentState.displayState
 		analytics.captureEvent(
 			"onboarding_next_clicked",
-			mapOf("step" to currentStep.name, "onBoardingUiState" to displayState.value.toString()),
+			mapOf("step" to currentStep.stepName, "onBoardingUiState" to displayState.value.toString()),
 		)
 
 		when (currentStep) {
-			DisplayState4.UserStruggles -> {
+			Onboarding4Route.UserStruggles -> {
 				if (currentState.selectedStruggles.isNotEmpty()) {
 					val props = buildMap<String, Any> {
 						put("struggles", currentState.selectedStruggles.toList())
@@ -179,12 +185,12 @@ class OnboardingViewModel4 @Inject constructor(
 					analytics.captureEvent("onboarding_struggles_submitted", props)
 				}
 			}
-			DisplayState4.UserProfile -> {
+			Onboarding4Route.UserProfile -> {
 				currentState.selectedProfile?.let {
 					analytics.captureEvent("onboarding_profile_submitted", mapOf("profile" to it))
 				}
 			}
-			DisplayState4.WakeUpTime -> {
+			Onboarding4Route.WakeUpTime -> {
 				val props = buildMap<String, Any> {
 					put("hour", currentState.wakeUpHour)
 					put("minute", currentState.wakeUpMinute)
@@ -195,71 +201,21 @@ class OnboardingViewModel4 @Inject constructor(
 			else -> Unit
 		}
 
-		dispatchNavigationAction(OnboardingNavigationAction.Next)
-	}
-
-	fun onPreviousClicked() {
-		val currentStep = _displayState.value.displayState.name
-		analytics.captureEvent("onboarding_previous_clicked", mapOf("step" to currentStep))
-		dispatchNavigationAction(OnboardingNavigationAction.Back)
-	}
-
-	fun skipPrePaywall() {
-		if (_displayState.value.displayState != DisplayState4.PrePaywall) return
-		_displayState.update { it.copy(displayState = DisplayState4.OnboardingPaywall) }
-	}
-
-	private fun dispatchNavigationAction(action: OnboardingNavigationAction) {
-		when (action) {
-			OnboardingNavigationAction.Back -> navigateBack()
-			OnboardingNavigationAction.Next -> {
-				val currentStep = _displayState.value.displayState
-				val nextStep = reduceNavigation(
-					currentStep = currentStep,
-					isHardPaywallEnabled = analytics.featureFlagsData.value?.isHardPaywallEnabled == true,
-				)
-				if (nextStep != currentStep) {
-					navigationBackStack += currentStep
-					_displayState.update {
-						it.copy(
-							displayState = nextStep,
-							canNavigateBack = navigationBackStack.isNotEmpty(),
-						)
-					}
-				}
-			}
-		}
-	}
-
-	private fun navigateBack() {
-		val previousStep = navigationBackStack.removeLastOrNull() ?: return
-		_displayState.update {
-			it.copy(
-				displayState = previousStep,
-				canNavigateBack = navigationBackStack.isNotEmpty(),
-			)
-		}
-	}
-
-	private fun reduceNavigation(
-		currentStep: DisplayState4,
-		isHardPaywallEnabled: Boolean,
-	): DisplayState4 {
+		val isHardPaywallEnabled = analytics.featureFlagsData.value?.isHardPaywallEnabled == true
 		return when (currentStep) {
-			DisplayState4.UserStruggles -> DisplayState4.UserProfile
-			DisplayState4.UserProfile -> DisplayState4.WakeUpTime
-			DisplayState4.WakeUpTime -> DisplayState4.Permission
-			DisplayState4.Permission -> DisplayState4.CreateFirstAlarm
-			DisplayState4.CreateFirstAlarm -> DisplayState4.AlarmPreview
-			DisplayState4.AlarmPreview -> if (isHardPaywallEnabled) DisplayState4.PrePaywall else DisplayState4.OnboardingPaywall
-			DisplayState4.PrePaywall -> DisplayState4.OnboardingPaywall
-			DisplayState4.OnboardingPaywall -> DisplayState4.OnboardingPaywall
+			Onboarding4Route.UserStruggles -> Onboarding4Route.UserProfile
+			Onboarding4Route.UserProfile -> Onboarding4Route.WakeUpTime
+			Onboarding4Route.WakeUpTime -> Onboarding4Route.Permission
+			Onboarding4Route.Permission -> Onboarding4Route.CreateFirstAlarm
+			Onboarding4Route.CreateFirstAlarm -> Onboarding4Route.AlarmPreview
+			Onboarding4Route.AlarmPreview -> if (isHardPaywallEnabled) Onboarding4Route.PrePaywall else Onboarding4Route.OnboardingPaywall
+			Onboarding4Route.PrePaywall -> Onboarding4Route.OnboardingPaywall
+			Onboarding4Route.OnboardingPaywall -> null
 		}
 	}
 
-	private sealed interface OnboardingNavigationAction {
-		data object Next : OnboardingNavigationAction
-		data object Back : OnboardingNavigationAction
+	fun onPreviousClicked(currentStep: Onboarding4Route) {
+		analytics.captureEvent("onboarding_previous_clicked", mapOf("step" to currentStep.stepName))
 	}
 
 	fun onPaywallEvent(event: PaywallEvent) {

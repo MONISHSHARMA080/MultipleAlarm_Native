@@ -105,7 +105,7 @@ class AlarmsController @Inject constructor(
 	/** handle setting the alarms and if fails then cancel it and update the DB state not running else running */
 	suspend fun startAlarmSeriesHandler(
 			alarm: AlarmData, alarmManager: AlarmManager, activityContext: Context, receiverClass:Class<out BroadcastReceiver> = AlarmReceiver::class.java, now: Calendar = Calendar.getInstance(),
-	): ResultCustom<Unit, StartAlarmSeriesHandlerError> {
+	): ResultCustom<AlarmData, StartAlarmSeriesHandlerError> {
 		return ResultCustom.runCatching(
 			{ exception -> AlarmControllerErrorSet.Unknown(internalErrorMessage = exception.toString()) }
 		) {
@@ -138,6 +138,7 @@ class AlarmsController @Inject constructor(
 					}
 				}
 			)
+			insertedAlarmData
 		}
 	}
 

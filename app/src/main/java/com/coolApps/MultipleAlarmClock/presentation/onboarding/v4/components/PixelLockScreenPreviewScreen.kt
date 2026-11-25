@@ -1,4 +1,4 @@
-package com.coolApps.MultipleAlarmClock.presentation.onboarding.components
+package com.coolApps.MultipleAlarmClock.presentation.onboarding.v4.components
 
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent
@@ -95,7 +95,7 @@ import androidx.compose.ui.unit.sp
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingPersonalization
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.v4.OnboardingPersonalization
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext

@@ -1,4 +1,4 @@
-package com.coolApps.MultipleAlarmClock.presentation.onboarding.components
+package com.coolApps.MultipleAlarmClock.presentation.onboarding.v1.components
 
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
 

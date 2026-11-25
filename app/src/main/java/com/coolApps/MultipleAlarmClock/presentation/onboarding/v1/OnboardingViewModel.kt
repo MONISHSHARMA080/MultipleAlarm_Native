@@ -1,4 +1,4 @@
-package com.coolApps.MultipleAlarmClock.presentation.onboarding
+package com.coolApps.MultipleAlarmClock.presentation.onboarding.v1
 
 import android.app.AlarmManager
 import android.content.Context

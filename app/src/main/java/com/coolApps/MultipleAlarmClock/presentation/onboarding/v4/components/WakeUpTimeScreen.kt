@@ -1,4 +1,4 @@
-package com.coolApps.MultipleAlarmClock.presentation.onboarding.components
+package com.coolApps.MultipleAlarmClock.presentation.onboarding.v4.components
 
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.layout.Arrangement
@@ -37,7 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingPersonalization
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.v4.OnboardingPersonalization
 import com.coolApps.MultipleAlarmClock.presentation.picker.TimePicker
 
 @OptIn(ExperimentalMaterial3Api::class)

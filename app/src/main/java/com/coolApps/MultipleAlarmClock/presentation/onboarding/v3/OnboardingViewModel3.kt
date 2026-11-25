@@ -1,4 +1,4 @@
-package com.coolApps.MultipleAlarmClock.presentation.onboarding
+package com.coolApps.MultipleAlarmClock.presentation.onboarding.v3
 
 import android.content.Context
 import android.util.Log
@@ -29,15 +29,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 
-@HiltViewModel class OnboardingViewModel2 @Inject constructor(
+@HiltViewModel class OnboardingViewModel3 @Inject constructor(
 	val analytics: Analytics,
 	private val settingsDataStore: DataStore<Settings>,
 	@ApplicationContext val context: Context
 ) : ViewModel() {
 
-	private val _displayState = MutableStateFlow(OnboardingUiState2())
+	private val _displayState = MutableStateFlow(OnboardingUiState3())
 
-	val displayState: StateFlow<OnboardingUiState2> = _displayState.asStateFlow()
+	val displayState: StateFlow<OnboardingUiState3> = _displayState.asStateFlow()
 
 	init {
 		viewModelScope.launch {
@@ -84,7 +84,7 @@ import kotlinx.coroutines.launch
 
 	private var selectedStruggles = emptySet<String>()
 	private var selectedProfile: String? = null
-	private val navigationBackStack = mutableListOf<DisplaySate2>()
+	private val navigationBackStack = mutableListOf<DisplaySate3>()
 
 	fun onStrugglesSelected(struggles: Set<String>) {
 		selectedStruggles = struggles
@@ -98,10 +98,10 @@ import kotlinx.coroutines.launch
 		val currentStep = _displayState.value.displaySate.name
 		analytics.captureEvent("onboarding_next_clicked", mapOf("step" to currentStep, "onBoardingUiState" to displayState.value.toString() ))
 
-		if (_displayState.value.displaySate == DisplaySate2.UserStruggles && selectedStruggles.isNotEmpty()) {
+		if (_displayState.value.displaySate == DisplaySate3.UserStruggles && selectedStruggles.isNotEmpty()) {
 			analytics.captureEvent("onboarding_struggles_submitted", mapOf("struggles" to selectedStruggles.toList()))
 		}
-		if (_displayState.value.displaySate == DisplaySate2.UserProfile) {
+		if (_displayState.value.displaySate == DisplaySate3.UserProfile) {
 			selectedProfile?.let {analytics.captureEvent("onboarding_profile_submitted", mapOf("profile" to it))   }
 		}
 		dispatchNavigationAction(OnboardingNavigationAction.Next)
@@ -138,16 +138,16 @@ import kotlinx.coroutines.launch
 	}
 
 	private fun reduceNavigation(
-		currentStep: DisplaySate2,
+		currentStep: DisplaySate3,
 		isHardPaywallEnabled: Boolean,
-	): DisplaySate2 {
+	): DisplaySate3 {
 		return when (currentStep) {
-			DisplaySate2.Problem -> DisplaySate2.UserStruggles
-			DisplaySate2.UserStruggles -> DisplaySate2.UserProfile
-			DisplaySate2.UserProfile -> DisplaySate2.Permission
-			DisplaySate2.Permission -> if (isHardPaywallEnabled) DisplaySate2.PrePaywall else DisplaySate2.OnboardingPaywall
-			DisplaySate2.PrePaywall -> DisplaySate2.OnboardingPaywall
-			DisplaySate2.OnboardingPaywall -> DisplaySate2.OnboardingPaywall
+			DisplaySate3.Problem -> DisplaySate3.UserStruggles
+			DisplaySate3.UserStruggles -> DisplaySate3.UserProfile
+			DisplaySate3.UserProfile -> DisplaySate3.Permission
+			DisplaySate3.Permission -> if (isHardPaywallEnabled) DisplaySate3.PrePaywall else DisplaySate3.OnboardingPaywall
+			DisplaySate3.PrePaywall -> DisplaySate3.OnboardingPaywall
+			DisplaySate3.OnboardingPaywall -> DisplaySate3.OnboardingPaywall
 		}
 	}
 
@@ -192,6 +192,6 @@ import kotlinx.coroutines.launch
 		 }
 	}
 	private fun logD(msg: String){
-		Log.d("AAAAA", "[OnboardingViewModel2] $msg")
+		Log.d("AAAAA", "[OnboardingViewModel3] $msg")
 	}
 }

@@ -1,6 +1,8 @@
-package com.coolApps.MultipleAlarmClock.presentation.onboarding.components
+package com.coolApps.MultipleAlarmClock.presentation.onboarding.v3.components
 
 import com.coolApps.MultipleAlarmClock.presentation.onboarding.ButtonState
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.RepeatAlarmCard
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.RingingAlarmStack
 
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.AnimatedContent

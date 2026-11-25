@@ -37,10 +37,10 @@ import com.coolApps.MultipleAlarmClock.data.paywall.OfferingState
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.data.preferences.OnboardingFlow
 import com.coolApps.MultipleAlarmClock.presentation.home.AlarmContainer
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingScreen
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingScreen2
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingScreen3
-import com.coolApps.MultipleAlarmClock.presentation.onboarding.OnboardingScreen4
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.v1.OnboardingScreen
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.v2.OnboardingScreen2
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.v3.OnboardingScreen3
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.v4.OnboardingScreen4
 import com.coolApps.MultipleAlarmClock.presentation.picker.EditAlarmFlowScreen
 import com.coolApps.MultipleAlarmClock.presentation.picker.NewAlarmFlowScreen
 import com.coolApps.MultipleAlarmClock.presentation.settings.PremiumPaywallDialog

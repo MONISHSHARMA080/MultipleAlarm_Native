@@ -47,7 +47,7 @@
     <string name="alarm_picker_repeat_days">Repeat</string>
     <string name="alarm_picker_sound">Sound</string>
     <string name="alarm_picker_sound_random">Random</string>
-    <string name="alarm_picker_missions">Missions</string>
+    <string name="alarm_picker_missions">Wake-up missions</string>
     <string name="alarm_picker_missions_none">None</string>
     <string name="alarm_picker_alarm_volume">Alarm volume</string>
     <string name="alarm_picker_alarm_volume_system">Play alarm at custom volume regardless of the system volume</string>

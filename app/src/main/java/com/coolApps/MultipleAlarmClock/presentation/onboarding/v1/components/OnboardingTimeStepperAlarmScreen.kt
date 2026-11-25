@@ -1,4 +1,6 @@
-package com.coolApps.MultipleAlarmClock.presentation.onboarding.components
+package com.coolApps.MultipleAlarmClock.presentation.onboarding.v1.components
+
+import com.coolApps.MultipleAlarmClock.presentation.onboarding.components.CreateFirstAlarmScreen
 
 import android.os.Build
 import android.view.HapticFeedbackConstants
@@ -266,7 +268,7 @@ fun OnboardingTimeStepperAlarmScreen(
 
 			OnboardingAlarmStep.FullEditor -> {
 				CreateFirstAlarmScreen(
-					onAlarmSetProceed = onAlarmSetProceed,
+					onAlarmSetProceed = { onAlarmSetProceed() },
 					linearProgressBar = linearProgressBar,
 					onShowPaywall = onShowPaywall,
 					alarmPickerViewModel = alarmPickerViewModel,
