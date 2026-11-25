@@ -2,7 +2,9 @@ package com.coolApps.MultipleAlarmClock.presentation.ads
 
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -15,6 +17,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -23,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -94,10 +98,16 @@ fun AdMobBanner(
 	var loadState by remember(adUnitId, placement) { mutableStateOf(BannerLoadState.Loading) }
 	if (loadState == BannerLoadState.Failed) return
 
+	var loadedHeightPx by remember(adUnitId, placement) { mutableIntStateOf(0) }
 	val context = LocalContext.current
+	val density = LocalDensity.current
 	val latestOnLoadStateChanged by rememberUpdatedState(onLoadStateChanged)
+	val bannerHeight = with(density) { loadedHeightPx.toDp() }
+
 	BoxWithConstraints(
-		modifier = modifier.fillMaxWidth(),
+		modifier = modifier
+			.fillMaxWidth()
+			.height(bannerHeight),
 		contentAlignment = Alignment.Center,
 	) {
 		val adWidthDp = maxWidth.value.toInt()
@@ -115,11 +125,15 @@ fun AdMobBanner(
 				placement = placement,
 				loadCallback = object : AdLoadCallback<BannerAd> {
 					override fun onAdLoaded(ad: BannerAd) {
+						loadedHeightPx = ad.getAdSize().getHeightInPixels(context)
+							.takeIf { it > 0 }
+							?: adSize.getHeightInPixels(context)
 						loadState = BannerLoadState.Loaded
 						latestOnLoadStateChanged(BannerLoadState.Loaded)
 					}
 
 					override fun onAdFailedToLoad(adError: LoadAdError) {
+						loadedHeightPx = 0
 						loadState = BannerLoadState.Failed
 						latestOnLoadStateChanged(BannerLoadState.Failed)
 					}
@@ -134,7 +148,7 @@ fun AdMobBanner(
 		key(adView) {
 			AndroidView(
 				factory = { adView },
-				modifier = Modifier.fillMaxWidth(),
+				modifier = Modifier.fillMaxSize(),
 			)
 		}
 	}
