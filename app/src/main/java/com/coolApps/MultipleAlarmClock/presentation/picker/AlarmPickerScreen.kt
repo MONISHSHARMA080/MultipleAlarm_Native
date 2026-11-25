@@ -78,6 +78,7 @@ import com.coolApps.MultipleAlarmClock.presentation.AlarmContainerBoundsTransfor
 import com.coolApps.MultipleAlarmClock.presentation.AlarmTimeBoundsTransform
 import com.coolApps.MultipleAlarmClock.presentation.logD
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.AlarmPermissionDialog
+import java.time.DayOfWeek
 import java.util.Calendar
 
 @OptIn(
@@ -223,12 +224,21 @@ fun EditAlarmScreen(
 				.consumeWindowInsets(screenPadding)
 				.padding(horizontal = horizontalPadding),
 			uiState = uiState,
-			viewModel = viewModel,
 			selectedSoundTitle = selectedSound?.title,
-			alarmId = alarmData.id,
-			showCalendarRequest = { showCalendar = true },
+			onStartTimeChange = viewModel::updateStartTime,
+			onEndTimeChange = viewModel::updateEndTime,
+			onFrequencyChange = viewModel::updateFrequency,
+			onRingDurationChange = viewModel::updateRingDuration,
+			onMessageChange = viewModel::updateMessage,
+			onAlarmVolumeChange = viewModel::updateAlarmVolume,
+			onRepeatDayClick = viewModel::onRepeatDayClicked,
+			onShowCalendar = { showCalendar = true },
 			onNavigateToSoundList = onNavigateToSoundList,
-			onNavigateToMissionList = onNavigateToMissionList,
+			onNavigateToMissionList = {
+				viewModel.captureEvent("mission_row_clicked", mapOf("is_edit" to true))
+				onNavigateToMissionList()
+			},
+			alarmId = alarmData.id,
 			sharedTransitionScope = sharedTransitionScope,
 			animatedVisibilityScope = animatedVisibilityScope,
 			animateScroll = false
@@ -248,11 +258,10 @@ fun NewAlarmScreen(
 		onNavigateToSoundList: () -> Unit,
 		onNavigateToMissionList: () -> Unit,
 		onShowPaywall: (PaywallTriggerType) -> Unit,
-		linearProgressBar: (@Composable () -> Unit)? = null,
 		viewModel: AlarmPickerViewModel,
+		showTopBar: Boolean = true,
+		cancelLabel: String = stringResource(R.string.alarm_picker_cancel),
 ) {
-	val fromOnboarding = linearProgressBar != null
-
 	val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 	val isPremium by viewModel.isPremium.collectAsStateWithLifecycle()
 	val selectedSound by viewModel.selectedAlarmSound.collectAsStateWithLifecycle()
@@ -310,9 +319,9 @@ fun NewAlarmScreen(
 	val horizontalPadding = rememberAdaptiveHorizontalPadding()
 
 	Scaffold(
-		contentWindowInsets = if (fromOnboarding) WindowInsets(0) else WindowInsets.safeDrawing,
+		contentWindowInsets = if (showTopBar) WindowInsets.safeDrawing else WindowInsets(0),
 		topBar = {
-			if (!fromOnboarding) {
+			if (showTopBar) {
 				ExpressiveAlarmTopBar(
 					onBackClick = { settingAlarmCancelled() }
 				)
@@ -323,7 +332,7 @@ fun NewAlarmScreen(
 				modifier = Modifier
 					.fillMaxWidth()
 					.background(colorScheme.background)
-					.then(if (fromOnboarding) Modifier else Modifier.navigationBarsPadding())
+					.then(if (showTopBar) Modifier.navigationBarsPadding() else Modifier)
 					.padding(16.dp)
 					.padding(bottom = 20.dp),
 				contentAlignment = Alignment.Center
@@ -335,7 +344,7 @@ fun NewAlarmScreen(
 				) {
 					CancelAndDeleteButton(
 						isNewAlarm = true,
-						fromOnboarding = fromOnboarding,
+						cancelLabel = cancelLabel,
 						onClick = settingAlarmCancelled
 					)
 
@@ -361,12 +370,21 @@ fun NewAlarmScreen(
 				.consumeWindowInsets(screenPadding)
 				.padding(horizontal = horizontalPadding),
 			uiState = uiState,
-			viewModel = viewModel,
 			selectedSoundTitle = selectedSound?.title,
-			alarmId = null,
-			showCalendarRequest = { showCalendar = true },
+			onStartTimeChange = viewModel::updateStartTime,
+			onEndTimeChange = viewModel::updateEndTime,
+			onFrequencyChange = viewModel::updateFrequency,
+			onRingDurationChange = viewModel::updateRingDuration,
+			onMessageChange = viewModel::updateMessage,
+			onAlarmVolumeChange = viewModel::updateAlarmVolume,
+			onRepeatDayClick = viewModel::onRepeatDayClicked,
+			onShowCalendar = { showCalendar = true },
 			onNavigateToSoundList = onNavigateToSoundList,
-			onNavigateToMissionList = onNavigateToMissionList,
+			onNavigateToMissionList = {
+				viewModel.captureEvent("mission_row_clicked", mapOf("is_edit" to false))
+				onNavigateToMissionList()
+			},
+			alarmId = null,
 			sharedTransitionScope = null,
 			animatedVisibilityScope = null,
 			animateScroll = true
@@ -417,18 +435,24 @@ private fun ExpressiveAlarmTopBar(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-private fun AlarmEditorBody(
-		modifier: Modifier = Modifier,
+fun AlarmEditorBody(
 		uiState: AlarmPickerUiState,
-		viewModel: AlarmPickerViewModel,
 		selectedSoundTitle: String?,
-		alarmId: Int?,
-		showCalendarRequest: () -> Unit,
+		onStartTimeChange: (Calendar) -> Unit,
+		onEndTimeChange: (Calendar) -> Unit,
+		onFrequencyChange: (Long) -> Unit,
+		onRingDurationChange: (Long) -> Unit,
+		onMessageChange: (String) -> Unit,
+		onAlarmVolumeChange: (Float?) -> Unit,
+		onRepeatDayClick: (DayOfWeek) -> Unit,
+		onShowCalendar: () -> Unit,
 		onNavigateToSoundList: () -> Unit,
 		onNavigateToMissionList: () -> Unit,
+		modifier: Modifier = Modifier,
+		alarmId: Int? = null,
 		sharedTransitionScope: SharedTransitionScope? = null,
 		animatedVisibilityScope: AnimatedVisibilityScope? = null,
-		animateScroll: Boolean
+		animateScroll: Boolean = true,
 ) {
 	val view = LocalView.current
 
@@ -445,8 +469,8 @@ private fun AlarmEditorBody(
 			Spacer(modifier = Modifier.weight(0.44f))
 			TimeRow(
 				uiState = uiState,
-				onStartTimeChange = { viewModel.updateStartTime(it) },
-				onEndTimeChange = { viewModel.updateEndTime(it) },
+				onStartTimeChange = onStartTimeChange,
+				onEndTimeChange = onEndTimeChange,
 				onDisabledTimeSelected = { onDisabledTimeSelected(view) },
 				sharedTransitionScope = sharedTransitionScope,
 				animatedVisibilityScope = animatedVisibilityScope,
@@ -456,17 +480,14 @@ private fun AlarmEditorBody(
 			Spacer(modifier = Modifier.weight(0.45f))
 			SettingsCard(
 				uiState = uiState,
-				updateFrequency = { viewModel.updateFrequency(it) },
-				updateRingDuration = { viewModel.updateRingDuration(it) },
-				messageValueChanged = { viewModel.updateMessage(it) },
-				updateAlarmVolume = { viewModel.updateAlarmVolume(it) },
-				calenderButtonClicked = showCalendarRequest,
+				updateFrequency = onFrequencyChange,
+				updateRingDuration = onRingDurationChange,
+				messageValueChanged = onMessageChange,
+				updateAlarmVolume = onAlarmVolumeChange,
+				calenderButtonClicked = onShowCalendar,
 				selectSoundButtonClicked = onNavigateToSoundList,
-				selectMissionButtonClicked = {
-					viewModel.captureEvent("mission_row_clicked", mapOf("is_edit" to (alarmId != null)))
-					onNavigateToMissionList()
-				},
-				repeatDayToggled = { day -> viewModel.onRepeatDayClicked(day) },
+				selectMissionButtonClicked = onNavigateToMissionList,
+				repeatDayToggled = onRepeatDayClick,
 				selectedSoundName = selectedSoundTitle ?: stringResource(R.string.alarm_picker_sound_random),
 				modifier = Modifier.weight(1f, fill = false),
 				animateScroll = animateScroll
@@ -476,14 +497,12 @@ private fun AlarmEditorBody(
 	}
 }
 
-// ─── Shared bottom-bar buttons (unchanged logic) ──────────────────────────────
-
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun CancelAndDeleteButton(
 	isNewAlarm: Boolean,
 	modifier: Modifier = Modifier,
-	fromOnboarding: Boolean = false,
+	cancelLabel: String = stringResource(R.string.alarm_picker_cancel),
 	onClick: () -> Unit,
 ) {
 	val interactionSource = remember { MutableInteractionSource() }
@@ -535,9 +554,7 @@ fun CancelAndDeleteButton(
 			shape = RoundedCornerShape(cornerRadius),
 		) {
 			Text(
-				text = stringResource(
-					if (fromOnboarding) R.string.alarm_picker_previous else R.string.alarm_picker_cancel,
-				),
+				text = cancelLabel,
 				style = typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
 			)
 		}

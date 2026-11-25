@@ -52,18 +52,21 @@ class AlarmPickerViewModel @AssistedInject constructor(
 		private val errorHandler: ErrorHandler,
 		private val alarmSoundRepository: AlarmSoundRepository,
 		@ApplicationContext val context: Context,
-		@Assisted private val alarmData: AlarmData?
+		@Assisted private val mode: AlarmEditorMode
 ) : ViewModel() {
 
 	@AssistedFactory
 	interface Factory {
-		fun create(alarmData: AlarmData?): AlarmPickerViewModel
+		fun create(mode: AlarmEditorMode): AlarmPickerViewModel
 	}
 
 	private val _uiState = MutableStateFlow(
 		AlarmPickerUiState(
-			alarmData = createDefaultAlarm(alarmData),
-			initialAlarm = alarmData?.takeIf { it.id > 0 },
+			alarmData = when (mode) {
+				is AlarmEditorMode.Create -> createDefaultAlarm(mode.preset)
+				is AlarmEditorMode.Edit -> mode.alarm
+			},
+			initialAlarm = (mode as? AlarmEditorMode.Edit)?.alarm,
 			areAllPermissionsGranted = PermissionUtils.allCriticalPermissionsGranted(context),
 		)
 	)

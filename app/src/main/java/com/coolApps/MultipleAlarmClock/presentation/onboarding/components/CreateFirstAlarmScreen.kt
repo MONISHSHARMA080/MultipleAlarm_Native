@@ -16,10 +16,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.local.AlarmData
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
+import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmEditorMode
 import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmPickerViewModel
 import com.coolApps.MultipleAlarmClock.presentation.picker.NewAlarmScreen
 import com.coolApps.MultipleAlarmClock.presentation.picker.listAlarmRingtone.ListAlarmSoundScreen
@@ -35,11 +38,10 @@ private enum class CreateFirstAlarmStep {
 fun CreateFirstAlarmScreen(
 		onAlarmSetProceed: (AlarmData) -> Unit,
 		modifier: Modifier = Modifier,
-		linearProgressBar: (@Composable () -> Unit)? = null,
 		onShowPaywall: (PaywallTriggerType) -> Unit = {},
-		initialAlarm: AlarmData? = null,
+		editorMode: AlarmEditorMode = AlarmEditorMode.Create(),
 		alarmPickerViewModel: AlarmPickerViewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory ->
-			factory.create(initialAlarm)
+			factory.create(editorMode)
 		},
 		onBackOverrideChanged: ((() -> Unit)?) -> Unit = {},
 		onCancelled: () -> Unit = {}
@@ -95,7 +97,6 @@ fun CreateFirstAlarmScreen(
 			CreateFirstAlarmStep.Picker -> {
 				NewAlarmScreen(
 					alarmSetProceed = onAlarmSetProceed,
-					
 					viewModel = alarmPickerViewModel,
 					onNavigateToSoundList = {
 						currentStep = CreateFirstAlarmStep.SoundList
@@ -105,7 +106,8 @@ fun CreateFirstAlarmScreen(
 					},
 					settingAlarmCancelled = onCancelled,
 					onShowPaywall = onShowPaywall,
-					linearProgressBar = linearProgressBar
+					showTopBar = false,
+					cancelLabel = stringResource(R.string.alarm_picker_previous),
 				)
 			}
 
@@ -125,7 +127,7 @@ fun CreateFirstAlarmScreen(
 					onProceed = { sound ->
 						alarmPickerViewModel.onAlarmSoundSelected(sound)
 					},
-					linearProgressBar = linearProgressBar,
+					showTopBar = false,
 					onShowPaywall = onShowPaywall
 				)
 			}
@@ -136,7 +138,7 @@ fun CreateFirstAlarmScreen(
 						currentStep = CreateFirstAlarmStep.Picker
 					},
 					onTrackEvent = { event, props -> alarmPickerViewModel.captureEvent(event, props) },
-					linearProgressBar = linearProgressBar
+					showTopBar = false,
 				)
 			}
 		}

@@ -91,10 +91,9 @@ import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 	previewingUri: Uri?,
 	onBack: () -> Unit,
 	onProceed: (AlarmSound?) -> Unit,
-	linearProgressBar: (@Composable () -> Unit)? = null,
+	showTopBar: Boolean = true,
 	onShowPaywall: (PaywallTriggerType) -> Unit = {}
 ) {
-	val fromOnboarding = linearProgressBar != null
 	val view = LocalView.current
 	val listOfAlarms by vm.listOfAlarms.collectAsStateWithLifecycle()
 	val randomPreviewing by vm.previewingRandom.collectAsStateWithLifecycle()
@@ -123,9 +122,9 @@ import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 	Scaffold(
 		containerColor = MaterialTheme.colorScheme.surface,
 		modifier = Modifier
-			.let { if (!fromOnboarding) it.nestedScroll(scrollBehavior.nestedScrollConnection) else it },
+			.let { if (showTopBar) it.nestedScroll(scrollBehavior.nestedScrollConnection) else it },
 		topBar = {
-			if (!fromOnboarding) {
+			if (showTopBar) {
 				val backInteractionSource = remember { MutableInteractionSource() }
 				val isBackPressed by backInteractionSource.collectIsPressedAsState()
 				val backCorner by animateDpAsState(

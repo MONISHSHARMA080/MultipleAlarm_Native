@@ -58,6 +58,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.R
 import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
+import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmEditorMode
 import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmPickerViewModel
 import com.coolApps.MultipleAlarmClock.presentation.picker.TimePickerWithoutDialog
 import com.coolApps.MultipleAlarmClock.presentation.picker.onDisabledTimeSelected
@@ -75,14 +76,13 @@ private enum class OnboardingAlarmStep {
 fun OnboardingTimeStepperAlarmScreen(
 	onAlarmSetProceed: () -> Unit,
 	modifier: Modifier = Modifier,
-	linearProgressBar: (@Composable () -> Unit)? = null,
 	onShowPaywall: (PaywallTriggerType) -> Unit = {},
 	onBackOverrideChanged: ((() -> Unit)?) -> Unit = {},
 	onCancelled: () -> Unit = {},
 ) {
 	val alarmPickerViewModel: AlarmPickerViewModel =
 		hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory ->
-			factory.create(null)
+			factory.create(AlarmEditorMode.Create())
 		}
 	val uiState by alarmPickerViewModel.uiState.collectAsStateWithLifecycle()
 	var currentStep by rememberSaveable { mutableStateOf(OnboardingAlarmStep.StartTime) }
@@ -269,7 +269,6 @@ fun OnboardingTimeStepperAlarmScreen(
 			OnboardingAlarmStep.FullEditor -> {
 				CreateFirstAlarmScreen(
 					onAlarmSetProceed = { onAlarmSetProceed() },
-					linearProgressBar = linearProgressBar,
 					onShowPaywall = onShowPaywall,
 					alarmPickerViewModel = alarmPickerViewModel,
 					onBackOverrideChanged = { nestedEditorBackOverride = it },

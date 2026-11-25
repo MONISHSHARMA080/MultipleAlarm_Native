@@ -36,7 +36,7 @@ fun EditAlarmFlowScreen(
 		animatedVisibilityScope: AnimatedVisibilityScope
 ) {
 	val viewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory ->
-		factory.create(alarmData)
+		factory.create(AlarmEditorMode.Edit(alarmData))
 	}
 	val activity = LocalActivity.current
 	val shouldShowInterstitialAds by viewModel.shouldShowInterstitialAds.collectAsStateWithLifecycle()
@@ -124,7 +124,7 @@ fun NewAlarmFlowScreen(
 	onShowPaywall: (PaywallTriggerType) -> Unit
 ) {
 	val viewModel = hiltViewModel<AlarmPickerViewModel, AlarmPickerViewModel.Factory> { factory ->
-		factory.create(null)
+		factory.create(AlarmEditorMode.Create())
 	}
 	val activity = LocalActivity.current
 	val shouldShowInterstitialAds by viewModel.shouldShowInterstitialAds.collectAsStateWithLifecycle()

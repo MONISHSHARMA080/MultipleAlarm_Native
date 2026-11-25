@@ -99,9 +99,8 @@ import com.coolApps.MultipleAlarmClock.presentation.ExpressiveAlarmTheme
 fun AlarmMissionListScreen(
 	onBack: () -> Unit,
 	onTrackEvent: (String, Map<String, Any>) -> Unit,
-	linearProgressBar: (@Composable () -> Unit)? = null,
+	showTopBar: Boolean = true,
 ) {
-	val fromOnboarding = linearProgressBar != null
 	val view = LocalView.current
 
 	var selectedMission by rememberSaveable { mutableStateOf<AlarmMission?>(null) }
@@ -124,10 +123,10 @@ fun AlarmMissionListScreen(
 		containerColor = MaterialTheme.colorScheme.surface,
 		contentWindowInsets = WindowInsets.safeDrawing,
 		modifier = Modifier.let {
-			if (!fromOnboarding) it.nestedScroll(scrollBehavior.nestedScrollConnection) else it
+			if (showTopBar) it.nestedScroll(scrollBehavior.nestedScrollConnection) else it
 		},
 		topBar = {
-			if (!fromOnboarding) {
+			if (showTopBar) {
 				LargeFlexibleTopAppBar(
 					title = {
 						Text(
@@ -253,7 +252,7 @@ fun AlarmMissionListScreen(
 				horizontalArrangement = Arrangement.spacedBy(12.dp),
 				verticalArrangement = Arrangement.spacedBy(12.dp)
 			) {
-				if (fromOnboarding) {
+				if (!showTopBar) {
 					item(
 						key = "missions_subtitle",
 						span = { GridItemSpan(maxLineSpan) }

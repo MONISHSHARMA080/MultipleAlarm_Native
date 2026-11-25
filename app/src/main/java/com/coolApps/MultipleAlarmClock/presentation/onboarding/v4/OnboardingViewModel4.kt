@@ -15,6 +15,7 @@ import com.coolApps.MultipleAlarmClock.data.preferences.Settings
 import com.coolApps.MultipleAlarmClock.data.preferences.copy
 import com.coolApps.MultipleAlarmClock.domain.repository.AlarmRepository
 import com.coolApps.MultipleAlarmClock.domain.usecase.AlarmsController
+import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmEditorMode
 import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionUtils
 import com.coolApps.MultipleAlarmClock.util.Analytics
 import com.coolApps.MultipleAlarmClock.util.TrialReminderScheduler
@@ -128,8 +129,9 @@ class OnboardingViewModel4 @Inject constructor(
 		_displayState.update { it.copy(savedAlarmId = alarm.id, alarmData = alarm) }
 	}
 
-	fun resolveInitialAlarm(): AlarmData {
-		return displayState.value.alarmData ?: _displayState.value.alarmData ?: buildPresetAlarm()
+	fun resolveEditorMode(): AlarmEditorMode {
+		val saved = displayState.value.alarmData ?: _displayState.value.alarmData
+		return if (saved != null) AlarmEditorMode.Edit(saved) else AlarmEditorMode.Create(buildPresetAlarm())
 	}
 
 	private fun buildPresetAlarm(): AlarmData {

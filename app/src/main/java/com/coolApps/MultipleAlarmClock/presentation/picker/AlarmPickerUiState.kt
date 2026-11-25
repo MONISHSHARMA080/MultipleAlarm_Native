@@ -7,6 +7,12 @@ import com.coolApps.MultipleAlarmClock.presentation.util.Permissions.PermissionS
 import java.time.DayOfWeek
 import java.util.Calendar
 
+sealed interface AlarmEditorMode {
+	// could be used while from the onboarding, e.g.  I have made an alarm in onboarding and I want to launch the alarmPickerScreen
+	data class Create(val preset: AlarmData? = null) : AlarmEditorMode
+	data class Edit(val alarm: AlarmData) : AlarmEditorMode
+}
+
 sealed interface AlarmCompletionAction {
 	data class Saved(val alarmData: AlarmData) : AlarmCompletionAction
 	data object Deleted : AlarmCompletionAction

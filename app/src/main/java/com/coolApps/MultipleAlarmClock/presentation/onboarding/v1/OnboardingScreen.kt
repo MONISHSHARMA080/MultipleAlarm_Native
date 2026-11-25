@@ -223,12 +223,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 					DisplaySate.CreateFirstAlarm -> {
 						OnboardingTimeStepperAlarmScreen(
 							onAlarmSetProceed = { viewModel.onNextClicked() },
-							linearProgressBar = {
-								LinearProgressIndicator(
-									progress = { animatedProgress },
-									modifier = Modifier.fillMaxWidth().padding(end = 16.dp)
-								)
-							},
 							onShowPaywall = onShowPaywall,
 							onBackOverrideChanged = { childBackOverride = it },
 							onCancelled = { viewModel.onPreviousClicked() }

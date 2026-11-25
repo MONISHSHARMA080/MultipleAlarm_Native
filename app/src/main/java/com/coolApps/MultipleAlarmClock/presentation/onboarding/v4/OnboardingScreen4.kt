@@ -246,7 +246,7 @@ fun OnboardingScreen4(onShowPaywall: (PaywallTriggerType) -> Unit = {}) {
 					}
 
 					entry<Onboarding4Route.CreateFirstAlarm> {
-						val initialAlarm = remember { viewModel.resolveInitialAlarm() }
+						val editorMode = remember { viewModel.resolveEditorMode() }
 						val onNext = dropUnlessResumed { navigateNext() }
 						val onCancelled = dropUnlessResumed { navigateBack() }
 						CreateFirstAlarmScreen(
@@ -254,16 +254,8 @@ fun OnboardingScreen4(onShowPaywall: (PaywallTriggerType) -> Unit = {}) {
 								viewModel.onAlarmSaved(savedAlarm)
 								onNext()
 							},
-							linearProgressBar = {
-								LinearProgressIndicator(
-									progress = { animatedProgress },
-									modifier = Modifier
-										.fillMaxWidth()
-										.padding(end = 16.dp),
-								)
-							},
 							onShowPaywall = onShowPaywall,
-							initialAlarm = initialAlarm,
+							editorMode = editorMode,
 							onBackOverrideChanged = { childBackOverride = it },
 							onCancelled = onCancelled,
 						)
