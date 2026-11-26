@@ -17,7 +17,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -27,11 +26,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -48,9 +49,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -73,19 +73,23 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.coolApps.MultipleAlarmClock.R
+import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmPickerViewModel
 import com.coolApps.MultipleAlarmClock.presentation.picker.AlarmSound
-import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
-
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
-@Composable fun ListAlarmSoundScreen(
+@Composable
+fun ListAlarmSoundScreen(
 	vm: AlarmPickerViewModel,
 	selectedUri: Uri?,
 	previewingUri: Uri?,
@@ -106,7 +110,7 @@ import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 			vm.consumePaywallTrigger()
 		}
 	}
-	
+
 	LaunchedEffect(uiState.soundSelectionCompletedGoBack) {
 		if (uiState.soundSelectionCompletedGoBack) {
 			vm.consumeSoundSelectionCompleted()
@@ -114,25 +118,18 @@ import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 		}
 	}
 
-	var soundToSelect by remember { mutableStateOf(selectedAlarmSound) }
-	var isSoundToSelectRandom by remember { mutableStateOf(selectedUri == null) }
+	var soundToSelect by remember(selectedUri) { mutableStateOf(selectedAlarmSound) }
+	var isSoundToSelectRandom by remember(selectedUri) { mutableStateOf(selectedUri == null) }
 
 	val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
 	Scaffold(
 		containerColor = MaterialTheme.colorScheme.surface,
+		contentWindowInsets = if (showTopBar) WindowInsets.safeDrawing else WindowInsets(0),
 		modifier = Modifier
 			.let { if (showTopBar) it.nestedScroll(scrollBehavior.nestedScrollConnection) else it },
 		topBar = {
 			if (showTopBar) {
-				val backInteractionSource = remember { MutableInteractionSource() }
-				val isBackPressed by backInteractionSource.collectIsPressedAsState()
-				val backCorner by animateDpAsState(
-					targetValue = if (isBackPressed) 8.dp else 14.dp,
-					animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-					label = "backCorner"
-				)
-
 				LargeTopAppBar(
 					title = {
 						Text(
@@ -141,24 +138,15 @@ import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 						)
 					},
 					navigationIcon = {
-						FilledTonalIconButton(
+						IconButton(
 							onClick = {
 								view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 								onBack()
-							},
-							interactionSource = backInteractionSource,
-							shape = RoundedCornerShape(backCorner),
-							colors = IconButtonDefaults.filledTonalIconButtonColors(
-								containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-								contentColor = MaterialTheme.colorScheme.onSurface
-							),
-							modifier = Modifier
-								.padding(start = 8.dp)
-								.size(44.dp)
+							}
 						) {
 							Icon(
 								imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-								contentDescription = "Back"
+								contentDescription = stringResource(R.string.alarm_picker_back_desc)
 							)
 						}
 					},
@@ -187,7 +175,7 @@ import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 			Box(
 				modifier = Modifier
 					.fillMaxWidth()
-					.navigationBarsPadding()
+					.then(if (showTopBar) Modifier.navigationBarsPadding() else Modifier)
 					.padding(horizontal = 20.dp, vertical = 16.dp),
 				contentAlignment = Alignment.Center
 			) {
@@ -212,7 +200,7 @@ import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 						}
 				) {
 					Text(
-						text = "Select",
+						text = stringResource(R.string.alarm_missions_select_button),
 						style = MaterialTheme.typography.titleMedium,
 						fontWeight = FontWeight.ExtraBold
 					)
@@ -233,12 +221,12 @@ import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 				contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 96.dp),
 				verticalArrangement = Arrangement.spacedBy(3.dp)
 			) {
-				item(key = "random_hero_sound") {
+				item(key = "random_sound") {
 					SoundCard(
 						sound = null,
-						selected = selectedUri == null,
+						selected = isSoundToSelectRandom,
 						isPlaying = randomPreviewing,
-						isHero = true,
+						isStandalone = true,
 						topCorner = 24.dp,
 						bottomCorner = 24.dp,
 						onClick = {
@@ -260,12 +248,13 @@ import com.coolApps.MultipleAlarmClock.data.paywall.PaywallTriggerType
 					val isLast = index == listOfAlarms.lastIndex
 					val baseTopCorner = if (isFirst) 24.dp else 6.dp
 					val baseBottomCorner = if (isLast) 24.dp else 6.dp
+					val isSelected = !isSoundToSelectRandom && soundToSelect?.soundUri == sound.soundUri
 
 					SoundCard(
 						sound = sound,
-						selected = selectedUri == sound.soundUri,
+						selected = isSelected,
 						isPlaying = previewingUri == sound.soundUri && !randomPreviewing,
-						isHero = false,
+						isStandalone = false,
 						topCorner = baseTopCorner,
 						bottomCorner = baseBottomCorner,
 						onClick = {
@@ -287,7 +276,7 @@ private fun SoundCard(
 	sound: AlarmSound?,
 	selected: Boolean,
 	isPlaying: Boolean,
-	isHero: Boolean = false,
+	isStandalone: Boolean = false,
 	topCorner: Dp = 20.dp,
 	bottomCorner: Dp = 20.dp,
 	onClick: () -> Unit,
@@ -302,14 +291,12 @@ private fun SoundCard(
 
 	val targetTopCorner = when {
 		isPressed -> 16.dp
-		isHero -> 26.dp
-		selected || isPlaying -> 22.dp
+		selected -> maxOf(topCorner, 22.dp)
 		else -> topCorner
 	}
 	val targetBottomCorner = when {
 		isPressed -> 16.dp
-		isHero -> 26.dp
-		selected || isPlaying -> 22.dp
+		selected -> maxOf(bottomCorner, 22.dp)
 		else -> bottomCorner
 	}
 
@@ -331,55 +318,52 @@ private fun SoundCard(
 	)
 
 	val containerColor by animateColorAsState(
-		targetValue = when {
-			isPlaying -> MaterialTheme.colorScheme.secondaryContainer
-			selected -> MaterialTheme.colorScheme.primaryContainer
-			isHero -> MaterialTheme.colorScheme.surfaceContainerHigh
-			else -> MaterialTheme.colorScheme.surfaceContainerLow
+		targetValue = if (selected) {
+			MaterialTheme.colorScheme.secondaryContainer
+		} else {
+			MaterialTheme.colorScheme.surfaceContainerLow
 		},
 		animationSpec = colorEffectsSpec,
 		label = "containerColor"
 	)
 	val contentColor by animateColorAsState(
-		targetValue = when {
-			isPlaying -> MaterialTheme.colorScheme.onSecondaryContainer
-			selected -> MaterialTheme.colorScheme.onPrimaryContainer
-			else -> MaterialTheme.colorScheme.onSurface
+		targetValue = if (selected) {
+			MaterialTheme.colorScheme.onSecondaryContainer
+		} else {
+			MaterialTheme.colorScheme.onSurface
 		},
 		animationSpec = colorEffectsSpec,
 		label = "contentColor"
 	)
 
 	val badgeCorner by animateDpAsState(
-		targetValue = if (isPlaying || selected) 24.dp else 14.dp,
+		targetValue = if (selected) 24.dp else 14.dp,
 		animationSpec = spatialSpec,
 		label = "badgeCorner"
 	)
 
 	val badgeColor by animateColorAsState(
-		targetValue = when {
-			isPlaying -> MaterialTheme.colorScheme.secondary
-			selected -> MaterialTheme.colorScheme.primary
-			isHero -> MaterialTheme.colorScheme.tertiaryContainer
-			else -> MaterialTheme.colorScheme.surfaceContainerHighest
+		targetValue = if (selected) {
+			MaterialTheme.colorScheme.secondary
+		} else {
+			MaterialTheme.colorScheme.surfaceContainerHighest
 		},
 		animationSpec = colorEffectsSpec,
 		label = "badgeColor"
 	)
 
 	val badgeContentColor by animateColorAsState(
-		targetValue = when {
-			isPlaying -> MaterialTheme.colorScheme.onSecondary
-			selected -> MaterialTheme.colorScheme.onPrimary
-			isHero -> MaterialTheme.colorScheme.onTertiaryContainer
-			else -> MaterialTheme.colorScheme.onSurfaceVariant
+		targetValue = if (selected) {
+			MaterialTheme.colorScheme.onSecondary
+		} else {
+			MaterialTheme.colorScheme.onSurfaceVariant
 		},
 		animationSpec = colorEffectsSpec,
 		label = "badgeContentColor"
 	)
 
 	val verticalMargin by animateDpAsState(
-		targetValue = if ((selected || isPlaying) && !isHero) 4.dp else 0.dp,
+		targetValue = if (selected && !isStandalone) 4.dp else 0.dp,
 		animationSpec = spatialSpec,
 		label = "verticalMargin"
 	)
@@ -395,14 +379,13 @@ private fun SoundCard(
 		),
 		color = containerColor,
 		contentColor = contentColor,
-		border = if (selected && !isPlaying) {
-			BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
-		} else {
-			null
-		},
 		modifier = Modifier
 			.fillMaxWidth()
 			.padding(vertical = verticalMargin.coerceAtLeast(0.dp))
+			.semantics {
+				this.selected = selected
+				role = Role.RadioButton
+			}
 			.graphicsLayer {
 				scaleX = scale
 				scaleY = scale
@@ -411,7 +394,7 @@ private fun SoundCard(
 		Row(
 			modifier = Modifier
 				.fillMaxWidth()
-				.padding(horizontal = 18.dp, vertical = if (isHero) 20.dp else 16.dp),
+				.padding(horizontal = 18.dp, vertical = 16.dp),
 			verticalAlignment = Alignment.CenterVertically
 		) {
 			Surface(
@@ -453,16 +436,15 @@ private fun SoundCard(
 			Column(modifier = Modifier.weight(1f)) {
 				Text(
 					text = sound?.title ?: stringResource(R.string.Sound_screen_Random),
-					style = if (isHero) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium,
-					fontWeight = if (selected || isPlaying || isHero) FontWeight.ExtraBold else FontWeight.SemiBold,
+					style = MaterialTheme.typography.titleMedium,
+					fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.SemiBold,
 					color = contentColor
 				)
 				Spacer(Modifier.height(2.dp))
 				Text(
 					text = when {
-						sound == null && selected -> stringResource(R.string.Sound_screen_Random_sound_choosen)
-						sound == null -> stringResource(R.string.alarm_picker_sound_random)
-						selected -> stringResource(R.string.Sound_screen_selected)
+						sound == null -> stringResource(R.string.Sound_screen_Random_sound)
+						isPlaying -> stringResource(R.string.Sound_screen_selected)
 						else -> stringResource(R.string.Sound_screen_preview)
 					},
 					style = MaterialTheme.typography.bodyMedium,
@@ -478,8 +460,8 @@ private fun SoundCard(
 						fadeOut(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec())
 			) {
 				Surface(
-					color = MaterialTheme.colorScheme.primary,
-					contentColor = MaterialTheme.colorScheme.onPrimary,
+					color = MaterialTheme.colorScheme.secondary,
+					contentColor = MaterialTheme.colorScheme.onSecondary,
 					shape = CircleShape,
 					modifier = Modifier.size(32.dp)
 				) {
@@ -495,7 +477,6 @@ private fun SoundCard(
 		}
 	}
 }
-
 
 @Composable
 private fun EqualizerBars(modifier: Modifier = Modifier, color: Color) {
@@ -530,4 +511,3 @@ private fun EqualizerBars(modifier: Modifier = Modifier, color: Color) {
 		}
 	}
 }
-

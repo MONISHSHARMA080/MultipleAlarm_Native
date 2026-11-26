@@ -52,10 +52,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.IconButtonShapes
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
@@ -142,22 +140,11 @@ fun AlarmMissionListScreen(
 						)
 					},
 					navigationIcon = {
-						FilledTonalIconButton(
+						IconButton(
 							onClick = {
 								view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 								onBack()
-							},
-							shapes = IconButtonShapes(
-								shape = IconButtonDefaults.smallRoundShape,
-								pressedShape = IconButtonDefaults.smallPressedShape
-							),
-							colors = IconButtonDefaults.filledTonalIconButtonColors(
-								containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-								contentColor = MaterialTheme.colorScheme.onSurface
-							),
-							modifier = Modifier
-								.padding(start = 8.dp)
-								.size(44.dp)
+							}
 						) {
 							Icon(
 								imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
