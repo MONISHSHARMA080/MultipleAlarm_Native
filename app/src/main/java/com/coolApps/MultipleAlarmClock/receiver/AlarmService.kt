@@ -1,5 +1,6 @@
 package com.coolApps.MultipleAlarmClock.receiver
 
+import android.app.ForegroundServiceStartNotAllowedException
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -88,7 +89,12 @@ class AlarmService: Service() {
         val notification: Notification = res.first
         val alarmIntentData: AlarmActivityIntentData = res.second
 		// alarmIntentData.alarmIdInDb shouldn't be 0
-		ServiceCompat.startForeground(this, alarmIntentData.alarmIdInDb, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+		try {
+			// systemExempted, not mediaPlayback: Android 15 blocks mediaPlayback when the start is credited to BOOT_COMPLETED
+			ServiceCompat.startForeground(this, alarmIntentData.alarmIdInDb, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED)
+		} catch (e: ForegroundServiceStartNotAllowedException) {
+			return problemSoStopTheService("startForeground not allowed: $e", mapOf("function" to "startPlayingAlarm"))
+		}
         intentHashMap.putIfAbsent(alarmIntentData.alarmIdInDb, intent)
 		logD("c,  and hashMapSize:${intentHashMap.size}")
 
